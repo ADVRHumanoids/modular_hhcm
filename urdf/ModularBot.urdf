@@ -1,0 +1,101 @@
+<?xml version="1.0"?>
+<robot name="ModularBot" xmlns:xacro="http://ros.org/wiki/xacro">
+
+    <xacro:property name="width" value="0.1" />
+    <!-- <xacro:property name="leglen" value="0.3" /> -->
+    <xacro:property name="len1" value="0.4" />
+    <xacro:property name="len2" value="0.6" />
+    <xacro:property name="len3" value="0.8" />
+    <xacro:property name="pi" value="3.1415" />
+
+    <material name="blue">
+        <color rgba="0 0 0.8 1"/>
+    </material>
+
+    <material name="black">
+        <color rgba="0 0 0 1"/>
+    </material>
+
+    <material name="white">
+        <color rgba="1 1 1 1"/>
+    </material>
+
+    <xacro:macro name="default_inertial" params="mass">
+        <inertial>
+        <mass value="${mass}" />
+        <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0" />
+        </inertial>
+    </xacro:macro>
+
+    <link name="base_link"/>
+    
+    <link name="link_0">
+        <visual>
+            <origin xyz="0 0 0.2" rpy="0 0 0" />
+            <geometry>
+                <cylinder radius="${width}" length="${len1}"/>
+            </geometry>
+            <material name="black"/>
+        </visual>
+        <collision>
+            <geometry>
+                <cylinder radius="${width}" length="${len1}"/>
+            </geometry>
+        </collision>
+        <xacro:default_inertial mass="10"/>
+    </link>
+
+    <!-- <joint name="fixed" type="fixed">
+        <parent link="base_link"/>
+        <child link="link_1"/>
+        <origin xyz="0 0 0.4" rpy="0 0 0" />
+    </joint> -->
+
+    <joint name="fixed" type="fixed">
+        <parent link="base_link"/>
+        <child link="link_0"/>
+    </joint>
+
+    <xacro:macro name="add_link" params="suffix length a_i d_i alpha_i theta_i">
+
+        <link name="link_${suffix}">
+        <visual>
+            <origin xyz="${length/2} 0 0" rpy="0 0 0" />
+            <geometry>
+            <box size="${length} ${width} ${width}"/>
+            </geometry>
+            <material name="blue"/>
+        </visual>
+        <collision>
+            <origin xyz="${length/2} 0 0" rpy="0 0 0" />
+            <geometry>
+            <box size="${length} ${width} ${width}"/>
+            </geometry>
+        </collision>
+        <xacro:default_inertial mass="1"/>
+        </link>
+
+        <joint name="joint_${suffix-1}_${suffix}" type="continuous">
+        <axis xyz="0 0 1" rpy="0 0 0" />
+        
+        <!-- <xacro:if value="${suffix == 1}">
+            <parent link="base_link"/>
+        </xacro:if> -->
+        <!-- <xacro:unless value="${suffix == 1}">
+            <parent link="link_${suffix-1}"/>
+        </xacro:unless> -->
+        <parent link="link_${suffix-1}"/>
+
+        <!-- <parent link="base_link"/> -->
+        <child link="link_${suffix}"/>
+        <origin xyz="${a_i} 0 ${d_i}" rpy="${alpha_i} 0 0"/>
+        </joint>
+
+    </xacro:macro>
+  
+    <xacro:add_link suffix="1" length="${len3}" a_i="0" d_i="${len1}" alpha_i="${-pi/2}" theta_i="0"/>
+    <xacro:add_link suffix="2" length="${len3}" a_i="${len3}" d_i="0" alpha_i="${pi/2}" theta_i="0"/>
+    <xacro:add_link suffix="3" length="${len3}" a_i="${len3}" d_i="0" alpha_i="${-pi/2}" theta_i="0"/>
+
+
+</robot>
