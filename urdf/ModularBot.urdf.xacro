@@ -31,7 +31,7 @@
     
     <link name="link_0">
         <visual>
-            <origin xyz="0 0 0.2" rpy="0 0 0" />
+            <origin xyz="0 0 ${len1/2}" rpy="0 0 0" />
             <geometry>
                 <cylinder radius="${width}" length="${len1}"/>
             </geometry>
@@ -44,12 +44,6 @@
         </collision>
         <xacro:default_inertial mass="10"/>
     </link>
-
-    <!-- <joint name="fixed" type="fixed">
-        <parent link="base_link"/>
-        <child link="link_1"/>
-        <origin xyz="0 0 0.4" rpy="0 0 0" />
-    </joint> -->
 
     <joint name="fixed" type="fixed">
         <parent link="base_link"/>
@@ -64,7 +58,12 @@
             <geometry>
             <box size="${length} ${width} ${width}"/>
             </geometry>
-            <material name="blue"/>
+            <xacro:if value="${suffix%2==0}">
+                <material name="white"/>
+            </xacro:if>
+            <xacro:unless value="${suffix%2==0}">
+                <material name="blue"/>
+            </xacro:unless>
         </visual>
         <collision>
             <origin xyz="${length/2} 0 0" rpy="0 0 0" />
@@ -93,9 +92,4 @@
 
     </xacro:macro>
   
-    <xacro:add_link suffix="1" length="${len3}" a_i="0" d_i="${len1}" alpha_i="${-pi/2}" theta_i="0"/>
-    <xacro:add_link suffix="2" length="${len3}" a_i="${len3}" d_i="0" alpha_i="${pi/2}" theta_i="0"/>
-    <xacro:add_link suffix="3" length="${len3}" a_i="${len3}" d_i="0" alpha_i="${-pi/2}" theta_i="0"/>
-
-
 </robot>
