@@ -1,0 +1,29 @@
+kinematics:
+  joint:
+    proximal:
+      a_pl: 0
+      alpha_pl: 0
+      p_pl: 0
+      n_pl: 0.1
+      delta_pl: 0
+
+    distal:
+      a_dl: 0
+      alpha_dl: -1.57
+      p_dl: 0.3
+      n_dl: 0.2
+      delta_dl: 0
+
+    joint:
+      delta_j: 0
+      type: 'rotational'
+      
+  link:
+    a_l: 0
+    alpha_l: 0
+    p_l: 0
+    n_l: 0
+    delta_l_in: 0
+    delta_l_out: 0
+
+dynamics:
