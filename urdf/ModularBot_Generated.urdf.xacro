@@ -88,4 +88,4 @@
 
     </xacro:macro>
   
-<xacro:add_link a_i="0" alpha_i="0" d_i="${len1}" length="${len3}" suffix="1" theta_i="0" /><xacro:add_link a_i="${len3}" alpha_i="${-pi/2}" d_i="0" length="${len3}" suffix="2" theta_i="0" /><xacro:add_link a_i="${len3}" alpha_i="${pi/2}" d_i="0" length="${len3}" suffix="3" theta_i="0" /></robot>
+<xacro:add_link a_i="0" alpha_i="0" d_i="${len1}" length="0.8" suffix="1" theta_i="0" /><xacro:add_link a_i="0.8" alpha_i="${-pi/2}" d_i="0" length="0.8" suffix="2" theta_i="0" /><xacro:add_link a_i="0.8" alpha_i="${pi/2}" d_i="0" length="0.8" suffix="3" theta_i="0" /></robot>

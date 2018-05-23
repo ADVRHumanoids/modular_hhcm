@@ -1,0 +1,158 @@
+<?xml version='1.0' encoding='utf-8'?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro" name="ModularBot">
+
+    <xacro:property name="width" value="0.1" />
+    
+    <xacro:property name="len1" value="0.4" />
+    <xacro:property name="len2" value="0.6" />
+    <xacro:property name="len3" value="0.8" />
+    <xacro:property name="pi" value="3.1415" />
+
+    <material name="blue">
+        <color rgba="0 0 0.8 1" />
+    </material>
+
+    <material name="black">
+        <color rgba="0 0 0 1" />
+    </material>
+
+    <material name="white">
+        <color rgba="1 1 1 1" />
+    </material>
+
+    <xacro:macro name="default_inertial" params="mass">
+        <inertial>
+        <mass value="${mass}" />
+        <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0" />
+        </inertial>
+    </xacro:macro>
+
+    <link name="base_link" />
+    
+    <link name="link_0">
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 ${len1/2}" />
+            <geometry>
+                <cylinder length="${len1}" radius="${width}" />
+            </geometry>
+            <material name="black" />
+        </visual>
+        <collision>
+            <geometry>
+                <cylinder length="${len1}" radius="${width}" />
+            </geometry>
+        </collision>
+        <xacro:default_inertial mass="10" />
+    </link>
+
+    <joint name="fixed" type="fixed">
+        <parent link="base_link" />
+        <child link="link_0" />
+    </joint>
+
+    <xacro:macro name="add_link" params="suffix length x y z r p yaw">
+
+        <link name="link_${suffix}">
+        <visual>
+            <origin rpy="0 0 0" xyz="${length/2} 0 0" />
+            <geometry>
+            <box size="${length} ${width} ${width}" />
+            </geometry>
+            <xacro:if value="${suffix%2==0}">
+                <material name="white" />
+            </xacro:if>
+            <xacro:unless value="${suffix%2==0}">
+                <material name="blue" />
+            </xacro:unless>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="${length/2} 0 0" />
+            <geometry>
+            <box size="${length} ${width} ${width}" />
+            </geometry>
+        </collision>
+        <xacro:default_inertial mass="1" />
+        </link>
+
+        <joint name="joint_${suffix-1}_${suffix}" type="continuous">
+        <axis rpy="0 0 0" xyz="0 0 1" />
+        
+        
+        
+        <parent link="link_${suffix-1}" />
+
+        
+        <child link="link_${suffix}" />
+        <origin rpy="${r} ${p} ${yaw}" xyz="${x} ${y} ${z}" />
+        </joint>
+
+    </xacro:macro>
+
+    <xacro:macro name="add_link_elbow" params="suffix p n x y z roll pitch yaw">
+        
+        <link name="link_${suffix}">
+            <visual>
+                <origin rpy="0 0 0" xyz="0 0 ${p/2}" />
+                <geometry>
+                <box size="${width} ${width} ${p}" />
+                </geometry>
+                <xacro:if value="${suffix%2==0}">
+                    <material name="white" />
+                </xacro:if>
+                <xacro:unless value="${suffix%2==0}">
+                    <material name="blue" />
+                </xacro:unless>
+            </visual>
+            <visual>
+                <origin rpy="0 0 0" xyz="0 ${n/2} ${p}" />
+                <geometry>
+                <box size="${width} ${n} ${width}" />
+                </geometry>
+                <xacro:if value="${suffix%2==0}">
+                    <material name="white" />
+                </xacro:if>
+                <xacro:unless value="${suffix%2==0}">
+                    <material name="blue" />
+                </xacro:unless>
+            </visual>
+            <visual>
+                <origin rpy="0 0 0" xyz="0 0 -0.05" />
+                <geometry>
+                <box size="${width} ${width} 0.1" />
+                </geometry>
+                <material name="black" />
+            </visual>
+            <collision>
+                <origin rpy="0 0 0" xyz="0 0 ${p/2}" />
+                <geometry>
+                <box size="${width} ${width} ${p}" />
+                </geometry>
+            </collision>
+            <collision>
+                <origin rpy="0 0 0" xyz="0 ${n/2} ${p}" />
+                <geometry>
+                <box size="${width} ${n} ${width}" />
+                </geometry>
+            </collision>
+            <collision>
+                <origin rpy="0 0 0" xyz="0 0 -0.05" />
+                <geometry>
+                <box size="${width} ${width} 0.1" />
+                </geometry>
+                <material name="black" />
+            </collision>
+            <xacro:default_inertial mass="1" />
+        </link>
+
+        <joint name="joint_${suffix-1}_${suffix}" type="continuous">
+            <axis rpy="0 0 0" xyz="0 0 1" />
+        
+            <parent link="link_${suffix-1}" />
+
+            
+            <child link="link_${suffix}" />
+            <origin rpy="${roll} ${pitch} ${yaw}" xyz="${x} ${y} ${z}" />
+        </joint>
+    </xacro:macro>
+
+<xacro:add_link_elbow n="0.2" p="0.3" pitch="-0.0" roll="0.0" suffix="1" x="0.0" y="0.0" yaw="0.0" z="0.5" /><xacro:add_link_elbow n="0.2" p="0.3" pitch="-0.0" roll="-1.57" suffix="2" x="0.0" y="0.29999990488" yaw="0.0" z="0.300238898013" /><xacro:add_link_elbow n="0.2" p="0.3" pitch="-0.0" roll="-1.57" suffix="3" x="0.0" y="0.29999990488" yaw="0.0" z="0.300238898013" /></robot>

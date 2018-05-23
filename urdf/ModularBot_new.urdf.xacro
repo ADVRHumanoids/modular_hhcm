@@ -92,7 +92,7 @@
 
     </xacro:macro>
 
-    <xacro:macro name="add_link_angular" params="suffix p n x y z roll pitch yaw">
+    <xacro:macro name="add_link_elbow" params="suffix p n x y z roll pitch yaw">
         
         <link name="link_${suffix}">
             <visual>
