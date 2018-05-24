@@ -6,7 +6,7 @@
     <xacro:property name="len1" value="0.4" />
     <xacro:property name="len2" value="0.6" />
     <xacro:property name="len3" value="0.8" />
-    <xacro:property name="pi" value="3.1415" />
+    <!-- <xacro:property name="pi" value="3.1415" /> -->
 
     <material name="blue">
         <color rgba="0 0 0.8 1"/>
