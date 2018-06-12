@@ -7,6 +7,8 @@ https://advrcloud.iit.it/owncloud/index.php/s/J7PoGhHNs6WVy4Y
 To genereate URDF (from 'urdf' folder):
 
 python URDF_generator.py ModularBot_Generated.urdf.xacro > ModularBot_Generated.urdf
+OR
+python URDF_generator_elbow.py ModularBot_Generated.urdf
 
 To launch rviz:
 

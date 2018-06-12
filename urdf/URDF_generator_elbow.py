@@ -40,7 +40,7 @@ def write_urdf(urdf_filename, tree):
   out.write(doc.toprettyxml(indent='  '))
 
 
-def main():    
+def main(filename):    
 
   ET.register_namespace('xacro', "http://ros.org/wiki/xacro")
 
@@ -76,11 +76,12 @@ def main():
     ET.SubElement(root, "{http://ros.org/wiki/xacro}add_link_elbow", suffix = str(i+1), p = p, n= n, x = Joints[i].x, y= Joints[i].y, z= Joints[i].z, roll= Joints[i].roll, pitch= Joints[i].pitch, yaw= Joints[i].yaw)
 
     #update the urdf file, adding the new module 
-    write_urdf(sys.argv[1], urdf_tree)
+    write_urdf(filename, urdf_tree)
 
     i+=1
 
     variable = raw_input('Input the name of the module to load (END to stop): ')
+      
           
   ###########################################################
 
@@ -115,4 +116,4 @@ def main():
   # xacro.main()
 
 if __name__ == '__main__':
-  main()
+  main(sys.argv[1])
