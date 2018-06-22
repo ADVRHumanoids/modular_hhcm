@@ -1,10 +1,15 @@
 import sys
+sys.path.append('/home/edoardo/catkin_ws/src') #Add folder where "modular" package is to the $PYTHONPATH
+
+import os
 import re
 import xml.etree.ElementTree as ET
 import xacro
 import xml.dom.minidom
 
-from read_yaml import read_yaml
+from modular.urdf.read_yaml import read_yaml
+
+import modular
 
 import tf  
 import rospy
@@ -19,7 +24,9 @@ rospy.init_node('myconfig_py', anonymous=True)
 ET.register_namespace('xacro', "http://ros.org/wiki/xacro")
 
 #obtaining tree from base file
-urdf_tree = ET.parse('ModularBot_new.urdf.xacro')
+path_name = os.path.dirname(modular.__file__)
+basefile_name=path_name + '/urdf/ModularBot_new.urdf.xacro'
+urdf_tree = ET.parse(basefile_name)
 
 root = urdf_tree.getroot()
 
@@ -38,7 +45,7 @@ def index():
 @app.route('/square/', methods=['POST'])
 def square():
   global i
-  module_name = str(request.form.get('module_name', 0))
+  module_name = path_name + '/urdf/' + str(request.form.get('module_name', 0))
 
   Joints.append(read_yaml(module_name))
 
@@ -54,9 +61,9 @@ def square():
   ET.SubElement(root, "{http://ros.org/wiki/xacro}add_link_elbow", suffix = str(i+1), p = p, n= n, x = Joints[i].x, y= Joints[i].y, z= Joints[i].z, roll= Joints[i].roll, pitch= Joints[i].pitch, yaw= Joints[i].yaw)
 
   #update the urdf file, adding the new module 
-  write_urdf('../urdf/ModularBot_test.urdf', urdf_tree)
+  write_urdf(path_name + '/urdf/ModularBot_test.urdf', urdf_tree)
 
-  file = open('../urdf/ModularBot_test.urdf', 'r') 
+  file = open(path_name + '/urdf/ModularBot_test.urdf', 'r') 
   urdf_file = file.read() 
 
   rospy.set_param('robot_description', urdf_file)

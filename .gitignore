@@ -146,3 +146,6 @@ venv.bak/
 
 ####
 urdf/prova
+three
+URDF_viewer/example/models/*
+

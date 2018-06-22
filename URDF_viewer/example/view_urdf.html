@@ -1,0 +1,144 @@
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>File API</title>
+
+        <link rel="stylesheet" >
+    </head>
+
+    <body>
+        <script src="../../three/build/three.js"></script>
+        <script src="../URDF_viewer.js"></script>
+
+        <script src="../../three/examples/js/controls/OrbitControls.js"></script>
+        <script src="../../three/examples/js/controls/TransformControls.js"></script>
+        <script src="../../three/examples/js/loaders/STLLoader.js"></script>
+        <script src="../../three/examples/js/loaders/ColladaLoader.js"></script>
+        
+        <div>
+            Select a text file: 
+            <input type="file" id="fileInput">
+        </div>
+        <pre id="fileDisplayArea"></pre>
+        <div id="controls">
+            <ul></ul>
+        </div>
+
+
+        <script>
+            var flag, reader, robots;
+            window.onload = function() {
+                var fileInput = document.getElementById('fileInput');
+                var fileDisplayArea = document.getElementById('fileDisplayArea');
+                
+                flag = false
+
+                fileInput.addEventListener('change', function(e) {
+                    var file = fileInput.files[0];
+                    
+                    reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        //fileDisplayArea.innerText = reader.result;
+                        
+                        robots = URDF_viewer.showURDF(reader);
+                        //flag = true
+
+                        // controls.addEventListener('urdf-processed', function(e) {
+
+                        //     URDF_viewer.forEach(robots.urdf.joints, joint => {
+
+                        //         const li = document.createElement('li')
+                        //         li.innerHTML =
+                        //         `
+                        //         <span title="${joint.name}">${joint.name}</span>
+                        //         <input type="range" value="0" step="0.0001"/>
+                        //         <input type="number" step="0.0001" />
+                        //         `
+                        //         li.setAttribute('joint-type', joint.urdf.type)
+
+                        //         sliderList = document.querySelector('#controls ul')
+                        //         sliderList.appendChild(li)
+
+                        //         const slider = li.querySelector('input[type="range"]')
+                        //         const input = li.querySelector('input[type="number"]')
+                        //         li.update = () => {
+                        //             let val = joint.urdf.type === 'revolute' ? joint.urdf.angle * RAD2DEG : joint.urdf.angle
+                        //             if (Math.abs(val) > 1) val = val.toFixed(1)
+                        //             else val = val.toPrecision(2)
+
+                        //             input.value = parseFloat(val)
+                        //             slider.value = joint.urdf.angle
+
+                        //             // if (viewer.ignoreLimits) {
+                        //             //     slider.min = -6.28
+                        //             //     slider.max = 6.28
+
+                        //             //     input.min = -6.28
+                        //             //     input.max = 6.28
+                        //             // } else {
+                        //                 slider.min = joint.urdf.limits.lower
+                        //                 slider.max = joint.urdf.limits.upper
+
+                        //                 input.min = joint.urdf.limits.lower
+                        //                 input.max = joint.urdf.limits.upper
+                        //             // }
+                        //         }
+
+                        //         switch(joint.urdf.type) {
+                        //             case 'continuous':
+                        //             case 'prismatic':
+                        //             case 'revolute':
+                        //                 break;
+                        //             default:
+                        //                 li.update = () => {}
+                        //                 input.remove()
+                        //                 slider.remove()
+                        //         }
+
+                        //         slider.addEventListener('input', () => {
+                        //             URDF_viewer.setAngle(joint.name, slider.value)
+                        //             li.update()
+                        //         })
+
+                        //         input.addEventListener('change', () => {
+                        //             URDF_viewer.setAngle(joint.name, input.value)
+                        //             li.update()
+                        //         })
+
+                        //         li.update()
+
+                        //         //sliders[joint.name] = li
+
+                        //     })
+
+                        // })
+                    }
+                    
+                    reader.readAsText(file);  
+                    // } else {
+                    //     fileDisplayArea.innerText = "File not supported!";
+                    // }
+                    
+                    //checkFlag();
+
+                });
+
+                controls.addEventListener( 'urdf-processed', function ( event ) {
+
+                    alert( event.message );
+
+                });
+            }
+            function checkFlag() {
+                if(flag == false) {
+                    window.setTimeout(checkFlag, 10); /* this checks the flag every 10 milliseconds*/
+                } else {
+                    robots = URDF_viewer.showURDF(reader);
+                }
+            }
+            
+        </script>
+
+    </body>
+</html>
