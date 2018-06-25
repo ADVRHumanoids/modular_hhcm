@@ -54,6 +54,8 @@ class URDF_viewer extends HTMLElement {
 
     /* Public API */
     static init(object) {
+        const rnd = document.getElementById('renderer')
+
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(0xf0f0f0);
 
@@ -73,10 +75,10 @@ class URDF_viewer extends HTMLElement {
         // light.shadow.mapSize.height = 1024;
         // this.scene.add( light );
 
-        this.scene.add( new THREE.HemisphereLight( 0x443333, 0x111122 ) );
+         this.scene.add( new THREE.HemisphereLight( 0x443333, 0x111122 ) );
 
         this.addShadowedLight( 1, 1, 1, 0xffffff, 1.35 );
-        this.addShadowedLight( 0.5, 1, -1, 0xffaa00, 1 );
+        this.addShadowedLight( -1, -1, -1, 0xffffff, 1.35 );
 
         this.renderer = new THREE.WebGLRenderer();
         this.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -85,7 +87,7 @@ class URDF_viewer extends HTMLElement {
         // this.renderer.gammaOutput = true;
 
         this.renderer.shadowMap.enabled = true;
-        document.body.appendChild(this.renderer.domElement);
+        rnd.appendChild(this.renderer.domElement);
 
         //this.renderer.setClearColor(0xffffff, 1);
 
@@ -186,6 +188,18 @@ class URDF_viewer extends HTMLElement {
     //         console.warn(`Could note load model at ${path}:\nNo loader available`)
     // }
 
+    static addModule(reader) {
+        const parser = new DOMParser()
+        const urdf = parser.parseFromString(reader.result, 'text/xml')
+
+        this.forEach(urdf.children, r => {
+            const obj = new THREE.Object3D()
+            obj.name = r.getAttribute('name')
+            obj.urdf = { node: r }
+        })
+
+    }
+    
     static showURDF(reader) {
         // THREE.Object3D.DefaultUp = new THREE.Vector3(0, 0, 1)
 
@@ -280,8 +294,8 @@ class URDF_viewer extends HTMLElement {
                 li.innerHTML =
                 `
                 <span title="${joint.name}">${joint.name}</span>
-                <input type="range" value="0" step="0.0001"/>
-                <input type="number" step="0.0001" />
+                <input type="range" value="0" step="0.01" class="range"/>
+                <input type="number" step="0.01" class="number"/>
                 `
                 li.setAttribute('joint-type', joint.urdf.type)
 
@@ -291,9 +305,10 @@ class URDF_viewer extends HTMLElement {
                 const slider = li.querySelector('input[type="range"]')
                 const input = li.querySelector('input[type="number"]')
                 li.update = () => {
-                    let val = joint.urdf.type === 'revolute' ? joint.urdf.angle * RAD2DEG : joint.urdf.angle
-                    if (Math.abs(val) > 1) val = val.toFixed(1)
-                    else val = val.toPrecision(2)
+                    //let val = joint.urdf.type === 'revolute' ? joint.urdf.angle * Math.RAD2DEG : joint.urdf.angle
+                    // if (Math.abs(val) > 1) val = val.toFixed(1)
+                    // else val = val.toPrecision(2)
+                    let val = joint.urdf.angle.toPrecision(3)
 
                     input.value = parseFloat(val)
                     slider.value = joint.urdf.angle
@@ -421,6 +436,10 @@ class URDF_viewer extends HTMLElement {
             }
         })
 
+        // if (joint_obj.urdf.limits.lower == 0 && joint_obj.urdf.limits.upper == 0) {
+        //     joint_obj.urdf.limits.lower = -3.14
+        //     joint_obj.urdf.limits.upper = 3.14
+        // }
         // Join the links
         parent.add(joint_obj)
         joint_obj.add(child)
@@ -447,37 +466,37 @@ class URDF_viewer extends HTMLElement {
             // fall through to revolute joint 'setAngle' function
             case 'revolute':
                 joint_obj.urdf.setAngle = function (angle = null) {
-                    if (!this.axis) return
+                    if (!joint_obj.urdf.axis) return
                     if (angle == null) return
 
-                    if (!this.ignoreLimits) {
-                        angle = Math.min(this.limits.upper, angle)
-                        angle = Math.max(this.limits.lower, angle)
+                    if (!joint_obj.urdf.ignoreLimits) {
+                        angle = Math.min(joint_obj.urdf.limits.upper, angle)
+                        angle = Math.max(joint_obj.urdf.limits.lower, angle)
                     }
 
                     // FromAxisAngle seems to rotate the opposite of the
                     // expected angle for URDF, so negate it here
-                    const delta = new THREE.Quaternion().setFromAxisAngle(this.axis, angle)
+                    const delta = new THREE.Quaternion().setFromAxisAngle(joint_obj.urdf.axis, angle)
                     joint_obj.quaternion.multiplyQuaternions(origRot, delta)
 
-                    this.angle = angle
+                    joint_obj.urdf.angle = angle
                 }
                 break
 
             case 'prismatic':
                 joint_obj.urdf.setAngle = function (angle = null) {
-                    if (!this.axis) return
+                    if (!joint_obj.urdf.axis) return
                     if (angle == null) return
 
-                    if (!this.ignoreLimits) {
-                        angle = Math.min(this.limits.upper, angle)
-                        angle = Math.max(this.limits.lower, angle)
+                    if (!joint_obj.urdf.ignoreLimits) {
+                        angle = Math.min(joint_obj.urdf.limits.upper, angle)
+                        angle = Math.max(joint_obj.urdf.limits.lower, angle)
                     }
 
                     joint_obj.position.copy(origPos);
-                    joint_obj.position.addScaledVector(this.axis, angle)
+                    joint_obj.position.addScaledVector(joint_obj.urdf.axis, angle)
 
-                    this.angle = angle
+                    joint_obj.urdf.angle = angle
                 }
                 break
 
