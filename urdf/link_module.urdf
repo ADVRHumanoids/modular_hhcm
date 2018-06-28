@@ -6,40 +6,13 @@
         <geometry>
             <box size="0.1 0.1 0.3"/>
         </geometry>
-        <material name="white"/>
-        </visual>
-        <visual>
-        <origin rpy="0 0 0" xyz="0 0.1 0.3"/>
-        <geometry>
-            <box size="0.1 0.2 0.1"/>
-        </geometry>
-        <material name="white"/>
-        </visual>
-        <visual>
-        <origin rpy="0 0 0" xyz="0 0 -0.05"/>
-        <geometry>
-            <box size="0.1 0.1 0.1"/>
-        </geometry>
-        <material name="black"/>
+        <material name="blue"/>
         </visual>
         <collision>
         <origin rpy="0 0 0" xyz="0 0 0.15"/>
         <geometry>
             <box size="0.1 0.1 0.3"/>
         </geometry>
-        </collision>
-        <collision>
-        <origin rpy="0 0 0" xyz="0 0.1 0.3"/>
-        <geometry>
-            <box size="0.1 0.2 0.1"/>
-        </geometry>
-        </collision>
-        <collision>
-        <origin rpy="0 0 0" xyz="0 0 -0.05"/>
-        <geometry>
-            <box size="0.1 0.1 0.1"/>
-        </geometry>
-        <material name="black"/>
         </collision>
         <inertial>
         <mass value="1"/>

@@ -9,6 +9,7 @@
     <body>
         <script src="../../three/build/three.js"></script>
         <script src="../URDF_viewer.js"></script>
+        <script src="js-yaml.min.js"></script>
 
         <script src="../../three/examples/js/controls/OrbitControls.js"></script>
         <script src="../../three/examples/js/controls/TransformControls.js"></script>
@@ -66,7 +67,10 @@
             </div>
             <div id="selector" style="overflow-y:auto;">
                 Select a module to add: 
-                <input type="file" id="moduleInput">
+                <!-- <input type="file" id="moduleInput"> -->
+                <button type="button" id="addJoint">Joint</button> 
+                <button type="button" id="addElbow">Elbow</button>
+                <button type="button" id="addLink">Link</button> 
             </div>
         </div>
 
@@ -76,7 +80,9 @@
             window.onload = function() {
                 var fileInput = document.getElementById('fileInput');
                 var fileDisplayArea = document.getElementById('fileDisplayArea');
-                var moduleInput = document.getElementById('moduleInput');
+                //var moduleInput = document.getElementById('moduleInput');
+                var addJoint = document.getElementById('addJoint');
+                var addElbow = document.getElementById('addElbow');
                 
 
                 fileInput.addEventListener('change', function(e) {
@@ -99,33 +105,64 @@
 
                 });
 
-                moduleInput.addEventListener('change', function(e) {
-                    var file = moduleInput.files[0];
+                // moduleInput.addEventListener('change', function(e) {
+                //     var file = moduleInput.files[0];
                     
-                    reader = new FileReader();
+                //     reader = new FileReader();
                     
-                    reader.onload = function(e) {
-                        //fileDisplayArea.innerText = reader.result;
-                        URDF_viewer.addModule(reader);
-                    }
+                //     reader.onload = function(e) {
+                //         //fileDisplayArea.innerText = reader.result;
+                //         URDF_viewer.addModule(reader);
+                //     }
                     
-                    reader.readAsText(file);  
+                //     reader.readAsText(file);  
                     
-                });
-
-                // controls.addEventListener( 'urdf-processed', function ( event ) {
-
-                //     alert( event.message );
-
                 // });
+
+                addJoint.onclick = function() {addModule("module_joint.yaml")};
+
+                addElbow.onclick = function() {addModule("module_elbow.yaml")};
+
+                addLink.onclick = function() {addModule("module_link.yaml")};
             }
-            // function checkFlag() {
-            //     if(flag == false) {
-            //         window.setTimeout(checkFlag, 10); /* this checks the flag every 10 milliseconds*/
-            //     } else {
-            //         robots = URDF_viewer.showURDF(reader);
-            //     }
-            // }
+
+            function addModule(filename) {
+                function updateProgress (oEvent) {
+                    if (oEvent.lengthComputable) {
+                        var percentComplete = oEvent.loaded / oEvent.total * 100;
+                        // ...
+                    } else {
+                        // Unable to compute progress information since the total size is unknown
+                    }
+                }
+                function onloaded (evt) {
+                    //console.log("The transfer is complete.");
+                    //console.log(this.responseText);
+                    
+                    var doc = jsyaml.load(xhr.responseText);
+                    console.log(doc)
+
+
+                    URDF_viewer.addModuleYAML(doc);
+                }
+                function transferFailed(evt) {
+                    console.log("An error occurred while transferring the file.");
+                }
+                
+                function transferCanceled(evt) {
+                    console.log("The transfer has been canceled by the user.");
+                }
+
+                var xhr = new XMLHttpRequest();
+                xhr.responseType = "text"
+                xhr.addEventListener( "load", onloaded, true );
+                xhr.addEventListener("progress", updateProgress);
+                xhr.addEventListener("error", transferFailed);
+                xhr.addEventListener("abort", transferCanceled);
+                xhr.open( "GET", filename, true );
+                xhr.send();
+                
+            };
             
         </script>
 

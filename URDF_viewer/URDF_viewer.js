@@ -75,14 +75,14 @@ class URDF_viewer extends HTMLElement {
         // light.shadow.mapSize.height = 1024;
         // this.scene.add( light );
 
-         this.scene.add( new THREE.HemisphereLight( 0x443333, 0x111122 ) );
+        this.scene.add(new THREE.HemisphereLight(0x443333, 0x111122));
 
-        this.addShadowedLight( 1, 1, 1, 0xffffff, 1.35 );
-        this.addShadowedLight( -1, -1, -1, 0xffffff, 1.35 );
+        this.addShadowedLight(1, 1, 1, 0xffffff, 1.35);
+        this.addShadowedLight(-1, -1, -1, 0xffffff, 1.35);
 
         this.renderer = new THREE.WebGLRenderer();
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setPixelRatio( window.devicePixelRatio );
+        this.renderer.setPixelRatio(window.devicePixelRatio);
         // this.renderer.gammaInput = true;
         // this.renderer.gammaOutput = true;
 
@@ -115,7 +115,7 @@ class URDF_viewer extends HTMLElement {
         for (let key in object.urdf.jointMap) {
             //console.log(self.jointMap[key])
             const joint = object.urdf.jointMap[key]
-            if(joint.urdf.type !== 'fixed')
+            if (joint.urdf.type !== 'fixed')
                 this.scene.add(joint.axes)
         }
 
@@ -128,9 +128,9 @@ class URDF_viewer extends HTMLElement {
 
         this.orbitControls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
 
-        this.transformControls = new THREE.TransformControls( this.camera, this.renderer.domElement );
+        this.transformControls = new THREE.TransformControls(this.camera, this.renderer.domElement);
         // this.transformControls.addEventListener( 'change', render );
-        
+
         this.transformControls.attach(object)
         this.scene.add(this.transformControls)
     }
@@ -150,11 +150,11 @@ class URDF_viewer extends HTMLElement {
 
     }
 
-    static addShadowedLight( x, y, z, color, intensity ) {
+    static addShadowedLight(x, y, z, color, intensity) {
 
-        var directionalLight = new THREE.DirectionalLight( color, intensity );
-        directionalLight.position.set( x, y, z );
-        this.scene.add( directionalLight );
+        var directionalLight = new THREE.DirectionalLight(color, intensity);
+        directionalLight.position.set(x, y, z);
+        this.scene.add(directionalLight);
 
         directionalLight.castShadow = true;
 
@@ -187,7 +187,7 @@ class URDF_viewer extends HTMLElement {
     //     }  
     //     else if (/\.dae$/i.test(path))
     //         this.DAELoader.load(path, dae => {
-                
+
     //             console.log('dae')
     //             done(dae.scene)
     //         })
@@ -198,6 +198,8 @@ class URDF_viewer extends HTMLElement {
     static addModule(reader) {
         const parser = new DOMParser()
         const urdf = parser.parseFromString(reader.result, 'text/xml')
+
+        console.log(this.jointNumber)
 
         // r=this.robots[0]
         // var lastchild = this.filter(r.children, n => n.nodeName.length > 0 )[0]
@@ -210,39 +212,38 @@ class URDF_viewer extends HTMLElement {
         const links = Object.keys(this.linkMap)
         const joints = Object.keys(this.jointMap)
 
-        if(links.length > joints.length) {
-            endWithLink=true
-            endWithJoint=false
+        if (links.length > joints.length) {
+            endWithLink = true
+            endWithJoint = false
         } else {
-            endWithLink=false
-            endWithJoint=true
+            endWithLink = false
+            endWithJoint = true
         }
 
         console.log(endWithJoint)
-        
+
         this.forEach(urdf.children, r => {
             // const obj = new THREE.Object3D()
             // obj.name = r.getAttribute('name')
             // obj.urdf = { node: r }
-        
+
 
             this.forEach(r.children, n => {
                 const type = n.nodeName.toLowerCase()
-                
-                if(endWithJoint){
+
+                if (endWithJoint) {
                     if (type === 'link') {
-                        console.log('link_'+ (links.length - 1).toString())
-                        const newlink_name = 'link_'+ (links.length - 1).toString()
+                        console.log('link_' + this.jointNumber)
+                        const newlink_name = 'link_' + this.jointNumber
                         this.linkMap[newlink_name] = this._processLink(n)
-                        this.linkMap[newlink_name].name =newlink_name
-                        
+                        this.linkMap[newlink_name].name = newlink_name
+
                         //add link as child of last joint
                         const lastjoint_name = joints[joints.length - 1]
                         const parentname = this.jointMap[lastjoint_name].name
                         this.jointMap[parentname].add(this.linkMap[newlink_name])
 
-                        //add link object to the robot objects and update joint and link maps
-                        //this.robots[0].add(this.linkMap[newlink_name])
+                        //update joint and link maps
                         this.robots[0].urdf.joints = this.jointMap
                         this.robots[0].urdf.links = this.linkMap
                         console.log(this.robots[0])
@@ -251,26 +252,36 @@ class URDF_viewer extends HTMLElement {
                         console.warn('Cannot attach two consecutive joints')
                         return
                     }
-                } else if(endWithLink) {
+                } else if (endWithLink) {
                     if (type === 'link') {
-                        console.log('link_'+ (links.length - 1).toString())
-                        const newlink_name = 'link_'+ (links.length - 1).toString()
-                        this.linkMap[newlink_name] = this._processLink(n)
-                        this.linkMap[newlink_name].name =newlink_name
-                        
-                        //add link as child of last joint
-                        const lastjoint_name = joints[joints.length - 1]
-                        const parentname = this.jointMap[lastjoint_name].name
-                        this.jointMap[parentname].add(this.linkMap[newlink_name])
+                        //Note: if two consecutive links are attached together a fixed joint must be created first to connect the two
 
-                        //add link object to the robot objects and update joint and link maps
-                        //this.robots[0].add(this.linkMap[newlink_name])
+                        //add fixed joint
+                        //
+                        const lastjoint_name = joints[joints.length - 1]
+                        const newjoint_name = lastjoint_name + '_bis'
+                        this.jointMap[newjoint_name] = this._createFixedJoint(newjoint_name)
+
+                        //add joint as child of last link                        
+                        const lastlink_name = links[links.length - 1]
+                        const parentname = this.linkMap[lastlink_name].name
+                        this.linkMap[parentname].add(this.jointMap[newjoint_name])
+
+                        //add link
+                        //
+                        const newlink_name = lastlink_name + '_bis'
+                        this.linkMap[newlink_name] = this._processLink(n)
+                        this.linkMap[newlink_name].name = newlink_name
+
+                        //add link as child of last joint
+                        this.jointMap[newjoint_name].add(this.linkMap[newlink_name])
+
+                        //update joint and link maps
                         this.robots[0].urdf.joints = this.jointMap
                         this.robots[0].urdf.links = this.linkMap
-                        console.log(this.robots[0])
                     }
                     else if (type === 'joint') {
-                        const newjoint_name = 'joint_'+ (joints.length - 1).toString() + '_' + joints.length.toString()
+                        const newjoint_name = 'joint_' + (this.jointNumber+1)
                         this.jointMap[newjoint_name] = this._processJoint(n)
                         this.jointMap[newjoint_name].name = newjoint_name
 
@@ -284,31 +295,160 @@ class URDF_viewer extends HTMLElement {
                         this.robots[0].urdf.joints = this.jointMap
                         this.robots[0].urdf.links = this.linkMap
 
-                        this.jointMap[newjoint_name]
+                        //this.jointMap[newjoint_name]
 
                         var URDF_change_eH = new URDF_change_eventHandler();
 
-                        self=this
-                        URDF_change_eH.addEventListener( 'urdf-change', function ( event ) {
+                        self = this
+                        URDF_change_eH.addEventListener('urdf-change', function (event) {
 
-                            alert( event.message );
-                            
+                            alert(event.message);
+
                             const joint = self.jointMap[newjoint_name]
-                            self._createSlider(joint)   
+                            self._createSlider(joint)
 
                         });
 
                         URDF_change_eH.start();
-                        
+
                     }
                 }
-                
+
             })
 
-            
+
         })
 
+
+
+    }
+
+    static addModuleYAML(doc) {
+        const parser = new DOMParser()
+        const urdf = parser.parseFromString(doc.urdf, 'text/xml')
+
         
+        console.log(this.jointNumber)
+
+        // r=this.robots[0]
+        // var lastchild = this.filter(r.children, n => n.nodeName.length > 0 )[0]
+
+        // this.robots[0].urdf.joints
+
+        let endWithLink = false
+        let endWithJoint = false
+
+        const links = Object.keys(this.linkMap)
+        const joints = Object.keys(this.jointMap)
+
+        if (links.length > joints.length) {
+            endWithLink = true
+            endWithJoint = false
+        } else {
+            endWithLink = false
+            endWithJoint = true
+        }
+
+        console.log(endWithJoint)
+
+        this.forEach(urdf.children, r => {
+            // const obj = new THREE.Object3D()
+            // obj.name = r.getAttribute('name')
+            // obj.urdf = { node: r }
+
+
+            this.forEach(r.children, n => {
+                const type = n.nodeName.toLowerCase()
+
+                if (endWithJoint) {
+                    if (type === 'link') {
+                        console.log('link_' + this.jointNumber)
+                        const newlink_name = 'link_' + this.jointNumber
+                        this.linkMap[newlink_name] = this._processLink(n)
+                        this.linkMap[newlink_name].name = newlink_name
+
+                        //add link as child of last joint
+                        const lastjoint_name = joints[joints.length - 1]
+                        const parentname = this.jointMap[lastjoint_name].name
+                        this.jointMap[parentname].add(this.linkMap[newlink_name])
+
+                        //update joint and link maps
+                        this.robots[0].urdf.joints = this.jointMap
+                        this.robots[0].urdf.links = this.linkMap
+                        console.log(this.robots[0])
+                    }
+                    else if (type === 'joint') {
+                        console.warn('Cannot attach two consecutive joints')
+                        return
+                    }
+                } else if (endWithLink) {
+                    if (type === 'link') {
+                        //Note: if two consecutive links are attached together a fixed joint must be created first to connect the two
+
+                        //add fixed joint
+                        //
+                        const lastjoint_name = joints[joints.length - 1]
+                        const newjoint_name = lastjoint_name + '_bis'
+                        this.jointMap[newjoint_name] = this._createFixedJoint(newjoint_name)
+
+                        //add joint as child of last link                        
+                        const lastlink_name = links[links.length - 1]
+                        const parentname = this.linkMap[lastlink_name].name
+                        this.linkMap[parentname].add(this.jointMap[newjoint_name])
+
+                        //add link
+                        //
+                        const newlink_name = lastlink_name + '_bis'
+                        this.linkMap[newlink_name] = this._processLink(n)
+                        this.linkMap[newlink_name].name = newlink_name
+
+                        //add link as child of last joint
+                        this.jointMap[newjoint_name].add(this.linkMap[newlink_name])
+
+                        //update joint and link maps
+                        this.robots[0].urdf.joints = this.jointMap
+                        this.robots[0].urdf.links = this.linkMap
+                    }
+                    else if (type === 'joint') {
+                        const newjoint_name = 'joint_' + (this.jointNumber+1)
+                        this.jointMap[newjoint_name] = this._processJoint(n)
+                        this.jointMap[newjoint_name].name = newjoint_name
+
+                        //add joint as child of last link                        
+                        const lastlink_name = links[links.length - 1]
+                        const parentname = this.linkMap[lastlink_name].name
+                        this.linkMap[parentname].add(this.jointMap[newjoint_name])
+
+                        //add joint object to the robot objects and update joint and link maps
+                        //this.robots[0].add(this.jointMap[newjoint_name])
+                        this.robots[0].urdf.joints = this.jointMap
+                        this.robots[0].urdf.links = this.linkMap
+
+                        //this.jointMap[newjoint_name]
+
+                        var URDF_change_eH = new URDF_change_eventHandler();
+
+                        self = this
+                        URDF_change_eH.addEventListener('urdf-change', function (event) {
+
+                            alert(event.message);
+
+                            const joint = self.jointMap[newjoint_name]
+                            self._createSlider(joint)
+
+                        });
+
+                        URDF_change_eH.start();
+
+                    }
+                }
+
+            })
+
+
+        })
+
+        this.lastModKin = doc.kinematics;
 
     }
 
@@ -319,10 +459,19 @@ class URDF_viewer extends HTMLElement {
         // const sliderList = document.querySelector('#controls ul')
         // const moduleselector = document.getElementById('selector')
 
+        this.lastModKin = {
+            joint: { proximal: { a_pl: 0, alpha_pl: 0, p_pl: 0, n_pl: 0, delta_pl: 0}, 
+            distal: { a_dl: 0, alpha_dl: 0, p_dl: 0, n_dl: 0.5, delta_dl: 0},
+            joint: { delta_j: 0, type: 'rotational'}
+            }, 
+            link: { a_l: 0, alpha_l: 0, p_l: 0, n_l: 0, delta_l_in: 0, delta_l_out: 0}
+        }
+
         const parser = new DOMParser()
         const urdf = parser.parseFromString(reader.result, 'text/xml')
 
         this.robots = []
+        this.jointNumber = 0
 
         console.log(urdf.children)
         this.forEach(urdf.children, r => {
@@ -397,15 +546,15 @@ class URDF_viewer extends HTMLElement {
         var URDF_processed_eH = new URDF_processed_eventHandler();
 
         var self = this;
-        URDF_processed_eH.addEventListener( 'urdf-processed', function ( event ) {
+        URDF_processed_eH.addEventListener('urdf-processed', function (event) {
 
-            alert( event.message );
+            alert(event.message);
 
             //console.log(self.jointMap)
             for (let key in self.jointMap) {
                 //console.log(self.jointMap[key])
                 const joint = self.jointMap[key]
-                if(joint.urdf.type !== 'fixed')
+                if (joint.urdf.type !== 'fixed')
                     self._createSlider(joint)
             }
 
@@ -415,7 +564,13 @@ class URDF_viewer extends HTMLElement {
 
         console.log(this.robots[0])
         console.log(Object.keys(this.linkMap))
-        
+
+        // var rdr = new FileReader();
+        // rdr.readAsText(new File('/home/edoardo/catkin_ws/src/modular/urdf/module_elbow.yaml'));  
+
+        // var doc = jsyaml.load(rdr.result);
+        // console.log(doc)
+
         return this.robots
     }
 
@@ -434,10 +589,10 @@ class URDF_viewer extends HTMLElement {
     /* Private Functions */
     static _createSlider(joint) {
         const sliderList = document.querySelector('#controls ul')
-        
+
         const li = document.createElement('li')
         li.innerHTML =
-        `
+            `
         <span title="${joint.name}">${joint.name}</span>
         <input type="range" value="0" step="0.01" class="range"/>
         <input type="number" step="0.01" class="number"/>
@@ -465,21 +620,21 @@ class URDF_viewer extends HTMLElement {
             //     input.min = -6.28
             //     input.max = 6.28
             // } else {
-                slider.min = joint.urdf.limits.lower
-                slider.max = joint.urdf.limits.upper
+            slider.min = joint.urdf.limits.lower
+            slider.max = joint.urdf.limits.upper
 
-                input.min = joint.urdf.limits.lower
-                input.max = joint.urdf.limits.upper
+            input.min = joint.urdf.limits.lower
+            input.max = joint.urdf.limits.upper
             // }
         }
 
-        switch(joint.urdf.type) {
+        switch (joint.urdf.type) {
             case 'continuous':
             case 'prismatic':
             case 'revolute':
                 break;
             default:
-                li.update = () => {}
+                li.update = () => { }
                 input.remove()
                 slider.remove()
         }
@@ -495,7 +650,7 @@ class URDF_viewer extends HTMLElement {
         })
 
         li.update()
-        
+
     }
 
     static _processMaterial(m) {
@@ -521,6 +676,32 @@ class URDF_viewer extends HTMLElement {
         })
 
         return material
+    }
+
+    static _createFixedJoint(joint_name) {
+        const jointType = "fixed"
+        const joint_obj = new THREE.Object3D()
+        joint_obj.name = joint_name
+        
+        const parser = new DOMParser()
+        const fixed_joint_urdf ='<joint type="fixed"><axis rpy="0 0 0" xyz="0 0 1"/><origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/><limit lower="-3.14" upper="3.14"/></joint>'
+        const urdf_node = parser.parseFromString(fixed_joint_urdf, 'text/xml')
+        console.log(urdf_node.children[0])
+
+        joint_obj.urdf = {
+            node: urdf_node.children[0], type: jointType, angle: 0, axis: null,
+            limits: { lower: 0, upper: 0 },
+            ignoreLimits: false,
+        }
+        
+        let xyz = [0.0, this.lastModKin.joint.proximal.p_pl + this.lastModKin.joint.distal.p_dl, this.lastModKin.joint.proximal.n_pl + this.lastModKin.joint.distal.n_dl ] //this.lastModKin.p_pl + this.lastModKin.p_dl, this.lastModKin.n_pl + this.lastModKin.n_dl
+        let rpy = [this.lastModKin.joint.distal.alpha_dl, 0.0, 0.0] //this.lastModKin.alpha_dl
+
+
+        this._applyRotation(joint_obj, rpy)
+        joint_obj.position.set(xyz[0], xyz[1], xyz[2])
+
+        return joint_obj
     }
 
     static _processJoint(j) {
@@ -555,27 +736,28 @@ class URDF_viewer extends HTMLElement {
             }
         })
 
-        if(!joint_obj.name) {
-            xyz = [0.0, 0.3, 0.3]
-            rpy = [-Math.PI/2, 0.0, 0.0]
+        console.log(this.lastModKin.joint.proximal.p_pl + this.lastModKin.joint.distal.p_dl)
+        if (!joint_obj.name) {
+            xyz = [0.0, this.lastModKin.joint.proximal.p_pl + this.lastModKin.joint.distal.p_dl, this.lastModKin.joint.proximal.n_pl + this.lastModKin.joint.distal.n_dl ] //this.lastModKin.p_pl + this.lastModKin.p_dl, this.lastModKin.n_pl + this.lastModKin.n_dl
+            rpy = [this.lastModKin.joint.distal.alpha_dl, 0.0, 0.0] //this.lastModKin.alpha_dl
         }
 
         // const axes = new THREE.AxesHelper( 1 );
         // axes.position.set(xyz[0], xyz[1], xyz[2]);
         // axes.rotation.set(rpy[0], rpy[1], rpy[2]);
         // joint_obj.add(axes)
-        
-        var a = new THREE.Vector3( 1, 0, 0 );
-        var b = new THREE.Vector3( 0, 1, 0 );
-        var c = new THREE.Vector3( 0, 0, 1 );
-        var origin = new THREE.Vector3( 0, 0, 0 );
+
+        var a = new THREE.Vector3(1, 0, 0);
+        var b = new THREE.Vector3(0, 1, 0);
+        var c = new THREE.Vector3(0, 0, 1);
+        var origin = new THREE.Vector3(0, 0, 0);
         var length = 0.3;
         var hex_a = 0x3511d8;
         var hex_b = 0xd81111;
         var hex_c = 0x1ee81e;
-        var arrow_a = new THREE.ArrowHelper( a, origin, length, hex_a );
-        var arrow_b = new THREE.ArrowHelper( b, origin, length, hex_b );
-        var arrow_c = new THREE.ArrowHelper( c, origin, length, hex_c );
+        var arrow_a = new THREE.ArrowHelper(a, origin, length, hex_a);
+        var arrow_b = new THREE.ArrowHelper(b, origin, length, hex_b);
+        var arrow_c = new THREE.ArrowHelper(c, origin, length, hex_c);
         var refFrame = new THREE.Group();
         refFrame.add(arrow_a);
         refFrame.add(arrow_b);
@@ -586,13 +768,13 @@ class URDF_viewer extends HTMLElement {
 
 
         // Join the links
-        
+
         //The IF might be removed!!!
-        if(parent!=null && child!=null) {
+        if (parent != null && child != null) {
             parent.add(joint_obj)
             joint_obj.add(child)
         }
-        
+
         this._applyRotation(joint_obj, rpy)
         joint_obj.position.set(xyz[0], xyz[1], xyz[2])
 
@@ -631,6 +813,9 @@ class URDF_viewer extends HTMLElement {
 
                     joint_obj.urdf.angle = angle
                 }
+
+                this.jointNumber++
+
                 break
 
             case 'prismatic':
@@ -647,6 +832,8 @@ class URDF_viewer extends HTMLElement {
                     joint_obj.position.addScaledVector(joint_obj.urdf.axis, angle)
 
                     joint_obj.urdf.angle = angle
+
+                    this.jointNumber++
                 }
                 break
 
@@ -719,7 +906,7 @@ class URDF_viewer extends HTMLElement {
                     //     material.map = this._textureloader.load(path)
                     // }
                 })
-            }else if (type === 'geometry') {
+            } else if (type === 'geometry') {
                 const geoType = n.children[0].nodeName.toLowerCase()
                 if (geoType === 'box') {
                     requestAnimationFrame(() => {
@@ -783,13 +970,13 @@ class URDF_viewer extends HTMLElement {
 
 
 
-                    if (/\.stl$/i.test(path)){
+                    if (/\.stl$/i.test(path)) {
                         //console.log('stl loader')
                         var Loader = new THREE.STLLoader();
                         //console.log(Loader)
                         //console.log(path)
-                        Loader.load(path, function(geom) {
-                            
+                        Loader.load(path, function (geom) {
+
                             const mesh = new THREE.Mesh()
                             mesh.geometry = geom
                             //console.log(mesh)
@@ -799,28 +986,34 @@ class URDF_viewer extends HTMLElement {
                                 //     meshMaterial = new THREE.MeshPhongMaterial({ opacity: geometry.alpha, vertexColors: THREE.VertexColors });
                                 //     mesh.material = meshMaterial
                                 // }
-                                
+
                                 if (mesh instanceof THREE.Mesh) {
                                     mesh.material = material
                                 }
-    
-                                link_obj.add(mesh)
-    
-                                mesh.position.set(xyz[0], xyz[1], xyz[2])
-                                mesh.rotation.set(0,0,0)
-                                mesh.scale.set(scale[0], scale[1], scale[2])
-                                this._applyRotation(mesh, rpy)
 
-                                mesh.castShadow = true;
-                                mesh.receiveShadow = true;
-                    
+                                link_obj.add(mesh)
+
+                                mesh.position.set(xyz[0], xyz[1], xyz[2])
+                                mesh.rotation.set(rpy[0], rpy[1], rpy[2])
+
+                                mesh.scale.set(scale[0], scale[1], scale[2])
+
+                                //this._applyRotation(mesh, [0,0,0])
+                                //console.log("1")
+                                console.log(rpy)
+                                // const delta = new THREE.Quaternion().setFromAxisAngle(joint_obj.urdf.axis, angle)
+                                // joint_obj.quaternion.multiplyQuaternions(origRot, delta)
+
+                                // mesh.castShadow = true;
+                                // mesh.receiveShadow = true;
+
                                 //console.log(mesh)
                             }
                         })
-                    }  
+                    }
                     // else if (/\.dae$/i.test(path))
                     //     this.DAELoader.load(path, dae => {
-                            
+
                     //         console.log('dae')
                     //         done(dae.scene)
                     //     })
@@ -847,7 +1040,13 @@ class URDF_viewer extends HTMLElement {
             } else if (type === 'origin') {
 
                 xyz = this._processTuple(n.getAttribute('xyz'))
-                rpy = this._processTuple(!n.getAttribute('rpy'))
+                rpy = this._processTuple(n.getAttribute('rpy'))
+                // if(rpy[0] > Math.PI)
+                //     rpy[0] = rpy[0] - 2*Math.PI
+                // if(rpy[1] > Math.PI)
+                //     rpy[1] = rpy[1] - 2*Math.PI
+                // if(rpy[2] > Math.PI)
+                //     rpy[2] = rpy[2] - 2*Math.PI
 
             }
         })
@@ -860,22 +1059,22 @@ var URDF_processed_eventHandler = function () {
 
     this.start = function () {
 
-        this.dispatchEvent( { type: 'urdf-processed', message: 'urdf has been processed!' } );
+        this.dispatchEvent({ type: 'urdf-processed', message: 'urdf has been processed!' });
     };
 };
 
-Object.assign( URDF_processed_eventHandler.prototype, THREE.EventDispatcher.prototype );
+Object.assign(URDF_processed_eventHandler.prototype, THREE.EventDispatcher.prototype);
 
 //Event handler for urdf change
 var URDF_change_eventHandler = function () {
 
     this.start = function () {
 
-        this.dispatchEvent( { type: 'urdf-change', message: 'urdf has been changed!' } );
+        this.dispatchEvent({ type: 'urdf-change', message: 'urdf has been changed!' });
     };
 };
 
-Object.assign( URDF_change_eventHandler.prototype, THREE.EventDispatcher.prototype );
+Object.assign(URDF_change_eventHandler.prototype, THREE.EventDispatcher.prototype);
 
 
 
