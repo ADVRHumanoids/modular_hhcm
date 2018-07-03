@@ -323,9 +323,9 @@ class URDF_viewer extends HTMLElement {
 
     }
 
-    static addModuleYAML(doc) {
+    static addModuleYAML(doc, URDF_string) {
         const parser = new DOMParser()
-        const urdf = parser.parseFromString(doc.urdf, 'text/xml')
+        const urdf = parser.parseFromString(URDF_string, 'text/xml')
 
         
         console.log(this.jointNumber)
@@ -338,8 +338,8 @@ class URDF_viewer extends HTMLElement {
         let endWithLink = false
         let endWithJoint = false
 
-        const links = Object.keys(this.linkMap)
-        const joints = Object.keys(this.jointMap)
+        var links = Object.keys(this.linkMap)
+        var joints = Object.keys(this.jointMap)
 
         if (links.length > joints.length) {
             endWithLink = true
@@ -384,7 +384,7 @@ class URDF_viewer extends HTMLElement {
                 } else if (endWithLink) {
                     if (type === 'link') {
                         //Note: if two consecutive links are attached together a fixed joint must be created first to connect the two
-
+                        console.log("link")
                         //add fixed joint
                         //
                         const lastjoint_name = joints[joints.length - 1]
@@ -408,8 +408,12 @@ class URDF_viewer extends HTMLElement {
                         //update joint and link maps
                         this.robots[0].urdf.joints = this.jointMap
                         this.robots[0].urdf.links = this.linkMap
+
+                        links = Object.keys(this.linkMap)
+                        joints = Object.keys(this.jointMap)
                     }
                     else if (type === 'joint') {
+                        console.log("joint")
                         const newjoint_name = 'joint_' + (this.jointNumber+1)
                         this.jointMap[newjoint_name] = this._processJoint(n)
                         this.jointMap[newjoint_name].name = newjoint_name
@@ -423,6 +427,9 @@ class URDF_viewer extends HTMLElement {
                         //this.robots[0].add(this.jointMap[newjoint_name])
                         this.robots[0].urdf.joints = this.jointMap
                         this.robots[0].urdf.links = this.linkMap
+
+                        links = Object.keys(this.linkMap)
+                        joints = Object.keys(this.jointMap)
 
                         //this.jointMap[newjoint_name]
 
@@ -443,13 +450,16 @@ class URDF_viewer extends HTMLElement {
                     }
                 }
 
+                this.lastModKin = doc.kinematics;
+                console.log("save parameters")
             })
 
 
         })
 
-        this.lastModKin = doc.kinematics;
+       
 
+        return this.robots
     }
 
     static showURDF(reader) {
@@ -461,7 +471,7 @@ class URDF_viewer extends HTMLElement {
 
         this.lastModKin = {
             joint: { proximal: { a_pl: 0, alpha_pl: 0, p_pl: 0, n_pl: 0, delta_pl: 0}, 
-            distal: { a_dl: 0, alpha_dl: 0, p_dl: 0, n_dl: 0.5, delta_dl: 0},
+            distal: { a_dl: 0, alpha_dl: 0, p_dl: 0, n_dl: 0.4, delta_dl: 0},
             joint: { delta_j: 0, type: 'rotational'}
             }, 
             link: { a_l: 0, alpha_l: 0, p_l: 0, n_l: 0, delta_l_in: 0, delta_l_out: 0}
@@ -694,6 +704,7 @@ class URDF_viewer extends HTMLElement {
             ignoreLimits: false,
         }
         
+        console.log(this.lastModKin.joint.proximal.n_pl + this.lastModKin.joint.distal.n_dl)
         let xyz = [0.0, this.lastModKin.joint.proximal.p_pl + this.lastModKin.joint.distal.p_dl, this.lastModKin.joint.proximal.n_pl + this.lastModKin.joint.distal.n_dl ] //this.lastModKin.p_pl + this.lastModKin.p_dl, this.lastModKin.n_pl + this.lastModKin.n_dl
         let rpy = [this.lastModKin.joint.distal.alpha_dl, 0.0, 0.0] //this.lastModKin.alpha_dl
 
@@ -736,7 +747,7 @@ class URDF_viewer extends HTMLElement {
             }
         })
 
-        console.log(this.lastModKin.joint.proximal.p_pl + this.lastModKin.joint.distal.p_dl)
+        console.log(this.lastModKin.joint.proximal.n_pl + this.lastModKin.joint.distal.n_dl)
         if (!joint_obj.name) {
             xyz = [0.0, this.lastModKin.joint.proximal.p_pl + this.lastModKin.joint.distal.p_dl, this.lastModKin.joint.proximal.n_pl + this.lastModKin.joint.distal.n_dl ] //this.lastModKin.p_pl + this.lastModKin.p_dl, this.lastModKin.n_pl + this.lastModKin.n_dl
             rpy = [this.lastModKin.joint.distal.alpha_dl, 0.0, 0.0] //this.lastModKin.alpha_dl

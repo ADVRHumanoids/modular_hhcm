@@ -4,7 +4,7 @@ kinematics:
       a_pl: 0
       alpha_pl: 0
       p_pl: 0
-      n_pl: 0
+      n_pl: 0.2
       delta_pl: 0
 
     distal:
@@ -28,13 +28,4 @@ kinematics:
 
 dynamics:
 
-urdf: |
-    <?xml version="1.0" ?>
-    <robot name="joint_module" xmlns:xacro="http://ros.org/wiki/xacro">
-        <joint type="revolute">
-        <axis rpy="0 0 0" xyz="0 0 1"/>
-        <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
-        <limit lower="-3.14" upper="3.14"/>
-    </joint>
-    </robot>
-
+urdf: "urdf/joint_module.urdf"

@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, jsonify, send_from_directory
 
+import URDF_writer
 
 app = Flask(__name__, static_folder='static', static_url_path='')
 
@@ -7,10 +8,10 @@ app = Flask(__name__, static_folder='static', static_url_path='')
 def index():
     return render_template('view_urdf.html')
 
-@app.route('/square/', methods=['POST'])
-def square():
-    num = str(request.form.get('module_name', 0))
-    data = {'result': num}
+@app.route('/changeURDF/', methods=['POST'])
+def changeURDF():
+    filename = request.form.get('module_name', 0)
+    data = URDF_writer.main(filename)
     data = jsonify(data)
     return data
 
