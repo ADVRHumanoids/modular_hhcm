@@ -20,6 +20,11 @@
       </inertial>
    </xacro:macro>
    <link name="base_link"/>
+   <link name="world"/>
+   <joint name="world" type="fixed">
+      <parent link="world"/>
+      <child link="base_link"/>
+   </joint>
    <link name="link_0">
       <visual>
          <origin rpy="0 0 0" xyz="0 0 ${len1/2}"/>
@@ -39,96 +44,90 @@
       <parent link="base_link"/>
       <child link="link_0"/>
    </joint>
-   <xacro:macro name="add_link" params="suffix length x y z r p yaw">
+   <xacro:macro name="add_link" params="suffix size_y size_z">
       <link name="link_${suffix}">
          <visual>
-            <origin rpy="0 0 0" xyz="${length/2} 0 0"/>
+            <origin rpy="0 0 0" xyz="0 0 ${size_z/2}"/>
             <geometry>
-               <box size="${length} ${width} ${width}"/>
+               <box size="${width} ${width} ${size_z}"/>
             </geometry>
-            <xacro:if value="${suffix%2==0}">
-               <material name="white"/>
-            </xacro:if>
-            <xacro:unless value="${suffix%2==0}">
-               <material name="blue"/>
-            </xacro:unless>
+         </visual>
+         <visual>
+            <origin rpy="0 0 0" xyz="0 ${size_y/2} ${size_z}"/>
+            <geometry>
+               <box size="${width} ${size_y} ${width}"/>
+            </geometry>
          </visual>
          <collision>
-            <origin rpy="0 0 0" xyz="${length/2} 0 0"/>
+            <origin rpy="0 0 0" xyz="0 0 ${size_z/2}"/>
             <geometry>
-               <box size="${length} ${width} ${width}"/>
+               <box size="${width} ${width} ${size_z}"/>
             </geometry>
          </collision>
          <xacro:default_inertial mass="1"/>
+         <collision>
+            <origin rpy="0 0 0" xyz="0 ${size_y/2} ${size_z}"/>
+            <geometry>
+               <box size="${width} ${size_y} ${width}"/>
+            </geometry>
+         </collision>
       </link>
-      <joint name="joint_${suffix-1}_${suffix}" type="continuous">
-         <axis rpy="0 0 0" xyz="0 0 1"/>
-         <parent link="link_${suffix-1}"/>
-         <child link="link_${suffix}"/>
-         <origin rpy="${r} ${p} ${yaw}" xyz="${x} ${y} ${z}"/>
-      </joint>
    </xacro:macro>
-   <xacro:macro name="add_link_elbow" params="suffix p n x y z roll pitch yaw">
-      <link name="link_${suffix}">
-         <visual>
-            <origin rpy="0 0 0" xyz="0 0 ${p/2}"/>
-            <geometry>
-               <box size="${width} ${width} ${p}"/>
-            </geometry>
-            <xacro:if value="${suffix%2==0}">
-               <material name="white"/>
-            </xacro:if>
-            <xacro:unless value="${suffix%2==0}">
-               <material name="blue"/>
-            </xacro:unless>
-         </visual>
-         <visual>
-            <origin rpy="0 0 0" xyz="0 ${n/2} ${p}"/>
-            <geometry>
-               <box size="${width} ${n} ${width}"/>
-            </geometry>
-            <xacro:if value="${suffix%2==0}">
-               <material name="white"/>
-            </xacro:if>
-            <xacro:unless value="${suffix%2==0}">
-               <material name="blue"/>
-            </xacro:unless>
-         </visual>
-         <visual>
-            <origin rpy="0 0 0" xyz="0 0 -0.05"/>
-            <geometry>
-               <box size="${width} ${width} 0.1"/>
-            </geometry>
-            <material name="black"/>
-         </visual>
-         <collision>
-            <origin rpy="0 0 0" xyz="0 0 ${p/2}"/>
-            <geometry>
-               <box size="${width} ${width} ${p}"/>
-            </geometry>
-         </collision>
-         <collision>
-            <origin rpy="0 0 0" xyz="0 ${n/2} ${p}"/>
-            <geometry>
-               <box size="${width} ${n} ${width}"/>
-            </geometry>
-         </collision>
-         <collision>
-            <origin rpy="0 0 0" xyz="0 0 -0.05"/>
-            <geometry>
-               <box size="${width} ${width} 0.1"/>
-            </geometry>
-            <material name="black"/>
-         </collision>
-         <xacro:default_inertial mass="1"/>
-      </link>
-      <joint name="joint_${suffix-1}_${suffix}" type="continuous">
+   <xacro:macro name="add_fixed_joint" params="suffix x y z roll pitch yaw">
+      <joint name="fixed_joint_${suffix}_bis" type="fixed">
          <axis rpy="0 0 0" xyz="0 0 1"/>
-         <parent link="link_${suffix-1}"/>
-         <child link="link_${suffix}"/>
+         <parent link="link_${suffix}"/>
+         <child link="link_${suffix}_bis"/>
          <origin rpy="${roll} ${pitch} ${yaw}" xyz="${x} ${y} ${z}"/>
       </joint>
    </xacro:macro>
-   <xacro:add_link_elbow n="0.2" p="0.3" pitch="-0.0" roll="0.0" suffix="1" x="0.0" y="0.0" yaw="0.0" z="0.5"/>
-   <xacro:add_link_elbow n="0.2" p="0.3" pitch="-0.0" roll="-1.57" suffix="2" x="0.0" y="0.29999990488" yaw="0.0" z="0.300238898013"/>
+   <xacro:macro name="add_joint" params="suffix x y z roll pitch yaw upper_lim lower_lim effort velocity">
+      <joint name="joint_${suffix}" type="revolute">
+         <axis rpy="0 0 0" xyz="0 0 1"/>
+         <parent link="link_stator_joint_${suffix}"/>
+         <child link="link_${suffix}"/>
+         <origin rpy="${roll} ${pitch} ${yaw}" xyz="${x} ${y} ${z}"/>
+         <limit effort="${effort}" lower="${lower_lim}" upper="${upper_lim}" velocity="${velocity}"/>
+      </joint>
+   </xacro:macro>
+   <xacro:macro name="add_joint_stator" params="suffix size_y size_z">
+      <link name="link_stator_joint_${suffix}">
+         <visual>
+            <origin rpy="0 0 0" xyz="0 0 ${size_z/2}"/>
+            <geometry>
+               <cylinder length="${size_z}" radius="${width}"/>
+            </geometry>
+            <material name="blue"/>
+         </visual>
+         <collision>
+            <origin rpy="0 0 0" xyz="0 0 ${size_z/2}"/>
+            <geometry>
+               <cylinder length="${size_z}" radius="${width}"/>
+            </geometry>
+         </collision>
+         <xacro:default_inertial mass="1"/>
+      </link>
+   </xacro:macro>
+   <xacro:macro name="add_fixed_joint_stator" params="suffix suffix_bis x y z roll pitch yaw">
+      <joint name="fixed_joint_${suffix_bis}_bis" type="fixed">
+         <axis rpy="0 0 0" xyz="0 0 1"/>
+         <parent link="link_${suffix_bis}"/>
+         <child link="link_stator_joint_${suffix}"/>
+         <origin rpy="${roll} ${pitch} ${yaw}" xyz="${x} ${y} ${z}"/>
+      </joint>
+   </xacro:macro>
+   <xacro:add_fixed_joint_stator pitch="-0.0" roll="0.0" suffix="1" suffix_bis="0" x="0.0" y="0.0" yaw="0.0" z="0.4"/>
+   <xacro:add_joint_stator size_y="0" size_z="0.2" suffix="1"/>
+   <xacro:add_joint effort="35" lower_lim="-3.14" pitch="-0.0" roll="0.0" suffix="1" upper_lim="3.14" velocity="5.7" x="0.0" y="0.0" yaw="0.0" z="0.2"/>
+   <xacro:add_link size_y="0.2" size_z="0.2" suffix="1"/>
+   <xacro:add_fixed_joint_stator pitch="-0.0" roll="-1.57" suffix="2" suffix_bis="1" x="0.0" y="0.199999936586" yaw="0.0" z="0.200159265342"/>
+   <xacro:add_joint_stator size_y="0" size_z="0.2" suffix="2"/>
+   <xacro:add_joint effort="35" lower_lim="-3.14" pitch="-0.0" roll="0.0" suffix="2" upper_lim="3.14" velocity="5.7" x="0.0" y="0.0" yaw="0.0" z="0.2"/>
+   <xacro:add_link size_y="0.2" size_z="0.2" suffix="2"/>
+   <xacro:add_fixed_joint_stator pitch="-0.0" roll="-1.57" suffix="3" suffix_bis="2" x="0.0" y="0.199999936586" yaw="0.0" z="0.200159265342"/>
+   <xacro:add_joint_stator size_y="0" size_z="0.2" suffix="3"/>
+   <xacro:add_joint effort="35" lower_lim="-3.14" pitch="-0.0" roll="0.0" suffix="3" upper_lim="3.14" velocity="5.7" x="0.0" y="0.0" yaw="0.0" z="0.2"/>
+   <xacro:add_link size_y="0.2" size_z="0.2" suffix="3"/>
+   <xacro:add_fixed_joint pitch="-0.0" roll="-1.57" suffix="3" x="0.0" y="0.199999936586" yaw="0.0" z="0.200159265342"/>
+   <xacro:add_link size_y="0.2" size_z="0.2" suffix="3_bis"/>
 </robot>
