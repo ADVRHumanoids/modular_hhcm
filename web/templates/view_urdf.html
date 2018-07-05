@@ -87,10 +87,11 @@
             var flag, reader, robots, doc;
             window.onload = function() {
                 var fileInput = document.getElementById('fileInput');
-                var fileDisplayArea = document.getElementById('fileDisplayArea');
+                //var fileDisplayArea = document.getElementById('fileDisplayArea');
                 //var moduleInput = document.getElementById('moduleInput');
                 var addJoint = document.getElementById('addJoint');
                 var addElbow = document.getElementById('addElbow');
+                var addLink = document.getElementById('addLink');
                 
 
                 fileInput.addEventListener('change', function(e) {
@@ -100,31 +101,23 @@
                     
                     reader.onload = function(e) {
                         //fileDisplayArea.innerText = reader.result;
-                        
                         robots = URDF_viewer.showURDF(reader);
                     }
                     
                     reader.readAsText(file);  
-                    // } else {
-                    //     fileDisplayArea.innerText = "File not supported!";
-                    // }
-                    
-                    //checkFlag();
 
                 });
 
+                //Old way used for adding a module: the urdf file is picked manually by the user
+                //
                 // moduleInput.addEventListener('change', function(e) {
-                //     var file = moduleInput.files[0];
-                    
-                //     reader = new FileReader();
-                    
+                //     var file = moduleInput.files[0];    
+                //     reader = new FileReader();    
                 //     reader.onload = function(e) {
                 //         //fileDisplayArea.innerText = reader.result;
                 //         URDF_viewer.addModule(reader);
-                //     }
-                    
-                //     reader.readAsText(file);  
-                    
+                //     }    
+                //     reader.readAsText(file);      
                 // });
 
                 addJoint.onclick = function() {addModule("module_joint.yaml")};
@@ -134,6 +127,27 @@
                 addLink.onclick = function() {addModule("module_link.yaml")};
             }
 
+            //Function to add a new module. Called at the click of the linked button
+            function addModule(filename) {
+                var url = 'http://127.0.0.1:5000/yaml/' + filename;
+                
+                //opening YAML file containing kin. and dyn. parameters and URDF path
+                openfile(url, callBack_YAML)  
+
+                //making an ajax request to the server to proceed to write the modified URDF
+                $.ajax({
+                    url: 'http://127.0.0.1:5000/changeURDF/',
+                    data: {'module_name': filename},
+                    method: 'POST',
+                    success: function(data) {
+                        //console.log(data)
+                        $('#square').html(data['result'])
+                    },
+                    async: true
+                });
+            };
+
+            //Function to open a file on the server side from the HTML page
             function openfile(url, cB) {
                 function updateProgress (oEvent) {
                     if (oEvent.lengthComputable) {
@@ -145,8 +159,7 @@
                 }
                 function onloaded (evt) {
                     //console.log("The transfer is complete.");
-                    //console.log(this.responseText);
-                    
+                    //console.log(this.responseText); 
                     cB(xhr, url)
                 }
                 function transferFailed(evt) {
@@ -166,36 +179,25 @@
                 xhr.open( "GET", url, true );
                 xhr.send();
             }
-
-            function addModule(filename) {
-                var url = 'http://127.0.0.1:5000/yaml/' + filename;
-                const robot = openfile(url, callBack_YAML)  
-
-                //e.preventDefault();
-                $.ajax({
-                    url: 'http://127.0.0.1:5000/changeURDF/',
-                    data: {'module_name': filename},
-                    method: 'POST',
-                    success: function(data) {
-                        console.log(data)
-                        $('#square').html(data['result'])
-                    },
-                    async: true
-                });
-            };
-
+    
+            //Function called when the YAML file has been opened
             function callBack_YAML(xhr, yaml_url) {
-                console.log(yaml_url)
+                //console.log(yaml_url)
                 doc = jsyaml.load(xhr.responseText);
-                console.log(doc.urdf)
+                //console.log(doc.urdf)
                 var urdf_url = 'http://127.0.0.1:5000/' + doc.urdf;
-                console.log(urdf_url)
-                URDF_string = openfile(urdf_url, callBack_URDF)
+                //console.log(urdf_url)
+                
+                //opening URDF file
+                openfile(urdf_url, callBack_URDF)
             }
 
+            //Function called when the URDF file has been opened
             function callBack_URDF(xhr, urdf_url) {
                 var URDF_string = xhr.responseText 
-                console.log(URDF_string)
+                //console.log(URDF_string)
+                
+                //Finally addModuleYAML gets called. THREE.js 3D model gets updated
                 robots = URDF_viewer.addModuleYAML(doc, URDF_string);
             }
             

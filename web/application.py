@@ -4,10 +4,12 @@ import URDF_writer
 
 app = Flask(__name__, static_folder='static', static_url_path='')
 
+#load view_urdf.html
 @app.route('/')
 def index():
     return render_template('view_urdf.html')
 
+#call URDF_writer.py to modify the urdf
 @app.route('/changeURDF/', methods=['POST'])
 def changeURDF():
     filename = request.form.get('module_name', 0)
@@ -15,6 +17,7 @@ def changeURDF():
     data = jsonify(data)
     return data
 
+#upload on the server the /static folder
 @app.route('/<path:path>')
 def send_file(path):
     return send_from_directory(app.static_folder, path)

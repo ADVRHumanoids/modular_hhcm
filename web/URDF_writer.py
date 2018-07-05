@@ -7,7 +7,7 @@ import xml.etree.ElementTree as ET
 import xacro
 import xml.dom.minidom
 
-from modular.urdf.read_yaml import read_yaml
+from read_yaml import read_yaml
 
 import modular
 
@@ -23,7 +23,11 @@ urdf_tree = ET.parse(basefile_name)
 root = urdf_tree.getroot()
 
 i=0
-Joints=[]
+joints=0
+suffix=str(joints)
+suffix_bis=suffix
+
+Modules=[]
 origin, xaxis, yaxis, zaxis = (0, 0, 0.4), (1, 0, 0), (0, 1, 0), (0, 0, 1)
 
 T = tf.transformations.translation_matrix(origin)
@@ -31,27 +35,81 @@ R = tf.transformations.identity_matrix()
 H0 = tf.transformations.concatenate_matrices(T, R)
 
 def main(filename):
-  global i
+  global i, joints, suffix, suffix_bis
   module_name = path_name + '/web/static/yaml/' + filename
-  
 
-  Joints.append(read_yaml(module_name))
+  Modules.append(read_yaml(module_name))
 
+  print(Modules[i].type)
   if(i==0):
-    Joints[i].get_rototranslation(H0, Joints[i].Proximal_tf)
-  else:
-    Joints[i].get_rototranslation(Joints[i-1].Distal_tf, Joints[i].Proximal_tf)
+    if(Modules[i].type == 'joint'):
+      Modules[i].get_rototranslation(H0, tf.transformations.identity_matrix())
+      suffix=str(joints+1)
+      ET.SubElement(root, "{http://ros.org/wiki/xacro}add_fixed_joint_stator", suffix = suffix, suffix_bis = suffix_bis, x = Modules[i].x, y= Modules[i].y, z= Modules[i].z, roll= Modules[i].roll, pitch= Modules[i].pitch, yaw= Modules[i].yaw)
+      print(Modules[i].joint_size_z)
+      suffix_bis=suffix
+      ET.SubElement(root, "{http://ros.org/wiki/xacro}add_joint_stator", suffix = suffix, size_y = Modules[i].joint_size_y, size_z = Modules[i].joint_size_z)
+      Modules[i].get_rototranslation(tf.transformations.identity_matrix(), Modules[i].Proximal_tf)
+      upper_lim=str(Modules[i].kinematics.joint.joint.upper_limit)
+      lower_lim=str(Modules[i].kinematics.joint.joint.lower_limit)
+      effort=str(Modules[i].kinematics.joint.joint.effort)
+      velocity=str(Modules[i].kinematics.joint.joint.velocity)
+      ET.SubElement(root, "{http://ros.org/wiki/xacro}add_joint", suffix = suffix, x = Modules[i].x, y= Modules[i].y, z= Modules[i].z, roll= Modules[i].roll, pitch= Modules[i].pitch, yaw= Modules[i].yaw, upper_lim=upper_lim, lower_lim=lower_lim, effort=effort, velocity=velocity)
+      joints=joints+1
+    else:
+      Modules[i].get_rototranslation(H0, tf.transformations.identity_matrix())
+      suffix_bis = suffix_bis + '_bis'
+      print(Modules[i].link_size_z)
+      ET.SubElement(root, "{http://ros.org/wiki/xacro}add_link", suffix = suffix_bis, size_y = Modules[i].link_size_y, size_z = Modules[i].link_size_z)
+      ET.SubElement(root, "{http://ros.org/wiki/xacro}add_fixed_joint", suffix = suffix_bis, x = Modules[i].x, y= Modules[i].y, z= Modules[i].z, roll= Modules[i].roll, pitch= Modules[i].pitch, yaw= Modules[i].yaw)
 
-  p=str(Joints[i].kinematics.joint.distal.p_dl)
-  n=str(Joints[i].kinematics.joint.distal.n_dl)
+  else:
+    if(Modules[i-1].type == 'joint'):
+      if(Modules[i].type == 'joint'):
+        #joint + joint
+        data = {'result' == 'Cannot attach two consecutive joints'}
+        return data
+      else:
+        #joint + link
+        Modules[i].get_rototranslation(Modules[i-1].Distal_tf, tf.transformations.identity_matrix())
+        ET.SubElement(root, "{http://ros.org/wiki/xacro}add_link", suffix = suffix, size_y = Modules[i].link_size_y, size_z = Modules[i].link_size_z)
+    else:
+      if(Modules[i].type == 'joint'):
+        #link + joint
+        Modules[i].get_rototranslation(Modules[i-1].Homogeneous_tf, tf.transformations.identity_matrix())
+        suffix=str(joints+1)
+        ET.SubElement(root, "{http://ros.org/wiki/xacro}add_fixed_joint_stator", suffix = suffix, suffix_bis = suffix_bis, x = Modules[i].x, y= Modules[i].y, z= Modules[i].z, roll= Modules[i].roll, pitch= Modules[i].pitch, yaw= Modules[i].yaw)
+        print(Modules[i].joint_size_z)
+        suffix_bis=suffix
+        ET.SubElement(root, "{http://ros.org/wiki/xacro}add_joint_stator", suffix = suffix, size_y = Modules[i].joint_size_y, size_z = Modules[i].joint_size_z)
+        Modules[i].get_rototranslation(tf.transformations.identity_matrix(), Modules[i].Proximal_tf)
+        upper_lim=str(Modules[i].kinematics.joint.joint.upper_limit)
+        lower_lim=str(Modules[i].kinematics.joint.joint.lower_limit)
+        effort=str(Modules[i].kinematics.joint.joint.effort)
+        velocity=str(Modules[i].kinematics.joint.joint.velocity)
+        ET.SubElement(root, "{http://ros.org/wiki/xacro}add_joint", suffix = suffix, x = Modules[i].x, y= Modules[i].y, z= Modules[i].z, roll= Modules[i].roll, pitch= Modules[i].pitch, yaw= Modules[i].yaw, upper_lim=upper_lim, lower_lim=lower_lim, effort=effort, velocity=velocity)
+        joints=joints+1
+        
+      else:
+        #link + link
+        Modules[i].get_rototranslation(Modules[i-1].Homogeneous_tf, tf.transformations.identity_matrix())
+        
+        ET.SubElement(root, "{http://ros.org/wiki/xacro}add_fixed_joint", suffix = suffix_bis, x = Modules[i].x, y= Modules[i].y, z= Modules[i].z, roll= Modules[i].roll, pitch= Modules[i].pitch, yaw= Modules[i].yaw)
+        suffix_bis = suffix_bis + '_bis'
+        ET.SubElement(root, "{http://ros.org/wiki/xacro}add_link", suffix = suffix_bis, size_y = Modules[i].link_size_y, size_z = Modules[i].link_size_z)
+
+  i=i+1
+
+  # p=str(Modules[i].kinematics.joint.distal.p_dl)
+  # n=str(Modules[i].kinematics.joint.distal.n_dl)
 
   #adding 3 links to the tree
-  ET.SubElement(root, "{http://ros.org/wiki/xacro}add_link_elbow", suffix = str(i+1), p = p, n= n, x = Joints[i].x, y= Joints[i].y, z= Joints[i].z, roll= Joints[i].roll, pitch= Joints[i].pitch, yaw= Joints[i].yaw)
+  #ET.SubElement(root, "{http://ros.org/wiki/xacro}add_link_elbow", suffix = str(i+1), p = Modules[i].size_y, n = Modules[i].size_z, x = Modules[i].x, y= Modules[i].y, z= Modules[i].z, roll= Modules[i].roll, pitch= Modules[i].pitch, yaw= Modules[i].yaw)
 
   #update the urdf file, adding the new module 
   write_urdf(path_name + '/urdf/ModularBot_test.urdf', urdf_tree)
 
-  i=i+1
+  # i=i+1
 
   data = {'result': module_name}
   # data = jsonify(data)

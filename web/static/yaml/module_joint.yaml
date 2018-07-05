@@ -16,7 +16,11 @@ kinematics:
 
     joint:
       delta_j: 0
-      type: 'rotational'
+      type: 'revolute'
+      lower_limit: -3.14
+      upper_limit: 3.14
+      effort: 35 
+      velocity: 5.7
       
   link:
     a_l: 0

@@ -220,7 +220,7 @@ class URDF_viewer extends HTMLElement {
             endWithJoint = true
         }
 
-        console.log(endWithJoint)
+        console.log('Ending with a joint?:', endWithJoint)
 
         this.forEach(urdf.children, r => {
             // const obj = new THREE.Object3D()
@@ -246,7 +246,7 @@ class URDF_viewer extends HTMLElement {
                         //update joint and link maps
                         this.robots[0].urdf.joints = this.jointMap
                         this.robots[0].urdf.links = this.linkMap
-                        console.log(this.robots[0])
+                        //console.log(this.robots[0])
                     }
                     else if (type === 'joint') {
                         console.warn('Cannot attach two consecutive joints')
@@ -255,7 +255,7 @@ class URDF_viewer extends HTMLElement {
                 } else if (endWithLink) {
                     if (type === 'link') {
                         //Note: if two consecutive links are attached together a fixed joint must be created first to connect the two
-
+                        //console.log("link_bis")
                         //add fixed joint
                         //
                         const lastjoint_name = joints[joints.length - 1]
@@ -270,6 +270,7 @@ class URDF_viewer extends HTMLElement {
                         //add link
                         //
                         const newlink_name = lastlink_name + '_bis'
+                        console.log(newlink_name)
                         this.linkMap[newlink_name] = this._processLink(n)
                         this.linkMap[newlink_name].name = newlink_name
 
@@ -281,6 +282,7 @@ class URDF_viewer extends HTMLElement {
                         this.robots[0].urdf.links = this.linkMap
                     }
                     else if (type === 'joint') {
+                        console.log('joint_' + (this.jointNumber+1))
                         const newjoint_name = 'joint_' + (this.jointNumber+1)
                         this.jointMap[newjoint_name] = this._processJoint(n)
                         this.jointMap[newjoint_name].name = newjoint_name
@@ -349,7 +351,7 @@ class URDF_viewer extends HTMLElement {
             endWithJoint = true
         }
 
-        console.log(endWithJoint)
+        console.log('Ending with a joint?:', endWithJoint)
 
         this.forEach(urdf.children, r => {
             // const obj = new THREE.Object3D()
@@ -375,7 +377,7 @@ class URDF_viewer extends HTMLElement {
                         //update joint and link maps
                         this.robots[0].urdf.joints = this.jointMap
                         this.robots[0].urdf.links = this.linkMap
-                        console.log(this.robots[0])
+                        //console.log(this.robots[0])
                     }
                     else if (type === 'joint') {
                         console.warn('Cannot attach two consecutive joints')
@@ -384,7 +386,7 @@ class URDF_viewer extends HTMLElement {
                 } else if (endWithLink) {
                     if (type === 'link') {
                         //Note: if two consecutive links are attached together a fixed joint must be created first to connect the two
-                        console.log("link")
+                        //console.log("link_bis")
                         //add fixed joint
                         //
                         const lastjoint_name = joints[joints.length - 1]
@@ -399,6 +401,7 @@ class URDF_viewer extends HTMLElement {
                         //add link
                         //
                         const newlink_name = lastlink_name + '_bis'
+                        console.log(newlink_name)
                         this.linkMap[newlink_name] = this._processLink(n)
                         this.linkMap[newlink_name].name = newlink_name
 
@@ -413,7 +416,7 @@ class URDF_viewer extends HTMLElement {
                         joints = Object.keys(this.jointMap)
                     }
                     else if (type === 'joint') {
-                        console.log("joint")
+                        console.log('joint_' + (this.jointNumber+1))
                         const newjoint_name = 'joint_' + (this.jointNumber+1)
                         this.jointMap[newjoint_name] = this._processJoint(n)
                         this.jointMap[newjoint_name].name = newjoint_name
@@ -451,7 +454,7 @@ class URDF_viewer extends HTMLElement {
                 }
 
                 this.lastModKin = doc.kinematics;
-                console.log("save parameters")
+                //console.log("save parameters")
             })
 
 
@@ -607,7 +610,7 @@ class URDF_viewer extends HTMLElement {
         <input type="range" value="0" step="0.01" class="range"/>
         <input type="number" step="0.01" class="number"/>
         `
-        li.setAttribute('joint-type', joint.urdf.type)
+        //li.setAttribute('joint-type', joint.urdf.type)
 
         //sliderList = document.querySelector('#controls ul')
         sliderList.appendChild(li)
@@ -696,7 +699,7 @@ class URDF_viewer extends HTMLElement {
         const parser = new DOMParser()
         const fixed_joint_urdf ='<joint type="fixed"><axis rpy="0 0 0" xyz="0 0 1"/><origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/><limit lower="-3.14" upper="3.14"/></joint>'
         const urdf_node = parser.parseFromString(fixed_joint_urdf, 'text/xml')
-        console.log(urdf_node.children[0])
+        //console.log(urdf_node.children[0])
 
         joint_obj.urdf = {
             node: urdf_node.children[0], type: jointType, angle: 0, axis: null,
@@ -1011,7 +1014,7 @@ class URDF_viewer extends HTMLElement {
 
                                 //this._applyRotation(mesh, [0,0,0])
                                 //console.log("1")
-                                console.log(rpy)
+                                //console.log(rpy)
                                 // const delta = new THREE.Quaternion().setFromAxisAngle(joint_obj.urdf.axis, angle)
                                 // joint_obj.quaternion.multiplyQuaternions(origRot, delta)
 
