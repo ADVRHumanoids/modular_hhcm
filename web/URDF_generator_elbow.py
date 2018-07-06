@@ -25,7 +25,7 @@ ET.register_namespace('xacro', "http://ros.org/wiki/xacro")
 
 #obtaining tree from base file
 path_name = os.path.dirname(modular.__file__)
-basefile_name=path_name + '/urdf/ModularBot_new.urdf.xacro'
+basefile_name=path_name + '/urdf/ModularBot_old.urdf.xacro'
 urdf_tree = ET.parse(basefile_name)
 
 root = urdf_tree.getroot()
