@@ -6,6 +6,7 @@
     <xacro:property name="len1" value="0.4" />
     <xacro:property name="len2" value="0.6" />
     <xacro:property name="len3" value="0.8" />
+    <xacro:property name="mass" value="1" />
     <!-- <xacro:property name="pi" value="3.1415" /> -->
 
     <material name="blue">
@@ -57,7 +58,7 @@
         <child link="link_0"/>
     </joint>
 
-    <xacro:macro name="add_link" params="suffix size_y size_z">
+    <xacro:macro name="add_link" params="suffix size_z">
 
         <link name="link_${suffix}">
             <visual>
@@ -65,18 +66,7 @@
                 <geometry>
                     <box size="${width} ${width} ${size_z}"/>
                 </geometry>
-                <!-- <xacro:if value="${suffix%2==0}">
-                    <material name="white"/>
-                </xacro:if>
-                <xacro:unless value="${suffix%2==0}">
-                    <material name="blue"/>
-                </xacro:unless> -->
-            </visual>
-            <visual>
-                <origin xyz="0 ${size_y/2} ${size_z}" rpy="0 0 0" />
-                <geometry>
-                <box size="${width} ${size_y} ${width}"/>
-                </geometry>
+                <material name="black"/>
                 <!-- <xacro:if value="${suffix%2==0}">
                     <material name="white"/>
                 </xacro:if>
@@ -90,7 +80,70 @@
                     <box size="${width} ${width} ${size_z}"/>
                 </geometry>
             </collision>
-            <xacro:default_inertial mass="1"/>
+            <inertial>
+                <origin xyz="0 0 ${size_z/2}" rpy="0 0 0"/>
+                <mass value="${mass}"/>
+                <inertia
+                ixx="${mass / 12.0 * (width*width + size_z*size_z)}" ixy="0.0" ixz="0.0"
+                iyy="${mass / 12.0 * (size_z*size_z + width*width)}" iyz="0.0"
+                izz="${mass / 12.0 * (width*width + width*width)}"/>
+            </inertial>
+        </link>
+        <gazebo reference="link_${suffix}">
+            <mu1>0.2</mu1>
+            <mu2>0.2</mu2>
+            <kp>1000000.0</kp>
+            <kd>1.0</kd>
+            <maxVel>0.0</maxVel>
+            <minDepth>0.0001</minDepth>
+            <material>Gazebo/White</material>
+        </gazebo>
+
+    </xacro:macro>
+
+    <xacro:macro name="add_elbow" params="suffix size_y size_z">
+
+        <link name="link_${suffix}">
+            <visual>
+                <origin xyz="0 0 ${size_z/2}" rpy="0 0 0" />
+                <geometry>
+                    <box size="${width} ${width} ${size_z}"/>
+                </geometry>
+                <material name="white"/>
+                <!-- <xacro:if value="${suffix%2==0}">
+                    <material name="white"/>
+                </xacro:if>
+                <xacro:unless value="${suffix%2==0}">
+                    <material name="blue"/>
+                </xacro:unless> -->
+            </visual>
+            <visual>
+                <origin xyz="0 ${size_y/2} ${size_z}" rpy="0 0 0" />
+                <geometry>
+                <box size="${width} ${size_y} ${width}"/>
+                </geometry>
+                <material name="white"/>
+                <!-- <xacro:if value="${suffix%2==0}">
+                    <material name="white"/>
+                </xacro:if>
+                <xacro:unless value="${suffix%2==0}">
+                    <material name="blue"/>
+                </xacro:unless> -->
+            </visual>
+            <collision>
+                <origin xyz="0 0 ${size_z/2}" rpy="0 0 0" />
+                <geometry>
+                    <box size="${width} ${width} ${size_z}"/>
+                </geometry>
+            </collision>
+            <inertial>
+                <origin xyz="0 0 ${size_z/2}" rpy="0 0 0"/>
+                <mass value="${mass}"/>
+                <inertia
+                ixx="${mass / 12.0 * (width*width + size_z*size_z)}" ixy="0.0" ixz="0.0"
+                iyy="${mass / 12.0 * (size_z*size_z + width*width)}" iyz="0.0"
+                izz="${mass / 12.0 * (width*width + width*width)}"/>
+            </inertial>
             <collision>
                 <origin xyz="0 ${size_y/2} ${size_z}" rpy="0 0 0" />
                 <geometry>
@@ -98,11 +151,20 @@
                 </geometry>
             </collision>
         </link>
+        <gazebo reference="link_${suffix}">
+            <mu1>0.2</mu1>
+            <mu2>0.2</mu2>
+            <kp>1000000.0</kp>
+            <kd>1.0</kd>
+            <maxVel>0.0</maxVel>
+            <minDepth>0.0001</minDepth>
+            <material>Gazebo/White</material>
+        </gazebo>
 
     </xacro:macro>
 
     <xacro:macro name="add_fixed_joint" params="suffix x y z roll pitch yaw">    
-        <joint name="fixed_joint_${suffix}_bis" type="fixed">
+        <joint name="fixed_joint_${suffix}" type="fixed">
             <axis xyz="0 0 1" rpy="0 0 0" />
         
             <parent link="link_${suffix}"/>
@@ -142,13 +204,29 @@
                     <cylinder radius="${width}" length="${size_z}"/>
                 </geometry>
             </collision>
-            <xacro:default_inertial mass="1"/>
+            <inertial>
+                <origin xyz="0 0 ${size_z/2}" rpy="0 0 0"/>
+                <mass value="${mass}"/>
+                <inertia
+                ixx="${mass / 12.0 * (width*width + size_z*size_z)}" ixy="0.0" ixz="0.0"
+                iyy="${mass / 12.0 * (size_z*size_z + width*width)}" iyz="0.0"
+                izz="${mass / 12.0 * (width*width + width*width)}"/>
+            </inertial>
         </link>
+        <gazebo reference="link_stator_joint_${suffix}">
+            <mu1>0.2</mu1>
+            <mu2>0.2</mu2>
+            <kp>1000000.0</kp>
+            <kd>1.0</kd>
+            <maxVel>0.0</maxVel>
+            <minDepth>0.0001</minDepth>
+            <material>Gazebo/Blue</material>
+        </gazebo>
 
     </xacro:macro>
 
     <xacro:macro name="add_fixed_joint_stator" params="suffix suffix_bis x y z roll pitch yaw">    
-        <joint name="fixed_joint_${suffix_bis}_bis" type="fixed">
+        <joint name="fixed_joint_${suffix_bis}" type="fixed">
             <axis xyz="0 0 1" rpy="0 0 0" />
         
             <parent link="link_${suffix_bis}"/>
