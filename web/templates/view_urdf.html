@@ -77,7 +77,7 @@
                 <button type="button" id="addJoint">Joint</button> 
                 <button type="button" id="addElbow">Elbow</button>
                 <button type="button" id="addLink">Link</button> 
-                <pre id="square"></pre>
+                <pre id="DisplayArea"></pre>
             </div>
         </div>
         
@@ -129,10 +129,9 @@
 
             //Function to add a new module. Called at the click of the linked button
             function addModule(filename) {
-                var url = 'http://127.0.0.1:5000/yaml/' + filename;
-                
                 //opening YAML file containing kin. and dyn. parameters and URDF path
-                openfile(url, callBack_YAML)  
+                //var url = 'http://127.0.0.1:5000/yaml/' + filename;
+                //openfile(url, callBack_YAML)  
 
                 //making an ajax request to the server to proceed to write the modified URDF
                 $.ajax({
@@ -140,66 +139,66 @@
                     data: {'module_name': filename},
                     method: 'POST',
                     success: function(data) {
-                        //console.log(data)
-                        $('#square').html(data['result'])
+                        console.log(data)
+                        robots = URDF_viewer.updateURDF(data['result'])
                     },
                     async: true
                 });
             };
 
-            //Function to open a file on the server side from the HTML page
-            function openfile(url, cB) {
-                function updateProgress (oEvent) {
-                    if (oEvent.lengthComputable) {
-                        var percentComplete = oEvent.loaded / oEvent.total * 100;
-                        // ...
-                    } else {
-                        // Unable to compute progress information since the total size is unknown
-                    }
-                }
-                function onloaded (evt) {
-                    //console.log("The transfer is complete.");
-                    //console.log(this.responseText); 
-                    cB(xhr, url)
-                }
-                function transferFailed(evt) {
-                    console.log("An error occurred while transferring the file.");
-                }
+            // //Function to open a file on the server side from the HTML page
+            // function openfile(url, cB) {
+            //     function updateProgress (oEvent) {
+            //         if (oEvent.lengthComputable) {
+            //             var percentComplete = oEvent.loaded / oEvent.total * 100;
+            //             // ...
+            //         } else {
+            //             // Unable to compute progress information since the total size is unknown
+            //         }
+            //     }
+            //     function onloaded (evt) {
+            //         //console.log("The transfer is complete.");
+            //         //console.log(this.responseText); 
+            //         cB(xhr, url)
+            //     }
+            //     function transferFailed(evt) {
+            //         console.log("An error occurred while transferring the file.");
+            //     }
                 
-                function transferCanceled(evt) {
-                    console.log("The transfer has been canceled by the user.");
-                }
+            //     function transferCanceled(evt) {
+            //         console.log("The transfer has been canceled by the user.");
+            //     }
 
-                var xhr = new XMLHttpRequest();
-                xhr.responseType = "text"
-                xhr.addEventListener( "load", onloaded, true );
-                xhr.addEventListener("progress", updateProgress);
-                xhr.addEventListener("error", transferFailed);
-                xhr.addEventListener("abort", transferCanceled);
-                xhr.open( "GET", url, true );
-                xhr.send();
-            }
+            //     var xhr = new XMLHttpRequest();
+            //     xhr.responseType = "text"
+            //     xhr.addEventListener( "load", onloaded, true );
+            //     xhr.addEventListener("progress", updateProgress);
+            //     xhr.addEventListener("error", transferFailed);
+            //     xhr.addEventListener("abort", transferCanceled);
+            //     xhr.open( "GET", url, true );
+            //     xhr.send();
+            // }
     
-            //Function called when the YAML file has been opened
-            function callBack_YAML(xhr, yaml_url) {
-                //console.log(yaml_url)
-                doc = jsyaml.load(xhr.responseText);
-                //console.log(doc.urdf)
-                var urdf_url = 'http://127.0.0.1:5000/' + doc.urdf;
-                //console.log(urdf_url)
+            // //Function called when the YAML file has been opened
+            // function callBack_YAML(xhr, yaml_url) {
+            //     //console.log(yaml_url)
+            //     doc = jsyaml.load(xhr.responseText);
+            //     //console.log(doc.urdf)
+            //     var urdf_url = 'http://127.0.0.1:5000/' + doc.urdf;
+            //     //console.log(urdf_url)
                 
-                //opening URDF file
-                openfile(urdf_url, callBack_URDF)
-            }
+            //     //opening URDF file
+            //     openfile(urdf_url, callBack_URDF)
+            // }
 
-            //Function called when the URDF file has been opened
-            function callBack_URDF(xhr, urdf_url) {
-                var URDF_string = xhr.responseText 
-                //console.log(URDF_string)
+            // //Function called when the URDF file has been opened
+            // function callBack_URDF(xhr, urdf_url) {
+            //     var URDF_string = xhr.responseText 
+            //     //console.log(URDF_string)
                 
-                //Finally addModuleYAML gets called. THREE.js 3D model gets updated
-                robots = URDF_viewer.addModuleYAML(doc, URDF_string);
-            }
+            //     //Finally addModuleYAML gets called. THREE.js 3D model gets updated
+            //     robots = URDF_viewer.addModuleYAML(doc, URDF_string);
+            // }
             
         </script>
 

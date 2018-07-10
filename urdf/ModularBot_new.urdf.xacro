@@ -186,6 +186,8 @@
             <origin xyz="${x} ${y} ${z}" rpy="${roll} ${pitch} ${yaw}"/>
             <limit lower="${lower_lim}" upper="${upper_lim}" effort="${effort}" velocity="${velocity}"/>
         </joint>
+        <link name="link_${suffix}"/>
+
     </xacro:macro>
 
     <xacro:macro name="add_joint_stator" params="suffix size_y size_z">

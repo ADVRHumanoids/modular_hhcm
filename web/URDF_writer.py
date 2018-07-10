@@ -1,7 +1,9 @@
-import sys
-sys.path.append('/home/edoardo/catkin_ws/src') #Add folder where "modular" package is to the $PYTHONPATH
+import os, sys
+currDir = os.path.dirname(os.path.realpath(__file__))
+rootDir = os.path.abspath(os.path.join(currDir, '../..'))
+if rootDir not in sys.path: # add parent dir to paths
+  sys.path.append(rootDir)
 
-import os
 import re
 import xml.etree.ElementTree as ET
 import xacro
@@ -13,7 +15,7 @@ import modular
 
 import tf  
 
-ET.register_namespace('xacro', "http://ros.org/wiki/xacro")
+ET.register_namespace('xacro', 'http://ros.org/wiki/xacro')
 
 #obtaining tree from base file
 path_name = os.path.dirname(modular.__file__)
@@ -55,55 +57,49 @@ def main(filename):
     else:
       #joint + link
       Modules[i].get_rototranslation(Modules[i-1].Distal_tf, tf.transformations.identity_matrix())
-      #ET.SubElement(root, "{http://ros.org/wiki/xacro}add_link", suffix = suffix, size_y = Modules[i].link_size_y, size_z = Modules[i].link_size_z)
+      #ET.SubElement(root, "xacro:add_link", suffix = suffix, size_y = Modules[i].link_size_y, size_z = Modules[i].link_size_z)
+      ET.SubElement(root, "xacro:add_fixed_joint", suffix = suffix_bis, x = Modules[i].x, y= Modules[i].y, z= Modules[i].z, roll= Modules[i].roll, pitch= Modules[i].pitch, yaw= Modules[i].yaw)
+      suffix_bis = suffix_bis + '_bis'
       if(Modules[i].type == 'link'):
-        ET.SubElement(root, "{http://ros.org/wiki/xacro}add_link", suffix = suffix, size_z = Modules[i].link_size_z)
+        ET.SubElement(root, "xacro:add_link", suffix = suffix_bis, size_z = Modules[i].link_size_z)
       else:
-        ET.SubElement(root, "{http://ros.org/wiki/xacro}add_elbow", suffix = suffix, size_y = Modules[i].link_size_y, size_z = Modules[i].link_size_z)
+        ET.SubElement(root, "xacro:add_elbow", suffix = suffix_bis, size_y = Modules[i].link_size_y, size_z = Modules[i].link_size_z)
   else:
     if(Modules[i].type == 'joint'):
       #link + joint
       Modules[i].get_rototranslation(Modules[i-1].Homogeneous_tf, tf.transformations.identity_matrix())
       joints=joints+1
       suffix=str(joints)
-      ET.SubElement(root, "{http://ros.org/wiki/xacro}add_fixed_joint_stator", suffix = suffix, suffix_bis = suffix_bis, x = Modules[i].x, y= Modules[i].y, z= Modules[i].z, roll= Modules[i].roll, pitch= Modules[i].pitch, yaw= Modules[i].yaw)
-      ET.SubElement(root, "{http://ros.org/wiki/xacro}add_joint_stator", suffix = suffix, size_y = Modules[i].joint_size_y, size_z = Modules[i].joint_size_z)
+      ET.SubElement(root, "xacro:add_fixed_joint_stator", suffix = suffix, suffix_bis = suffix_bis, x = Modules[i].x, y= Modules[i].y, z= Modules[i].z, roll= Modules[i].roll, pitch= Modules[i].pitch, yaw= Modules[i].yaw)
+      ET.SubElement(root, "xacro:add_joint_stator", suffix = suffix, size_y = Modules[i].joint_size_y, size_z = Modules[i].joint_size_z)
       Modules[i].get_rototranslation(tf.transformations.identity_matrix(), Modules[i].Proximal_tf)
       jointData = Modules[i].kinematics.joint.joint
       upper_lim=str(jointData.upper_limit)
       lower_lim=str(jointData.lower_limit)
       effort=str(jointData.effort)
       velocity=str(jointData.velocity)
-      ET.SubElement(root, "{http://ros.org/wiki/xacro}add_joint", suffix = suffix, x = Modules[i].x, y= Modules[i].y, z= Modules[i].z, roll= Modules[i].roll, pitch= Modules[i].pitch, yaw= Modules[i].yaw, upper_lim=upper_lim, lower_lim=lower_lim, effort=effort, velocity=velocity)
+      ET.SubElement(root, "xacro:add_joint", suffix = suffix, x = Modules[i].x, y= Modules[i].y, z= Modules[i].z, roll= Modules[i].roll, pitch= Modules[i].pitch, yaw= Modules[i].yaw, upper_lim=upper_lim, lower_lim=lower_lim, effort=effort, velocity=velocity)
       suffix_bis=suffix
 
     else:
       #link + link
       Modules[i].get_rototranslation(Modules[i-1].Homogeneous_tf, tf.transformations.identity_matrix())
       
-      ET.SubElement(root, "{http://ros.org/wiki/xacro}add_fixed_joint", suffix = suffix_bis, x = Modules[i].x, y= Modules[i].y, z= Modules[i].z, roll= Modules[i].roll, pitch= Modules[i].pitch, yaw= Modules[i].yaw)
+      ET.SubElement(root, "xacro:add_fixed_joint", suffix = suffix_bis, x = Modules[i].x, y= Modules[i].y, z= Modules[i].z, roll= Modules[i].roll, pitch= Modules[i].pitch, yaw= Modules[i].yaw)
       suffix_bis = suffix_bis + '_bis'
       
       if(Modules[i].type == 'link'):
-        ET.SubElement(root, "{http://ros.org/wiki/xacro}add_link", suffix = suffix_bis, size_z = Modules[i].link_size_z)
+        ET.SubElement(root, "xacro:add_link", suffix = suffix_bis, size_z = Modules[i].link_size_z)
       else:
-        ET.SubElement(root, "{http://ros.org/wiki/xacro}add_elbow", suffix = suffix_bis, size_y = Modules[i].link_size_y, size_z = Modules[i].link_size_z)
+        ET.SubElement(root, "xacro:add_elbow", suffix = suffix_bis, size_y = Modules[i].link_size_y, size_z = Modules[i].link_size_z)
 
 
   i=i+1
 
-  # p=str(Modules[i].kinematics.joint.distal.p_dl)
-  # n=str(Modules[i].kinematics.joint.distal.n_dl)
-
-  #adding 3 links to the tree
-  #ET.SubElement(root, "{http://ros.org/wiki/xacro}add_link_elbow", suffix = str(i+1), p = Modules[i].size_y, n = Modules[i].size_z, x = Modules[i].x, y= Modules[i].y, z= Modules[i].z, roll= Modules[i].roll, pitch= Modules[i].pitch, yaw= Modules[i].yaw)
-
   #update the urdf file, adding the new module 
-  write_urdf(path_name + '/urdf/ModularBot_test.urdf', urdf_tree)
+  string = write_urdf(path_name + '/urdf/ModularBot_test.urdf', urdf_tree)
 
-  # i=i+1
-
-  data = {'result': module_name}
+  data = {'result': string}
   # data = jsonify(data)
 
   return data
@@ -111,9 +107,9 @@ def main(filename):
 # def joinLinkLink():
 #   Modules[i].get_rototranslation(Modules[i-1].Homogeneous_tf, tf.transformations.identity_matrix())
       
-#   ET.SubElement(root, "{http://ros.org/wiki/xacro}add_fixed_joint", suffix = suffix_bis, x = Modules[i].x, y= Modules[i].y, z= Modules[i].z, roll= Modules[i].roll, pitch= Modules[i].pitch, yaw= Modules[i].yaw)
+#   ET.SubElement(root, "xacro:add_fixed_joint", suffix = suffix_bis, x = Modules[i].x, y= Modules[i].y, z= Modules[i].z, roll= Modules[i].roll, pitch= Modules[i].pitch, yaw= Modules[i].yaw)
 #   suffix_bis = suffix_bis + '_bis'
-#   ET.SubElement(root, "{http://ros.org/wiki/xacro}add_link", suffix = suffix_bis, size_y = Modules[i].link_size_y, size_z = Modules[i].link_size_z)
+#   ET.SubElement(root, "xacro:add_link", suffix = suffix_bis, size_y = Modules[i].link_size_y, size_z = Modules[i].link_size_z)
 
 #Function writin the urdf file after converting from .xacro (See xacro/__init__.py for reference)
 def write_urdf(urdf_filename, tree):
@@ -133,6 +129,8 @@ def write_urdf(urdf_filename, tree):
   doc = xacro.parse(None, urdf_xacro_filename)
   #perform macro replacement
   xacro.process_doc(doc)
+  
+  #print(doc.lastChild.toprettyxml(indent='  '))
 
   # add xacro auto-generated banner
   banner = [xml.dom.minidom.Comment(c) for c in
@@ -145,3 +143,5 @@ def write_urdf(urdf_filename, tree):
     doc.insertBefore(comment, first)
 
   out.write(doc.toprettyxml(indent='  '))
+
+  return doc.toprettyxml(indent='  ')

@@ -53,126 +53,14 @@ class URDF_viewer extends HTMLElement {
 
 
     /* Public API */
-    static init(object) {
-        const rnd = document.getElementById('renderer')
+    /*
+    There are 3 methods to add a module to the robot:
+    - addModule: Method that reads a URDF file describing the module and adds the 3D object
+    - addModuleYAML: Method that reads a YAML file describing the module and adds the 3D object
+    - updateURDF: Method that parse a string describing the updated robot URDF. The string is received from the Python script which reads it from YAML
+    */
 
-        this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0xf0f0f0);
-
-        // const ambientLight = new THREE.AmbientLight(this.ambientColor)
-        // this.scene.add(ambientLight)
-
-        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
-        this.camera.position.set(2, 2, 2);
-        this.scene.add(this.camera);
-
-        // var light = new THREE.SpotLight( 0xffffff, 1.5 );
-        // light.position.set( 0, 3, 3 );
-        // light.castShadow = true;
-        // light.shadow = new THREE.LightShadow( this.camera );
-        // light.shadow.bias = -0.000222;
-        // light.shadow.mapSize.width = 1024;
-        // light.shadow.mapSize.height = 1024;
-        // this.scene.add( light );
-
-        this.scene.add(new THREE.HemisphereLight(0x443333, 0x111122));
-
-        this.addShadowedLight(1, 1, 1, 0xffffff, 1.35);
-        this.addShadowedLight(-1, -1, -1, 0xffffff, 1.35);
-
-        this.renderer = new THREE.WebGLRenderer();
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setPixelRatio(window.devicePixelRatio);
-        // this.renderer.gammaInput = true;
-        // this.renderer.gammaOutput = true;
-
-        this.renderer.shadowMap.enabled = true;
-        rnd.appendChild(this.renderer.domElement);
-
-        //this.renderer.setClearColor(0xffffff, 1);
-
-        //World setup
-        // const world = new THREE.Object3D()
-        // this.scene.add(world)
-
-        var geometry = new THREE.PlaneBufferGeometry(10, 10);
-        geometry.rotateX(- Math.PI / 2);
-        var material = new THREE.ShadowMaterial({ opacity: 0.2 });
-        var plane = new THREE.Mesh(geometry, material);
-        plane.position.y = 0;
-        plane.receiveShadow = true;
-        this.scene.add(plane);
-
-        var helper = new THREE.GridHelper(10, 100);
-        helper.position.y = 0;
-        helper.material.opacity = 0.25;
-        helper.material.transparent = true;
-        this.scene.add(helper);
-
-        var worldAxis = new THREE.AxesHelper(20);
-        this.scene.add(worldAxis);
-
-        for (let key in object.urdf.jointMap) {
-            //console.log(self.jointMap[key])
-            const joint = object.urdf.jointMap[key]
-            if (joint.urdf.type !== 'fixed')
-                this.scene.add(joint.axes)
-        }
-
-        // var geometry = new THREE.BoxGeometry( 100, 100, 100 );
-        // var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-        // this.cube = new THREE.Mesh( geometry, material );
-        // this.scene.add( this.cube );
-
-        this.scene.add(object);
-
-        this.orbitControls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
-
-        this.transformControls = new THREE.TransformControls(this.camera, this.renderer.domElement);
-        // this.transformControls.addEventListener( 'change', render );
-
-        this.transformControls.attach(object)
-        this.scene.add(this.transformControls)
-    }
-
-    static animate() {
-
-        // Read more about requestAnimationFrame at http://www.paulirish.com/2011/requestanimationframe-for-smart-animating/
-        requestAnimationFrame(this.animate.bind(this));
-        // this.cube.rotation.x += 0.1;
-        // this.cube.rotation.y += 0.1;
-
-
-        // Render the this.scene.
-        this.renderer.render(this.scene, this.camera);
-        this.orbitControls.update();
-        this.transformControls.update();
-
-    }
-
-    static addShadowedLight(x, y, z, color, intensity) {
-
-        var directionalLight = new THREE.DirectionalLight(color, intensity);
-        directionalLight.position.set(x, y, z);
-        this.scene.add(directionalLight);
-
-        directionalLight.castShadow = true;
-
-        var d = 1;
-        directionalLight.shadow.camera.left = -d;
-        directionalLight.shadow.camera.right = d;
-        directionalLight.shadow.camera.top = d;
-        directionalLight.shadow.camera.bottom = -d;
-
-        directionalLight.shadow.camera.near = 1;
-        directionalLight.shadow.camera.far = 4;
-
-        directionalLight.shadow.mapSize.width = 1024;
-        directionalLight.shadow.mapSize.height = 1024;
-
-        directionalLight.shadow.bias = -0.002;
-
-    }
+    
 
     // static defaultMeshLoader(path, ext, done) {
 
@@ -195,6 +83,7 @@ class URDF_viewer extends HTMLElement {
     //         console.warn(`Could note load model at ${path}:\nNo loader available`)
     // }
 
+    
     static addModule(reader) {
         const parser = new DOMParser()
         const urdf = parser.parseFromString(reader.result, 'text/xml')
@@ -321,10 +210,9 @@ class URDF_viewer extends HTMLElement {
 
         })
 
-
-
     }
 
+    //Method to read a YAML file describing the module to add
     static addModuleYAML(doc, URDF_string) {
         const parser = new DOMParser()
         const urdf = parser.parseFromString(URDF_string, 'text/xml')
@@ -465,20 +353,95 @@ class URDF_viewer extends HTMLElement {
         return this.robots
     }
 
+    static updateURDF(string) {
+        const parser = new DOMParser()
+        const urdf = parser.parseFromString(string, 'text/xml')
+
+        console.log(urdf.children)
+        this.forEach(urdf.children, r => {
+
+            const links = []
+            const joints = []
+            const materials = []
+            
+            //inherit the "robot" previously processed
+            const obj = this.robots[0]
+
+            obj.urdf = { node: r }
+            console.log(r.children)
+
+            // Process the <joint> and <link> nodes
+            this.forEach(r.children, n => {
+                const type = n.nodeName.toLowerCase()
+                if (type === 'link') links.push(n)
+                else if (type === 'joint') joints.push(n)
+                else if (type === 'material') materials.push(n)
+            })
+
+            console.log(links)
+            console.log(joints)
+            console.log(materials)
+
+            // Update the <material> map
+            this.forEach(materials, m => {
+                const name = m.getAttribute('name')
+                if(!this.materialMap[name])
+                    this.materialMap[name] = this._processMaterial(m)
+            })
+
+            console.log(this.materialMap)
+
+            // Update the <link> map
+            this.forEach(links, l => {
+                const name = l.getAttribute('name')
+                if(!this.linkMap[name])
+                    this.linkMap[name] = this._processLink(l)
+            })
+
+            console.log(this.linkMap)
+
+            // Update the <joint> map
+            this.forEach(joints, j => {
+                const name = j.getAttribute('name')
+                if(!this.jointMap[name]) {
+                    this.jointMap[name] = this._processJoint(j)
+                    
+                    var URDF_processed_eH = new URDF_processed_eventHandler();
+
+                    var self = this;
+                    URDF_processed_eH.addEventListener('urdf-processed', function (event) {
+                        if (self.jointMap[name].urdf.type !== 'fixed')
+                            self._createSlider(self.jointMap[name])
+                    })
+
+                    URDF_processed_eH.start();
+                }
+            })
+
+            console.log(this.jointMap)
+
+            for (let key in this.linkMap) this.linkMap[key].parent ? null : obj.add(this.linkMap[key])
+
+            obj.urdf.joints = this.jointMap
+            obj.urdf.links = this.linkMap
+
+        })
+
+        console.log(this.robots[0])
+        console.log(Object.keys(this.linkMap))
+
+        return this.robots
+    }
+
     static showURDF(reader) {
-        // THREE.Object3D.DefaultUp = new THREE.Vector3(0, 0, 1)
-
-        //const controlsel = document.getElementById('controls')
-        // const sliderList = document.querySelector('#controls ul')
-        // const moduleselector = document.getElementById('selector')
-
-        this.lastModKin = {
-            joint: { proximal: { a_pl: 0, alpha_pl: 0, p_pl: 0, n_pl: 0, delta_pl: 0}, 
-            distal: { a_dl: 0, alpha_dl: 0, p_dl: 0, n_dl: 0.4, delta_dl: 0},
-            joint: { delta_j: 0, type: 'rotational'}
-            }, 
-            link: { a_l: 0, alpha_l: 0, p_l: 0, n_l: 0, delta_l_in: 0, delta_l_out: 0}
-        }
+        //Note: uncomment if you want to use the addModuleYAML method! 
+        // this.lastModKin = {
+        //     joint: { proximal: { a_pl: 0, alpha_pl: 0, p_pl: 0, n_pl: 0, delta_pl: 0}, 
+        //     distal: { a_dl: 0, alpha_dl: 0, p_dl: 0, n_dl: 0.4, delta_dl: 0},
+        //     joint: { delta_j: 0, type: 'rotational'}
+        //     }, 
+        //     link: { a_l: 0, alpha_l: 0, p_l: 0, n_l: 0, delta_l_in: 0, delta_l_out: 0}
+        // }
 
         const parser = new DOMParser()
         const urdf = parser.parseFromString(reader.result, 'text/xml')
@@ -548,13 +511,11 @@ class URDF_viewer extends HTMLElement {
             this._applyRotation(obj, rpy_ros2three)
             //object.rotateOnAxis ( new THREE.Vector3(1, 0, 0), - Math.PI / 2 )
 
-            this.init(obj);
-            this.animate();
+            this._init(obj);
+            this._animate();
 
             this.robots.push(obj)
         })
-        //let event = new Event ()
-        //URDF_viewer.prototype.dispatchEvent(new CustomEvent('urdf-processed', { bubbles: true, cancelable: true, composed: true }))
 
         var URDF_processed_eH = new URDF_processed_eventHandler();
 
@@ -578,12 +539,6 @@ class URDF_viewer extends HTMLElement {
         console.log(this.robots[0])
         console.log(Object.keys(this.linkMap))
 
-        // var rdr = new FileReader();
-        // rdr.readAsText(new File('/home/edoardo/catkin_ws/src/modular/urdf/module_elbow.yaml'));  
-
-        // var doc = jsyaml.load(rdr.result);
-        // console.log(doc)
-
         return this.robots
     }
 
@@ -600,6 +555,123 @@ class URDF_viewer extends HTMLElement {
     }
 
     /* Private Functions */
+
+    static _init(object) {
+        const rnd = document.getElementById('renderer')
+
+        this.scene = new THREE.Scene();
+        this.scene.background = new THREE.Color(0xf0f0f0);
+
+        // const ambientLight = new THREE.AmbientLight(this.ambientColor)
+        // this.scene.add(ambientLight)
+
+        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
+        this.camera.position.set(2, 2, 2);
+        this.scene.add(this.camera);
+
+        // var light = new THREE.SpotLight( 0xffffff, 1.5 );
+        // light.position.set( 0, 3, 3 );
+        // light.castShadow = true;
+        // light.shadow = new THREE.LightShadow( this.camera );
+        // light.shadow.bias = -0.000222;
+        // light.shadow.mapSize.width = 1024;
+        // light.shadow.mapSize.height = 1024;
+        // this.scene.add( light );
+
+        this.scene.add(new THREE.HemisphereLight(0x443333, 0x111122));
+
+        this._addShadowedLight(1, 1, 1, 0xffffff, 1.35);
+        this._addShadowedLight(-1, -1, -1, 0xffffff, 1.35);
+
+        this.renderer = new THREE.WebGLRenderer();
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setPixelRatio(window.devicePixelRatio);
+        // this.renderer.gammaInput = true;
+        // this.renderer.gammaOutput = true;
+
+        this.renderer.shadowMap.enabled = true;
+        rnd.appendChild(this.renderer.domElement);
+
+        //this.renderer.setClearColor(0xffffff, 1);
+
+        //World setup
+        // const world = new THREE.Object3D()
+        // this.scene.add(world)
+
+        var geometry = new THREE.PlaneBufferGeometry(10, 10);
+        geometry.rotateX(- Math.PI / 2);
+        var material = new THREE.ShadowMaterial({ opacity: 0.2 });
+        var plane = new THREE.Mesh(geometry, material);
+        plane.position.y = 0;
+        plane.receiveShadow = true;
+        this.scene.add(plane);
+
+        var helper = new THREE.GridHelper(10, 100);
+        helper.position.y = 0;
+        helper.material.opacity = 0.25;
+        helper.material.transparent = true;
+        this.scene.add(helper);
+
+        var worldAxis = new THREE.AxesHelper(20);
+        this.scene.add(worldAxis);
+
+        for (let key in object.urdf.jointMap) {
+            //console.log(self.jointMap[key])
+            const joint = object.urdf.jointMap[key]
+            if (joint.urdf.type !== 'fixed')
+                this.scene.add(joint.axes)
+        }
+
+        this.scene.add(object);
+
+        this.orbitControls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+
+        this.transformControls = new THREE.TransformControls(this.camera, this.renderer.domElement);
+        // this.transformControls.addEventListener( 'change', render );
+
+        this.transformControls.attach(object)
+        this.scene.add(this.transformControls)
+    }
+
+    static _animate() {
+
+        // Read more about requestAnimationFrame at http://www.paulirish.com/2011/requestanimationframe-for-smart-animating/
+        requestAnimationFrame(this._animate.bind(this));
+        // this.cube.rotation.x += 0.1;
+        // this.cube.rotation.y += 0.1;
+
+
+        // Render the this.scene.
+        this.renderer.render(this.scene, this.camera);
+        this.orbitControls.update();
+        this.transformControls.update();
+
+    }
+
+    static _addShadowedLight(x, y, z, color, intensity) {
+
+        var directionalLight = new THREE.DirectionalLight(color, intensity);
+        directionalLight.position.set(x, y, z);
+        this.scene.add(directionalLight);
+
+        directionalLight.castShadow = true;
+
+        var d = 1;
+        directionalLight.shadow.camera.left = -d;
+        directionalLight.shadow.camera.right = d;
+        directionalLight.shadow.camera.top = d;
+        directionalLight.shadow.camera.bottom = -d;
+
+        directionalLight.shadow.camera.near = 1;
+        directionalLight.shadow.camera.far = 4;
+
+        directionalLight.shadow.mapSize.width = 1024;
+        directionalLight.shadow.mapSize.height = 1024;
+
+        directionalLight.shadow.bias = -0.002;
+
+    }
+
     static _createSlider(joint) {
         const sliderList = document.querySelector('#controls ul')
 
@@ -691,6 +763,7 @@ class URDF_viewer extends HTMLElement {
         return material
     }
 
+    //Function called only by addModuleYAML and addModule methods
     static _createFixedJoint(joint_name) {
         const jointType = "fixed"
         const joint_obj = new THREE.Object3D()
@@ -749,18 +822,14 @@ class URDF_viewer extends HTMLElement {
                 joint_obj.urdf.limits.upper = parseFloat(n.getAttribute('upper') || joint_obj.urdf.limits.upper)
             }
         })
+        
+        //NOTE: uncomment if you want to use the addModuleYAML method! 
+        // if (!joint_obj.name) {
+        //     xyz = [0.0, this.lastModKin.joint.proximal.p_pl + this.lastModKin.joint.distal.p_dl, this.lastModKin.joint.proximal.n_pl + this.lastModKin.joint.distal.n_dl ] //this.lastModKin.p_pl + this.lastModKin.p_dl, this.lastModKin.n_pl + this.lastModKin.n_dl
+        //     rpy = [this.lastModKin.joint.distal.alpha_dl, 0.0, 0.0] //this.lastModKin.alpha_dl
+        // }
 
-        console.log(this.lastModKin.joint.proximal.n_pl + this.lastModKin.joint.distal.n_dl)
-        if (!joint_obj.name) {
-            xyz = [0.0, this.lastModKin.joint.proximal.p_pl + this.lastModKin.joint.distal.p_dl, this.lastModKin.joint.proximal.n_pl + this.lastModKin.joint.distal.n_dl ] //this.lastModKin.p_pl + this.lastModKin.p_dl, this.lastModKin.n_pl + this.lastModKin.n_dl
-            rpy = [this.lastModKin.joint.distal.alpha_dl, 0.0, 0.0] //this.lastModKin.alpha_dl
-        }
-
-        // const axes = new THREE.AxesHelper( 1 );
-        // axes.position.set(xyz[0], xyz[1], xyz[2]);
-        // axes.rotation.set(rpy[0], rpy[1], rpy[2]);
-        // joint_obj.add(axes)
-
+        //Add reference frame
         var a = new THREE.Vector3(1, 0, 0);
         var b = new THREE.Vector3(0, 1, 0);
         var c = new THREE.Vector3(0, 0, 1);
@@ -789,6 +858,7 @@ class URDF_viewer extends HTMLElement {
             joint_obj.add(child)
         }
 
+        //Apply rotation and offset
         this._applyRotation(joint_obj, rpy)
         joint_obj.position.set(xyz[0], xyz[1], xyz[2])
 
@@ -808,8 +878,8 @@ class URDF_viewer extends HTMLElement {
             case 'continuous':
                 joint_obj.urdf.limits.lower = -Infinity
                 joint_obj.urdf.limits.upper = Infinity
+                // fall through to revolute joint 'setAngle' function
 
-            // fall through to revolute joint 'setAngle' function
             case 'revolute':
                 joint_obj.urdf.setAngle = function (angle = null) {
                     if (!joint_obj.urdf.axis) return

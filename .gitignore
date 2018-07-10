@@ -145,6 +145,12 @@ venv.bak/
 .mypy_cache/
 
 ####
+
+# Generic files to ignore
+*.pdf
+*.gv
+
+# Folders to ignore
 urdf/prova
 three
 URDF_viewer/example/models/*
