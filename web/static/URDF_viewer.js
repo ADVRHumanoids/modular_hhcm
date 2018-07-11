@@ -16,10 +16,10 @@ class URDF_viewer extends HTMLElement {
     //     return this._stlloader
     // }
 
-    // static get DAELoader() {
-    //     this._daeloader = this._daeloader || new THREE.ColladaLoader()
-    //     return this._daeloader
-    // }
+    static get DAELoader() {
+        this._daeloader = this._daeloader || new THREE.ColladaLoader()
+        return this._daeloader
+    }
 
     // static get TextureLoader() {
     //     this._textureloader = this._textureloader || new THREE.TextureLoader()
@@ -1045,9 +1045,9 @@ class URDF_viewer extends HTMLElement {
                         cyl_obj.position.set(xyz[0], xyz[1], xyz[2])
                     })
                 } else if (geoType === 'mesh') {
-                    const filename = n.children[0].getAttribute('filename').replace(/^((package:\/\/)|(model:\/\/))/, '')
+                    const filename = n.children[0].getAttribute('filename').replace(/^package:\/\//, ''); // replace(/^((package:\/\/)|(model:\/\/))/, '')
                     const path = './models' + '/' + filename
-                    console.log(path)
+                    //console.log(path)
                     const ext = path.match(/.*\.([A-Z0-9]+)$/i).pop() || ''
                     let scale_exist = n.children[0].getAttribute('scale')
                     if (scale_exist) scale = this._processTuple(scale_exist)
@@ -1060,7 +1060,7 @@ class URDF_viewer extends HTMLElement {
                         //console.log(Loader)
                         //console.log(path)
                         Loader.load(path, function (geom) {
-
+                            
                             const mesh = new THREE.Mesh()
                             mesh.geometry = geom
                             //console.log(mesh)
@@ -1093,14 +1093,42 @@ class URDF_viewer extends HTMLElement {
 
                                 //console.log(mesh)
                             }
-                        })
-                    }
-                    // else if (/\.dae$/i.test(path))
-                    //     this.DAELoader.load(path, dae => {
+                        })//, onProgressCallback, onErrorCallback)
 
-                    //         console.log('dae')
-                    //         done(dae.scene)
-                    //     })
+                        // function onProgressCallback(){}
+                        // function onErrorCallback(e){
+                        //     console.log("JSONLoader failed! because of error " + e.target.status + ", " + e.target.statusText);
+                        // }
+                    }
+                    else if (/\.dae$/i.test(path))
+                        this.DAELoader.load(path, collada => {
+
+                            console.log('dae')
+                            const dae = collada.scene
+
+                            if (dae) {
+
+                                dae.traverse( function ( child ) {
+                                    if ( child instanceof THREE.Mesh ) {
+                                        child.material = material
+                                    }
+                                });
+
+                                if (dae instanceof THREE.Mesh) {
+                                    dae.material = material
+                                    console.log("test")
+                                }
+
+                                link_obj.add(dae)
+
+                                dae.position.set(xyz[0], xyz[1], xyz[2])
+                                dae.rotation.set(rpy[0], rpy[1], rpy[2])
+
+                                dae.scale.set(scale[0], scale[1], scale[2])
+
+                                console.log(dae)
+                            }
+                        })
                     else
                         console.warn(`Could note load model at ${path}:\nNo loader available`)
 
