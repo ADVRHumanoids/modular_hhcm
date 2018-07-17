@@ -105,13 +105,7 @@ def main(filename):
   # data = jsonify(data)
 
   return data
-  
-# def joinLinkLink():
-#   Modules[i].get_rototranslation(Modules[i-1].Homogeneous_tf, tf.transformations.identity_matrix())
-      
-#   ET.SubElement(root, "xacro:add_fixed_joint", suffix = suffix_bis, x = Modules[i].x, y= Modules[i].y, z= Modules[i].z, roll= Modules[i].roll, pitch= Modules[i].pitch, yaw= Modules[i].yaw)
-#   suffix_bis = suffix_bis + '_bis'
-#   ET.SubElement(root, "xacro:add_link", suffix = suffix_bis, size_y = Modules[i].link_size_y, size_z = Modules[i].link_size_z)
+
 
 #Function writin the urdf file after converting from .xacro (See xacro/__init__.py for reference)
 def write_urdf(urdf_filename, tree):

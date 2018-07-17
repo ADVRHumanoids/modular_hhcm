@@ -628,6 +628,17 @@ class URDF_viewer extends HTMLElement {
 
         this.transformControls.attach(object)
         this.scene.add(this.transformControls)
+
+        self=this
+        window.addEventListener( 'resize', onWindowResize, false );
+        function onWindowResize(){
+
+            self.camera.aspect = window.innerWidth / window.innerHeight;
+            self.camera.updateProjectionMatrix();
+
+            self.renderer.setSize( window.innerWidth, window.innerHeight );
+
+        }
     }
 
     static _animate() {
