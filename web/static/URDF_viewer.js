@@ -1,20 +1,20 @@
 class URDF_viewer extends HTMLElement {
 
     //
-    get angles() {
-        const angles = {}
-        this.robots.forEach(r => {
-            for (let name in r.urdf.joints) angles[name] = r.urdf.joints[name].urdf.angle
-        })
-        return angles
-    }
-    set angles(val) { this._setAngles(val) }
-
-    // Cached mesh loaders
-    // static get STLLoader() {
-    //     this._stlloader = this._stlloader || new THREE.STLLoader()
-    //     return this._stlloader
+    // get angles() {
+    //     const angles = {}
+    //     this.robots.forEach(r => {
+    //         for (let name in r.urdf.joints) angles[name] = r.urdf.joints[name].urdf.angle
+    //     })
+    //     return angles
     // }
+    // set angles(val) { this._setAngles(val) }
+
+    //Cached mesh loaders
+    static get STLLoader() {
+        this._stlloader = this._stlloader || new THREE.STLLoader()
+        return this._stlloader
+    }
 
     static get DAELoader() {
         this._daeloader = this._daeloader || new THREE.ColladaLoader()
@@ -59,30 +59,6 @@ class URDF_viewer extends HTMLElement {
     - addModuleYAML: Method that reads a YAML file describing the module and adds the 3D object
     - updateURDF: Method that parse a string describing the updated robot URDF. The string is received from the Python script which reads it from YAML
     */
-
-    
-
-    // static defaultMeshLoader(path, ext, done) {
-
-    //     if (/\.stl$/i.test(path)){
-    //         this.STLLoader.load(path, function(geom) {
-    //             console.log('stl loder')
-    //             const mesh = new THREE.Mesh()
-    //             mesh.geometry = geom
-    //             console.log(mesh)
-    //             done(mesh)
-    //         })
-    //     }  
-    //     else if (/\.dae$/i.test(path))
-    //         this.DAELoader.load(path, dae => {
-
-    //             console.log('dae')
-    //             done(dae.scene)
-    //         })
-    //     else
-    //         console.warn(`Could note load model at ${path}:\nNo loader available`)
-    // }
-
     
     static addModule(reader) {
         const parser = new DOMParser()
@@ -554,6 +530,27 @@ class URDF_viewer extends HTMLElement {
         for (name in angles) this.setAngle(name, angles[name])
     }
 
+    // static defaultMeshLoader(path, ext, done) {
+
+    //     if (/\.stl$/i.test(path)){
+    //         this.STLLoader.load(path, function(geom) {
+    //             console.log('stl loder')
+    //             const mesh = new THREE.Mesh()
+    //             mesh.geometry = geom
+    //             console.log(mesh)
+    //             done(mesh)
+    //         })
+    //     }  
+    //     else if (/\.dae$/i.test(path))
+    //         this.DAELoader.load(path, dae => {
+
+    //             console.log('dae')
+    //             done(dae.scene)
+    //         })
+    //     else
+    //         console.warn(`Could note load model at ${path}:\nNo loader available`)
+    // }
+
     /* Private Functions */
 
     static _init(object) {
@@ -1016,6 +1013,7 @@ class URDF_viewer extends HTMLElement {
                     })
                 } else if (geoType === 'sphere') {
                     requestAnimationFrame(() => {
+                        console.log('sphere')
                         const mesh = new THREE.Mesh()
                         mesh.geometry = new THREE.SphereGeometry(1, 20, 20)
                         mesh.material = material
@@ -1023,6 +1021,9 @@ class URDF_viewer extends HTMLElement {
                         const radius = parseFloat(n.children[0].getAttribute('radius')) || 0
                         mesh.position.set(xyz[0], xyz[1], xyz[2])
                         mesh.scale.set(radius, radius, radius)
+
+                        link_obj.add(mesh)
+                        
                     })
                 } else if (geoType === 'cylinder') {
                     requestAnimationFrame(() => {
@@ -1056,10 +1057,9 @@ class URDF_viewer extends HTMLElement {
 
                     if (/\.stl$/i.test(path)) {
                         //console.log('stl loader')
-                        var Loader = new THREE.STLLoader();
                         //console.log(Loader)
                         //console.log(path)
-                        Loader.load(path, function (geom) {
+                        this.STLLoader.load(path, function (geom) {
                             
                             const mesh = new THREE.Mesh()
                             mesh.geometry = geom

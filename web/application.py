@@ -24,4 +24,7 @@ def send_file(path):
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, threaded=True) 
+    # from gevent.pywsgi import WSGIServer
+    # http_server = WSGIServer(('', 5000), app)
+    # http_server.serve_forever()

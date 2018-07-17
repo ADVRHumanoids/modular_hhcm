@@ -19,9 +19,20 @@ class Module(dict):
         switcher = {
             '/home/edoardo/catkin_ws/src/modular/web/static/yaml/module_joint.yaml': "joint",
             '/home/edoardo/catkin_ws/src/modular/web/static/yaml/module_link.yaml' : "link",
+            '/home/edoardo/catkin_ws/src/modular/web/static/yaml/module_link_500mm.yaml' : "link",
+            '/home/edoardo/catkin_ws/src/modular/web/static/yaml/module_link_700mm.yaml' : "link",
             '/home/edoardo/catkin_ws/src/modular/web/static/yaml/module_elbow.yaml' : "elbow"
         }
         setattr(self, 'type', switcher.get(x,"Invalid file name"))
+
+    def set_size(self, x):
+        print(x)
+        switcher = {
+            'small': 1,
+            'medium' : 2,
+            'big' : 3,
+        }
+        setattr(self, 'size', switcher.get(x,"Invalid file name"))
 
     # Computes the homogeneous transformation matrices for the distal and proximal part of the joint
     def get_proximal_distal_matrices(self):
@@ -124,6 +135,7 @@ def read_yaml(filename):
     result = Module(data)
     result.set_type(filename)
     result.get_transform()
+    result.set_size(result.size)
     return result 
 
 def main():

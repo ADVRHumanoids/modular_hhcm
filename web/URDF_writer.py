@@ -46,6 +46,8 @@ def main(filename):
 
   Modules.append(read_yaml(module_name))
 
+  size = str(Modules[i].size)
+
   #print(i)
   #print(Modules[i].type)
   
@@ -61,9 +63,9 @@ def main(filename):
       ET.SubElement(root, "xacro:add_fixed_joint", suffix = suffix_bis, x = Modules[i].x, y= Modules[i].y, z= Modules[i].z, roll= Modules[i].roll, pitch= Modules[i].pitch, yaw= Modules[i].yaw)
       suffix_bis = suffix_bis + '_bis'
       if(Modules[i].type == 'link'):
-        ET.SubElement(root, "xacro:add_link", suffix = suffix_bis, size_z = Modules[i].link_size_z)
+        ET.SubElement(root, "xacro:add_link", suffix = suffix_bis, size_z = Modules[i].link_size_z, size = size)
       else:
-        ET.SubElement(root, "xacro:add_elbow", suffix = suffix_bis, size_y = Modules[i].link_size_y, size_z = Modules[i].link_size_z)
+        ET.SubElement(root, "xacro:add_elbow", suffix = suffix_bis, size_y = Modules[i].link_size_y, size_z = Modules[i].link_size_z, size = size)
   else:
     if(Modules[i].type == 'joint'):
       #link + joint
@@ -71,7 +73,7 @@ def main(filename):
       joints=joints+1
       suffix=str(joints)
       ET.SubElement(root, "xacro:add_fixed_joint_stator", suffix = suffix, suffix_bis = suffix_bis, x = Modules[i].x, y= Modules[i].y, z= Modules[i].z, roll= Modules[i].roll, pitch= Modules[i].pitch, yaw= Modules[i].yaw)
-      ET.SubElement(root, "xacro:add_joint_stator", suffix = suffix, size_y = Modules[i].joint_size_y, size_z = Modules[i].joint_size_z)
+      ET.SubElement(root, "xacro:add_joint_stator", suffix = suffix, size_y = Modules[i].joint_size_y, size_z = Modules[i].joint_size_z, size = size)
       Modules[i].get_rototranslation(tf.transformations.identity_matrix(), Modules[i].Proximal_tf)
       jointData = Modules[i].kinematics.joint.joint
       upper_lim=str(jointData.upper_limit)
@@ -89,9 +91,9 @@ def main(filename):
       suffix_bis = suffix_bis + '_bis'
       
       if(Modules[i].type == 'link'):
-        ET.SubElement(root, "xacro:add_link", suffix = suffix_bis, size_z = Modules[i].link_size_z)
+        ET.SubElement(root, "xacro:add_link", suffix = suffix_bis, size_z = Modules[i].link_size_z, size = size)
       else:
-        ET.SubElement(root, "xacro:add_elbow", suffix = suffix_bis, size_y = Modules[i].link_size_y, size_z = Modules[i].link_size_z)
+        ET.SubElement(root, "xacro:add_elbow", suffix = suffix_bis, size_y = Modules[i].link_size_y, size_z = Modules[i].link_size_z, size = size)
 
 
   i=i+1

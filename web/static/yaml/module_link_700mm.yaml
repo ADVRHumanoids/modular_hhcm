@@ -4,7 +4,7 @@ kinematics:
       a_pl: 0
       alpha_pl: 0
       p_pl: 0
-      n_pl: 0.2
+      n_pl: 0
       delta_pl: 0
 
     distal:
@@ -16,22 +16,18 @@ kinematics:
 
     joint:
       delta_j: 0
-      type: 'revolute'
-      lower_limit: -3.14
-      upper_limit: 3.14
-      effort: 35 
-      velocity: 5.7
+      type: ''
       
   link:
     a_l: 0
     alpha_l: 0
     p_l: 0
-    n_l: 0
+    n_l: 0.7
     delta_l_in: 0
     delta_l_out: 0
 
 dynamics:
 
-size: 'small'
+size: 'big'
 
-urdf: "urdf/joint_module.urdf"
+urdf: "urdf/link_module.urdf"

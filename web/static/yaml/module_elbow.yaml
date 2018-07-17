@@ -28,4 +28,6 @@ kinematics:
 
 dynamics:
 
+size: 'medium'
+
 urdf: "urdf/elbow_module.urdf"
