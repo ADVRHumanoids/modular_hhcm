@@ -21,7 +21,8 @@ class Module(dict):
             '/home/edoardo/catkin_ws/src/modular/web/static/yaml/module_link.yaml' : "link",
             '/home/edoardo/catkin_ws/src/modular/web/static/yaml/module_link_500mm.yaml' : "link",
             '/home/edoardo/catkin_ws/src/modular/web/static/yaml/module_link_700mm.yaml' : "link",
-            '/home/edoardo/catkin_ws/src/modular/web/static/yaml/module_elbow.yaml' : "elbow"
+            '/home/edoardo/catkin_ws/src/modular/web/static/yaml/module_elbow.yaml' : "elbow",
+            '/home/edoardo/catkin_ws/src/modular/web/static/yaml/module_size_adapter.yaml' : "size_adapter"
         }
         setattr(self, 'type', switcher.get(x,"Invalid file name"))
 
@@ -120,7 +121,8 @@ class Module(dict):
         return {
         'joint': self.get_proximal_distal_matrices(),
         'link' : self.get_homogeneous_matrix(),
-        'elbow' : self.get_homogeneous_matrix()
+        'elbow' : self.get_homogeneous_matrix(),
+        'size_adapter' : self.get_homogeneous_matrix()
         }.get(x, 'Invalid type')
 
 
@@ -135,7 +137,7 @@ def read_yaml(filename):
     result = Module(data)
     result.set_type(filename)
     result.get_transform()
-    result.set_size(result.size)
+    #result.set_size(result.size)
     return result 
 
 def main():

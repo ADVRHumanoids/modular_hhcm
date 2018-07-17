@@ -40,13 +40,18 @@ Modules.append(Module(data))
 #print(Modules[0].type)
 i=i+1
 
+size = 3
+
 def main(filename):
-  global i, joints, suffix, suffix_bis
+  global i, joints, suffix, suffix_bis, size
   module_name = path_name + '/web/static/yaml/' + filename
 
   Modules.append(read_yaml(module_name))
 
-  size = str(Modules[i].size)
+  #Modules[i].size = str(size)
+  
+  setattr(Modules[i], 'size', str(size))
+  print(Modules[i].size)
 
   #print(i)
   #print(Modules[i].type)
@@ -63,9 +68,16 @@ def main(filename):
       ET.SubElement(root, "xacro:add_fixed_joint", suffix = suffix_bis, x = Modules[i].x, y= Modules[i].y, z= Modules[i].z, roll= Modules[i].roll, pitch= Modules[i].pitch, yaw= Modules[i].yaw)
       suffix_bis = suffix_bis + '_bis'
       if(Modules[i].type == 'link'):
-        ET.SubElement(root, "xacro:add_link", suffix = suffix_bis, size_z = Modules[i].link_size_z, size = size)
+        ET.SubElement(root, "xacro:add_link", suffix = suffix_bis, size_z = Modules[i].link_size_z, size = Modules[i].size)
+      elif(Modules[i].type == 'elbow'):
+        ET.SubElement(root, "xacro:add_elbow", suffix = suffix_bis, size_y = Modules[i].link_size_y, size_z = Modules[i].link_size_z, size = Modules[i].size)
       else:
-        ET.SubElement(root, "xacro:add_elbow", suffix = suffix_bis, size_y = Modules[i].link_size_y, size_z = Modules[i].link_size_z, size = size)
+        if(size>1):
+          ET.SubElement(root, "xacro:add_size_adapter", suffix = suffix_bis, size_z = Modules[i].link_size_z, size = Modules[i].size)
+          size = size-1
+        else:
+          #ERROR
+          print("Error")
   else:
     if(Modules[i].type == 'joint'):
       #link + joint
@@ -73,7 +85,7 @@ def main(filename):
       joints=joints+1
       suffix=str(joints)
       ET.SubElement(root, "xacro:add_fixed_joint_stator", suffix = suffix, suffix_bis = suffix_bis, x = Modules[i].x, y= Modules[i].y, z= Modules[i].z, roll= Modules[i].roll, pitch= Modules[i].pitch, yaw= Modules[i].yaw)
-      ET.SubElement(root, "xacro:add_joint_stator", suffix = suffix, size_y = Modules[i].joint_size_y, size_z = Modules[i].joint_size_z, size = size)
+      ET.SubElement(root, "xacro:add_joint_stator", suffix = suffix, size_y = Modules[i].joint_size_y, size_z = Modules[i].joint_size_z, size = Modules[i].size)
       Modules[i].get_rototranslation(tf.transformations.identity_matrix(), Modules[i].Proximal_tf)
       jointData = Modules[i].kinematics.joint.joint
       upper_lim=str(jointData.upper_limit)
@@ -91,18 +103,24 @@ def main(filename):
       suffix_bis = suffix_bis + '_bis'
       
       if(Modules[i].type == 'link'):
-        ET.SubElement(root, "xacro:add_link", suffix = suffix_bis, size_z = Modules[i].link_size_z, size = size)
+        ET.SubElement(root, "xacro:add_link", suffix = suffix_bis, size_z = Modules[i].link_size_z, size = Modules[i].size)
+      elif(Modules[i].type == 'elbow'):
+        ET.SubElement(root, "xacro:add_elbow", suffix = suffix_bis, size_y = Modules[i].link_size_y, size_z = Modules[i].link_size_z, size = Modules[i].size)
       else:
-        ET.SubElement(root, "xacro:add_elbow", suffix = suffix_bis, size_y = Modules[i].link_size_y, size_z = Modules[i].link_size_z, size = size)
-
-
-  i=i+1
+        if(size>1):
+          ET.SubElement(root, "xacro:add_size_adapter", suffix = suffix_bis, size_z = Modules[i].link_size_z, size = Modules[i].size)
+          size=size-1
+        else:
+          #ERROR
+          print("Error")
 
   #update the urdf file, adding the new module 
   string = write_urdf(path_name + '/urdf/ModularBot_test.urdf', urdf_tree)
 
-  data = {'result': string}
+  data = {'result': string, 'lastModule': Modules[i].type, 'size': size}
   # data = jsonify(data)
+
+  i=i+1
 
   return data
 

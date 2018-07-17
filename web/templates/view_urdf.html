@@ -51,6 +51,7 @@
                 top: 0;
                 right: 0;
                 float: right;
+                display: none;
                 /* float:right;
                 width:50px;
                 height:100px; */
@@ -118,6 +119,16 @@
                 display: inline-block; */
                 font-size: 16px;
             }
+            #addSizeAdapter {
+                background-image: url(images/size_adapter.png);
+                background-size: 100% 100%;
+                height: 140px; 
+                width: 100%;
+                text-align: center;
+                /* text-decoration: none;
+                display: inline-block; */
+                font-size: 16px;
+            }
             button > div {
                 padding-top: 50%;
             }
@@ -146,9 +157,10 @@
                 <!-- <input type="file" id="moduleInput"> -->
                 <button type="button" id="addJoint"><div>Joint</div></button> 
                 <button type="button" id="addElbow"><div>Elbow</div></button>
-                <button type="button" id="addLink"><div>Link</div></button> 
+                <button type="button" id="addLink"><div>Link 0.3m</div></button> 
                 <button type="button" id="addLink500mm"><div>Link 0.5m</div></button>
                 <button type="button" id="addLink700mm"><div>Link 0.7m</div></button>
+                <button type="button" id="addSizeAdapter"><div>Size Adapter</div></button>
                 <!-- <pre id="DisplayArea"></pre> -->
             </div>
         </div>
@@ -161,11 +173,13 @@
                 var fileInput = document.getElementById('fileInput');
                 //var fileDisplayArea = document.getElementById('fileDisplayArea');
                 //var moduleInput = document.getElementById('moduleInput');
+                var selector = document.getElementById('selector')
                 var addJoint = document.getElementById('addJoint');
                 var addElbow = document.getElementById('addElbow');
                 var addLink = document.getElementById('addLink');
                 var addLink500 = document.getElementById('addLink500mm');
                 var addLink700 = document.getElementById('addLink700mm');
+                var addSizeAdapter = document.getElementById('addSizeAdapter');
                 
 
                 fileInput.addEventListener('change', function(e) {
@@ -177,6 +191,7 @@
                         //fileDisplayArea.innerText = reader.result;
                         document.getElementById('header').style.display="none";
                         robots = URDF_viewer.showURDF(reader);
+                        selector.style.display = 'block';
                     }
                     
                     reader.readAsText(file);  
@@ -204,6 +219,8 @@
                 addLink500.onclick = function() {addModule("module_link_500mm.yaml")};
 
                 addLink700.onclick = function() {addModule("module_link_700mm.yaml")};
+
+                addSizeAdapter.onclick = function() {addModule("module_size_adapter.yaml")};
             }
 
             //Function to add a new module. Called at the click of the linked button
@@ -220,11 +237,28 @@
                     success: function(data) {
                         console.log(data)
                         robots = URDF_viewer.updateURDF(data['result'])
+                        updateShownButtons(data['lastModule'], data['size'])
                     },
                     async: true
                 });
             };
 
+            function updateShownButtons(lastModule, size) {
+                console.log(lastModule)
+                switch (lastModule) {
+                    case 'joint': 
+                        addJoint.style.display="none";
+                        break;
+                    case 'size_adapter':
+                        if (size<2)
+                            addSizeAdapter.style.display="none";
+                    case 'link':
+                    case 'elbow':
+                        addJoint.style.display="block";
+                        break;
+                }
+                
+            }
             // //Function to open a file on the server side from the HTML page
             // function openfile(url, cB) {
             //     function updateProgress (oEvent) {
