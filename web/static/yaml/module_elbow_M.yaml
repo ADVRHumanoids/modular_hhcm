@@ -17,6 +17,10 @@ kinematics:
     joint:
       delta_j: 0
       type: ''
+      lower_limit: 0
+      upper_limit: 0
+      effort: 0
+      velocity: 0
       
   link:
     a_l: 0
@@ -29,5 +33,9 @@ kinematics:
 dynamics:
 
 size: 'medium'
+size_in:
+size_out:
+
+type: 'elbow'
 
 urdf: "urdf/elbow_module.urdf"

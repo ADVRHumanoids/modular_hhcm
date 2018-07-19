@@ -119,14 +119,29 @@
                 display: inline-block; */
                 font-size: 16px;
             }
-            #addSizeAdapter {
+            #addSizeAdapter_Big2Medium {
                 background-image: url(images/size_adapter.png);
                 background-size: 100% 100%;
                 height: 140px; 
                 width: 100%;
                 text-align: center;
-                /* text-decoration: none;
-                display: inline-block; */
+                font-size: 16px;
+            }
+            #addSizeAdapter_Big2Small {
+                background-image: url(images/size_adapter.png);
+                background-size: 100% 100%;
+                height: 140px; 
+                width: 100%;
+                text-align: center;
+                font-size: 16px;
+            }
+            #addSizeAdapter_Medium2Small {
+                background-image: url(images/size_adapter.png);
+                background-size: 100% 100%;
+                height: 140px; 
+                width: 100%;
+                text-align: center;
+                display: none;
                 font-size: 16px;
             }
             button > div {
@@ -160,7 +175,9 @@
                 <button type="button" id="addLink"><div>Link 0.3m</div></button> 
                 <button type="button" id="addLink500mm"><div>Link 0.5m</div></button>
                 <button type="button" id="addLink700mm"><div>Link 0.7m</div></button>
-                <button type="button" id="addSizeAdapter"><div>Size Adapter</div></button>
+                <button type="button" id="addSizeAdapter_Big2Medium"><div>Size Adapter: Big to Medium</div></button>
+                <button type="button" id="addSizeAdapter_Big2Small"><div>Size Adapter: Big to Small</div></button>
+                <button type="button" id="addSizeAdapter_Medium2Small"><div>Size Adapter: Medium to Small</div></button>
                 <!-- <pre id="DisplayArea"></pre> -->
             </div>
         </div>
@@ -169,6 +186,7 @@
 
         <script>
             var flag, reader, robots, doc;
+            var size = 3;
             window.onload = function() {
                 var fileInput = document.getElementById('fileInput');
                 //var fileDisplayArea = document.getElementById('fileDisplayArea');
@@ -179,7 +197,9 @@
                 var addLink = document.getElementById('addLink');
                 var addLink500 = document.getElementById('addLink500mm');
                 var addLink700 = document.getElementById('addLink700mm');
-                var addSizeAdapter = document.getElementById('addSizeAdapter');
+                var addSizeAdapter_Big2Medium = document.getElementById('addSizeAdapter_Big2Medium');
+                var addSizeAdapter_Big2Small = document.getElementById('addSizeAdapter_Big2Small');
+                var addSizeAdapter_Medium2Small = document.getElementById('addSizeAdapter_Medium2Small');
                 
 
                 fileInput.addEventListener('change', function(e) {
@@ -210,25 +230,46 @@
                 //     reader.readAsText(file);      
                 // });
 
-                addJoint.onclick = function() {addModule("module_joint.yaml")};
+                addJoint.onclick = function() {addModule("module_joint", size)};
 
-                addElbow.onclick = function() {addModule("module_elbow.yaml")};
+                addElbow.onclick = function() {addModule("module_elbow", size)};
 
-                addLink.onclick = function() {addModule("module_link.yaml")};
+                addLink.onclick = function() {addModule("module_link_300mm", size)};
 
-                addLink500.onclick = function() {addModule("module_link_500mm.yaml")};
+                addLink500.onclick = function() {addModule("module_link_500mm", size)};
 
-                addLink700.onclick = function() {addModule("module_link_700mm.yaml")};
+                addLink700.onclick = function() {addModule("module_link_700mm", size)};
 
-                addSizeAdapter.onclick = function() {addModule("module_size_adapter.yaml")};
+                addSizeAdapter_Big2Medium.onclick = function() {addModule("module_size_adapter_B2M", size)};
+
+                addSizeAdapter_Big2Small.onclick = function() {addModule("module_size_adapter_B2S", size)};
+
+                addSizeAdapter_Medium2Small.onclick = function() {addModule("module_size_adapter_M2S", size)};
             }
 
             //Function to add a new module. Called at the click of the linked button
-            function addModule(filename) {
+            function addModule(modulename, size_value) {
                 //opening YAML file containing kin. and dyn. parameters and URDF path
                 //var url = 'http://127.0.0.1:5000/yaml/' + filename;
                 //openfile(url, callBack_YAML)  
-
+                switch (size_value) {
+                    case 3:
+                        size_tag = '_B';
+                        break;
+                    case 2:
+                        size_tag = '_M';
+                        break;
+                    case 1:
+                        size_tag = '_S';
+                        break;
+                }
+                
+                if (modulename.indexOf("module_size_adapter") >= 0) {
+                    filename = modulename + '.yaml'
+                } else {
+                    filename = modulename + size_tag + '.yaml'
+                }
+                
                 //making an ajax request to the server to proceed to write the modified URDF
                 $.ajax({
                     url: 'http://127.0.0.1:5000/changeURDF/',
@@ -237,21 +278,32 @@
                     success: function(data) {
                         console.log(data)
                         robots = URDF_viewer.updateURDF(data['result'])
-                        updateShownButtons(data['lastModule'], data['size'])
+                        size = data['size']
+                        updateShownButtons(data['lastModule'])
+                        console.log(size)
                     },
                     async: true
                 });
+
             };
 
-            function updateShownButtons(lastModule, size) {
-                console.log(lastModule)
+            function updateShownButtons(lastModule) {
+                console.log(size)
                 switch (lastModule) {
                     case 'joint': 
                         addJoint.style.display="none";
                         break;
                     case 'size_adapter':
-                        if (size<2)
-                            addSizeAdapter.style.display="none";
+                        if (size==2) {
+                            addSizeAdapter_Big2Medium.style.display="none";
+                            addSizeAdapter_Big2Small.style.display="none";
+                            addSizeAdapter_Medium2Small.style.display="block";
+                        }
+                        else if (size==1){
+                            addSizeAdapter_Big2Medium.style.display="none";
+                            addSizeAdapter_Big2Small.style.display="none";
+                            addSizeAdapter_Medium2Small.style.display="none";
+                        }                             
                     case 'link':
                     case 'elbow':
                         addJoint.style.display="block";

@@ -1,19 +1,39 @@
 <?xml version="1.0" ?>
 <robot name="link_module" xmlns:xacro="http://ros.org/wiki/xacro">
-    <link>
+    <material name="blue">
+        <color rgba="0 0 0.8 1"/>
+    </material>
+    <material name="black">
+        <color rgba="0 0 0 1"/>
+    </material>
+    <material name="white">
+        <color rgba="1 1 1 1"/>
+    </material>
+    <link name="base_link">
+        <visual>
+        <origin rpy = "0 0 0" xyz = "0 0 0"/>
+        </visual>
+    </link>
+    <joint name="fixed" type="fixed">
+        <parent link="base_link"/>
+        <child link="link_0"/>
+        <axis rpy="0 0 0" xyz="0 0 1"/>
+        <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+    </joint>
+    <link name="link_0">
         <visual>
         <origin rpy="0 0 0" xyz="0 0 0.1"/>
         <geometry>
             <box size="0.1 0.1 0.2"/>
         </geometry>
-        <material name="white"/>
+        <material name="black"/>
         </visual>
         <visual>
         <origin rpy="0 0 0" xyz="0 0.1 0.2"/>
         <geometry>
             <box size="0.1 0.2 0.1"/>
         </geometry>
-        <material name="white"/>
+        <material name="black"/>
         </visual>
         <!-- <visual>
         <origin rpy="0 0 0" xyz="0 0.25 0.2"/>

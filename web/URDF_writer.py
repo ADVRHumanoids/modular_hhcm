@@ -73,8 +73,8 @@ def main(filename):
         ET.SubElement(root, "xacro:add_elbow", suffix = suffix_bis, size_y = Modules[i].link_size_y, size_z = Modules[i].link_size_z, size = Modules[i].size)
       else:
         if(size>1):
-          ET.SubElement(root, "xacro:add_size_adapter", suffix = suffix_bis, size_z = Modules[i].link_size_z, size = Modules[i].size)
-          size = size-1
+          ET.SubElement(root, "xacro:add_size_adapter", suffix = suffix_bis, size_z = Modules[i].link_size_z, size_in = Modules[i].size_in, size_out = Modules[i].size_out)
+          size = Modules[i].size_out
         else:
           #ERROR
           print("Error")
@@ -108,8 +108,8 @@ def main(filename):
         ET.SubElement(root, "xacro:add_elbow", suffix = suffix_bis, size_y = Modules[i].link_size_y, size_z = Modules[i].link_size_z, size = Modules[i].size)
       else:
         if(size>1):
-          ET.SubElement(root, "xacro:add_size_adapter", suffix = suffix_bis, size_z = Modules[i].link_size_z, size = Modules[i].size)
-          size=size-1
+          ET.SubElement(root, "xacro:add_size_adapter", suffix = suffix_bis, size_z = Modules[i].link_size_z, size_in = Modules[i].size_in, size_out = Modules[i].size_out)
+          size=Modules[i].size_out
         else:
           #ERROR
           print("Error")

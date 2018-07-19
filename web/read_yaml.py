@@ -2,38 +2,48 @@ import yaml
 import sys
 import tf
 
-# Class describing all the properties of a joint module 
+# Class describing all the properties of a module 
 # - Kinematics and dynamics paramters are loaded from a YAML file
 # - Methods are provided to compute frame transformations and store them as class attributes 
 class Module(dict):
     
-    # Method used to import as class attributes the fields of the dictionary obtained by reading the YAML file 
+    # Import the fields of the dictionary (obtained by reading the YAML file) as class attributes 
     def __getattr__(self, name):
         value = self[name]
         if isinstance(value, dict):
             value = Module(value)
         return value
 
-    def set_type(self, x):
-        print(x)
-        switcher = {
-            '/home/edoardo/catkin_ws/src/modular/web/static/yaml/module_joint.yaml': "joint",
-            '/home/edoardo/catkin_ws/src/modular/web/static/yaml/module_link.yaml' : "link",
-            '/home/edoardo/catkin_ws/src/modular/web/static/yaml/module_link_500mm.yaml' : "link",
-            '/home/edoardo/catkin_ws/src/modular/web/static/yaml/module_link_700mm.yaml' : "link",
-            '/home/edoardo/catkin_ws/src/modular/web/static/yaml/module_elbow.yaml' : "elbow",
-            '/home/edoardo/catkin_ws/src/modular/web/static/yaml/module_size_adapter.yaml' : "size_adapter"
-        }
-        setattr(self, 'type', switcher.get(x,"Invalid file name"))
+    # # From the name of the YAML file to be read, set the type of the module
+    # def set_type(self, x):
+    #     print(x)
+    #     switcher = {
+    #         '/home/edoardo/catkin_ws/src/modular/web/static/yaml/module_joint.yaml': "joint",
+    #         '/home/edoardo/catkin_ws/src/modular/web/static/yaml/module_link.yaml' : "link",
+    #         '/home/edoardo/catkin_ws/src/modular/web/static/yaml/module_link_500mm.yaml' : "link",
+    #         '/home/edoardo/catkin_ws/src/modular/web/static/yaml/module_link_700mm.yaml' : "link",
+    #         '/home/edoardo/catkin_ws/src/modular/web/static/yaml/module_elbow.yaml' : "elbow",
+    #         '/home/edoardo/catkin_ws/src/modular/web/static/yaml/module_size_adapter_B2M.yaml' : "size_adapter",
+    #         '/home/edoardo/catkin_ws/src/modular/web/static/yaml/module_size_adapter_B2S.yaml' : "size_adapter",
+    #         '/home/edoardo/catkin_ws/src/modular/web/static/yaml/module_size_adapter_M2S.yaml' : "size_adapter"
+    #     }
+    #     setattr(self, 'type', switcher.get(x,"Invalid file name"))
 
-    def set_size(self, x):
-        print(x)
+    # Set the size of the module
+    def set_size(self, mod):
         switcher = {
-            'small': 1,
-            'medium' : 2,
-            'big' : 3,
-        }
-        setattr(self, 'size', switcher.get(x,"Invalid file name"))
+                'small': '1',
+                'medium' : '2',
+                'big' : '3',
+            }
+        if (mod.type == "size_adapter"):
+            print(mod.size_in)
+            setattr(self, 'size_in', switcher.get(mod.size_in,"Invalid size"))
+            print(mod.size_out)
+            setattr(self, 'size_out', switcher.get(mod.size_out,"Invalid size"))
+        else:
+            print(mod.size)
+            setattr(self, 'size', switcher.get(mod.size,"Invalid size"))
 
     # Computes the homogeneous transformation matrices for the distal and proximal part of the joint
     def get_proximal_distal_matrices(self):
@@ -75,7 +85,7 @@ class Module(dict):
         setattr(self, 'joint_size_y', str(size_y))
         setattr(self, 'joint_size_z', str(size_z))
     
-     # Computes the homogeneous transformation matrix for the link
+    # Computes the homogeneous transformation matrix for the link
     def get_homogeneous_matrix(self):
         origin, xaxis, yaxis, zaxis = (0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1)
 
@@ -115,6 +125,7 @@ class Module(dict):
         setattr(self, 'pitch', str(angles[1]))
         setattr(self, 'yaw', str(angles[2]))
 
+    # Computes the correct transformation depending on the module type
     def get_transform(self):
         x=self.type
         print(self.type)
@@ -135,11 +146,12 @@ def read_yaml(filename):
             print(exc)
 
     result = Module(data)
-    result.set_type(filename)
+    #result.set_type(filename)
     result.get_transform()
-    #result.set_size(result.size)
+    result.set_size(result)
     return result 
 
+# Main function called when the script is not imported as a modue but run directly
 def main():
     my_dict = read_yaml(sys.argv[1])
     print(my_dict)

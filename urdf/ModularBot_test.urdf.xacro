@@ -1,6 +1,8 @@
 <?xml version="1.0" ?>
 <robot name="ModularBot" xmlns:xacro="http://ros.org/wiki/xacro">
-   <xacro:property name="width" value="0.1"/>
+   <xacro:property name="size1" value="0.05"/>
+   <xacro:property name="size2" value="0.055"/>
+   <xacro:property name="size3" value="0.06"/>
    <xacro:property name="len1" value="0.4"/>
    <xacro:property name="len2" value="0.6"/>
    <xacro:property name="len3" value="0.8"/>
@@ -13,6 +15,9 @@
    </material>
    <material name="white">
       <color rgba="1 1 1 1"/>
+   </material>
+   <material name="grey">
+      <color rgba="0.5 0.5 0.5 1"/>
    </material>
    <xacro:macro name="default_inertial" params="mass">
       <inertial>
@@ -30,13 +35,13 @@
       <visual>
          <origin rpy="0 0 0" xyz="0 0 ${len1/2}"/>
          <geometry>
-            <cylinder length="${len1}" radius="${width}"/>
+            <cylinder length="${len1}" radius="${size1}"/>
          </geometry>
          <material name="black"/>
       </visual>
       <collision>
          <geometry>
-            <cylinder length="${len1}" radius="${width}"/>
+            <cylinder length="${len1}" radius="${size1}"/>
          </geometry>
       </collision>
       <xacro:default_inertial mass="10"/>
@@ -45,25 +50,36 @@
       <parent link="base_link"/>
       <child link="link_0"/>
    </joint>
-   <xacro:macro name="add_link" params="suffix size_z">
+   <xacro:macro name="add_link" params="suffix size_z size">
+      <xacro:if value="${size==1}">
+         <xacro:property name="radius" value="${size1}"/>
+      </xacro:if>
+      <xacro:unless value="${size==1}">
+         <xacro:if value="${size==2}">
+            <xacro:property name="radius" value="${size2}"/>
+         </xacro:if>
+         <xacro:unless value="${size==2}">
+            <xacro:property name="radius" value="${size3}"/>
+         </xacro:unless>
+      </xacro:unless>
       <link name="link_${suffix}">
          <visual>
             <origin rpy="0 0 0" xyz="0 0 ${size_z/2}"/>
             <geometry>
-               <box size="${width} ${width} ${size_z}"/>
+               <cylinder length="${size_z}" radius="${radius}"/>
             </geometry>
             <material name="black"/>
          </visual>
          <collision>
             <origin rpy="0 0 0" xyz="0 0 ${size_z/2}"/>
             <geometry>
-               <box size="${width} ${width} ${size_z}"/>
+               <cylinder length="${size_z}" radius="${radius}"/>
             </geometry>
          </collision>
          <inertial>
             <origin rpy="0 0 0" xyz="0 0 ${size_z/2}"/>
             <mass value="${mass}"/>
-            <inertia ixx="${mass / 12.0 * (width*width + size_z*size_z)}" ixy="0.0" ixz="0.0" iyy="${mass / 12.0 * (size_z*size_z + width*width)}" iyz="0.0" izz="${mass / 12.0 * (width*width + width*width)}"/>
+            <inertia ixx="${mass / 12.0 * (3*radius*radius + size_z*size_z)}" ixy="0.0" ixz="0.0" iyy="${mass / 12.0 * (size_z*size_z + 3*radius*radius)}" iyz="0.0" izz="${mass / 2.0 * (radius*radius)}"/>
          </inertial>
       </link>
       <gazebo reference="link_${suffix}">
@@ -76,37 +92,127 @@
          <material>Gazebo/White</material>
       </gazebo>
    </xacro:macro>
-   <xacro:macro name="add_elbow" params="suffix size_y size_z">
+   <xacro:macro name="add_size_adapter" params="suffix size_z size_in size_out">
+      <xacro:if value="${size_in==3}">
+         <xacro:property name="radius1" value="${size3}"/>
+      </xacro:if>
+      <xacro:unless value="${size_in==3}">
+         <xacro:if value="${size_in==2}">
+            <xacro:property name="radius1" value="${size2}"/>
+         </xacro:if>
+         <xacro:unless value="${size_in==2}">
+                
+            </xacro:unless>
+      </xacro:unless>
+      <xacro:if value="${size_out==3}">
+            
+        </xacro:if>
+      <xacro:unless value="${size_out==3}">
+         <xacro:if value="${size_out==2}">
+            <xacro:property name="radius2" value="${size2}"/>
+         </xacro:if>
+         <xacro:unless value="${size_out==2}">
+            <xacro:property name="radius2" value="${size1}"/>
+         </xacro:unless>
+      </xacro:unless>
       <link name="link_${suffix}">
          <visual>
-            <origin rpy="0 0 0" xyz="0 0 ${size_z/2}"/>
+            <origin rpy="0 0 0" xyz="0 0 ${size_z/4}"/>
             <geometry>
-               <box size="${width} ${width} ${size_z}"/>
+               <cylinder length="${size_z/2}" radius="${radius1}"/>
             </geometry>
-            <material name="white"/>
+            <material name="grey"/>
          </visual>
          <visual>
-            <origin rpy="0 0 0" xyz="0 ${size_y/2} ${size_z}"/>
+            <origin rpy="0 0 0" xyz="0 0 ${3*size_z/4}"/>
             <geometry>
-               <box size="${width} ${size_y} ${width}"/>
+               <cylinder length="${size_z/2}" radius="${radius2}"/>
             </geometry>
-            <material name="white"/>
+            <material name="grey"/>
          </visual>
          <collision>
-            <origin rpy="0 0 0" xyz="0 0 ${size_z/2}"/>
+            <origin rpy="0 0 0" xyz="0 0 ${size_z/4}"/>
             <geometry>
-               <box size="${width} ${width} ${size_z}"/>
+               <cylinder length="${size_z/2}" radius="${radius1}"/>
+            </geometry>
+         </collision>
+         <collision>
+            <origin rpy="0 0 0" xyz="0 0 ${3*size_z/4}"/>
+            <geometry>
+               <cylinder length="${size_z/2}" radius="${radius2}"/>
             </geometry>
          </collision>
          <inertial>
             <origin rpy="0 0 0" xyz="0 0 ${size_z/2}"/>
             <mass value="${mass}"/>
-            <inertia ixx="${mass / 12.0 * (width*width + size_z*size_z)}" ixy="0.0" ixz="0.0" iyy="${mass / 12.0 * (size_z*size_z + width*width)}" iyz="0.0" izz="${mass / 12.0 * (width*width + width*width)}"/>
+            <inertia ixx="${mass / 12.0 * (3*radius1*radius1 + 4*size_z/2*size_z/2) + mass / 12.0 * (3*radius2*radius2 + 4*size_z/2*size_z/2)}" ixy="0.0" ixz="0.0" iyy="${mass / 12.0 * (3*radius1*radius1 + 4*size_z/2*size_z/2) + mass / 12.0 * (3*radius2*radius2 + 4*size_z/2*size_z/2)}" iyz="0.0" izz="${mass / 2.0 * (radius1*radius1) + mass / 2.0 * (radius2*radius2)}"/>
+         </inertial>
+      </link>
+      <gazebo reference="link_${suffix}">
+         <mu1>0.2</mu1>
+         <mu2>0.2</mu2>
+         <kp>1000000.0</kp>
+         <kd>1.0</kd>
+         <maxVel>0.0</maxVel>
+         <minDepth>0.0001</minDepth>
+         <material>Gazebo/Grey</material>
+      </gazebo>
+   </xacro:macro>
+   <xacro:macro name="add_elbow" params="suffix size_y size_z size">
+      <xacro:if value="${size==1}">
+         <xacro:property name="radius" value="${size1}"/>
+      </xacro:if>
+      <xacro:unless value="${size==1}">
+         <xacro:if value="${size==2}">
+            <xacro:property name="radius" value="${size2}"/>
+         </xacro:if>
+         <xacro:unless value="${size==2}">
+            <xacro:property name="radius" value="${size3}"/>
+         </xacro:unless>
+      </xacro:unless>
+      <link name="link_${suffix}">
+         <visual>
+            <origin rpy="0 0 0" xyz="0 0 ${size_z/2}"/>
+            <geometry>
+               <cylinder length="${size_z}" radius="${radius}"/>
+            </geometry>
+            <material name="white"/>
+         </visual>
+         <visual>
+            <origin rpy="1.57 0 0" xyz="0 ${size_y/2} ${size_z}"/>
+            <geometry>
+               <cylinder length="${size_y}" radius="${radius}"/>
+            </geometry>
+            <material name="white"/>
+         </visual>
+         <visual>
+            <origin rpy="0 0 0" xyz="0 0 ${size_z}"/>
+            <geometry>
+               <sphere radius="${radius}"/>
+            </geometry>
+            <material name="white"/>
+         </visual>
+         <collision>
+            <origin rpy="0 0 0" xyz="0 0 ${size_z/2}"/>
+            <geometry>
+               <cylinder length="${size_z}" radius="${radius}"/>
+            </geometry>
+         </collision>
+         <inertial>
+            <origin rpy="0 0 0" xyz="0 0 ${size_z/2}"/>
+            <mass value="${mass}"/>
+            <inertia ixx="${mass / 12.0 * (radius*radius + size_z*size_z)}" ixy="0.0" ixz="0.0" iyy="${mass / 12.0 * (size_z*size_z + radius*radius)}" iyz="0.0" izz="${mass / 12.0 * (radius*radius + radius*radius)}"/>
          </inertial>
          <collision>
-            <origin rpy="0 0 0" xyz="0 ${size_y/2} ${size_z}"/>
+            <origin rpy="1.57 0 0" xyz="0 ${size_y/2} ${size_z}"/>
             <geometry>
-               <box size="${width} ${size_y} ${width}"/>
+               <cylinder length="${size_y}" radius="${radius}"/>
+            </geometry>
+         </collision>
+         <collision>
+            <origin rpy="0 0 0" xyz="0 0 ${size_z}"/>
+            <geometry>
+               <sphere radius="${radius}"/>
             </geometry>
          </collision>
       </link>
@@ -136,26 +242,38 @@
          <origin rpy="${roll} ${pitch} ${yaw}" xyz="${x} ${y} ${z}"/>
          <limit effort="${effort}" lower="${lower_lim}" upper="${upper_lim}" velocity="${velocity}"/>
       </joint>
+      <link name="link_${suffix}"/>
    </xacro:macro>
-   <xacro:macro name="add_joint_stator" params="suffix size_y size_z">
+   <xacro:macro name="add_joint_stator" params="suffix size_y size_z size">
+      <xacro:if value="${size==1}">
+         <xacro:property name="radius" value="${size1}"/>
+      </xacro:if>
+      <xacro:unless value="${size==1}">
+         <xacro:if value="${size==2}">
+            <xacro:property name="radius" value="${size2}"/>
+         </xacro:if>
+         <xacro:unless value="${size==2}">
+            <xacro:property name="radius" value="${size3}"/>
+         </xacro:unless>
+      </xacro:unless>
       <link name="link_stator_joint_${suffix}">
          <visual>
             <origin rpy="0 0 0" xyz="0 0 ${size_z/2}"/>
             <geometry>
-               <cylinder length="${size_z}" radius="${width}"/>
+               <cylinder length="${size_z}" radius="${radius}"/>
             </geometry>
             <material name="blue"/>
          </visual>
          <collision>
             <origin rpy="0 0 0" xyz="0 0 ${size_z/2}"/>
             <geometry>
-               <cylinder length="${size_z}" radius="${width}"/>
+               <cylinder length="${size_z}" radius="${radius}"/>
             </geometry>
          </collision>
          <inertial>
             <origin rpy="0 0 0" xyz="0 0 ${size_z/2}"/>
             <mass value="${mass}"/>
-            <inertia ixx="${mass / 12.0 * (width*width + size_z*size_z)}" ixy="0.0" ixz="0.0" iyy="${mass / 12.0 * (size_z*size_z + width*width)}" iyz="0.0" izz="${mass / 12.0 * (width*width + width*width)}"/>
+            <inertia ixx="${mass / 12.0 * (radius*radius + size_z*size_z)}" ixy="0.0" ixz="0.0" iyy="${mass / 12.0 * (size_z*size_z + radius*radius)}" iyz="0.0" izz="${mass / 12.0 * (radius*radius + radius*radius)}"/>
          </inertial>
       </link>
       <gazebo reference="link_stator_joint_${suffix}">
@@ -177,21 +295,26 @@
       </joint>
    </xacro:macro>
    <xacro:add_fixed_joint_stator pitch="-0.0" roll="0.0" suffix="1" suffix_bis="0" x="0.0" y="0.0" yaw="0.0" z="0.4"/>
-   <xacro:add_joint_stator size_y="0" size_z="0.2" suffix="1"/>
+   <xacro:add_joint_stator size="3" size_y="0" size_z="0.2" suffix="1"/>
    <xacro:add_joint effort="35" lower_lim="-3.14" pitch="-0.0" roll="0.0" suffix="1" upper_lim="3.14" velocity="5.7" x="0.0" y="0.0" yaw="0.0" z="0.2"/>
-   <xacro:add_elbow size_y="0.2" size_z="0.2" suffix="1"/>
-   <xacro:add_fixed_joint pitch="-0.0" roll="-1.57" suffix="1" x="0.0" y="0.199999936586" yaw="0.0" z="0.200159265342"/>
-   <xacro:add_link size_z="0.3" suffix="1_bis"/>
-   <xacro:add_fixed_joint_stator pitch="-0.0" roll="0.0" suffix="2" suffix_bis="1_bis" x="0.0" y="0.0" yaw="0.0" z="0.3"/>
-   <xacro:add_joint_stator size_y="0" size_z="0.2" suffix="2"/>
+   <xacro:add_fixed_joint pitch="-0.0" roll="0.0" suffix="1" x="0.0" y="0.0" yaw="0.0" z="0.0"/>
+   <xacro:add_elbow size="3" size_y="0.2" size_z="0.2" suffix="1_bis"/>
+   <xacro:add_fixed_joint pitch="-0.0" roll="-1.57" suffix="1_bis" x="0.0" y="0.199999936586" yaw="0.0" z="0.200159265342"/>
+   <xacro:add_elbow size="3" size_y="0.2" size_z="0.2" suffix="1_bis_bis"/>
+   <xacro:add_fixed_joint pitch="-0.0" roll="-1.57" suffix="1_bis_bis" x="0.0" y="0.199999936586" yaw="0.0" z="0.200159265342"/>
+   <xacro:add_size_adapter size_in="3" size_out="2" size_z="0.1" suffix="1_bis_bis_bis"/>
+   <xacro:add_fixed_joint_stator pitch="-0.0" roll="0.0" suffix="2" suffix_bis="1_bis_bis_bis" x="0.0" y="0.0" yaw="0.0" z="0.1"/>
+   <xacro:add_joint_stator size="2" size_y="0" size_z="0.2" suffix="2"/>
    <xacro:add_joint effort="35" lower_lim="-3.14" pitch="-0.0" roll="0.0" suffix="2" upper_lim="3.14" velocity="5.7" x="0.0" y="0.0" yaw="0.0" z="0.2"/>
-   <xacro:add_elbow size_y="0.2" size_z="0.2" suffix="2"/>
-   <xacro:add_fixed_joint pitch="-0.0" roll="-1.57" suffix="2" x="0.0" y="0.199999936586" yaw="0.0" z="0.200159265342"/>
-   <xacro:add_link size_z="0.3" suffix="2_bis"/>
-   <xacro:add_fixed_joint_stator pitch="-0.0" roll="0.0" suffix="3" suffix_bis="2_bis" x="0.0" y="0.0" yaw="0.0" z="0.3"/>
-   <xacro:add_joint_stator size_y="0" size_z="0.2" suffix="3"/>
+   <xacro:add_fixed_joint pitch="-0.0" roll="0.0" suffix="2" x="0.0" y="0.0" yaw="0.0" z="0.0"/>
+   <xacro:add_elbow size="2" size_y="0.2" size_z="0.2" suffix="2_bis"/>
+   <xacro:add_fixed_joint pitch="-0.0" roll="-1.57" suffix="2_bis" x="0.0" y="0.199999936586" yaw="0.0" z="0.200159265342"/>
+   <xacro:add_link size="2" size_z="0.7" suffix="2_bis_bis"/>
+   <xacro:add_fixed_joint pitch="-0.0" roll="0.0" suffix="2_bis_bis" x="0.0" y="0.0" yaw="0.0" z="0.7"/>
+   <xacro:add_size_adapter size_in="2" size_out="1" size_z="0.1" suffix="2_bis_bis_bis"/>
+   <xacro:add_fixed_joint_stator pitch="-0.0" roll="0.0" suffix="3" suffix_bis="2_bis_bis_bis" x="0.0" y="0.0" yaw="0.0" z="0.1"/>
+   <xacro:add_joint_stator size="1" size_y="0" size_z="0.2" suffix="3"/>
    <xacro:add_joint effort="35" lower_lim="-3.14" pitch="-0.0" roll="0.0" suffix="3" upper_lim="3.14" velocity="5.7" x="0.0" y="0.0" yaw="0.0" z="0.2"/>
-   <xacro:add_elbow size_y="0.2" size_z="0.2" suffix="3"/>
-   <xacro:add_fixed_joint pitch="-0.0" roll="-1.57" suffix="3" x="0.0" y="0.199999936586" yaw="0.0" z="0.200159265342"/>
-   <xacro:add_elbow size_y="0.2" size_z="0.2" suffix="3_bis"/>
+   <xacro:add_fixed_joint pitch="-0.0" roll="0.0" suffix="3" x="0.0" y="0.0" yaw="0.0" z="0.0"/>
+   <xacro:add_elbow size="1" size_y="0.2" size_z="0.2" suffix="3_bis"/>
 </robot>

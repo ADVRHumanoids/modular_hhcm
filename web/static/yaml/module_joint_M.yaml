@@ -32,6 +32,10 @@ kinematics:
 
 dynamics:
 
-size: 'small'
+size: 'medium'
+size_in:
+size_out:
+
+type: 'joint'
 
 urdf: "urdf/joint_module.urdf"

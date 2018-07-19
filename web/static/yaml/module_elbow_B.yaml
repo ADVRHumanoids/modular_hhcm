@@ -4,30 +4,38 @@ kinematics:
       a_pl: 0
       alpha_pl: 0
       p_pl: 0
-      n_pl: 0
+      n_pl: 0.1
       delta_pl: 0
 
     distal:
       a_dl: 0
-      alpha_dl: 0
-      p_dl: 0
-      n_dl: 0
+      alpha_dl: -1.57
+      p_dl: 0.2
+      n_dl: 0.1
       delta_dl: 0
 
     joint:
       delta_j: 0
       type: ''
+      lower_limit: 0
+      upper_limit: 0
+      effort: 0
+      velocity: 0
       
   link:
     a_l: 0
-    alpha_l: 0
-    p_l: 0
-    n_l: 0.7
+    alpha_l: -1.57
+    p_l: 0.2
+    n_l: 0.2
     delta_l_in: 0
     delta_l_out: 0
 
 dynamics:
 
 size: 'big'
+size_in:
+size_out:
 
-urdf: "urdf/link_module.urdf"
+type: 'elbow'
+
+urdf: "urdf/elbow_module.urdf"

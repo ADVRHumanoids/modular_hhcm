@@ -1,0 +1,41 @@
+kinematics:
+  joint:
+    proximal:
+      a_pl: 0
+      alpha_pl: 0
+      p_pl: 0
+      n_pl: 0
+      delta_pl: 0
+
+    distal:
+      a_dl: 0
+      alpha_dl: 0
+      p_dl: 0
+      n_dl: 0
+      delta_dl: 0
+
+    joint:
+      delta_j: 0
+      type: ''
+      lower_limit: 0
+      upper_limit: 0
+      effort: 0
+      velocity: 0
+      
+  link:
+    a_l: 0
+    alpha_l: 0
+    p_l: 0
+    n_l: 0.1
+    delta_l_in: 0
+    delta_l_out: 0
+
+dynamics:
+
+size:
+size_in: 'big'
+size_out: 'small'
+
+type: 'size_adapter'
+
+urdf: "urdf/size_adapter_module.urdf"

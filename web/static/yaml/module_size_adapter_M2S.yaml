@@ -17,17 +17,25 @@ kinematics:
     joint:
       delta_j: 0
       type: ''
+      lower_limit: 0
+      upper_limit: 0
+      effort: 0
+      velocity: 0
       
   link:
     a_l: 0
     alpha_l: 0
     p_l: 0
-    n_l: 0.3
+    n_l: 0.1
     delta_l_in: 0
     delta_l_out: 0
 
 dynamics:
 
-size: 'big'
+size:
+size_in: 'medium'
+size_out: 'small'
 
-urdf: "urdf/link_module.urdf"
+type: 'size_adapter'
+
+urdf: "urdf/size_adapter_module.urdf"
