@@ -8,7 +8,7 @@
     <xacro:property name="len1" value="0.4" />
     <xacro:property name="len2" value="0.6" />
     <xacro:property name="len3" value="0.8" />
-    <xacro:property name="mass" value="1" />
+    <xacro:property name="mass" value="0.5" />
     <!-- <xacro:property name="pi" value="3.1415" /> -->
 
     <material name="blue">
@@ -52,11 +52,12 @@
             <material name="black"/>
         </visual>
         <collision>
+            <origin xyz="0 0 ${len1/2}" rpy="0 0 0" />
             <geometry>
                 <cylinder radius="${size1}" length="${len1}"/>
             </geometry>
         </collision>
-        <xacro:default_inertial mass="10"/>
+        <xacro:default_inertial mass="1"/>
     </link>
 
     <joint name="fixed" type="fixed">
@@ -174,7 +175,7 @@
                 <inertia
                 ixx="${mass / 12.0 * (3*radius1*radius1 + 4*size_z/2*size_z/2) + mass / 12.0 * (3*radius2*radius2 + 4*size_z/2*size_z/2)}" ixy="0.0" ixz="0.0"
                 iyy="${mass / 12.0 * (3*radius1*radius1 + 4*size_z/2*size_z/2) + mass / 12.0 * (3*radius2*radius2 + 4*size_z/2*size_z/2)}" iyz="0.0"
-                izz="${mass / 2.0 * (radius1*radius1) + mass / 2.0 * (radius2*radius2)}"/>
+                izz="${mass / 4.0 * (radius1*radius1) + mass / 4.0 * (radius2*radius2)}"/>
             </inertial>
         </link>
         <gazebo reference="link_${suffix}">
@@ -236,9 +237,9 @@
                 <origin xyz="0 0 ${size_z/2}" rpy="0 0 0"/>
                 <mass value="${mass}"/>
                 <inertia
-                ixx="${mass / 12.0 * (radius*radius + size_z*size_z)}" ixy="0.0" ixz="0.0"
-                iyy="${mass / 12.0 * (size_z*size_z + radius*radius)}" iyz="0.0"
-                izz="${mass / 12.0 * (radius*radius + radius*radius)}"/>
+                ixx="${mass / 2 *( 1 / 12.0 * (3*radius*radius + 4*size_y*size_y) + size_z*size_z) + mass / 24.0 * (3*radius*radius + 4*size_z*size_z)}" ixy="0.0" ixz="0.0"
+                iyy="${mass / 24.0 * (3*radius*radius + 4*size_z*size_z) + mass / 2 *( 1 / 2 *radius*radius + size_z*size_z)}" iyz="0.0"
+                izz="${mass / 4.0 * (radius*radius) + mass / 24.0 * (3*radius*radius + 4*size_y*size_y)}"/>
             </inertial>
             <collision>
                 <origin xyz="0 ${size_y/2} ${size_z}" rpy="1.57 0 0" />
@@ -321,9 +322,9 @@
                 <origin xyz="0 0 ${size_z/2}" rpy="0 0 0"/>
                 <mass value="${mass}"/>
                 <inertia
-                ixx="${mass / 12.0 * (radius*radius + size_z*size_z)}" ixy="0.0" ixz="0.0"
-                iyy="${mass / 12.0 * (size_z*size_z + radius*radius)}" iyz="0.0"
-                izz="${mass / 12.0 * (radius*radius + radius*radius)}"/>
+                ixx="${mass / 12.0 * (3*radius*radius + size_z*size_z)}" ixy="0.0" ixz="0.0"
+                iyy="${mass / 12.0 * (size_z*size_z + 3*radius*radius)}" iyz="0.0"
+                izz="${mass / 2.0 * (radius*radius)}"/>
             </inertial>
         </link>
         <gazebo reference="link_stator_joint_${suffix}">
