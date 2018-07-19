@@ -156,49 +156,23 @@
   </joint>
   <link name="link_1_bis_bis">
     <visual>
-      <origin rpy="0 0 0" xyz="0 0 0.1"/>
+      <origin rpy="0 0 0" xyz="0 0 0.15"/>
       <geometry>
-        <cylinder length="0.2" radius="0.06"/>
+        <cylinder length="0.3" radius="0.06"/>
       </geometry>
-      <material name="white"/>
-    </visual>
-    <visual>
-      <origin rpy="1.57 0 0" xyz="0 0.1 0.2"/>
-      <geometry>
-        <cylinder length="0.2" radius="0.06"/>
-      </geometry>
-      <material name="white"/>
-    </visual>
-    <visual>
-      <origin rpy="0 0 0" xyz="0 0 0.2"/>
-      <geometry>
-        <sphere radius="0.06"/>
-      </geometry>
-      <material name="white"/>
+      <material name="black"/>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0 0 0.1"/>
+      <origin rpy="0 0 0" xyz="0 0 0.15"/>
       <geometry>
-        <cylinder length="0.2" radius="0.06"/>
+        <cylinder length="0.3" radius="0.06"/>
       </geometry>
     </collision>
     <inertial>
-      <origin rpy="0 0 0" xyz="0 0 0.1"/>
+      <origin rpy="0 0 0" xyz="0 0 0.15"/>
       <mass value="1"/>
-      <inertia ixx="0.00363333333333" ixy="0.0" ixz="0.0" iyy="0.00363333333333" iyz="0.0" izz="0.0006"/>
+      <inertia ixx="0.0084" ixy="0.0" ixz="0.0" iyy="0.0084" iyz="0.0" izz="0.0018"/>
     </inertial>
-    <collision>
-      <origin rpy="1.57 0 0" xyz="0 0.1 0.2"/>
-      <geometry>
-        <cylinder length="0.2" radius="0.06"/>
-      </geometry>
-    </collision>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0.2"/>
-      <geometry>
-        <sphere radius="0.06"/>
-      </geometry>
-    </collision>
   </link>
   <gazebo reference="link_1_bis_bis">
     <mu1>0.2</mu1>
@@ -213,7 +187,7 @@
     <axis rpy="0 0 0" xyz="0 0 1"/>
     <parent link="link_1_bis_bis"/>
     <child link="link_1_bis_bis_bis"/>
-    <origin rpy="-1.57 -0.0 0.0" xyz="0.0 0.199999936586 0.200159265342"/>
+    <origin rpy="0.0 -0.0 0.0" xyz="0.0 0.0 0.3"/>
   </joint>
   <link name="link_1_bis_bis_bis">
     <visual>
@@ -308,6 +282,41 @@
   </joint>
   <link name="link_2_bis">
     <visual>
+      <origin rpy="0 0 0" xyz="0 0 0.25"/>
+      <geometry>
+        <cylinder length="0.5" radius="0.055"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0.25"/>
+      <geometry>
+        <cylinder length="0.5" radius="0.055"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0.25"/>
+      <mass value="1"/>
+      <inertia ixx="0.0215895833333" ixy="0.0" ixz="0.0" iyy="0.0215895833333" iyz="0.0" izz="0.0015125"/>
+    </inertial>
+  </link>
+  <gazebo reference="link_2_bis">
+    <mu1>0.2</mu1>
+    <mu2>0.2</mu2>
+    <kp>1000000.0</kp>
+    <kd>1.0</kd>
+    <maxVel>0.0</maxVel>
+    <minDepth>0.0001</minDepth>
+    <material>Gazebo/White</material>
+  </gazebo>
+  <joint name="fixed_joint_2_bis" type="fixed">
+    <axis rpy="0 0 0" xyz="0 0 1"/>
+    <parent link="link_2_bis"/>
+    <child link="link_2_bis_bis"/>
+    <origin rpy="0.0 -0.0 0.0" xyz="0.0 0.0 0.5"/>
+  </joint>
+  <link name="link_2_bis_bis">
+    <visual>
       <origin rpy="0 0 0" xyz="0 0 0.1"/>
       <geometry>
         <cylinder length="0.2" radius="0.055"/>
@@ -352,41 +361,6 @@
       </geometry>
     </collision>
   </link>
-  <gazebo reference="link_2_bis">
-    <mu1>0.2</mu1>
-    <mu2>0.2</mu2>
-    <kp>1000000.0</kp>
-    <kd>1.0</kd>
-    <maxVel>0.0</maxVel>
-    <minDepth>0.0001</minDepth>
-    <material>Gazebo/White</material>
-  </gazebo>
-  <joint name="fixed_joint_2_bis" type="fixed">
-    <axis rpy="0 0 0" xyz="0 0 1"/>
-    <parent link="link_2_bis"/>
-    <child link="link_2_bis_bis"/>
-    <origin rpy="-1.57 -0.0 0.0" xyz="0.0 0.199999936586 0.200159265342"/>
-  </joint>
-  <link name="link_2_bis_bis">
-    <visual>
-      <origin rpy="0 0 0" xyz="0 0 0.35"/>
-      <geometry>
-        <cylinder length="0.7" radius="0.055"/>
-      </geometry>
-      <material name="black"/>
-    </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0.35"/>
-      <geometry>
-        <cylinder length="0.7" radius="0.055"/>
-      </geometry>
-    </collision>
-    <inertial>
-      <origin rpy="0 0 0" xyz="0 0 0.35"/>
-      <mass value="1"/>
-      <inertia ixx="0.0415895833333" ixy="0.0" ixz="0.0" iyy="0.0415895833333" iyz="0.0" izz="0.0015125"/>
-    </inertial>
-  </link>
   <gazebo reference="link_2_bis_bis">
     <mu1>0.2</mu1>
     <mu2>0.2</mu2>
@@ -400,7 +374,7 @@
     <axis rpy="0 0 0" xyz="0 0 1"/>
     <parent link="link_2_bis_bis"/>
     <child link="link_2_bis_bis_bis"/>
-    <origin rpy="0.0 -0.0 0.0" xyz="0.0 0.0 0.7"/>
+    <origin rpy="-1.57 -0.0 0.0" xyz="0.0 0.199999936586 0.200159265342"/>
   </joint>
   <link name="link_2_bis_bis_bis">
     <visual>
@@ -540,6 +514,41 @@
     </collision>
   </link>
   <gazebo reference="link_3_bis">
+    <mu1>0.2</mu1>
+    <mu2>0.2</mu2>
+    <kp>1000000.0</kp>
+    <kd>1.0</kd>
+    <maxVel>0.0</maxVel>
+    <minDepth>0.0001</minDepth>
+    <material>Gazebo/White</material>
+  </gazebo>
+  <joint name="fixed_joint_3_bis" type="fixed">
+    <axis rpy="0 0 0" xyz="0 0 1"/>
+    <parent link="link_3_bis"/>
+    <child link="link_3_bis_bis"/>
+    <origin rpy="-1.57 -0.0 0.0" xyz="0.0 0.199999936586 0.200159265342"/>
+  </joint>
+  <link name="link_3_bis_bis">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0.15"/>
+      <geometry>
+        <cylinder length="0.3" radius="0.05"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0.15"/>
+      <geometry>
+        <cylinder length="0.3" radius="0.05"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0.15"/>
+      <mass value="1"/>
+      <inertia ixx="0.008125" ixy="0.0" ixz="0.0" iyy="0.008125" iyz="0.0" izz="0.00125"/>
+    </inertial>
+  </link>
+  <gazebo reference="link_3_bis_bis">
     <mu1>0.2</mu1>
     <mu2>0.2</mu2>
     <kp>1000000.0</kp>

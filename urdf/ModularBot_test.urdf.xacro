@@ -300,21 +300,23 @@
    <xacro:add_fixed_joint pitch="-0.0" roll="0.0" suffix="1" x="0.0" y="0.0" yaw="0.0" z="0.0"/>
    <xacro:add_elbow size="3" size_y="0.2" size_z="0.2" suffix="1_bis"/>
    <xacro:add_fixed_joint pitch="-0.0" roll="-1.57" suffix="1_bis" x="0.0" y="0.199999936586" yaw="0.0" z="0.200159265342"/>
-   <xacro:add_elbow size="3" size_y="0.2" size_z="0.2" suffix="1_bis_bis"/>
-   <xacro:add_fixed_joint pitch="-0.0" roll="-1.57" suffix="1_bis_bis" x="0.0" y="0.199999936586" yaw="0.0" z="0.200159265342"/>
+   <xacro:add_link size="3" size_z="0.3" suffix="1_bis_bis"/>
+   <xacro:add_fixed_joint pitch="-0.0" roll="0.0" suffix="1_bis_bis" x="0.0" y="0.0" yaw="0.0" z="0.3"/>
    <xacro:add_size_adapter size_in="3" size_out="2" size_z="0.1" suffix="1_bis_bis_bis"/>
    <xacro:add_fixed_joint_stator pitch="-0.0" roll="0.0" suffix="2" suffix_bis="1_bis_bis_bis" x="0.0" y="0.0" yaw="0.0" z="0.1"/>
    <xacro:add_joint_stator size="2" size_y="0" size_z="0.2" suffix="2"/>
    <xacro:add_joint effort="35" lower_lim="-3.14" pitch="-0.0" roll="0.0" suffix="2" upper_lim="3.14" velocity="5.7" x="0.0" y="0.0" yaw="0.0" z="0.2"/>
    <xacro:add_fixed_joint pitch="-0.0" roll="0.0" suffix="2" x="0.0" y="0.0" yaw="0.0" z="0.0"/>
-   <xacro:add_elbow size="2" size_y="0.2" size_z="0.2" suffix="2_bis"/>
-   <xacro:add_fixed_joint pitch="-0.0" roll="-1.57" suffix="2_bis" x="0.0" y="0.199999936586" yaw="0.0" z="0.200159265342"/>
-   <xacro:add_link size="2" size_z="0.7" suffix="2_bis_bis"/>
-   <xacro:add_fixed_joint pitch="-0.0" roll="0.0" suffix="2_bis_bis" x="0.0" y="0.0" yaw="0.0" z="0.7"/>
+   <xacro:add_link size="2" size_z="0.5" suffix="2_bis"/>
+   <xacro:add_fixed_joint pitch="-0.0" roll="0.0" suffix="2_bis" x="0.0" y="0.0" yaw="0.0" z="0.5"/>
+   <xacro:add_elbow size="2" size_y="0.2" size_z="0.2" suffix="2_bis_bis"/>
+   <xacro:add_fixed_joint pitch="-0.0" roll="-1.57" suffix="2_bis_bis" x="0.0" y="0.199999936586" yaw="0.0" z="0.200159265342"/>
    <xacro:add_size_adapter size_in="2" size_out="1" size_z="0.1" suffix="2_bis_bis_bis"/>
    <xacro:add_fixed_joint_stator pitch="-0.0" roll="0.0" suffix="3" suffix_bis="2_bis_bis_bis" x="0.0" y="0.0" yaw="0.0" z="0.1"/>
    <xacro:add_joint_stator size="1" size_y="0" size_z="0.2" suffix="3"/>
    <xacro:add_joint effort="35" lower_lim="-3.14" pitch="-0.0" roll="0.0" suffix="3" upper_lim="3.14" velocity="5.7" x="0.0" y="0.0" yaw="0.0" z="0.2"/>
    <xacro:add_fixed_joint pitch="-0.0" roll="0.0" suffix="3" x="0.0" y="0.0" yaw="0.0" z="0.0"/>
    <xacro:add_elbow size="1" size_y="0.2" size_z="0.2" suffix="3_bis"/>
+   <xacro:add_fixed_joint pitch="-0.0" roll="-1.57" suffix="3_bis" x="0.0" y="0.199999936586" yaw="0.0" z="0.200159265342"/>
+   <xacro:add_link size="1" size_z="0.3" suffix="3_bis_bis"/>
 </robot>
