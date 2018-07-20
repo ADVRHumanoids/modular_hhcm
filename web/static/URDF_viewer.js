@@ -59,7 +59,7 @@ class URDF_viewer extends HTMLElement {
     - addModuleYAML: Method that reads a YAML file describing the module and adds the 3D object
     - updateURDF: Method that parse a string describing the updated robot URDF. The string is received from the Python script which reads it from YAML
     */
-    
+
     static addModule(reader) {
         const parser = new DOMParser()
         const urdf = parser.parseFromString(reader.result, 'text/xml')
@@ -147,8 +147,8 @@ class URDF_viewer extends HTMLElement {
                         this.robots[0].urdf.links = this.linkMap
                     }
                     else if (type === 'joint') {
-                        console.log('joint_' + (this.jointNumber+1))
-                        const newjoint_name = 'joint_' + (this.jointNumber+1)
+                        console.log('joint_' + (this.jointNumber + 1))
+                        const newjoint_name = 'joint_' + (this.jointNumber + 1)
                         this.jointMap[newjoint_name] = this._processJoint(n)
                         this.jointMap[newjoint_name].name = newjoint_name
 
@@ -193,7 +193,7 @@ class URDF_viewer extends HTMLElement {
         const parser = new DOMParser()
         const urdf = parser.parseFromString(URDF_string, 'text/xml')
 
-        
+
         console.log(this.jointNumber)
 
         // r=this.robots[0]
@@ -280,8 +280,8 @@ class URDF_viewer extends HTMLElement {
                         joints = Object.keys(this.jointMap)
                     }
                     else if (type === 'joint') {
-                        console.log('joint_' + (this.jointNumber+1))
-                        const newjoint_name = 'joint_' + (this.jointNumber+1)
+                        console.log('joint_' + (this.jointNumber + 1))
+                        const newjoint_name = 'joint_' + (this.jointNumber + 1)
                         this.jointMap[newjoint_name] = this._processJoint(n)
                         this.jointMap[newjoint_name].name = newjoint_name
 
@@ -324,7 +324,7 @@ class URDF_viewer extends HTMLElement {
 
         })
 
-       
+
 
         return this.robots
     }
@@ -332,17 +332,15 @@ class URDF_viewer extends HTMLElement {
     static updateURDF(string) {
         const parser = new DOMParser()
         const urdf = parser.parseFromString(string, 'text/xml')
-
+        
         console.log(urdf.children)
         this.forEach(urdf.children, r => {
 
             const links = []
             const joints = []
             const materials = []
-            
-            //inherit the "robot" previously processed
-            const obj = this.robots[0]
-
+            const obj = new THREE.Object3D()
+            obj.name = r.getAttribute('name')
             obj.urdf = { node: r }
             console.log(r.children)
 
@@ -358,40 +356,29 @@ class URDF_viewer extends HTMLElement {
             console.log(joints)
             console.log(materials)
 
-            // Update the <material> map
+            // Create the <material> map
+            this.materialMap = {}
             this.forEach(materials, m => {
                 const name = m.getAttribute('name')
-                if(!this.materialMap[name])
-                    this.materialMap[name] = this._processMaterial(m)
+                this.materialMap[name] = this._processMaterial(m)
             })
 
             console.log(this.materialMap)
 
-            // Update the <link> map
+            // Create the <link> map
+            this.linkMap = {}
             this.forEach(links, l => {
                 const name = l.getAttribute('name')
-                if(!this.linkMap[name])
-                    this.linkMap[name] = this._processLink(l)
+                this.linkMap[name] = this._processLink(l)
             })
 
             console.log(this.linkMap)
 
-            // Update the <joint> map
+            // // Create the <joint> map
+            this.jointMap = {}
             this.forEach(joints, j => {
                 const name = j.getAttribute('name')
-                if(!this.jointMap[name]) {
-                    this.jointMap[name] = this._processJoint(j)
-                    
-                    var URDF_processed_eH = new URDF_processed_eventHandler();
-
-                    var self = this;
-                    URDF_processed_eH.addEventListener('urdf-processed', function (event) {
-                        if (self.jointMap[name].urdf.type !== 'fixed')
-                            self._createSlider(self.jointMap[name])
-                    })
-
-                    URDF_processed_eH.start();
-                }
+                this.jointMap[name] = this._processJoint(j)
             })
 
             console.log(this.jointMap)
@@ -401,7 +388,44 @@ class URDF_viewer extends HTMLElement {
             obj.urdf.joints = this.jointMap
             obj.urdf.links = this.linkMap
 
+            //console.log(obj)
+
+            const rpy_ros2three = [-Math.PI / 2, -Math.PI / 2, 0]
+            //console.log(rpy_ros2three)
+            this._applyRotation(obj, rpy_ros2three)
+            
+            //replace the object in the scene with the new robot
+            this.scene.remove(robots[0])
+            this.scene.add(obj);
+
+            //replace the object in the "robots" array
+            this.robots.pop()
+            this.robots.push(obj)
+
+            //add controls to it
+            this.transformControls.attach(obj)
+            this.scene.add(this.transformControls)
         })
+  
+        var URDF_processed_eH = new URDF_processed_eventHandler();
+
+        var self = this;
+        URDF_processed_eH.addEventListener('urdf-processed', function (event) {
+
+            // alert(event.message);
+            self._removeSliders()
+
+            //console.log(self.jointMap)
+            for (let key in self.jointMap) {
+                //console.log(self.jointMap[key])
+                const joint = self.jointMap[key]
+                if (joint.urdf.type !== 'fixed')
+                    self._createSlider(joint)
+            }
+
+        });
+
+        URDF_processed_eH.start();
 
         console.log(this.robots[0])
         console.log(Object.keys(this.linkMap))
@@ -629,14 +653,14 @@ class URDF_viewer extends HTMLElement {
         this.transformControls.attach(object)
         this.scene.add(this.transformControls)
 
-        self=this
-        window.addEventListener( 'resize', onWindowResize, false );
-        function onWindowResize(){
+        self = this
+        window.addEventListener('resize', onWindowResize, false);
+        function onWindowResize() {
 
             self.camera.aspect = window.innerWidth / window.innerHeight;
             self.camera.updateProjectionMatrix();
 
-            self.renderer.setSize( window.innerWidth, window.innerHeight );
+            self.renderer.setSize(window.innerWidth, window.innerHeight);
 
         }
     }
@@ -678,6 +702,12 @@ class URDF_viewer extends HTMLElement {
 
         directionalLight.shadow.bias = -0.002;
 
+    }
+
+    static _removeSliders() {
+        const sliderList = document.querySelector('#controls ul')
+        while(sliderList.firstChild)
+            sliderList.removeChild(sliderList.firstChild)
     }
 
     static _createSlider(joint) {
@@ -776,9 +806,9 @@ class URDF_viewer extends HTMLElement {
         const jointType = "fixed"
         const joint_obj = new THREE.Object3D()
         joint_obj.name = joint_name
-        
+
         const parser = new DOMParser()
-        const fixed_joint_urdf ='<joint type="fixed"><axis rpy="0 0 0" xyz="0 0 1"/><origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/><limit lower="-3.14" upper="3.14"/></joint>'
+        const fixed_joint_urdf = '<joint type="fixed"><axis rpy="0 0 0" xyz="0 0 1"/><origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/><limit lower="-3.14" upper="3.14"/></joint>'
         const urdf_node = parser.parseFromString(fixed_joint_urdf, 'text/xml')
         //console.log(urdf_node.children[0])
 
@@ -787,9 +817,9 @@ class URDF_viewer extends HTMLElement {
             limits: { lower: 0, upper: 0 },
             ignoreLimits: false,
         }
-        
+
         console.log(this.lastModKin.joint.proximal.n_pl + this.lastModKin.joint.distal.n_dl)
-        let xyz = [0.0, this.lastModKin.joint.proximal.p_pl + this.lastModKin.joint.distal.p_dl, this.lastModKin.joint.proximal.n_pl + this.lastModKin.joint.distal.n_dl ] //this.lastModKin.p_pl + this.lastModKin.p_dl, this.lastModKin.n_pl + this.lastModKin.n_dl
+        let xyz = [0.0, this.lastModKin.joint.proximal.p_pl + this.lastModKin.joint.distal.p_dl, this.lastModKin.joint.proximal.n_pl + this.lastModKin.joint.distal.n_dl] //this.lastModKin.p_pl + this.lastModKin.p_dl, this.lastModKin.n_pl + this.lastModKin.n_dl
         let rpy = [this.lastModKin.joint.distal.alpha_dl, 0.0, 0.0] //this.lastModKin.alpha_dl
 
 
@@ -830,7 +860,7 @@ class URDF_viewer extends HTMLElement {
                 joint_obj.urdf.limits.upper = parseFloat(n.getAttribute('upper') || joint_obj.urdf.limits.upper)
             }
         })
-        
+
         //NOTE: uncomment if you want to use the addModuleYAML method! 
         // if (!joint_obj.name) {
         //     xyz = [0.0, this.lastModKin.joint.proximal.p_pl + this.lastModKin.joint.distal.p_dl, this.lastModKin.joint.proximal.n_pl + this.lastModKin.joint.distal.n_dl ] //this.lastModKin.p_pl + this.lastModKin.p_dl, this.lastModKin.n_pl + this.lastModKin.n_dl
@@ -886,7 +916,7 @@ class URDF_viewer extends HTMLElement {
             case 'continuous':
                 joint_obj.urdf.limits.lower = -Infinity
                 joint_obj.urdf.limits.upper = Infinity
-                // fall through to revolute joint 'setAngle' function
+            // fall through to revolute joint 'setAngle' function
 
             case 'revolute':
                 joint_obj.urdf.setAngle = function (angle = null) {
@@ -1034,7 +1064,7 @@ class URDF_viewer extends HTMLElement {
                         mesh.scale.set(radius, radius, radius)
 
                         link_obj.add(mesh)
-                        
+
                     })
                 } else if (geoType === 'cylinder') {
                     requestAnimationFrame(() => {
@@ -1071,7 +1101,7 @@ class URDF_viewer extends HTMLElement {
                         //console.log(Loader)
                         //console.log(path)
                         this.STLLoader.load(path, function (geom) {
-                            
+
                             const mesh = new THREE.Mesh()
                             mesh.geometry = geom
                             //console.log(mesh)
@@ -1119,8 +1149,8 @@ class URDF_viewer extends HTMLElement {
 
                             if (dae) {
 
-                                dae.traverse( function ( child ) {
-                                    if ( child instanceof THREE.Mesh ) {
+                                dae.traverse(function (child) {
+                                    if (child instanceof THREE.Mesh) {
                                         child.material = material
                                     }
                                 });

@@ -31,7 +31,7 @@
       <child link="base_link"/>
    </joint>
    <link name="base_link"/>
-   <link name="link_0">
+   <link name="L_0">
       <visual>
          <origin rpy="0 0 0" xyz="0 0 ${len1/2}"/>
          <geometry>
@@ -49,9 +49,9 @@
    </link>
    <joint name="fixed" type="fixed">
       <parent link="base_link"/>
-      <child link="link_0"/>
+      <child link="L_0"/>
    </joint>
-   <xacro:macro name="add_link" params="suffix size_z size">
+   <xacro:macro name="add_link" params="name type size_z size">
       <xacro:if value="${size==1}">
          <xacro:property name="radius" value="${size1}"/>
       </xacro:if>
@@ -63,7 +63,7 @@
             <xacro:property name="radius" value="${size3}"/>
          </xacro:unless>
       </xacro:unless>
-      <link name="link_${suffix}">
+      <link name="${name}">
          <visual>
             <origin rpy="0 0 0" xyz="0 0 ${size_z/2}"/>
             <geometry>
@@ -83,7 +83,7 @@
             <inertia ixx="${mass / 12.0 * (3*radius*radius + size_z*size_z)}" ixy="0.0" ixz="0.0" iyy="${mass / 12.0 * (size_z*size_z + 3*radius*radius)}" iyz="0.0" izz="${mass / 2.0 * (radius*radius)}"/>
          </inertial>
       </link>
-      <gazebo reference="link_${suffix}">
+      <gazebo reference="${name}">
          <mu1>0.2</mu1>
          <mu2>0.2</mu2>
          <kp>1000000.0</kp>
@@ -93,7 +93,7 @@
          <material>Gazebo/White</material>
       </gazebo>
    </xacro:macro>
-   <xacro:macro name="add_size_adapter" params="suffix size_z size_in size_out">
+   <xacro:macro name="add_size_adapter" params="type name size_z size_in size_out">
       <xacro:if value="${size_in==3}">
          <xacro:property name="radius1" value="${size3}"/>
       </xacro:if>
@@ -116,7 +116,7 @@
             <xacro:property name="radius2" value="${size1}"/>
          </xacro:unless>
       </xacro:unless>
-      <link name="link_${suffix}">
+      <link name="${name}">
          <visual>
             <origin rpy="0 0 0" xyz="0 0 ${size_z/4}"/>
             <geometry>
@@ -149,7 +149,7 @@
             <inertia ixx="${mass / 12.0 * (3*radius1*radius1 + 4*size_z/2*size_z/2) + mass / 12.0 * (3*radius2*radius2 + 4*size_z/2*size_z/2)}" ixy="0.0" ixz="0.0" iyy="${mass / 12.0 * (3*radius1*radius1 + 4*size_z/2*size_z/2) + mass / 12.0 * (3*radius2*radius2 + 4*size_z/2*size_z/2)}" iyz="0.0" izz="${mass / 4.0 * (radius1*radius1) + mass / 4.0 * (radius2*radius2)}"/>
          </inertial>
       </link>
-      <gazebo reference="link_${suffix}">
+      <gazebo reference="${name}">
          <mu1>0.2</mu1>
          <mu2>0.2</mu2>
          <kp>1000000.0</kp>
@@ -159,7 +159,7 @@
          <material>Gazebo/Grey</material>
       </gazebo>
    </xacro:macro>
-   <xacro:macro name="add_elbow" params="suffix size_y size_z size">
+   <xacro:macro name="add_elbow" params="type name size_y size_z size">
       <xacro:if value="${size==1}">
          <xacro:property name="radius" value="${size1}"/>
       </xacro:if>
@@ -171,7 +171,7 @@
             <xacro:property name="radius" value="${size3}"/>
          </xacro:unless>
       </xacro:unless>
-      <link name="link_${suffix}">
+      <link name="${name}">
          <visual>
             <origin rpy="0 0 0" xyz="0 0 ${size_z/2}"/>
             <geometry>
@@ -217,7 +217,7 @@
             </geometry>
          </collision>
       </link>
-      <gazebo reference="link_${suffix}">
+      <gazebo reference="${name}">
          <mu1>0.2</mu1>
          <mu2>0.2</mu2>
          <kp>1000000.0</kp>
@@ -227,25 +227,25 @@
          <material>Gazebo/White</material>
       </gazebo>
    </xacro:macro>
-   <xacro:macro name="add_fixed_joint" params="suffix x y z roll pitch yaw">
-      <joint name="fixed_joint_${suffix}" type="fixed">
+   <xacro:macro name="add_fixed_joint" params="type name father child x y z roll pitch yaw">
+      <joint name="${name}" type="fixed">
          <axis rpy="0 0 0" xyz="0 0 1"/>
-         <parent link="link_${suffix}"/>
-         <child link="link_${suffix}_bis"/>
+         <parent link="${father}"/>
+         <child link="${child}"/>
          <origin rpy="${roll} ${pitch} ${yaw}" xyz="${x} ${y} ${z}"/>
       </joint>
    </xacro:macro>
-   <xacro:macro name="add_joint" params="suffix x y z roll pitch yaw upper_lim lower_lim effort velocity">
-      <joint name="joint_${suffix}" type="revolute">
+   <xacro:macro name="add_joint" params="type name father child x y z roll pitch yaw upper_lim lower_lim effort velocity">
+      <joint name="${name}" type="revolute">
          <axis rpy="0 0 0" xyz="0 0 1"/>
-         <parent link="link_stator_joint_${suffix}"/>
-         <child link="link_${suffix}"/>
+         <parent link="${father}"/>
+         <child link="${child}"/>
          <origin rpy="${roll} ${pitch} ${yaw}" xyz="${x} ${y} ${z}"/>
          <limit effort="${effort}" lower="${lower_lim}" upper="${upper_lim}" velocity="${velocity}"/>
       </joint>
-      <link name="link_${suffix}"/>
+      <link name="${child}"/>
    </xacro:macro>
-   <xacro:macro name="add_joint_stator" params="suffix size_y size_z size">
+   <xacro:macro name="add_joint_stator" params="type name size_y size_z size">
       <xacro:if value="${size==1}">
          <xacro:property name="radius" value="${size1}"/>
       </xacro:if>
@@ -257,7 +257,7 @@
             <xacro:property name="radius" value="${size3}"/>
          </xacro:unless>
       </xacro:unless>
-      <link name="link_stator_joint_${suffix}">
+      <link name="${name}">
          <visual>
             <origin rpy="0 0 0" xyz="0 0 ${size_z/2}"/>
             <geometry>
@@ -277,7 +277,7 @@
             <inertia ixx="${mass / 12.0 * (3*radius*radius + size_z*size_z)}" ixy="0.0" ixz="0.0" iyy="${mass / 12.0 * (size_z*size_z + 3*radius*radius)}" iyz="0.0" izz="${mass / 2.0 * (radius*radius)}"/>
          </inertial>
       </link>
-      <gazebo reference="link_stator_joint_${suffix}">
+      <gazebo reference="${name}">
          <mu1>0.2</mu1>
          <mu2>0.2</mu2>
          <kp>1000000.0</kp>
@@ -287,43 +287,12 @@
          <material>Gazebo/Blue</material>
       </gazebo>
    </xacro:macro>
-   <xacro:macro name="add_fixed_joint_stator" params="suffix suffix_bis x y z roll pitch yaw">
-      <joint name="fixed_joint_${suffix_bis}" type="fixed">
+   <xacro:macro name="add_fixed_joint_stator" params="type name father child x y z roll pitch yaw">
+      <joint name="${name}" type="fixed">
          <axis rpy="0 0 0" xyz="0 0 1"/>
-         <parent link="link_${suffix_bis}"/>
-         <child link="link_stator_joint_${suffix}"/>
+         <parent link="${father}"/>
+         <child link="${child}"/>
          <origin rpy="${roll} ${pitch} ${yaw}" xyz="${x} ${y} ${z}"/>
       </joint>
    </xacro:macro>
-   <xacro:add_fixed_joint_stator pitch="-0.0" roll="0.0" suffix="1" suffix_bis="0" x="0.0" y="0.0" yaw="0.0" z="0.4"/>
-   <xacro:add_joint_stator size="3" size_y="0" size_z="0.2" suffix="1"/>
-   <xacro:add_joint effort="35" lower_lim="-3.14" pitch="-0.0" roll="0.0" suffix="1" upper_lim="3.14" velocity="5.7" x="0.0" y="0.0" yaw="0.0" z="0.2"/>
-   <xacro:add_fixed_joint pitch="-0.0" roll="0.0" suffix="1" x="0.0" y="0.0" yaw="0.0" z="0.0"/>
-   <xacro:add_link size="3" size_z="0.7" suffix="1_bis"/>
-   <xacro:add_fixed_joint pitch="-0.0" roll="0.0" suffix="1_bis" x="0.0" y="0.0" yaw="0.0" z="0.7"/>
-   <xacro:add_elbow size="3" size_y="0.2" size_z="0.2" suffix="1_bis_bis"/>
-   <xacro:add_fixed_joint pitch="-0.0" roll="-1.57" suffix="1_bis_bis" x="0.0" y="0.199999936586" yaw="0.0" z="0.200159265342"/>
-   <xacro:add_size_adapter size_in="3" size_out="2" size_z="0.1" suffix="1_bis_bis_bis"/>
-   <xacro:add_fixed_joint_stator pitch="-0.0" roll="0.0" suffix="2" suffix_bis="1_bis_bis_bis" x="0.0" y="0.0" yaw="0.0" z="0.1"/>
-   <xacro:add_joint_stator size="2" size_y="0" size_z="0.2" suffix="2"/>
-   <xacro:add_joint effort="35" lower_lim="-3.14" pitch="-0.0" roll="0.0" suffix="2" upper_lim="3.14" velocity="5.7" x="0.0" y="0.0" yaw="0.0" z="0.2"/>
-   <xacro:add_fixed_joint pitch="-0.0" roll="0.0" suffix="2" x="0.0" y="0.0" yaw="0.0" z="0.0"/>
-   <xacro:add_link size="2" size_z="0.5" suffix="2_bis"/>
-   <xacro:add_fixed_joint pitch="-0.0" roll="0.0" suffix="2_bis" x="0.0" y="0.0" yaw="0.0" z="0.5"/>
-   <xacro:add_elbow size="2" size_y="0.2" size_z="0.2" suffix="2_bis_bis"/>
-   <xacro:add_fixed_joint pitch="-0.0" roll="-1.57" suffix="2_bis_bis" x="0.0" y="0.199999936586" yaw="0.0" z="0.200159265342"/>
-   <xacro:add_size_adapter size_in="2" size_out="1" size_z="0.1" suffix="2_bis_bis_bis"/>
-   <xacro:add_fixed_joint_stator pitch="-0.0" roll="0.0" suffix="3" suffix_bis="2_bis_bis_bis" x="0.0" y="0.0" yaw="0.0" z="0.1"/>
-   <xacro:add_joint_stator size="1" size_y="0" size_z="0.2" suffix="3"/>
-   <xacro:add_joint effort="35" lower_lim="-3.14" pitch="-0.0" roll="0.0" suffix="3" upper_lim="3.14" velocity="5.7" x="0.0" y="0.0" yaw="0.0" z="0.2"/>
-   <xacro:add_fixed_joint pitch="-0.0" roll="0.0" suffix="3" x="0.0" y="0.0" yaw="0.0" z="0.0"/>
-   <xacro:add_elbow size="1" size_y="0.2" size_z="0.2" suffix="3_bis"/>
-   <xacro:add_fixed_joint_stator pitch="-0.0" roll="-1.57" suffix="4" suffix_bis="3_bis" x="0.0" y="0.199999936586" yaw="0.0" z="0.200159265342"/>
-   <xacro:add_joint_stator size="1" size_y="0" size_z="0.2" suffix="4"/>
-   <xacro:add_joint effort="35" lower_lim="-3.14" pitch="-0.0" roll="0.0" suffix="4" upper_lim="3.14" velocity="5.7" x="0.0" y="0.0" yaw="0.0" z="0.2"/>
-   <xacro:add_fixed_joint pitch="-0.0" roll="0.0" suffix="4" x="0.0" y="0.0" yaw="0.0" z="0.0"/>
-   <xacro:add_elbow size="1" size_y="0.2" size_z="0.2" suffix="4_bis"/>
-   <xacro:add_fixed_joint_stator pitch="-0.0" roll="-1.57" suffix="5" suffix_bis="4_bis" x="0.0" y="0.199999936586" yaw="0.0" z="0.200159265342"/>
-   <xacro:add_joint_stator size="1" size_y="0" size_z="0.2" suffix="5"/>
-   <xacro:add_joint effort="35" lower_lim="-3.14" pitch="-0.0" roll="0.0" suffix="5" upper_lim="3.14" velocity="5.7" x="0.0" y="0.0" yaw="0.0" z="0.2"/>
 </robot>

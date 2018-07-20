@@ -16,6 +16,7 @@ import modular
 import tf  
 
 ET.register_namespace('xacro', 'http://ros.org/wiki/xacro')
+ns = {'xacro': 'http://ros.org/wiki/xacro'}
 
 #obtaining tree from base file
 path_name = os.path.dirname(modular.__file__)
@@ -26,8 +27,7 @@ root = urdf_tree.getroot()
 
 i=0
 joints=0
-suffix=str(joints)
-suffix_bis=suffix
+fixed_joints=0
 
 Modules=[]
 origin, xaxis, yaxis, zaxis = (0, 0, 0.4), (1, 0, 0), (0, 1, 0), (0, 0, 1)
@@ -35,7 +35,7 @@ origin, xaxis, yaxis, zaxis = (0, 0, 0.4), (1, 0, 0), (0, 1, 0), (0, 0, 1)
 T = tf.transformations.translation_matrix(origin)
 R = tf.transformations.identity_matrix()
 H0 = tf.transformations.concatenate_matrices(T, R)
-data = {'Homogeneous_tf': H0, 'type': "link"}
+data = {'Homogeneous_tf': H0, 'type': "link", 'name': "L_0", 'link_index': 0}
 Modules.append(Module(data))
 #print(Modules[0].type)
 i=i+1
@@ -43,7 +43,7 @@ i=i+1
 size = 3
 
 def main(filename):
-  global i, joints, suffix, suffix_bis, size
+  global i, joints, fixed_joints, size
   module_name = path_name + '/web/static/yaml/' + filename
 
   Modules.append(read_yaml(module_name))
@@ -51,10 +51,9 @@ def main(filename):
   #Modules[i].size = str(size)
   
   setattr(Modules[i], 'size', str(size))
-  print(Modules[i].size)
+  #print(Modules[i].size)
 
-  #print(i)
-  #print(Modules[i].type)
+  print(i)
   
   if(Modules[i-1].type == 'joint'):
     if(Modules[i].type == 'joint'):
@@ -64,63 +63,108 @@ def main(filename):
     else:
       #joint + link
       Modules[i].get_rototranslation(Modules[i-1].Distal_tf, tf.transformations.identity_matrix())
-      #ET.SubElement(root, "xacro:add_link", suffix = suffix, size_y = Modules[i].link_size_y, size_z = Modules[i].link_size_z)
-      ET.SubElement(root, "xacro:add_fixed_joint", suffix = suffix_bis, x = Modules[i].x, y= Modules[i].y, z= Modules[i].z, roll= Modules[i].roll, pitch= Modules[i].pitch, yaw= Modules[i].yaw)
-      suffix_bis = suffix_bis + '_bis'
+
+      fixed_joints=1
       if(Modules[i].type == 'link'):
-        ET.SubElement(root, "xacro:add_link", suffix = suffix_bis, size_z = Modules[i].link_size_z, size = Modules[i].size)
+        setattr(Modules[i],'name', 'L_'+str(joints)+'_link_'+str(fixed_joints))
+        ET.SubElement(root, "xacro:add_link", type = "link", name = Modules[i].name, size_z = Modules[i].link_size_z, size = Modules[i].size)
       elif(Modules[i].type == 'elbow'):
-        ET.SubElement(root, "xacro:add_elbow", suffix = suffix_bis, size_y = Modules[i].link_size_y, size_z = Modules[i].link_size_z, size = Modules[i].size)
+        setattr(Modules[i],'name', 'L_'+str(joints)+'_elbow_'+str(fixed_joints))
+        ET.SubElement(root, "xacro:add_elbow", type = "elbow", name = Modules[i].name, size_y = Modules[i].link_size_y, size_z = Modules[i].link_size_z, size = Modules[i].size)
       else:
         if(size>1):
-          ET.SubElement(root, "xacro:add_size_adapter", suffix = suffix_bis, size_z = Modules[i].link_size_z, size_in = Modules[i].size_in, size_out = Modules[i].size_out)
+          setattr(Modules[i],'name', 'L_'+str(joints)+'_size_adapter_'+str(fixed_joints))
+          ET.SubElement(root, "xacro:add_size_adapter", type = "size_adapter", name = Modules[i].name, size_z = Modules[i].link_size_z, size_in = Modules[i].size_in, size_out = Modules[i].size_out)
           size = Modules[i].size_out
         else:
           #ERROR
           print("Error")
+
+      fixed_joint_name = 'L_'+str(joints)+'_fixed_joint_'+str(fixed_joints)
+      ET.SubElement(root, "xacro:add_fixed_joint", type = "fixed_joint", name = fixed_joint_name, father = 'L_'+str(joints), child = Modules[i].name, x = Modules[i].x, y= Modules[i].y, z= Modules[i].z, roll= Modules[i].roll, pitch= Modules[i].pitch, yaw= Modules[i].yaw)
+      
   else:
     if(Modules[i].type == 'joint'):
       #link + joint
       Modules[i].get_rototranslation(Modules[i-1].Homogeneous_tf, tf.transformations.identity_matrix())
       joints=joints+1
-      suffix=str(joints)
-      ET.SubElement(root, "xacro:add_fixed_joint_stator", suffix = suffix, suffix_bis = suffix_bis, x = Modules[i].x, y= Modules[i].y, z= Modules[i].z, roll= Modules[i].roll, pitch= Modules[i].pitch, yaw= Modules[i].yaw)
-      ET.SubElement(root, "xacro:add_joint_stator", suffix = suffix, size_y = Modules[i].joint_size_y, size_z = Modules[i].joint_size_z, size = Modules[i].size)
+      setattr(Modules[i], 'name', 'J' + str(joints))
+      stator_name = 'L_' + str(joints-1) + '_' + Modules[i].name + '_stator'
+      joint_stator_name = "fixed__"+Modules[i].name
+      ET.SubElement(root, "xacro:add_fixed_joint_stator", type = "fixed_joint_stator", name = joint_stator_name, father = Modules[i-1].name, child = stator_name, x = Modules[i].x, y= Modules[i].y, z= Modules[i].z, roll= Modules[i].roll, pitch= Modules[i].pitch, yaw= Modules[i].yaw)
+      ET.SubElement(root, "xacro:add_joint_stator", type = "joint_stator", name = stator_name, size_y = Modules[i].joint_size_y, size_z = Modules[i].joint_size_z, size = Modules[i].size)
       Modules[i].get_rototranslation(tf.transformations.identity_matrix(), Modules[i].Proximal_tf)
       jointData = Modules[i].kinematics.joint.joint
       upper_lim=str(jointData.upper_limit)
       lower_lim=str(jointData.lower_limit)
       effort=str(jointData.effort)
       velocity=str(jointData.velocity)
-      ET.SubElement(root, "xacro:add_joint", suffix = suffix, x = Modules[i].x, y= Modules[i].y, z= Modules[i].z, roll= Modules[i].roll, pitch= Modules[i].pitch, yaw= Modules[i].yaw, upper_lim=upper_lim, lower_lim=lower_lim, effort=effort, velocity=velocity)
-      suffix_bis=suffix
+      ET.SubElement(root, "xacro:add_joint", type = "joint", name = Modules[i].name, father = stator_name, child = 'L_' + str(joints), x = Modules[i].x, y= Modules[i].y, z= Modules[i].z, roll= Modules[i].roll, pitch= Modules[i].pitch, yaw= Modules[i].yaw, upper_lim=upper_lim, lower_lim=lower_lim, effort=effort, velocity=velocity)
 
     else:
       #link + link
       Modules[i].get_rototranslation(Modules[i-1].Homogeneous_tf, tf.transformations.identity_matrix())
-      
-      ET.SubElement(root, "xacro:add_fixed_joint", suffix = suffix_bis, x = Modules[i].x, y= Modules[i].y, z= Modules[i].z, roll= Modules[i].roll, pitch= Modules[i].pitch, yaw= Modules[i].yaw)
-      suffix_bis = suffix_bis + '_bis'
+      print(Modules[i].z)
+  
+      fixed_joints+=1
       
       if(Modules[i].type == 'link'):
-        ET.SubElement(root, "xacro:add_link", suffix = suffix_bis, size_z = Modules[i].link_size_z, size = Modules[i].size)
+        setattr(Modules[i],'name', 'L_'+str(joints)+'_link_'+str(fixed_joints))
+        ET.SubElement(root, "xacro:add_link", type = "link", name = Modules[i].name, size_z = Modules[i].link_size_z, size = Modules[i].size)
       elif(Modules[i].type == 'elbow'):
-        ET.SubElement(root, "xacro:add_elbow", suffix = suffix_bis, size_y = Modules[i].link_size_y, size_z = Modules[i].link_size_z, size = Modules[i].size)
+        setattr(Modules[i],'name', 'L_'+str(joints)+'_elbow_'+str(fixed_joints))
+        ET.SubElement(root, "xacro:add_elbow", type = "elbow", name = Modules[i].name, size_y = Modules[i].link_size_y, size_z = Modules[i].link_size_z, size = Modules[i].size)
       else:
         if(size>1):
-          ET.SubElement(root, "xacro:add_size_adapter", suffix = suffix_bis, size_z = Modules[i].link_size_z, size_in = Modules[i].size_in, size_out = Modules[i].size_out)
+          setattr(Modules[i],'name', 'L_'+str(joints)+'_size_adapter_'+str(fixed_joints))
+          ET.SubElement(root, "xacro:add_size_adapter", type = "size_adapter", name = Modules[i].name, size_z = Modules[i].link_size_z, size_in = Modules[i].size_in, size_out = Modules[i].size_out)
           size=Modules[i].size_out
         else:
           #ERROR
           print("Error")
+      
+      fixed_joint_name = 'L_'+str(joints)+'_fixed_joint_'+str(fixed_joints)
+      ET.SubElement(root, "xacro:add_fixed_joint", name = fixed_joint_name, type = "fixed_joint", father = Modules[i-1].name, child = Modules[i].name, x = Modules[i].x, y= Modules[i].y, z= Modules[i].z, roll= Modules[i].roll, pitch= Modules[i].pitch, yaw= Modules[i].yaw)
+      
+  setattr(Modules[i],'link_index', fixed_joints)
 
   #update the urdf file, adding the new module 
   string = write_urdf(path_name + '/urdf/ModularBot_test.urdf', urdf_tree)
 
-  data = {'result': string, 'lastModule': Modules[i].type, 'size': size}
+  i=i+1
+
+  data = {'result': string, 'lastModule': Modules[i-1].type, 'size': size, 'count': i}
   # data = jsonify(data)
 
-  i=i+1
+  return data
+
+def remove_module():
+  global i, size, joints, fixed_joints
+  if (Modules[i-1].type == 'joint'):
+    root.remove(root.findall("*[@type='joint']", ns)[-1])
+    root.remove(root.findall("*[@type='joint_stator']", ns)[-1])
+    root.remove(root.findall("*[@type='fixed_joint_stator']", ns)[-1])
+    joints=joints-1
+  else:
+    #print(root.findall("*[@type='link']", ns)[-1])
+    root.remove(root.findall("*[@type='fixed_joint']", ns)[-1])
+    if (Modules[i-1].type == 'link'):
+      root.remove(root.findall("*[@type='link']", ns)[-1])
+    elif (Modules[i-1].type == 'elbow'):
+      root.remove(root.findall("*[@type='elbow']", ns)[-1])
+    elif (Modules[i-1].type == 'size_adapter'):
+      root.remove(root.findall("*[@type='size_adapter']", ns)[-1])
+      size=Modules[i-1].size_in
+
+  del Modules[i-1]
+  i=i-1
+  fixed_joints=Modules[i-1].link_index
+
+  #update the urdf file, removing the module 
+  string = write_urdf(path_name + '/urdf/ModularBot_test.urdf', urdf_tree)
+
+  data = {'result': string, 'lastModule': Modules[i-1].type, 'size': size, 'count': i}
+  # data = jsonify(data)
 
   return data
 

@@ -77,9 +77,9 @@ class Module(dict):
         #TO BE CHECKED!!!
         size_x = 0
         size_y = proximal.p_pl + distal.p_dl
-        print(size_y)
+        # print(size_y)
         size_z = proximal.n_pl + distal.n_dl 
-        print(size_z)
+        #print(size_z)
 
         setattr(self, 'joint_size_x', str(size_x))
         setattr(self, 'joint_size_y', str(size_y))

@@ -43,7 +43,7 @@
 
     <link name="base_link"/>
 
-    <link name="link_0">
+    <link name="L_0">
         <visual>
             <origin xyz="0 0 ${len1/2}" rpy="0 0 0" />
             <geometry>
@@ -62,11 +62,11 @@
 
     <joint name="fixed" type="fixed">
         <parent link="base_link"/>
-        <child link="link_0"/>
+        <child link="L_0"/>
     </joint>
 
     <!-- Macro for adding a straight link -->
-    <xacro:macro name="add_link" params="suffix size_z size">
+    <xacro:macro name="add_link" params="name type size_z size">
         
         <xacro:if value="${size==1}">
             <xacro:property name="radius" value="${size1}" />
@@ -80,7 +80,7 @@
             </xacro:unless>  
         </xacro:unless>
 
-        <link name="link_${suffix}">
+        <link name="${name}">
             <visual>
                 <origin xyz="0 0 ${size_z/2}" rpy="0 0 0" />
                 <geometry>
@@ -103,7 +103,7 @@
                 izz="${mass / 2.0 * (radius*radius)}"/>
             </inertial>
         </link>
-        <gazebo reference="link_${suffix}">
+        <gazebo reference="${name}">
             <mu1>0.2</mu1>
             <mu2>0.2</mu2>
             <kp>1000000.0</kp>
@@ -116,7 +116,7 @@
     </xacro:macro>
 
     <!-- Macro for adding a size adapter -->
-    <xacro:macro name="add_size_adapter" params="suffix size_z size_in size_out">
+    <xacro:macro name="add_size_adapter" params="type name size_z size_in size_out">
         
         <xacro:if value="${size_in==3}">
             <xacro:property name="radius1" value="${size3}" />
@@ -142,7 +142,7 @@
             </xacro:unless>  
         </xacro:unless>
 
-        <link name="link_${suffix}">
+        <link name="${name}">
             <visual>
                 <origin xyz="0 0 ${size_z/4}" rpy="0 0 0" />
                 <geometry>
@@ -178,7 +178,7 @@
                 izz="${mass / 4.0 * (radius1*radius1) + mass / 4.0 * (radius2*radius2)}"/>
             </inertial>
         </link>
-        <gazebo reference="link_${suffix}">
+        <gazebo reference="${name}">
             <mu1>0.2</mu1>
             <mu2>0.2</mu2>
             <kp>1000000.0</kp>
@@ -191,7 +191,7 @@
     </xacro:macro>
 
     <!-- Macro for adding an elbow module (90° link) -->
-    <xacro:macro name="add_elbow" params="suffix size_y size_z size">
+    <xacro:macro name="add_elbow" params="type name size_y size_z size">
 
         <xacro:if value="${size==1}">
             <xacro:property name="radius" value="${size1}" />
@@ -205,7 +205,7 @@
             </xacro:unless>  
         </xacro:unless>
 
-        <link name="link_${suffix}">
+        <link name="${name}">
             <visual>
                 <origin xyz="0 0 ${size_z/2}" rpy="0 0 0" />
                 <geometry>
@@ -254,7 +254,7 @@
                 </geometry>
             </collision>
         </link>
-        <gazebo reference="link_${suffix}">
+        <gazebo reference="${name}">
             <mu1>0.2</mu1>
             <mu2>0.2</mu2>
             <kp>1000000.0</kp>
@@ -267,30 +267,30 @@
     </xacro:macro>
 
     <!-- Macro for adding a fixed joint (rigid interconnection between links) -->
-    <xacro:macro name="add_fixed_joint" params="suffix x y z roll pitch yaw">    
-        <joint name="fixed_joint_${suffix}" type="fixed">
+    <xacro:macro name="add_fixed_joint" params="type name father child x y z roll pitch yaw">    
+        <joint name="${name}" type="fixed">
             <axis xyz="0 0 1" rpy="0 0 0" />
-            <parent link="link_${suffix}"/>
-            <child link="link_${suffix}_bis"/>
+            <parent link="${father}"/>
+            <child link="${child}"/>
             <origin xyz="${x} ${y} ${z}" rpy="${roll} ${pitch} ${yaw}"/>
         </joint>
     </xacro:macro>
 
     <!-- Macro for adding the joint (it has no size) -->
-    <xacro:macro name="add_joint" params="suffix x y z roll pitch yaw upper_lim lower_lim effort velocity">    
-        <joint name="joint_${suffix}" type="revolute">
+    <xacro:macro name="add_joint" params="type name father child x y z roll pitch yaw upper_lim lower_lim effort velocity">    
+        <joint name="${name}" type="revolute">
             <axis xyz="0 0 1" rpy="0 0 0" />
-            <parent link="link_stator_joint_${suffix}"/>
-            <child link="link_${suffix}"/>
+            <parent link="${father}"/>
+            <child link="${child}"/>
             <origin xyz="${x} ${y} ${z}" rpy="${roll} ${pitch} ${yaw}"/>
             <limit lower="${lower_lim}" upper="${upper_lim}" effort="${effort}" velocity="${velocity}"/>
         </joint>
-        <link name="link_${suffix}"/>
+        <link name="${child}"/>
 
     </xacro:macro>
 
     <!-- Macro for adding the physical module housing the actuator -->
-    <xacro:macro name="add_joint_stator" params="suffix size_y size_z size">
+    <xacro:macro name="add_joint_stator" params="type name size_y size_z size">
 
         <xacro:if value="${size==1}">
             <xacro:property name="radius" value="${size1}" />
@@ -304,7 +304,7 @@
             </xacro:unless>  
         </xacro:unless>
         
-        <link name="link_stator_joint_${suffix}">
+        <link name="${name}">
             <visual>
                 <origin xyz="0 0 ${size_z/2}" rpy="0 0 0" />
                 <geometry>
@@ -327,7 +327,7 @@
                 izz="${mass / 2.0 * (radius*radius)}"/>
             </inertial>
         </link>
-        <gazebo reference="link_stator_joint_${suffix}">
+        <gazebo reference="${name}">
             <mu1>0.2</mu1>
             <mu2>0.2</mu2>
             <kp>1000000.0</kp>
@@ -340,11 +340,11 @@
     </xacro:macro>
 
     <!-- Macro for adding a fixed joint (rigid interconnection between links and statoric part of the joint) -->
-    <xacro:macro name="add_fixed_joint_stator" params="suffix suffix_bis x y z roll pitch yaw">    
-        <joint name="fixed_joint_${suffix_bis}" type="fixed">
+    <xacro:macro name="add_fixed_joint_stator" params="type name father child x y z roll pitch yaw">    
+        <joint name="${name}" type="fixed">
             <axis xyz="0 0 1" rpy="0 0 0" />        
-            <parent link="link_${suffix_bis}"/>
-            <child link="link_stator_joint_${suffix}"/>
+            <parent link="${father}"/>
+            <child link="${child}"/>
             <origin xyz="${x} ${y} ${z}" rpy="${roll} ${pitch} ${yaw}"/>
         </joint>
     </xacro:macro>

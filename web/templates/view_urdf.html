@@ -22,6 +22,8 @@
 
         <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
 
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
         <style type="text/css">
             html, body {
                 height: 100%;
@@ -144,6 +146,17 @@
                 display: none;
                 font-size: 16px;
             }
+            #removeLast {
+                background-color: rgb(206, 33, 33);
+                border: none;
+                position: absolute;
+                top: 0;
+                right: 20%;
+                font-size: 16px;
+                color: white;
+                padding: 12px 16px;
+                display: none;
+            }
             button > div {
                 padding-top: 50%;
             }
@@ -167,6 +180,7 @@
             <div id="controls" style="overflow-y:auto;">
                 <ul></ul>
             </div>
+            <button id=removeLast class="btn"><i class="fa fa-trash"></i> Remove Module</button>
             <div id="selector" style="overflow-y:auto;">
                 Select a module to add: 
                 <!-- <input type="file" id="moduleInput"> -->
@@ -178,7 +192,7 @@
                 <button type="button" id="addSizeAdapter_Big2Medium"><div>Size Adapter: Big to Medium</div></button>
                 <button type="button" id="addSizeAdapter_Big2Small"><div>Size Adapter: Big to Small</div></button>
                 <button type="button" id="addSizeAdapter_Medium2Small"><div>Size Adapter: Medium to Small</div></button>
-                <!-- <pre id="DisplayArea"></pre> -->
+                <!-- <button type="button" id="remove"><div>Remove module</div></button> -->
             </div>
         </div>
         
@@ -200,7 +214,7 @@
                 var addSizeAdapter_Big2Medium = document.getElementById('addSizeAdapter_Big2Medium');
                 var addSizeAdapter_Big2Small = document.getElementById('addSizeAdapter_Big2Small');
                 var addSizeAdapter_Medium2Small = document.getElementById('addSizeAdapter_Medium2Small');
-                
+                var removeLast = document.getElementById('removeLast');
 
                 fileInput.addEventListener('change', function(e) {
                     var file = fileInput.files[0];
@@ -245,6 +259,8 @@
                 addSizeAdapter_Big2Small.onclick = function() {addModule("module_size_adapter_B2S", size)};
 
                 addSizeAdapter_Medium2Small.onclick = function() {addModule("module_size_adapter_M2S", size)};
+
+                removeLast.onclick = function() {removeModule()};
             }
 
             //Function to add a new module. Called at the click of the linked button
@@ -279,7 +295,7 @@
                         console.log(data)
                         robots = URDF_viewer.updateURDF(data['result'])
                         size = data['size']
-                        updateShownButtons(data['lastModule'])
+                        updateShownButtons(data['lastModule'], data['count'])
                         console.log(size)
                     },
                     async: true
@@ -287,28 +303,55 @@
 
             };
 
-            function updateShownButtons(lastModule) {
-                console.log(size)
+            function removeModule() {
+                $.ajax({
+                    url: 'http://127.0.0.1:5000/removeModule/',
+                    // data: {'module_name': filename},
+                    method: 'POST',
+                    success: function(data) {
+                        console.log(data)
+                        robots = URDF_viewer.updateURDF(data['result'])
+                        size = data['size']
+                        updateShownButtons(data['lastModule'], data['count'])
+                        console.log(size)
+                    },
+                    async: true
+                });
+            }
+
+            function updateShownButtons(lastModule, count) {
+                console.log(count)
                 switch (lastModule) {
                     case 'joint': 
                         addJoint.style.display="none";
                         break;
-                    case 'size_adapter':
-                        if (size==2) {
-                            addSizeAdapter_Big2Medium.style.display="none";
-                            addSizeAdapter_Big2Small.style.display="none";
-                            addSizeAdapter_Medium2Small.style.display="block";
-                        }
-                        else if (size==1){
-                            addSizeAdapter_Big2Medium.style.display="none";
-                            addSizeAdapter_Big2Small.style.display="none";
-                            addSizeAdapter_Medium2Small.style.display="none";
-                        }                             
+                    case 'size_adapter':                      
                     case 'link':
                     case 'elbow':
                         addJoint.style.display="block";
                         break;
                 }
+
+                if (size==3) {
+                    addSizeAdapter_Big2Medium.style.display="block";
+                    addSizeAdapter_Big2Small.style.display="block";
+                    addSizeAdapter_Medium2Small.style.display="none";
+                }
+                else if (size==2) {
+                    addSizeAdapter_Big2Medium.style.display="none";
+                    addSizeAdapter_Big2Small.style.display="none";
+                    addSizeAdapter_Medium2Small.style.display="block";
+                }
+                else if (size==1){
+                    addSizeAdapter_Big2Medium.style.display="none";
+                    addSizeAdapter_Big2Small.style.display="none";
+                    addSizeAdapter_Medium2Small.style.display="none";
+                } 
+                
+                if (count>1)
+                    removeLast.style.display="block";
+                else
+                    removeLast.style.display="none";
                 
             }
             // //Function to open a file on the server side from the HTML page

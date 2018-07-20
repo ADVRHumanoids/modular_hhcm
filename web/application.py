@@ -17,6 +17,13 @@ def changeURDF():
     data = jsonify(data)
     return data
 
+#call URDF_writer.py to remove the last module
+@app.route('/removeModule/', methods=['POST'])
+def remove():
+    data = URDF_writer.remove_module()
+    data = jsonify(data)
+    return data
+
 #upload on the server the /static folder
 @app.route('/<path:path>')
 def send_file(path):
