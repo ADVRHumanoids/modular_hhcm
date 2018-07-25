@@ -9,6 +9,10 @@
     <body>
         <!-- NOTE: importing scripts works with relative path for standalone version or with "url_for_static" when called by FLASK!-->
         <!-- <script src="../static/build/three.js"></script> -->
+        <script type="text/javascript" >
+            var current_parent = 'L_0';
+        </script>
+        
         <script type="text/javascript" src="{{ url_for('static', filename='/build/three.js') }}"></script>
         
         <script type="text/javascript" src="{{ url_for('static', filename='/build/js-yaml.min.js') }}"></script>
@@ -19,6 +23,8 @@
         <script type="text/javascript" src="{{ url_for('static', filename='/examples/js/controls/TransformControls.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static', filename='/examples/js/loaders/STLLoader.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static', filename='/examples/js/loaders/ColladaLoader.js') }}"></script>
+
+        <script type="text/javascript" src="{{ url_for('static', filename='/examples/js/renderers/Projector.js') }}"></script>
 
         <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
 
@@ -286,17 +292,19 @@
                     filename = modulename + size_tag + '.yaml'
                 }
                 
+                console.log(current_parent)
                 //making an ajax request to the server to proceed to write the modified URDF
                 $.ajax({
                     url: 'http://127.0.0.1:5000/changeURDF/',
-                    data: {'module_name': filename},
+                    data: {'module_name': filename, 'parent': current_parent},
                     method: 'POST',
                     success: function(data) {
                         console.log(data)
                         robots = URDF_viewer.updateURDF(data['result'])
                         size = data['size']
-                        updateShownButtons(data['lastModule'], data['count'])
+                        updateShownButtons(data['lastModule_type'], data['count'])
                         console.log(size)
+                        current_parent = data['lastModule_name']
                     },
                     async: true
                 });
@@ -306,22 +314,23 @@
             function removeModule() {
                 $.ajax({
                     url: 'http://127.0.0.1:5000/removeModule/',
-                    // data: {'module_name': filename},
+                    data: {'parent': current_parent},
                     method: 'POST',
                     success: function(data) {
                         console.log(data)
                         robots = URDF_viewer.updateURDF(data['result'])
                         size = data['size']
-                        updateShownButtons(data['lastModule'], data['count'])
+                        updateShownButtons(data['lastModule_type'], data['count'])
                         console.log(size)
+                        current_parent = data['lastModule_name']
                     },
                     async: true
                 });
             }
 
-            function updateShownButtons(lastModule, count) {
+            function updateShownButtons(lastModule_type, count) {
                 console.log(count)
-                switch (lastModule) {
+                switch (lastModule_type) {
                     case 'joint': 
                         addJoint.style.display="none";
                         break;

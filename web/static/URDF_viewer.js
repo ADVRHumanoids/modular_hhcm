@@ -407,6 +407,10 @@ class URDF_viewer extends HTMLElement {
             this.scene.add(this.transformControls)
         })
   
+        // this.Meshes = []
+        // this.forEach(Object.values(this.linkMap), l => {this.Meshes.push(l.getObjectByProperty('type', 'Mesh') )})
+        // this.Meshes.pop()
+
         var URDF_processed_eH = new URDF_processed_eventHandler();
 
         var self = this;
@@ -653,8 +657,15 @@ class URDF_viewer extends HTMLElement {
         this.transformControls.attach(object)
         this.scene.add(this.transformControls)
 
+        this.raycaster = new THREE.Raycaster();
+        this.mouse = new THREE.Vector2();
+        
+        rnd.addEventListener( 'mousedown', onDocumentMouseDown, false );
+        //document.addEventListener( 'touchstart', onDocumentTouchStart, false );
+
         self = this
         window.addEventListener('resize', onWindowResize, false);
+        
         function onWindowResize() {
 
             self.camera.aspect = window.innerWidth / window.innerHeight;
@@ -663,6 +674,49 @@ class URDF_viewer extends HTMLElement {
             self.renderer.setSize(window.innerWidth, window.innerHeight);
 
         }
+
+        self=this
+        function onDocumentMouseDown( event ) {
+            event.preventDefault();
+            self.mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+            self.mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+            self.raycaster.setFromCamera( self.mouse, self.camera );
+            //self.forEach(Object.values(self.robots[0].urdf.links), l => {console.log(l.getObjectByProperty('type', 'Mesh') )})
+            //console.log(self.robots[0].urdf.links['L_1'].getObjectByProperty('type', 'Mesh') )
+            
+            //console.log(self.Meshes)
+            var intersects = self.raycaster.intersectObject( self.robots[0], true );
+            var mesh_intersects = intersects.filter(inters => inters.object.type == 'Mesh')
+            console.log(mesh_intersects.length)
+            if ( mesh_intersects.length > 0 ) {
+                var color = Math.random() * 0xffffff
+                self.forEach(mesh_intersects[0].object.parent.children, s => {
+                    if(s.type == 'Mesh')
+                        s.material.color.setHex( color );
+                })
+                
+                //Update global variable
+                current_parent = mesh_intersects[0].object.parent.name
+                console.log(current_parent)
+                // var particle = new THREE.Sprite( particleMaterial );
+                // particle.position.copy( intersects[ 0 ].point );
+                // particle.scale.x = particle.scale.y = 16;
+                // scene.add( particle );
+                }
+            /*
+            // Parse all the faces
+            for ( var i in intersects ) {
+                intersects[ i ].face.material[ 0 ].color.setHex( Math.random() * 0xffffff | 0x80000000 );
+            }
+            */
+        }
+
+        // function onDocumentTouchStart( event ) {
+        //     event.preventDefault();
+        //     event.clientX = event.touches[0].clientX;
+        //     event.clientY = event.touches[0].clientY;
+        //     onDocumentMouseDown( event );
+        // }
     }
 
     static _animate() {
@@ -1036,6 +1090,7 @@ class URDF_viewer extends HTMLElement {
                         //mesh.up = new THREE.Vector3(0,0,1)
                         //mesh.DefaultUp = new THREE.Vector3(0, 0, 1)
                         mesh.geometry = new THREE.BoxGeometry(1, 1, 1)
+                        mesh.geometry.computeFaceNormals();
                         mesh.material = material
 
 
@@ -1057,6 +1112,7 @@ class URDF_viewer extends HTMLElement {
                         console.log('sphere')
                         const mesh = new THREE.Mesh()
                         mesh.geometry = new THREE.SphereGeometry(1, 20, 20)
+                        mesh.geometry.computeFaceNormals();
                         mesh.material = material
 
                         const radius = parseFloat(n.children[0].getAttribute('radius')) || 0
@@ -1074,17 +1130,20 @@ class URDF_viewer extends HTMLElement {
                         const mesh = new THREE.Mesh()
                         //mesh.up = new THREE.Vector3(0,0,1)
                         mesh.geometry = new THREE.CylinderBufferGeometry(1, 1, 1, 25)
+                        mesh.geometry.computeFaceNormals();
                         mesh.material = material
                         mesh.scale.set(radius, length, radius)
 
-                        const cyl_obj = new THREE.Object3D()
-                        cyl_obj.add(mesh)
                         mesh.rotation.set(Math.PI / 2, 0, 0)
 
+                        //TO check: cyl_obj has been replaced with mesh directly
+                        // const cyl_obj = new THREE.Object3D()
+                        // cyl_obj.add(mesh)
+
                         //console.log(xyz)
-                        link_obj.add(cyl_obj)
-                        this._applyRotation(cyl_obj, rpy)
-                        cyl_obj.position.set(xyz[0], xyz[1], xyz[2])
+                        link_obj.add(mesh)                              //link_obj.add(cyl_obj) etc.
+                        this._applyRotation(mesh, rpy)
+                        mesh.position.set(xyz[0], xyz[1], xyz[2])
                     })
                 } else if (geoType === 'mesh') {
                     const filename = n.children[0].getAttribute('filename').replace(/^package:\/\//, ''); // replace(/^((package:\/\/)|(model:\/\/))/, '')

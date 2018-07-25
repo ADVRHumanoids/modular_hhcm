@@ -13,14 +13,18 @@ def index():
 @app.route('/changeURDF/', methods=['POST'])
 def changeURDF():
     filename = request.form.get('module_name', 0)
-    data = URDF_writer.main(filename)
+    print(filename)
+    parent = request.form.get('parent', 0)
+    print(parent)
+    data = URDF_writer.add_module(filename, parent)
     data = jsonify(data)
-    return data
+    return data 
 
 #call URDF_writer.py to remove the last module
 @app.route('/removeModule/', methods=['POST'])
 def remove():
-    data = URDF_writer.remove_module()
+    parent = request.form.get('parent', 0)
+    data = URDF_writer.remove_module(parent)
     data = jsonify(data)
     return data
 

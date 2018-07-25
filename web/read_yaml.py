@@ -2,17 +2,26 @@ import yaml
 import sys
 import tf
 
+from anytree import NodeMixin, RenderTree
+
 # Class describing all the properties of a module 
 # - Kinematics and dynamics paramters are loaded from a YAML file
 # - Methods are provided to compute frame transformations and store them as class attributes 
-class Module(dict):
+class Module(object):
     
+    def __init__(self, d):
+        for a, b in d.items():
+            if isinstance(b, (list, tuple)):
+                setattr(self, a, [Module(x) if isinstance(x, dict) else x for x in b])
+            else:
+                setattr(self, a, Module(b) if isinstance(b, dict) else b)
+
     # Import the fields of the dictionary (obtained by reading the YAML file) as class attributes 
-    def __getattr__(self, name):
-        value = self[name]
-        if isinstance(value, dict):
-            value = Module(value)
-        return value
+    # def __getattr__(self, name):
+    #     value = self[name]
+    #     if isinstance(value, dict):
+    #         value = Module(value)
+    #     return value
 
     # # From the name of the YAML file to be read, set the type of the module
     # def set_type(self, x):
@@ -116,6 +125,7 @@ class Module(dict):
     def get_rototranslation(self, Distal_previous, Proximal):
         F=tf.transformations.concatenate_matrices(Distal_previous, Proximal)
 
+        print(F)
         scale, shear, angles, trans, persp = tf.transformations.decompose_matrix(F)
 
         setattr(self, 'x', str(trans[0]))
@@ -136,16 +146,21 @@ class Module(dict):
         'size_adapter' : self.get_homogeneous_matrix()
         }.get(x, 'Invalid type')
 
+class ModuleNode(Module, NodeMixin):
+    def __init__(self, dict, name, parent=None):
+        super(ModuleNode, self).__init__(dict)
+        self.name=name
+        self.parent=parent
 
 # Function parsing YAML file and returning an instance of a Module class
-def read_yaml(filename):
+def read_yaml(filename, father):
     with open(filename, 'r') as stream:
         try:
             data=yaml.load(stream)
         except yaml.YAMLError as exc:
             print(exc)
 
-    result = Module(data)
+    result = ModuleNode(data, filename, parent=father)
     #result.set_type(filename)
     result.get_transform()
     result.set_size(result)
