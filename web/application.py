@@ -28,6 +28,14 @@ def remove():
     data = jsonify(data)
     return data
 
+#update "last module" (and so shown buttons) when clicking on it
+@app.route('/updateLastModule/', methods=['POST'])
+def accessModule():
+    parent = request.form.get('parent', 0)
+    data = URDF_writer.access_module(parent)
+    data = jsonify(data)
+    return data
+
 #upload on the server the /static folder
 @app.route('/<path:path>')
 def send_file(path):

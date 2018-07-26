@@ -11,6 +11,42 @@
         <!-- <script src="../static/build/three.js"></script> -->
         <script type="text/javascript" >
             var current_parent = 'L_0';
+            
+            function updateShownButtons(lastModule_type, count, lastSize) {
+                console.log(count)
+                switch (lastModule_type) {
+                    case 'joint': 
+                        addJoint.style.display="none";
+                        break;
+                    case 'size_adapter':                      
+                    case 'link':
+                    case 'elbow':
+                        addJoint.style.display="block";
+                        break;
+                }
+
+                if (lastSize==3) {
+                    addSizeAdapter_Big2Medium.style.display="block";
+                    addSizeAdapter_Big2Small.style.display="block";
+                    addSizeAdapter_Medium2Small.style.display="none";
+                }
+                else if (lastSize==2) {
+                    addSizeAdapter_Big2Medium.style.display="none";
+                    addSizeAdapter_Big2Small.style.display="none";
+                    addSizeAdapter_Medium2Small.style.display="block";
+                }
+                else if (lastSize==1){
+                    addSizeAdapter_Big2Medium.style.display="none";
+                    addSizeAdapter_Big2Small.style.display="none";
+                    addSizeAdapter_Medium2Small.style.display="none";
+                } 
+                
+                if (count>0)
+                    removeLast.style.display="block";
+                else
+                    removeLast.style.display="none";
+                
+            }
         </script>
         
         <script type="text/javascript" src="{{ url_for('static', filename='/build/three.js') }}"></script>
@@ -292,7 +328,7 @@
                     filename = modulename + size_tag + '.yaml'
                 }
                 
-                console.log(current_parent)
+                console.log()
                 //making an ajax request to the server to proceed to write the modified URDF
                 $.ajax({
                     url: 'http://127.0.0.1:5000/changeURDF/',
@@ -302,7 +338,7 @@
                         console.log(data)
                         robots = URDF_viewer.updateURDF(data['result'])
                         size = data['size']
-                        updateShownButtons(data['lastModule_type'], data['count'])
+                        updateShownButtons(data['lastModule_type'], data['count'], data['size'])
                         console.log(size)
                         current_parent = data['lastModule_name']
                     },
@@ -320,7 +356,7 @@
                         console.log(data)
                         robots = URDF_viewer.updateURDF(data['result'])
                         size = data['size']
-                        updateShownButtons(data['lastModule_type'], data['count'])
+                        updateShownButtons(data['lastModule_type'], data['count'], data['size'])
                         console.log(size)
                         current_parent = data['lastModule_name']
                     },
@@ -328,41 +364,7 @@
                 });
             }
 
-            function updateShownButtons(lastModule_type, count) {
-                console.log(count)
-                switch (lastModule_type) {
-                    case 'joint': 
-                        addJoint.style.display="none";
-                        break;
-                    case 'size_adapter':                      
-                    case 'link':
-                    case 'elbow':
-                        addJoint.style.display="block";
-                        break;
-                }
-
-                if (size==3) {
-                    addSizeAdapter_Big2Medium.style.display="block";
-                    addSizeAdapter_Big2Small.style.display="block";
-                    addSizeAdapter_Medium2Small.style.display="none";
-                }
-                else if (size==2) {
-                    addSizeAdapter_Big2Medium.style.display="none";
-                    addSizeAdapter_Big2Small.style.display="none";
-                    addSizeAdapter_Medium2Small.style.display="block";
-                }
-                else if (size==1){
-                    addSizeAdapter_Big2Medium.style.display="none";
-                    addSizeAdapter_Big2Small.style.display="none";
-                    addSizeAdapter_Medium2Small.style.display="none";
-                } 
-                
-                if (count>1)
-                    removeLast.style.display="block";
-                else
-                    removeLast.style.display="none";
-                
-            }
+            
             // //Function to open a file on the server side from the HTML page
             // function openfile(url, cB) {
             //     function updateProgress (oEvent) {

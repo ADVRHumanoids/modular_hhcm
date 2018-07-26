@@ -698,11 +698,23 @@ class URDF_viewer extends HTMLElement {
                 //Update global variable
                 current_parent = mesh_intersects[0].object.parent.name
                 console.log(current_parent)
+
+                $.ajax({
+                    url: 'http://127.0.0.1:5000/updateLastModule/',
+                    data: {'parent': current_parent},
+                    method: 'POST',
+                    success: function(data) {
+                        console.log(data)
+                        updateShownButtons(data['lastModule_type'], data['count'], data['size'])
+                        size=data['size']
+                    },
+                    async: true
+                });
                 // var particle = new THREE.Sprite( particleMaterial );
                 // particle.position.copy( intersects[ 0 ].point );
                 // particle.scale.x = particle.scale.y = 16;
                 // scene.add( particle );
-                }
+            }
             /*
             // Parse all the faces
             for ( var i in intersects ) {
