@@ -260,14 +260,28 @@
 
                 fileInput.addEventListener('change', function(e) {
                     var file = fileInput.files[0];
-                    
+                    console.log(file)
                     reader = new FileReader();
                     
                     reader.onload = function(e) {
                         //fileDisplayArea.innerText = reader.result;
                         document.getElementById('header').style.display="none";
-                        robots = URDF_viewer.showURDF(reader);
+                        //robots = URDF_viewer.showURDF(reader);
                         selector.style.display = 'block';
+
+                        //console.log(reader.result)
+                        $.ajax({
+                            url: 'http://127.0.0.1:5000/openFile/',
+                            data: {'file': reader.result},
+                            method: 'POST',
+                            // contentType: false,
+                            // processData: false,
+                            success: function(data) {
+                                console.log(data['string'])
+                                robots = URDF_viewer.showURDF(data['string']);
+                            },
+                            async: true
+                        });
                     }
                     
                     reader.readAsText(file);  

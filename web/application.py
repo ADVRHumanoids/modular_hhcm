@@ -36,6 +36,15 @@ def accessModule():
     data = jsonify(data)
     return data
 
+#update "last module" (and so shown buttons) when clicking on it
+@app.route('/openFile/', methods=['POST'])
+def openFile():
+    file_str = request.form.get('file', 0)
+    print(file_str)
+    data = URDF_writer.read_file(file_str)
+    data = jsonify(data)
+    return data
+
 #upload on the server the /static folder
 @app.route('/<path:path>')
 def send_file(path):

@@ -437,7 +437,7 @@ class URDF_viewer extends HTMLElement {
         return this.robots
     }
 
-    static showURDF(reader) {
+    static showURDF(string) {
         //Note: uncomment if you want to use the addModuleYAML method! 
         // this.lastModKin = {
         //     joint: { proximal: { a_pl: 0, alpha_pl: 0, p_pl: 0, n_pl: 0, delta_pl: 0}, 
@@ -448,7 +448,7 @@ class URDF_viewer extends HTMLElement {
         // }
 
         const parser = new DOMParser()
-        const urdf = parser.parseFromString(reader.result, 'text/xml')
+        const urdf = parser.parseFromString(string, 'text/xml')
 
         this.robots = []
         this.jointNumber = 0
