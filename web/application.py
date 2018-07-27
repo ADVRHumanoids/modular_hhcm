@@ -32,7 +32,7 @@ def remove():
 @app.route('/updateLastModule/', methods=['POST'])
 def accessModule():
     parent = request.form.get('parent', 0)
-    data = URDF_writer.access_module(parent)
+    data = URDF_writer.select_module(parent)
     data = jsonify(data)
     return data
 

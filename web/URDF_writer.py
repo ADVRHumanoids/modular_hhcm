@@ -182,10 +182,14 @@ def add_module(filename, selected_module):
   return data
 
 def remove_module(selected_module):
-  if selected_module.endswith('_stator') :
-    selected_module = selected_module[:-7]
-  last_module = anytree.search.findall_by_attr(L_0, selected_module)[0]
+  if(isinstance(selected_module, basestring)):
+    last_module = access_module(selected_module)
+  else:
+    last_module = selected_module
   
+  for child in last_module.children :
+    remove_module(child)
+
   if (last_module.type == 'joint'):
     stator_name = last_module.name + '_stator'
     joint_stator_name = "fixed_" + last_module.name
@@ -235,6 +239,9 @@ def remove_module(selected_module):
 
   #last_module.parent.children = None
   last_module.parent = None
+  
+  
+
   del last_module
 
   #Render tree
@@ -247,6 +254,11 @@ def access_module(selected_module):
   if selected_module.endswith('_stator') :
     selected_module = selected_module[:-7]
   last_module = anytree.search.findall_by_attr(L_0, selected_module)[0]
+  
+  return last_module
+
+def select_module(module) :
+  last_module = access_module(module)
 
   data = {'lastModule_type': last_module.type, 'lastModule_name': last_module.name, 'size': last_module.size, 'count': last_module.i}
   
