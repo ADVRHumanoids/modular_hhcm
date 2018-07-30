@@ -4,13 +4,43 @@ We store all files we cannot share here (PDFs, DATA and in general binaries and 
 
 https://advrcloud.iit.it/owncloud/index.php/s/J7PoGhHNs6WVy4Y
 
-To genereate URDF (from 'urdf' folder):
+**Instal Flask**
 
-python URDF_generator.py ModularBot_Generated.urdf.xacro > ModularBot_Generated.urdf
-OR
-python URDF_generator_elbow.py ModularBot_Generated.urdf
+After cloning the repo, create a virtual environment:
+
+``` 
+cd path/to/modular/web
+python3 -m venv venv 
+```
+
+Then activate the environment and proceed to install Flask
+
+```
+. venv/bin/activate
+pip install Flask
+```
+
+Deactivate the environment
+
+`deactivate`
+
+**Run the configurator tool**
+
+The online tool to configurate the robot can be run with: 
+
+```
+cd path/to/modular/web 
+python application.py
+```
+
+A generic URDF file can be selected to be opened by the online tool or the **ModularBot_new.urdf.xacro** file to start building a modular robot. 
+While creating the robot the file **ModularBot_test.urdf.xacro** will be modified, and can then be opened by rviz or Gazebo.
 
 To launch rviz:
 
-roslaunch modular display.launch model:='$(find modular)/urdf/ModularBot_Generated.urdf'
+` roslaunch modular display.launch model:='$(find modular)/urdf/ModularBot_test.urdf' `
+
+To launch Gazebo:
+
+` roslaunch modular gazebo.launch model:='$(find modular)/urdf/ModularBot_test.urdf' `
 
