@@ -151,9 +151,5 @@ venv.bak/
 *.gv
 
 # Folders to ignore
-urdf/prova
-three
-URDF_viewer/example/models/*
-web/templates/models/*
 web/static/models/*
 

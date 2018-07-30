@@ -8,7 +8,7 @@
 
     <body>
         <!-- NOTE: importing scripts works with relative path for standalone version or with "url_for_static" when called by FLASK!-->
-        <!-- <script src="../static/build/three.js"></script> -->
+        <!-- <script src="../static/js/three.js"></script> -->
         <script type="text/javascript" >
             var current_parent = '';
             
@@ -49,9 +49,9 @@
             }
         </script>
         
-        <script type="text/javascript" src="{{ url_for('static', filename='/build/three.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='/js/three.js') }}"></script>
         
-        <script type="text/javascript" src="{{ url_for('static', filename='/build/js-yaml.min.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='/js/js-yaml.min.js') }}"></script>
 
         <script type="text/javascript" src="{{ url_for('static', filename='URDF_viewer.js') }}"></script>
         
