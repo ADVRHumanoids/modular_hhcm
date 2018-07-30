@@ -1283,7 +1283,7 @@ var URDF_processed_eventHandler = function () {
 
     this.start = function () {
 
-        this.dispatchEvent({ type: 'urdf-processed', message: 'urdf has been processed!' });
+        this.dispatchEvent({ type: 'urdf-processed', message: 'urdf has been processed! \nSelect a branch to start building the robot' });
     };
 };
 

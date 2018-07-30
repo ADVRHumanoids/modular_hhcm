@@ -38,10 +38,22 @@ R = tf.transformations.identity_matrix()
 H0 = tf.transformations.concatenate_matrices(T, R)
 data = {'Homogeneous_tf': H0, 'type': "link", 'name': "L_0", 'i': 0, 'p': 0, 'size': 3}
 L_0 = ModuleNode(data, 'L_0')
-#print(Modules[0].type)
-#i=i+1
 
-#size = 3
+#create ModuleNode for branch A connector
+origin_A = (0, 0, 0.1) #origin_A = (0, 0.3, 0.3)
+T_A = tf.transformations.translation_matrix(origin_A)
+R_A = tf.transformations.identity_matrix() #rotation_matrix(-1.57, xaxis)
+H0_A = tf.transformations.concatenate_matrices(T_A, R_A)
+data = {'Homogeneous_tf': H0_A, 'type': "link", 'name': "L_0_A", 'i': 0, 'p': 0, 'size': 3, 'tag': "_A"}
+L_0_A = ModuleNode(data, 'L_0_A', parent=L_0)
+
+#create ModuleNode for branch B connector
+origin_B = (0, 0, 0.1) #origin_B = (0, -0.3, 0.3)
+T_B = tf.transformations.translation_matrix(origin_B)
+R_B = tf.transformations.identity_matrix() #rotation_matrix(1.57, xaxis)
+H0_B = tf.transformations.concatenate_matrices(T_B, R_B)
+data = {'Homogeneous_tf': H0_B, 'type': "link", 'name': "L_0_B", 'i': 0, 'p': 0, 'size': 3, 'tag': "_B"}
+L_0_B = ModuleNode(data, 'L_0_B', parent=L_0)
 
 def read_file(file_str):
 	"""Open the URDF chosen from the front-end and import it as a tree"""
