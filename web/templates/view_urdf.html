@@ -10,7 +10,7 @@
         <!-- NOTE: importing scripts works with relative path for standalone version or with "url_for_static" when called by FLASK!-->
         <!-- <script src="../static/js/three.js"></script> -->
         <script type="text/javascript" >
-            var current_parent = '';
+            var CURRENT_PARENT = '';
             
             function updateShownButtons(lastModule_type, count, lastSize) {
                 console.log(count)
@@ -346,15 +346,15 @@
                 //making an ajax request to the server to proceed to write the modified URDF
                 $.ajax({
                     url: 'http://127.0.0.1:5000/changeURDF/',
-                    data: {'module_name': filename, 'parent': current_parent},
+                    data: {'module_name': filename, 'parent': CURRENT_PARENT},
                     method: 'POST',
                     success: function(data) {
                         console.log(data)
-                        robots = URDF_viewer.updateURDF(data['result'])
-                        size = data['size']
+                        robots = URDF_viewer.updateURDF(data['result'], data['lastModule_name'])
+                        // size = data['size']
                         updateShownButtons(data['lastModule_type'], data['count'], data['size'])
-                        console.log(size)
-                        current_parent = data['lastModule_name']
+                        // console.log(size)
+                        CURRENT_PARENT = data['lastModule_name']
                     },
                     async: true
                 });
@@ -364,15 +364,15 @@
             function removeModule() {
                 $.ajax({
                     url: 'http://127.0.0.1:5000/removeModule/',
-                    data: {'parent': current_parent},
+                    data: {'parent': CURRENT_PARENT},
                     method: 'POST',
                     success: function(data) {
                         console.log(data)
                         robots = URDF_viewer.updateURDF(data['result'])
-                        size = data['size']
+                        //size = data['size']
                         updateShownButtons(data['lastModule_type'], data['count'], data['size'])
-                        console.log(size)
-                        current_parent = data['lastModule_name']
+                        //console.log(size)
+                        CURRENT_PARENT = data['lastModule_name']
                     },
                     async: true
                 });

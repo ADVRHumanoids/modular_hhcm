@@ -339,8 +339,9 @@ class URDF_viewer extends HTMLElement {
             const links = []
             const joints = []
             const materials = []
-            const obj = new THREE.Object3D()
-            obj.name = r.getAttribute('name')
+            const obj = this.robots[0] 
+            // const obj = new THREE.Object3D()
+            // obj.name = r.getAttribute('name')
             obj.urdf = { node: r }
             console.log(r.children)
 
@@ -356,29 +357,74 @@ class URDF_viewer extends HTMLElement {
             console.log(joints)
             console.log(materials)
 
-            // Create the <material> map
-            this.materialMap = {}
+            /* Update the <material> map */
+            //Add new materials to the <material> map
             this.forEach(materials, m => {
                 const name = m.getAttribute('name')
-                this.materialMap[name] = this._processMaterial(m)
+                if(!this.materialMap[name]) {
+                    this.materialMap[name] = this._processMaterial(m) 
+                }
             })
+
+            //Remove the materials from the <material> map  
+            var rmv_materials = Object.keys(this.materialMap).filter(function(obj) { 
+                var materials_names = materials.map(m => m.getAttribute('name'))
+                return materials_names.indexOf(obj) == -1; 
+            });
+            console.log(rmv_materials)
+            //Remove the materials from the materialMap
+            rmv_materials.forEach(m => { delete this.materialMap[m] })
 
             console.log(this.materialMap)
 
-            // Create the <link> map
-            this.linkMap = {}
+            /* Update the <link> map */
+            //Add new links to the linkMap
             this.forEach(links, l => {
                 const name = l.getAttribute('name')
-                this.linkMap[name] = this._processLink(l)
+                if(!this.linkMap[name]) {
+                    this.linkMap[name] = this._processLink(l);
+                    //this.lastModule = this.linkMap[name];   
+                }
+            })
+
+            //Find the links that are still on the linkMap but were cancelled from the URDF            
+            var rmv_links = Object.keys(this.linkMap).filter(function(obj) { 
+                var links_names = links.map(l => l.getAttribute('name'));
+                return links_names.indexOf(obj) == -1; 
+            });
+            console.log(rmv_links)
+
+            //Remove the links from the linkMap and from the 3D model            
+            rmv_links.forEach(l => { 
+                //Remove the link as a child of the parent object
+                this.linkMap[l].parent.remove(this.linkMap[l]);
+                //Remove the link from the linkMap
+                delete this.linkMap[l];
             })
 
             console.log(this.linkMap)
 
-            // // Create the <joint> map
-            this.jointMap = {}
+            /* Update the <joint> map */
+            //Add new joints to the jointMap
             this.forEach(joints, j => {
                 const name = j.getAttribute('name')
-                this.jointMap[name] = this._processJoint(j)
+                if(!this.jointMap[name]) 
+                    this.jointMap[name] = this._processJoint(j)               
+            })
+
+            //Find the joints that are still on the jointMap but were cancelled from the URDF
+            var rmv_joints = Object.keys(this.jointMap).filter(function(obj) { 
+                var joints_names = joints.map(j => j.getAttribute('name'));
+                return joints_names.indexOf(obj) == -1; 
+            });
+            console.log(rmv_joints)
+            
+            //Remove the joints from the jointMap and from the 3D model
+            rmv_joints.forEach(j => { 
+                //Remove the joint as a child of the parent object
+                this.jointMap[j].parent.remove(this.jointMap[j]);
+                //Remove the joint from the jointMap
+                delete this.jointMap[j];
             })
 
             console.log(this.jointMap)
@@ -388,28 +434,22 @@ class URDF_viewer extends HTMLElement {
             obj.urdf.joints = this.jointMap
             obj.urdf.links = this.linkMap
 
-            //console.log(obj)
-
-            const rpy_ros2three = [-Math.PI / 2, -Math.PI / 2, 0]
-            //console.log(rpy_ros2three)
-            this._applyRotation(obj, rpy_ros2three)
+            // const rpy_ros2three = [-Math.PI / 2, -Math.PI / 2, 0]
+            // //console.log(rpy_ros2three)
+            // this._applyRotation(obj, rpy_ros2three)
             
-            //replace the object in the scene with the new robot
-            this.scene.remove(robots[0])
-            this.scene.add(obj);
+            // //replace the object in the scene with the new robot
+            // this.scene.remove(robots[0])
+            // this.scene.add(obj);
 
-            //replace the object in the "robots" array
-            this.robots.pop()
-            this.robots.push(obj)
+            // //replace the object in the "robots" array
+            // this.robots.pop()
+            // this.robots.push(obj)
 
-            //add controls to it
-            this.transformControls.attach(obj)
-            this.scene.add(this.transformControls)
+            // //add controls to it
+            // this.transformControls.attach(obj)
+            // this.scene.add(this.transformControls)
         })
-  
-        // this.Meshes = []
-        // this.forEach(Object.values(this.linkMap), l => {this.Meshes.push(l.getObjectByProperty('type', 'Mesh') )})
-        // this.Meshes.pop()
 
         var URDF_processed_eH = new URDF_processed_eventHandler();
 
@@ -427,6 +467,31 @@ class URDF_viewer extends HTMLElement {
                     self._createSlider(joint)
             }
 
+            // if (self.linkMap[lastModule_name]) {
+            //     console.log('link')
+            //     self.current_parent = self.linkMap[lastModule_name];
+            // }
+            // else if (self.jointMap[lastModule_name]) {
+            //     console.log('joint')
+            //     var joint = self.jointMap[lastModule_name];
+            //     self.current_parent = joint.parent
+            // }
+
+            // console.log(lastModule_name);
+            // self.robots[0].traverse(function(child) {
+            //     if (child.name == lastModule_name)
+            //         self.current_parent = child;
+            // })
+
+            // console.log(self.current_parent.children)
+            // var meshes = self.filter(self.current_parent.children, c => c.type === "Mesh");
+            // console.log(self.current_parent.children.length)
+            // for (var i=0, len=self.current_parent.children.length; i<len; i++)
+            //     console.log(self.current_parent.children[i]);
+            // self.forEach(self.current_parent.children, c => console.log(c))
+            // console.log(meshes);
+            
+            // self.highlightParent();
         });
 
         URDF_processed_eH.start();
@@ -522,6 +587,7 @@ class URDF_viewer extends HTMLElement {
         })
 
         var URDF_processed_eH = new URDF_processed_eventHandler();
+        //this.module_selection_eH = new module_selection_eventHandler();
 
         var self = this;
         URDF_processed_eH.addEventListener('urdf-processed', function (event) {
@@ -544,6 +610,51 @@ class URDF_viewer extends HTMLElement {
         console.log(Object.keys(this.linkMap))
 
         return this.robots
+    }
+
+    static highlightParent() {
+        CURRENT_PARENT = this.current_parent.name
+        console.log(this.current_parent.children);
+        var meshes = this.filter(this.current_parent.children, c => c.type == "Mesh");
+        console.log(meshes);
+        //Highlight the clicked module
+        this.forEach(this.current_parent.children, s => {
+            console.log(s);
+            if(s.type == 'Mesh') {
+                s.material.opacity = 0.5;
+                s.material.transparent = true;
+            };
+            
+        });
+        
+        //Make the previously selected module back to normal
+        if(this.previous_parent) {
+            console.log(this.previous_parent);
+            this.forEach(this.previous_parent.children, s => {
+                if(s.type == 'Mesh') {
+                    s.material.opacity = 1;
+                    s.material.transparent = false;
+                }
+            })
+        }
+        
+        //Update global variable  
+        // current_parent = that.lastModule.name
+        // console.log(current_parent)
+
+        this.previous_parent = this.current_parent
+
+        $.ajax({
+            url: 'http://127.0.0.1:5000/updateLastModule/',
+            data: {'parent': CURRENT_PARENT},
+            method: 'POST',
+            success: function(data) {
+                console.log(data)
+                updateShownButtons(data['lastModule_type'], data['count'], data['size'])
+                //size=data['size']
+            },
+            async: true
+        });
     }
 
     static setAngle(jointname, angle) {
@@ -661,7 +772,7 @@ class URDF_viewer extends HTMLElement {
         this.mouse = new THREE.Vector2();
         
         rnd.addEventListener( 'mousedown', onDocumentMouseDown, false );
-        //document.addEventListener( 'touchstart', onDocumentTouchStart, false );
+        rnd.addEventListener( 'touchstart', onDocumentTouchStart, false );
 
         self = this
         window.addEventListener('resize', onWindowResize, false);
@@ -688,47 +799,18 @@ class URDF_viewer extends HTMLElement {
             var intersects = self.raycaster.intersectObject( self.robots[0], true );
             var mesh_intersects = intersects.filter(inters => inters.object.type == 'Mesh')
             console.log(mesh_intersects.length)
-            if ( mesh_intersects.length > 0 ) {
-                var color = Math.random() * 0xffffff
-                self.forEach(mesh_intersects[0].object.parent.children, s => {
-                    if(s.type == 'Mesh')
-                        s.material.color.setHex( color );
-                })
-                
-                //Update global variable
-                current_parent = mesh_intersects[0].object.parent.name
-                console.log(current_parent)
-
-                $.ajax({
-                    url: 'http://127.0.0.1:5000/updateLastModule/',
-                    data: {'parent': current_parent},
-                    method: 'POST',
-                    success: function(data) {
-                        console.log(data)
-                        updateShownButtons(data['lastModule_type'], data['count'], data['size'])
-                        size=data['size']
-                    },
-                    async: true
-                });
-                // var particle = new THREE.Sprite( particleMaterial );
-                // particle.position.copy( intersects[ 0 ].point );
-                // particle.scale.x = particle.scale.y = 16;
-                // scene.add( particle );
+            if ( mesh_intersects.length > 0 ) {                
+                self.current_parent = mesh_intersects[0].object.parent;
+                self.highlightParent();
             }
-            /*
-            // Parse all the faces
-            for ( var i in intersects ) {
-                intersects[ i ].face.material[ 0 ].color.setHex( Math.random() * 0xffffff | 0x80000000 );
-            }
-            */
         }
 
-        // function onDocumentTouchStart( event ) {
-        //     event.preventDefault();
-        //     event.clientX = event.touches[0].clientX;
-        //     event.clientY = event.touches[0].clientY;
-        //     onDocumentMouseDown( event );
-        // }
+        function onDocumentTouchStart( event ) {
+            event.preventDefault();
+            event.clientX = event.touches[0].clientX;
+            event.clientY = event.touches[0].clientY;
+            onDocumentMouseDown( event );
+        }
     }
 
     static _animate() {
@@ -1299,7 +1381,6 @@ var URDF_change_eventHandler = function () {
 };
 
 Object.assign(URDF_change_eventHandler.prototype, THREE.EventDispatcher.prototype);
-
 
 
 // URDF_viewer.prototype.dispatchEvent = function (evt) {
