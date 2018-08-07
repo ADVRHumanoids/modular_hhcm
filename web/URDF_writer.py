@@ -10,7 +10,7 @@ import xml.etree.ElementTree as ET
 import xacro
 import xml.dom.minidom
 
-from read_yaml import read_yaml, ModuleNode
+from read_yaml import module_from_yaml, ModuleNode, mastercube_from_yaml, slavecube_from_yaml
 
 import modular
 
@@ -31,29 +31,165 @@ path_name = os.path.dirname(modular.__file__)
 root = 0
 urdf_tree = 0
 
+tag = 1
+branch_switcher = {
+	1: '_A',
+	2 : '_B',
+	3 : '_C',
+	4 : '_D',
+	5 : '_E',
+	6 : '_F',
+	7 : '_G',
+	8 : '_H'
+}
+
+n_cubes = 0
+cube_switcher = {
+	0: 'a',
+	1 : 'b',
+	2 : 'c',
+	3 : 'd',
+	4 : 'e',
+	5 : 'f',
+	6 : 'g',
+	7 : 'h'
+}
+
 origin, xaxis, yaxis, zaxis = (0, 0, 0.4), (1, 0, 0), (0, 1, 0), (0, 0, 1)
 
-T = tf.transformations.translation_matrix(origin)
-R = tf.transformations.identity_matrix()
-H0 = tf.transformations.concatenate_matrices(T, R)
-data = {'Homogeneous_tf': H0, 'type': "link", 'name': "L_0", 'i': 0, 'p': 0, 'size': 3}
-L_0 = ModuleNode(data, 'L_0')
+# T = tf.transformations.translation_matrix(origin)
+# R = tf.transformations.identity_matrix()
+# H0 = tf.transformations.concatenate_matrices(T, R)
+# data = {'Homogeneous_tf': H0, 'type': "link", 'name': "L_0", 'i': 0, 'p': 0, 'size': 3}
+# L_0 = ModuleNode(data, 'L_0')
 
-#create ModuleNode for branch A connector
-origin_A = (0, 0, 0.1) #origin_A = (0, 0.3, 0.3)
-T_A = tf.transformations.translation_matrix(origin_A)
-R_A = tf.transformations.identity_matrix() #rotation_matrix(-1.57, xaxis)
-H0_A = tf.transformations.concatenate_matrices(T_A, R_A)
-data = {'Homogeneous_tf': H0_A, 'type': "link", 'name': "L_0_A", 'i': 0, 'p': 0, 'size': 3, 'tag': "_A"}
-L_0_A = ModuleNode(data, 'L_0_A', parent=L_0)
+# #create ModuleNode for branch A connector
+# origin_A = (0, 0, 0.1) #origin_A = (0, 0.3, 0.3)
+# T_A = tf.transformations.translation_matrix(origin_A)
+# R_A = tf.transformations.identity_matrix() #rotation_matrix(-1.57, xaxis)
+# H0_A = tf.transformations.concatenate_matrices(T_A, R_A)
+# data = {'Homogeneous_tf': H0_A, 'type': "link", 'name': "L_0_A", 'i': 0, 'p': 0, 'size': 3, 'tag': "_A"}
+# L_0_A = ModuleNode(data, 'L_0_A', parent=L_0)
 
-#create ModuleNode for branch B connector
-origin_B = (0, 0, 0.1) #origin_B = (0, -0.3, 0.3)
-T_B = tf.transformations.translation_matrix(origin_B)
-R_B = tf.transformations.identity_matrix() #rotation_matrix(1.57, xaxis)
-H0_B = tf.transformations.concatenate_matrices(T_B, R_B)
-data = {'Homogeneous_tf': H0_B, 'type': "link", 'name': "L_0_B", 'i': 0, 'p': 0, 'size': 3, 'tag': "_B"}
-L_0_B = ModuleNode(data, 'L_0_B', parent=L_0)
+# #create ModuleNode for branch B connector
+# origin_B = (0, 0, 0.1) #origin_B = (0, -0.3, 0.3)
+# T_B = tf.transformations.translation_matrix(origin_B)
+# R_B = tf.transformations.identity_matrix() #rotation_matrix(1.57, xaxis)
+# H0_B = tf.transformations.concatenate_matrices(T_B, R_B)
+# data = {'Homogeneous_tf': H0_B, 'type': "link", 'name': "L_0_B", 'i': 0, 'p': 0, 'size': 3, 'tag': "_B"}
+# L_0_B = ModuleNode(data, 'L_0_B', parent=L_0)
+
+# data = {'type': "link", 'name': "L_0a", 'i': 0, 'p': 0, 'size': 3}
+# base = ModuleNode(data, 'L_0a')
+L_0a = mastercube_from_yaml(path_name + '/web/static/yaml/master_cube.yaml')
+T_con = tf.transformations.translation_matrix((0, 0, L_0a.geometry.connector_length))
+setattr(L_0a, 'name', "L_0a")
+
+#create ModuleNode for branch 1 connector
+#H0_1 = L_0a.kinematics.connector_1.Homogeneous_tf
+# origin_1 = (0, 0.2, 0.2)
+# T_1 = tf.transformations.translation_matrix(origin_1)
+# R_1 = tf.transformations.rotation_matrix(-1.57, xaxis)
+#H0_1 = tf.transformations.concatenate_matrices(H0_1, T_con)
+name_con1 = 'L_0a' + '_con1' 
+data1 = {'Homogeneous_tf': T_con, 'type': "link", 'name': name_con1, 'i': 0, 'p': 0, 'size': 3}
+L_0a_con1 = ModuleNode(data1, name_con1, parent=L_0a)
+
+#create ModuleNode for branch 2 connector
+#H0_2 = L_0a.kinematics.connector_2.Homogeneous_tf
+#origin_2 = (0, -0.2, 0.2)
+# T_2 = tf.transformations.translation_matrix(origin_2)
+# R_2 = tf.transformations.rotation_matrix(1.57, xaxis)
+#H0_2 = tf.transformations.concatenate_matrices(H0_2, T_con)
+name_con2 = 'L_0a' + '_con2'
+data2 = {'Homogeneous_tf': T_con, 'type': "link", 'name': name_con2, 'i': 0, 'p': 0, 'size': 3}
+L_0a_con2 = ModuleNode(data2, name_con2, parent=L_0a)
+
+#create ModuleNode for branch 3 connector
+#H0_3 = L_0a.kinematics.connector_3.Homogeneous_tf
+# origin_3 = (0, 0, 0.4)
+# T_3 = tf.transformations.translation_matrix(origin_3)
+# R_3 = tf.transformations.identity_matrix()
+#H0_3 = tf.transformations.concatenate_matrices(H0_3, T_con)
+name_con3 = 'L_0a' + '_con3'
+data3 = {'Homogeneous_tf': T_con, 'type': "link", 'name': name_con3, 'i': 0, 'p': 0, 'size': 3}
+L_0a_con3 = ModuleNode(data3, name_con3, parent=L_0a)
+
+#create ModuleNode for branch 3 connector
+#H0_4 = L_0a.kinematics.connector_4.Homogeneous_tf
+# origin_4 = (0, 0, 0)
+# T_4 = tf.transformations.translation_matrix(origin_4)
+# R_4 = tf.transformations.rotation_matrix(3.14, xaxis)
+#H0_4 = tf.transformations.concatenate_matrices(H0_4, T_con)
+name_con4 = 'L_0a' + '_con4'
+data4 = {'Homogeneous_tf': T_con, 'type': "link", 'name': name_con4, 'i': 0, 'p': 0, 'size': 3}
+L_0a_con4 = ModuleNode(data4, name_con4, parent=L_0a)
+
+#Render tree
+for pre, _, node in anytree.render.RenderTree(L_0a):
+	print("%s%s" % (pre, node.name))
+
+def add_slave_cube(father):
+	global T_con, L_0a, n_cubes
+	
+	n_cubes+=1
+	name = 'L_0' + cube_switcher.get(n_cubes)
+
+	parent_module = anytree.search.findall_by_attr(L_0a, father)[0]
+
+	T_con_inv = tf.transformations.inverse_matrix(T_con)
+	name_con1 = name + '_con1' 
+	data1 = {'Homogeneous_tf': T_con_inv, 'type': "link", 'name': name_con1, 'i': 0, 'p': 0, 'size': 3}
+	slavecube_con1 = ModuleNode(data1, name_con1, parent=parent_module)
+
+	parent_module.get_rototranslation(tf.transformations.identity_matrix(), parent_module.Homogeneous_tf)
+	fixed_joint_name = 'FJ_' + parent_module.parent.name + '_' + name
+	ET.SubElement(root, "xacro:add_fixed_joint", type="fixed_joint", name=fixed_joint_name, father=father, child=name_con1, x=parent_module.x, y=parent_module.y, z=parent_module.z, roll=parent_module.roll, pitch=parent_module.pitch, yaw=parent_module.yaw)
+
+	filename = path_name + '/web/static/yaml/master_cube.yaml'
+	slavecube = slavecube_from_yaml(filename, name, slavecube_con1)
+	setattr(slavecube, 'name', name)
+	setattr(slavecube, 'i', 0)
+	setattr(slavecube, 'p', 0)
+
+	ET.SubElement(root, "xacro:add_slave_cube", name=name)
+
+	#create ModuleNode for branch 2 connector
+	name_con2 = name + '_con2'
+	data2 = {'Homogeneous_tf': T_con, 'type': "link", 'name': name_con2, 'i': 0, 'p': 0, 'size': 3}
+	slavecube_con2 = ModuleNode(data2, name_con2, parent=slavecube)
+
+	#create ModuleNode for branch 3 connector
+	name_con3 = name + '_con3'
+	data3 = {'Homogeneous_tf': T_con, 'type': "link", 'name': name_con3, 'i': 0, 'p': 0, 'size': 3}
+	slavecube_con3 = ModuleNode(data3, name_con3, parent=slavecube)
+
+	#create ModuleNode for branch 3 connector
+	name_con4 = name + '_con4'
+	data4 = {'Homogeneous_tf': T_con, 'type': "link", 'name': name_con4, 'i': 0, 'p': 0, 'size': 3}
+	slavecube_con4 = ModuleNode(data4, name_con4, parent=slavecube)
+
+	#Render tree
+	for pre, _, node in anytree.render.RenderTree(L_0a):
+		print("%s%s" % (pre, node.name))
+
+	# new_Link = slavecube_con1 
+	# past_Link = parent_module
+	# new_Link.get_rototranslation(past_Link.Homogeneous_tf, tf.transformations.identity_matrix())
+	# print(new_Link.z)
+
+	# ET.SubElement(root, "xacro:add_master_cube", name=name)
+
+	# fixed_joint_name = 'cube_joint'
+	# ET.SubElement(root, "xacro:add_fixed_joint", name=fixed_joint_name, type="fixed_joint", father=past_Link.name, child=new_Link.name, x=new_Link.x, y=new_Link.y, z=new_Link.z, roll=new_Link.roll, pitch=new_Link.pitch, yaw=new_Link.yaw)
+
+	#update the urdf file, adding the new module
+	string = write_urdf(path_name + '/urdf/ModularBot_test.urdf', urdf_tree)
+
+	data = {'result': string, 'lastModule_type': 'mastercube', 'lastModule_name': name, 'size': 3, 'count': n_cubes}
+
+	return data
+
 
 def read_file(file_str):
 	"""Open the URDF chosen from the front-end and import it as a tree"""
@@ -72,28 +208,40 @@ def read_file(file_str):
 
 def add_module(filename, selected_module):
 	"""Add a module specified by filename to the selected module. Return info on the new module"""
+	global tag
+	
 	if selected_module.endswith('_stator'):
 		selected_module = selected_module[:-7]
 
 	module_name = path_name + '/web/static/yaml/' + filename
 
 	print(selected_module)
-	parent_module = anytree.search.findall_by_attr(L_0, selected_module)[0]
+	parent_module = anytree.search.findall_by_attr(L_0a, selected_module)[0]
 	print(parent_module)
-	new_module = read_yaml(module_name, parent_module)
+	new_module = module_from_yaml(module_name, parent_module)
 
-	print(parent_module.children)
-	if parent_module.name == 'L_0':
-		if len(parent_module.children) == 1:
-			setattr(new_module, 'tag', '_A')
-		elif len(parent_module.children) == 2:
-			setattr(new_module, 'tag', '_B')
-		elif len(parent_module.children) == 3:
-			setattr(new_module, 'tag', '_C')
-		elif len(parent_module.children) == 4:
-			setattr(new_module, 'tag', '_D')
+	# print(anytree.search.find_by_attr(L_0a, name="tag"))
+
+	# print(parent_module.children)
+	# if 'L_0' in parent_module.name:
+	# 	if len(parent_module.children) == 1:
+	# 		setattr(new_module, 'tag', '_A')
+	# 	elif len(parent_module.children) == 2:
+	# 		setattr(new_module, 'tag', '_B')
+	# 	elif len(parent_module.children) == 3:
+	# 		setattr(new_module, 'tag', '_C')
+	# 	elif len(parent_module.children) == 4:
+	# 		setattr(new_module, 'tag', '_D')
+	# else:
+	# 	setattr(new_module, 'tag', parent_module.tag)
+
+	if '_con' in parent_module.name:
+		tag_letter = branch_switcher.get(tag)
+		setattr(new_module, 'tag', tag_letter)
+		tag+=1
 	else:
-		setattr(new_module, 'tag', parent_module.tag)
+	 	setattr(new_module, 'tag', parent_module.tag)
+
 
 	setattr(new_module, 'size', parent_module.size)
 	setattr(new_module, 'i', parent_module.i)
@@ -119,7 +267,7 @@ def add_module(filename, selected_module):
 	string = write_urdf(path_name + '/urdf/ModularBot_test.urdf', urdf_tree)
 
 	#Render tree
-	for pre, _, node in anytree.render.RenderTree(L_0):
+	for pre, _, node in anytree.render.RenderTree(L_0a):
 		print("%s%s" % (pre, node.name))
 
 	data = {'result': string, 'lastModule_type': new_module.type, 'lastModule_name': new_module.name, 'size': new_module.size, 'count': new_module.i}
@@ -128,15 +276,27 @@ def add_module(filename, selected_module):
 
 def remove_module(selected_module):
 	"""Remove the selected module and return info on its parent"""
+	global tag, n_cubes
+
 	if isinstance(selected_module, basestring):
 		last_module = access_module(selected_module)
 	else:
 		last_module = selected_module
+	print(last_module.name)
+	if '_con' in last_module.name:
+		last_module = last_module.parent
 
-	for child in last_module.children:
-		remove_module(child)
+	if last_module.type != 'cube':
+		print('eliminate child')
+		for child in last_module.children:
+			remove_module(child)
+
+	print(last_module.children)
+	print(last_module.parent.name)
 
 	if last_module.type == 'joint':
+		father = last_module.parent
+
 		stator_name = last_module.name + '_stator'
 		joint_stator_name = "fixed_" + last_module.name
 
@@ -152,8 +312,30 @@ def remove_module(selected_module):
 		# root.remove(root.findall("*[@name=last_module.name]", ns)[-1])
 		# root.remove(root.findall("*[@name=stator_name]", ns)[-1])
 		# root.remove(root.findall("*[@name=joint_stator_name]", ns)[-1])
-
+	elif last_module.type == 'cube':
+		father = last_module.parent.parent
+		print(last_module.parent.name)
+		n_cubes-=1
+		for child in last_module.children:
+			for node in root.findall("*"):
+				if node.attrib['name'] == child.name:
+					root.remove(node)
+		for node in root.findall("*"):
+			if node.attrib['name'] == last_module.name:
+				root.remove(node)
+		# last_module.parent = None
+		parent_module = access_module(last_module.parent.name)
+		joint_name = 'FJ_' + parent_module.parent.parent.name + '_' + last_module.name
+		print(joint_name)
+		for node in root.findall("*"):
+			if node.attrib['name'] == joint_name:
+				print(joint_name)
+				root.remove(node)
+		parent_module.parent = None
+		del parent_module
 	else:
+		father = last_module.parent
+
 		#print(root.findall("*[@type='link']", ns)[-1])
 		fixed_joint_name = 'L_'+str(last_module.i)+'_fixed_joint_'+str(last_module.p)+last_module.tag
 		#root.remove(root.findall("*[@name=fixed_joint_name]", ns)[-1])
@@ -179,17 +361,22 @@ def remove_module(selected_module):
 
 	#update the urdf file, removing the module
 	string = write_urdf(path_name + '/urdf/ModularBot_test.urdf', urdf_tree)
-
-	data = {'result': string, 'lastModule_type': last_module.parent.type, 'lastModule_name': last_module.parent.name, 'size': last_module.parent.size, 'count': last_module.parent.i}
+	if father.type=='cube':
+		data = {'result': string, 'lastModule_type': father.type, 'lastModule_name': father.name, 'size': father.size, 'count': n_cubes}
+	else:
+		data = {'result': string, 'lastModule_type': father.type, 'lastModule_name': father.name, 'size': father.size, 'count': father.i}
 	# data = jsonify(data)
 
+	if '_con' in father.name:
+		tag-=1
+	
 	#last_module.parent.children = None
 	last_module.parent = None
 
 	del last_module
 
 	#Render tree
-	for pre, _, node in anytree.render.RenderTree(L_0):
+	for pre, _, node in anytree.render.RenderTree(L_0a):
 		print("%s%s" % (pre, node.name))
 
 	return data
@@ -198,7 +385,7 @@ def access_module(selected_module):
 	"""Find the selected module in the tree"""
 	if selected_module.endswith('_stator'):
 		selected_module = selected_module[:-7]
-	last_module = anytree.search.findall_by_attr(L_0, selected_module)[0]
+	last_module = anytree.search.findall_by_attr(L_0a, selected_module)[0]
 
 	return last_module
 
@@ -206,7 +393,10 @@ def select_module(module):
 	"""Returns info on the selected module"""
 	last_module = access_module(module)
 
-	data = {'lastModule_type': last_module.type, 'lastModule_name': last_module.name, 'size': last_module.size, 'count': last_module.i}
+	if last_module.type == 'cube':
+		data = {'lastModule_type': last_module.type, 'lastModule_name': last_module.name, 'size': last_module.size, 'count': n_cubes}
+	else:
+		data = {'lastModule_type': last_module.type, 'lastModule_name': last_module.name, 'size': last_module.size, 'count': last_module.i}
 
 	return data
 

@@ -234,6 +234,7 @@
                 <button type="button" id="addSizeAdapter_Big2Medium"><div>Size Adapter: Big to Medium</div></button>
                 <button type="button" id="addSizeAdapter_Big2Small"><div>Size Adapter: Big to Small</div></button>
                 <button type="button" id="addSizeAdapter_Medium2Small"><div>Size Adapter: Medium to Small</div></button>
+                <button type="button" id="addSlaveCube"><div>Slave cube</div></button>
                 <!-- <button type="button" id="remove"><div>Remove module</div></button> -->
             </div>
         </div>
@@ -256,6 +257,7 @@
                 var addSizeAdapter_Big2Medium = document.getElementById('addSizeAdapter_Big2Medium');
                 var addSizeAdapter_Big2Small = document.getElementById('addSizeAdapter_Big2Small');
                 var addSizeAdapter_Medium2Small = document.getElementById('addSizeAdapter_Medium2Small');
+                var addSlaveCube = document.getElementById('addSlaveCube');
                 var removeLast = document.getElementById('removeLast');
 
                 fileInput.addEventListener('change', function(e) {
@@ -315,6 +317,8 @@
                 addSizeAdapter_Big2Small.onclick = function() {addModule("module_size_adapter_B2S", size)};
 
                 addSizeAdapter_Medium2Small.onclick = function() {addModule("module_size_adapter_M2S", size)};
+
+                addSlaveCube.onclick = function() {addCube("mastercube", size)};
 
                 removeLast.onclick = function() {removeModule()};
             }
@@ -378,7 +382,27 @@
                 });
             }
 
-            
+            function addCube(modulename) {
+                //making an ajax request to the server to proceed to write the modified URDF
+                filename = modulename + '.yaml'
+                $.ajax({
+                    url: 'http://127.0.0.1:5000/addMasterCube/',
+                    data: {'module_name': filename, 'parent': CURRENT_PARENT},
+                    method: 'POST',
+                    success: function(data) {
+                        console.log(data)
+                        robots = URDF_viewer.updateURDF(data['result'], data['lastModule_name'])
+                        // size = data['size']
+                        updateShownButtons(data['lastModule_type'], data['count'], data['size'])
+                        // console.log(size)
+                        CURRENT_PARENT = data['lastModule_name']
+                    },
+                    async: true
+                });
+
+            };
+
+
             // //Function to open a file on the server side from the HTML page
             // function openfile(url, cB) {
             //     function updateProgress (oEvent) {

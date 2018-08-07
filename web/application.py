@@ -20,6 +20,17 @@ def changeURDF():
     data = jsonify(data)
     return data 
 
+#call URDF_writer.py to add another master cube
+@app.route('/addMasterCube/', methods=['POST'])
+def addCube():
+    filename = request.form.get('module_name', 0)
+    print(filename)
+    parent = request.form.get('parent', 0)
+    print(parent)
+    data = URDF_writer.add_slave_cube(parent)
+    data = jsonify(data)
+    return data 
+
 #call URDF_writer.py to remove the last module
 @app.route('/removeModule/', methods=['POST'])
 def remove():

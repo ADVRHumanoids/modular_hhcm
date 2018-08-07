@@ -146,6 +146,20 @@ class Module(object):
         'size_adapter' : self.get_homogeneous_matrix()
         }.get(x, 'Invalid type')
 
+    # def get_connector_tf(self, connector):
+    #     origin, xaxis, yaxis, zaxis = (0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1)
+
+    #     #TO BE CHECKED!!!
+    #     T = tf.transformations.translation_matrix((connector.x, connector.y, connector.z))
+    #     Rx = tf.transformations.rotation_matrix(connector.roll, xaxis)
+    #     Ry = tf.transformations.rotation_matrix(connector.pitch, yaxis)
+    #     Rz = tf.transformations.rotation_matrix(connector.yaw, zaxis)
+    #     R = tf.transformations.concatenate_matrices(Rx, Ry, Rz)
+    #     H=tf.transformations.concatenate_matrices(T, R)
+
+    #     # Add the transformation matrix for the Proximal part as attribute of the class
+    #     setattr(connector, 'Homogeneous_tf', H)
+
 class ModuleNode(Module, NodeMixin):
     def __init__(self, dict, name, parent=None):
         super(ModuleNode, self).__init__(dict)
@@ -153,7 +167,7 @@ class ModuleNode(Module, NodeMixin):
         self.parent=parent
 
 # Function parsing YAML file and returning an instance of a Module class
-def read_yaml(filename, father):
+def module_from_yaml(filename, father):
     with open(filename, 'r') as stream:
         try:
             data=yaml.load(stream)
@@ -165,6 +179,79 @@ def read_yaml(filename, father):
     result.get_transform()
     result.set_size(result)
     return result 
+
+# Function parsing YAML file and returning an instance of a Module class
+def mastercube_from_yaml(filename, father=None):
+    with open(filename, 'r') as stream:
+        try:
+            data=yaml.load(stream)
+        except yaml.YAMLError as exc:
+            print(exc)
+
+    MasterCube = ModuleNode(data, filename, parent=father)
+    # con1 = MasterCube.kinematics.connector_1
+    # MasterCube.get_connector_tf(con1)
+    # con2 = MasterCube.kinematics.connector_2
+    # MasterCube.get_connector_tf(con2)
+    # con3 = MasterCube.kinematics.connector_3
+    # MasterCube.get_connector_tf(con3)
+    # con4 = MasterCube.kinematics.connector_4
+    # MasterCube.get_connector_tf(con4)
+
+    #result.set_type(filename)
+    # result.get_transform()
+    # result.set_size(result)
+    return MasterCube
+
+def slavecube_from_yaml(filename, cubename, father=None):
+    with open(filename, 'r') as stream:
+        try:
+            data=yaml.load(stream)
+        except yaml.YAMLError as exc:
+            print(exc)
+
+    # T_con = tf.transformations.translation_matrix((0, 0, 0.1))
+    # T_con1 = tf.transformations.inverse_matrix(T_con)
+    # data1 = {'Homogeneous_tf': T_con1, 'type': "link", 'name': name_con1, 'i': 0, 'p': 0, 'size': 3}
+    # L_1a_con1 = ModuleNode(data1, name_con1, parent=father)
+    SlaveCube = ModuleNode(data, filename, parent=father)
+    # con1 = SlaveCube.kinematics.connector_1
+    # SlaveCube.get_connector_tf(con1)
+    # con2 = SlaveCube.kinematics.connector_2
+    # SlaveCube.get_connector_tf(con2)
+    # con3 = SlaveCube.kinematics.connector_3
+    # SlaveCube.get_connector_tf(con3)
+    # con4 = SlaveCube.kinematics.connector_4
+    # SlaveCube.get_connector_tf(con4)
+    
+    #result.set_type(filename)
+    # result.get_transform()
+    # result.set_size(result)
+    return SlaveCube
+
+# class MasterCube(object):
+    
+#     def __init__(self, d):
+#         for a, b in d.items():
+#             if isinstance(b, (list, tuple)):
+#                 setattr(self, a, [Module(x) if isinstance(x, dict) else x for x in b])
+#             else:
+#                 setattr(self, a, Module(b) if isinstance(b, dict) else b)
+
+#     def get_connector_tf(self, connector):
+#         origin, xaxis, yaxis, zaxis = (0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1)
+
+#         #TO BE CHECKED!!!
+#         T = tf.transformations.translation_matrix(connector.x, connector.y, connector.z)
+#         Rx = tf.transformations.rotation_matrix(connector.roll, xaxis)
+#         Ry = tf.transformations.rotation_matrix(connector.pitch, yaxis)
+#         Rz = tf.transformations.rotation_matrix(connector.yaw, zaxis)
+#         R = tf.transformations.concatenate_matrices(Rx, Ry, Rz)
+#         H=tf.transformations.concatenate_matrices(T, R)
+
+#         # Add the transformation matrix for the Proximal part as attribute of the class
+#         setattr(connector, 'Homogeneous_tf', H)
+
 
 # Main function called when the script is not imported as a modue but run directly
 def main():

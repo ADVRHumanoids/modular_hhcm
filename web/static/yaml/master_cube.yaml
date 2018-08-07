@@ -1,0 +1,45 @@
+geometry:
+  cube_size: 0.4
+  connector_length: 0.1
+  
+kinematics:
+  connector_1: 
+    roll: -1.57
+    pitch: 0
+    yaw: 0
+    x: 0
+    y: 0.2
+    z: 0.2
+  connector_2: 
+    roll: 1.57
+    pitch: 0
+    yaw: 0
+    x: 0
+    y: -0.2
+    z: 0.2
+  connector_3: 
+    roll: 0
+    pitch: 0
+    yaw: 0
+    x: 0
+    y: 0
+    z: 0.2
+  connector_4: 
+    roll: 3.14
+    pitch: 0
+    yaw: 0
+    x: 0
+    y: 0
+    z: 0
+
+dynamics:
+  joint:
+
+  link:
+    mass: '0.5'
+    inertia_tensor:
+    CoM_coordinates:
+      
+size: 'big'
+
+type: 'cube'
