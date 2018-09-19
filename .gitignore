@@ -149,7 +149,9 @@ venv.bak/
 # Generic files to ignore
 *.pdf
 *.gv
+.pylintrc
 
 # Folders to ignore
 web/static/models/*
+configs/*
 
