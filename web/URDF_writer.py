@@ -199,8 +199,12 @@ def read_file(file_str):
 	urdf_tree = ET.ElementTree(root)
 	print(ET.tostring(urdf_tree.getroot()))
 
+	#include files necessary for Gazebo&XBot simulation
+	# ET.SubElement(root, "xacro:include", filename="$(find modular)/urdf/config.xacro")
+	# ET.SubElement(root, "xacro:include", filename="$(find modular)/urdf/modular.gazebo")
+
 	doc = xacro.parse(file_str.encode('utf-8'))
-	xacro.process_doc(doc)
+	xacro.process_doc(doc, in_order=True)
 	string = doc.toprettyxml(indent='  ')
 
 	data = {'string': string}

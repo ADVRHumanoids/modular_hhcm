@@ -44,4 +44,13 @@ size_out:
 
 type: 'joint'
 
+control:
+  K_theta: 500
+  D_theta: 70
+  B: 0.000031
+  K_s: 80000
+  D_s: 2
+  D_m: 0.0000578
+  nu: 100
+
 urdf: "urdf/joint_module.urdf"
