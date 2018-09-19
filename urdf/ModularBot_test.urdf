@@ -22,27 +22,514 @@
     <child link="base_link"/>
   </joint>
   <link name="base_link"/>
-  <link name="L_0">
+  <joint name="fixed" type="fixed">
+    <parent link="base_link"/>
+    <child link="L_0a"/>
+    <axis rpy="0 0 0" xyz="0 0 1"/>
+    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+  </joint>
+  <link name="L_0a">
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0.2"/>
       <geometry>
-        <cylinder length="0.4" radius="0.05"/>
+        <box size="0.4 0.4 0.4"/>
       </geometry>
       <material name="black"/>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0 0 0.2"/>
       <geometry>
-        <cylinder length="0.4" radius="0.05"/>
+        <box size="0.4 0.4 0.4"/>
       </geometry>
     </collision>
     <inertial>
-      <mass value="1"/>
+      <mass value="2"/>
       <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
     </inertial>
   </link>
-  <joint name="fixed" type="fixed">
-    <parent link="base_link"/>
-    <child link="L_0"/>
+  <link name="L_0a_con1">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0.05"/>
+      <geometry>
+        <cylinder length="0.1" radius="0.06"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder length="0.1" radius="0.06"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.5"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+  <link name="L_0a_con2">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0.05"/>
+      <geometry>
+        <cylinder length="0.1" radius="0.06"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder length="0.1" radius="0.06"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.5"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+  <link name="L_0a_con3">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0.05"/>
+      <geometry>
+        <cylinder length="0.1" radius="0.06"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder length="0.1" radius="0.06"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.5"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+  <link name="L_0a_con4">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0.05"/>
+      <geometry>
+        <cylinder length="0.1" radius="0.06"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder length="0.1" radius="0.06"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.5"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+  <joint name="L_0a_fixed_1" type="fixed">
+    <parent link="L_0a"/>
+    <child link="L_0a_con1"/>
+    <axis rpy="0 0 0" xyz="0 0 1"/>
+    <origin rpy="3.14 0 0" xyz="0 0 0"/>
   </joint>
+  <joint name="L_0a_fixed_2" type="fixed">
+    <parent link="L_0a"/>
+    <child link="L_0a_con2"/>
+    <axis rpy="0 0 0" xyz="0 0 1"/>
+    <origin rpy="1.57 0 0" xyz="0 -0.2 0.2"/>
+  </joint>
+  <joint name="L_0a_fixed_3" type="fixed">
+    <parent link="L_0a"/>
+    <child link="L_0a_con3"/>
+    <axis rpy="0 0 0" xyz="0 0 1"/>
+    <origin rpy="0 0 0" xyz="0 0 0.4"/>
+  </joint>
+  <joint name="L_0a_fixed_4" type="fixed">
+    <parent link="L_0a"/>
+    <child link="L_0a_con4"/>
+    <axis rpy="0 0 0" xyz="0 0 1"/>
+    <origin rpy="-1.57 0 0" xyz="0 0.2 0.2"/>
+  </joint>
+  <joint name="fixed_J1_A" type="fixed">
+    <axis rpy="0 0 0" xyz="0 0 1"/>
+    <parent link="L_0a_con4"/>
+    <child link="J1_A_stator"/>
+    <origin rpy="0.0 -0.0 0.0" xyz="0.0 0.0 0.1"/>
+  </joint>
+  <link name="J1_A_stator">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0.1"/>
+      <geometry>
+        <cylinder length="0.2" radius="0.06"/>
+      </geometry>
+      <material name="blue"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0.1"/>
+      <geometry>
+        <cylinder length="0.2" radius="0.06"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0.1"/>
+      <mass value="0.5"/>
+      <inertia ixx="0.00211666666667" ixy="0.0" ixz="0.0" iyy="0.00211666666667" iyz="0.0" izz="0.0009"/>
+    </inertial>
+  </link>
+  <gazebo reference="J1_A_stator">
+    <mu1>0.2</mu1>
+    <mu2>0.2</mu2>
+    <kp>1000000.0</kp>
+    <kd>1.0</kd>
+    <maxVel>0.0</maxVel>
+    <minDepth>0.0001</minDepth>
+    <material>Gazebo/Blue</material>
+  </gazebo>
+  <joint name="J1_A" type="revolute">
+    <axis rpy="0 0 0" xyz="0 0 1"/>
+    <parent link="J1_A_stator"/>
+    <child link="L_1_A"/>
+    <origin rpy="0.0 -0.0 0.0" xyz="0.0 0.0 0.2"/>
+    <limit effort="35" lower="-3.14" upper="3.14" velocity="5.7"/>
+  </joint>
+  <link name="L_1_A"/>
+  <joint name="fixed_J1_B" type="fixed">
+    <axis rpy="0 0 0" xyz="0 0 1"/>
+    <parent link="L_0a_con3"/>
+    <child link="J1_B_stator"/>
+    <origin rpy="0.0 -0.0 0.0" xyz="0.0 0.0 0.1"/>
+  </joint>
+  <link name="J1_B_stator">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0.1"/>
+      <geometry>
+        <cylinder length="0.2" radius="0.06"/>
+      </geometry>
+      <material name="blue"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0.1"/>
+      <geometry>
+        <cylinder length="0.2" radius="0.06"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0.1"/>
+      <mass value="0.5"/>
+      <inertia ixx="0.00211666666667" ixy="0.0" ixz="0.0" iyy="0.00211666666667" iyz="0.0" izz="0.0009"/>
+    </inertial>
+  </link>
+  <gazebo reference="J1_B_stator">
+    <mu1>0.2</mu1>
+    <mu2>0.2</mu2>
+    <kp>1000000.0</kp>
+    <kd>1.0</kd>
+    <maxVel>0.0</maxVel>
+    <minDepth>0.0001</minDepth>
+    <material>Gazebo/Blue</material>
+  </gazebo>
+  <joint name="J1_B" type="revolute">
+    <axis rpy="0 0 0" xyz="0 0 1"/>
+    <parent link="J1_B_stator"/>
+    <child link="L_1_B"/>
+    <origin rpy="0.0 -0.0 0.0" xyz="0.0 0.0 0.2"/>
+    <limit effort="35" lower="-3.14" upper="3.14" velocity="5.7"/>
+  </joint>
+  <link name="L_1_B"/>
+  <link name="L_1_link_1_B">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0.15"/>
+      <geometry>
+        <cylinder length="0.3" radius="0.06"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0.15"/>
+      <geometry>
+        <cylinder length="0.3" radius="0.06"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0.15"/>
+      <mass value="0.5"/>
+      <inertia ixx="0.0042" ixy="0.0" ixz="0.0" iyy="0.0042" iyz="0.0" izz="0.0009"/>
+    </inertial>
+  </link>
+  <gazebo reference="L_1_link_1_B">
+    <mu1>0.2</mu1>
+    <mu2>0.2</mu2>
+    <kp>1000000.0</kp>
+    <kd>1.0</kd>
+    <maxVel>0.0</maxVel>
+    <minDepth>0.0001</minDepth>
+    <material>Gazebo/White</material>
+  </gazebo>
+  <joint name="L_1_fixed_joint_1_B" type="fixed">
+    <axis rpy="0 0 0" xyz="0 0 1"/>
+    <parent link="L_1_B"/>
+    <child link="L_1_link_1_B"/>
+    <origin rpy="0.0 -0.0 0.0" xyz="0.0 0.0 0.0"/>
+  </joint>
+  <link name="L_1_elbow_2_B">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0.1"/>
+      <geometry>
+        <cylinder length="0.2" radius="0.06"/>
+      </geometry>
+      <material name="white"/>
+    </visual>
+    <visual>
+      <origin rpy="1.57 0 0" xyz="0 0.1 0.2"/>
+      <geometry>
+        <cylinder length="0.2" radius="0.06"/>
+      </geometry>
+      <material name="white"/>
+    </visual>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0.2"/>
+      <geometry>
+        <sphere radius="0.06"/>
+      </geometry>
+      <material name="white"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0.1"/>
+      <geometry>
+        <cylinder length="0.2" radius="0.06"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0.1"/>
+      <mass value="0.5"/>
+      <inertia ixx="0.0171166666667" ixy="0.0" ixz="0.0" iyy="0.0140083333333" iyz="0.0" izz="0.00400833333333"/>
+    </inertial>
+    <collision>
+      <origin rpy="1.57 0 0" xyz="0 0.1 0.2"/>
+      <geometry>
+        <cylinder length="0.2" radius="0.06"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0.2"/>
+      <geometry>
+        <sphere radius="0.06"/>
+      </geometry>
+    </collision>
+  </link>
+  <gazebo reference="L_1_elbow_2_B">
+    <mu1>0.2</mu1>
+    <mu2>0.2</mu2>
+    <kp>1000000.0</kp>
+    <kd>1.0</kd>
+    <maxVel>0.0</maxVel>
+    <minDepth>0.0001</minDepth>
+    <material>Gazebo/White</material>
+  </gazebo>
+  <joint name="L_1_fixed_joint_2_B" type="fixed">
+    <axis rpy="0 0 0" xyz="0 0 1"/>
+    <parent link="L_1_link_1_B"/>
+    <child link="L_1_elbow_2_B"/>
+    <origin rpy="0.0 -0.0 0.0" xyz="0.0 0.0 0.3"/>
+  </joint>
+  <joint name="fixed_J2_B" type="fixed">
+    <axis rpy="0 0 0" xyz="0 0 1"/>
+    <parent link="L_1_elbow_2_B"/>
+    <child link="J2_B_stator"/>
+    <origin rpy="-1.57 -0.0 0.0" xyz="0.0 0.199999936586 0.200159265342"/>
+  </joint>
+  <link name="J2_B_stator">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0.1"/>
+      <geometry>
+        <cylinder length="0.2" radius="0.06"/>
+      </geometry>
+      <material name="blue"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0.1"/>
+      <geometry>
+        <cylinder length="0.2" radius="0.06"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0.1"/>
+      <mass value="0.5"/>
+      <inertia ixx="0.00211666666667" ixy="0.0" ixz="0.0" iyy="0.00211666666667" iyz="0.0" izz="0.0009"/>
+    </inertial>
+  </link>
+  <gazebo reference="J2_B_stator">
+    <mu1>0.2</mu1>
+    <mu2>0.2</mu2>
+    <kp>1000000.0</kp>
+    <kd>1.0</kd>
+    <maxVel>0.0</maxVel>
+    <minDepth>0.0001</minDepth>
+    <material>Gazebo/Blue</material>
+  </gazebo>
+  <joint name="J2_B" type="revolute">
+    <axis rpy="0 0 0" xyz="0 0 1"/>
+    <parent link="J2_B_stator"/>
+    <child link="L_2_B"/>
+    <origin rpy="0.0 -0.0 0.0" xyz="0.0 0.0 0.2"/>
+    <limit effort="35" lower="-3.14" upper="3.14" velocity="5.7"/>
+  </joint>
+  <link name="L_2_B"/>
+  <link name="L_2_elbow_1_B">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0.1"/>
+      <geometry>
+        <cylinder length="0.2" radius="0.06"/>
+      </geometry>
+      <material name="white"/>
+    </visual>
+    <visual>
+      <origin rpy="1.57 0 0" xyz="0 0.1 0.2"/>
+      <geometry>
+        <cylinder length="0.2" radius="0.06"/>
+      </geometry>
+      <material name="white"/>
+    </visual>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0.2"/>
+      <geometry>
+        <sphere radius="0.06"/>
+      </geometry>
+      <material name="white"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0.1"/>
+      <geometry>
+        <cylinder length="0.2" radius="0.06"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0.1"/>
+      <mass value="0.5"/>
+      <inertia ixx="0.0171166666667" ixy="0.0" ixz="0.0" iyy="0.0140083333333" iyz="0.0" izz="0.00400833333333"/>
+    </inertial>
+    <collision>
+      <origin rpy="1.57 0 0" xyz="0 0.1 0.2"/>
+      <geometry>
+        <cylinder length="0.2" radius="0.06"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0.2"/>
+      <geometry>
+        <sphere radius="0.06"/>
+      </geometry>
+    </collision>
+  </link>
+  <gazebo reference="L_2_elbow_1_B">
+    <mu1>0.2</mu1>
+    <mu2>0.2</mu2>
+    <kp>1000000.0</kp>
+    <kd>1.0</kd>
+    <maxVel>0.0</maxVel>
+    <minDepth>0.0001</minDepth>
+    <material>Gazebo/White</material>
+  </gazebo>
+  <joint name="L_2_fixed_joint_1_B" type="fixed">
+    <axis rpy="0 0 0" xyz="0 0 1"/>
+    <parent link="L_2_B"/>
+    <child link="L_2_elbow_1_B"/>
+    <origin rpy="0.0 -0.0 0.0" xyz="0.0 0.0 0.0"/>
+  </joint>
+  <link name="L_2_elbow_2_B">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0.1"/>
+      <geometry>
+        <cylinder length="0.2" radius="0.06"/>
+      </geometry>
+      <material name="white"/>
+    </visual>
+    <visual>
+      <origin rpy="1.57 0 0" xyz="0 0.1 0.2"/>
+      <geometry>
+        <cylinder length="0.2" radius="0.06"/>
+      </geometry>
+      <material name="white"/>
+    </visual>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0.2"/>
+      <geometry>
+        <sphere radius="0.06"/>
+      </geometry>
+      <material name="white"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0.1"/>
+      <geometry>
+        <cylinder length="0.2" radius="0.06"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0.1"/>
+      <mass value="0.5"/>
+      <inertia ixx="0.0171166666667" ixy="0.0" ixz="0.0" iyy="0.0140083333333" iyz="0.0" izz="0.00400833333333"/>
+    </inertial>
+    <collision>
+      <origin rpy="1.57 0 0" xyz="0 0.1 0.2"/>
+      <geometry>
+        <cylinder length="0.2" radius="0.06"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0.2"/>
+      <geometry>
+        <sphere radius="0.06"/>
+      </geometry>
+    </collision>
+  </link>
+  <gazebo reference="L_2_elbow_2_B">
+    <mu1>0.2</mu1>
+    <mu2>0.2</mu2>
+    <kp>1000000.0</kp>
+    <kd>1.0</kd>
+    <maxVel>0.0</maxVel>
+    <minDepth>0.0001</minDepth>
+    <material>Gazebo/White</material>
+  </gazebo>
+  <joint name="L_2_fixed_joint_2_B" type="fixed">
+    <axis rpy="0 0 0" xyz="0 0 1"/>
+    <parent link="L_2_elbow_1_B"/>
+    <child link="L_2_elbow_2_B"/>
+    <origin rpy="-1.57 -0.0 0.0" xyz="0.0 0.199999936586 0.200159265342"/>
+  </joint>
+  <joint name="fixed_J3_B" type="fixed">
+    <axis rpy="0 0 0" xyz="0 0 1"/>
+    <parent link="L_2_elbow_2_B"/>
+    <child link="J3_B_stator"/>
+    <origin rpy="-1.57 -0.0 0.0" xyz="0.0 0.199999936586 0.200159265342"/>
+  </joint>
+  <link name="J3_B_stator">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0.1"/>
+      <geometry>
+        <cylinder length="0.2" radius="0.06"/>
+      </geometry>
+      <material name="blue"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0.1"/>
+      <geometry>
+        <cylinder length="0.2" radius="0.06"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0.1"/>
+      <mass value="0.5"/>
+      <inertia ixx="0.00211666666667" ixy="0.0" ixz="0.0" iyy="0.00211666666667" iyz="0.0" izz="0.0009"/>
+    </inertial>
+  </link>
+  <gazebo reference="J3_B_stator">
+    <mu1>0.2</mu1>
+    <mu2>0.2</mu2>
+    <kp>1000000.0</kp>
+    <kd>1.0</kd>
+    <maxVel>0.0</maxVel>
+    <minDepth>0.0001</minDepth>
+    <material>Gazebo/Blue</material>
+  </gazebo>
+  <joint name="J3_B" type="revolute">
+    <axis rpy="0 0 0" xyz="0 0 1"/>
+    <parent link="J3_B_stator"/>
+    <child link="L_3_B"/>
+    <origin rpy="0.0 -0.0 0.0" xyz="0.0 0.0 0.2"/>
+    <limit effort="35" lower="-3.14" upper="3.14" velocity="5.7"/>
+  </joint>
+  <link name="L_3_B"/>
 </robot>

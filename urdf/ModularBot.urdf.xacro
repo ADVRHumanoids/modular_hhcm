@@ -1,5 +1,11 @@
 <?xml version="1.0" ?>
 <robot name="ModularBot" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find modular)/urdf/config.xacro"/>
+  <xacro:if value="${GAZEBO}">
+    <xacro:include filename="$(find modular)/urdf/modular.gazebo"/>
+  </xacro:if>
+
    <xacro:property name="size1" value="0.05"/>
    <xacro:property name="size2" value="0.055"/>
    <xacro:property name="size3" value="0.06"/>
@@ -514,21 +520,8 @@
    <xacro:add_fixed_joint_stator child="J1_A_stator" father="L_0a_con4" name="fixed_J1_A" pitch="-0.0" roll="0.0" type="fixed_joint_stator" x="0.0" y="0.0" yaw="0.0" z="0.1"/>
    <xacro:add_joint_stator name="J1_A_stator" size="3" size_y="0" size_z="0.2" type="joint_stator"/>
    <xacro:add_joint child="L_1_A" effort="35" father="J1_A_stator" lower_lim="-3.14" name="J1_A" pitch="-0.0" roll="0.0" type="joint" upper_lim="3.14" velocity="5.7" x="0.0" y="0.0" yaw="0.0" z="0.2"/>
-   <xacro:add_fixed_joint_stator child="J1_B_stator" father="L_0a_con3" name="fixed_J1_B" pitch="-0.0" roll="0.0" type="fixed_joint_stator" x="0.0" y="0.0" yaw="0.0" z="0.1"/>
-   <xacro:add_joint_stator name="J1_B_stator" size="3" size_y="0" size_z="0.2" type="joint_stator"/>
-   <xacro:add_joint child="L_1_B" effort="35" father="J1_B_stator" lower_lim="-3.14" name="J1_B" pitch="-0.0" roll="0.0" type="joint" upper_lim="3.14" velocity="5.7" x="0.0" y="0.0" yaw="0.0" z="0.2"/>
-   <xacro:add_link name="L_1_link_1_B" size="3" size_z="0.3" type="link"/>
-   <xacro:add_fixed_joint child="L_1_link_1_B" father="L_1_B" name="L_1_fixed_joint_1_B" pitch="-0.0" roll="0.0" type="fixed_joint" x="0.0" y="0.0" yaw="0.0" z="0.0"/>
-   <xacro:add_elbow name="L_1_elbow_2_B" size="3" size_y="0.2" size_z="0.2" type="elbow"/>
-   <xacro:add_fixed_joint child="L_1_elbow_2_B" father="L_1_link_1_B" name="L_1_fixed_joint_2_B" pitch="-0.0" roll="0.0" type="fixed_joint" x="0.0" y="0.0" yaw="0.0" z="0.3"/>
-   <xacro:add_fixed_joint_stator child="J2_B_stator" father="L_1_elbow_2_B" name="fixed_J2_B" pitch="-0.0" roll="-1.57" type="fixed_joint_stator" x="0.0" y="0.199999936586" yaw="0.0" z="0.200159265342"/>
-   <xacro:add_joint_stator name="J2_B_stator" size="3" size_y="0" size_z="0.2" type="joint_stator"/>
-   <xacro:add_joint child="L_2_B" effort="35" father="J2_B_stator" lower_lim="-3.14" name="J2_B" pitch="-0.0" roll="0.0" type="joint" upper_lim="3.14" velocity="5.7" x="0.0" y="0.0" yaw="0.0" z="0.2"/>
-   <xacro:add_elbow name="L_2_elbow_1_B" size="3" size_y="0.2" size_z="0.2" type="elbow"/>
-   <xacro:add_fixed_joint child="L_2_elbow_1_B" father="L_2_B" name="L_2_fixed_joint_1_B" pitch="-0.0" roll="0.0" type="fixed_joint" x="0.0" y="0.0" yaw="0.0" z="0.0"/>
-   <xacro:add_elbow name="L_2_elbow_2_B" size="3" size_y="0.2" size_z="0.2" type="elbow"/>
-   <xacro:add_fixed_joint child="L_2_elbow_2_B" father="L_2_elbow_1_B" name="L_2_fixed_joint_2_B" pitch="-0.0" roll="-1.57" type="fixed_joint" x="0.0" y="0.199999936586" yaw="0.0" z="0.200159265342"/>
-   <xacro:add_fixed_joint_stator child="J3_B_stator" father="L_2_elbow_2_B" name="fixed_J3_B" pitch="-0.0" roll="-1.57" type="fixed_joint_stator" x="0.0" y="0.199999936586" yaw="0.0" z="0.200159265342"/>
-   <xacro:add_joint_stator name="J3_B_stator" size="3" size_y="0" size_z="0.2" type="joint_stator"/>
-   <xacro:add_joint child="L_3_B" effort="35" father="J3_B_stator" lower_lim="-3.14" name="J3_B" pitch="-0.0" roll="0.0" type="joint" upper_lim="3.14" velocity="5.7" x="0.0" y="0.0" yaw="0.0" z="0.2"/>
+   <xacro:add_elbow name="L_1_elbow_1_A" size="3" size_y="0.2" size_z="0.2" type="elbow"/>
+   <xacro:add_fixed_joint child="L_1_elbow_1_A" father="L_1_A" name="L_1_fixed_joint_1_A" pitch="-0.0" roll="0.0" type="fixed_joint" x="0.0" y="0.0" yaw="0.0" z="0.0"/>
+   <xacro:add_link name="L_1_link_2_A" size="3" size_z="0.3" type="link"/>
+   <xacro:add_fixed_joint child="L_1_link_2_A" father="L_1_elbow_1_A" name="L_1_fixed_joint_2_A" pitch="-0.0" roll="-1.57" type="fixed_joint" x="0.0" y="0.199999936586" yaw="0.0" z="0.200159265342"/>
 </robot>

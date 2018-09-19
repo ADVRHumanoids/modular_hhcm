@@ -1,6 +1,9 @@
 <?xml version="1.0"?>
 <robot name="ModularBot" xmlns:xacro="http://ros.org/wiki/xacro">
 
+    <!-- <xacro:include filename="$(find modular)/urdf/config.xacro" />
+    <xacro:include filename="$(find modular)/urdf/modular.gazebo" /> -->
+
     <xacro:property name="size1" value="0.05" />
     <xacro:property name="size2" value="0.055" />
     <xacro:property name="size3" value="0.06" />
