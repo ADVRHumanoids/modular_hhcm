@@ -1,0 +1,40 @@
+<?xml version="1.0" ?>
+<robot name="ModularBot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<xacro:include filename="$(find modular)/urdf/config.xacro"/>
+
+<!-- SENSORS -->
+<!-- <xacro:include filename="$(find centauro_gazebo)/sensors/config.xacro"/> -->
+
+<!-- CONTROLLER -->
+
+<!-- <xacro:if value="${middleware == 'ros_control'}">
+	<gazebo> -->
+        <!-- XBOTCORE -->
+            <!-- <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+                <robotNamespace>/centauro</robotNamespace>
+                <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
+            </plugin>
+	</gazebo>
+</xacro:if> -->
+
+<!-- <xacro:if value="${middleware == 'xbotcore'}">
+       <gazebo>
+            <plugin name="gazebo_xbot_plugin" filename="libGazeboXBotPlugin.so">
+                <path_to_config_file>${xbot_config_file}</path_to_config_file>
+            </plugin>
+       </gazebo>
+</xacro:if> -->
+<!--                <path_to_config_file>configs/ADVR_shared/centauro/configs/config_centauro.yaml</path_to_config_file> -->
+
+<gazebo>
+    <plugin name="gazebo_xbot_plugin" filename="libGazeboXBotPlugin.so">
+        <!-- <path_to_config_file>${xbot_config_file}</path_to_config_file> -->
+        <path_to_config_file>configs/ADVR_shared/ModularBot/configs/config_ModularBot.yaml</path_to_config_file>
+    </plugin>
+</gazebo>
+
+<!-- /CONTROLLER -->
+	
+<!-- VISUALiZATION AND FRICTION -->
+</robot>
