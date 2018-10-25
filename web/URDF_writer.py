@@ -137,14 +137,16 @@ L_0a_con4 = ModuleNode(data4, name_con4, parent=L_0a)
 for pre, _, node in anytree.render.RenderTree(L_0a):
 	print("%s%s" % (pre, node.name))
 
-def add_slave_cube(father):
-def add_slave_cube(father, angle_offset):
-	global T_con, L_0a, n_cubes
+parent_module = anytree.search.findall_by_attr(L_0a, "L_0a_con1")[0]
+print(parent_module)
+
+def add_slave_cube(angle_offset):
+	global T_con, L_0a, n_cubes, parent_module
 	
 	n_cubes+=1
 	name = 'L_0' + cube_switcher.get(n_cubes)
 
-	parent_module = anytree.search.findall_by_attr(L_0a, father)[0]
+	#parent_module = anytree.search.findall_by_attr(L_0a, father)[0]
 
 	T_con_inv = tf.transformations.inverse_matrix(T_con)
 	name_con1 = name + '_con1' 
@@ -153,7 +155,7 @@ def add_slave_cube(father, angle_offset):
 
 	parent_module.get_rototranslation(parent_module.Homogeneous_tf, tf.transformations.rotation_matrix(angle_offset, zaxis))
 	fixed_joint_name = 'FJ_' + parent_module.parent.name + '_' + name
-	ET.SubElement(root, "xacro:add_fixed_joint", type="fixed_joint", name=fixed_joint_name, father=father, child=name_con1, x=parent_module.x, y=parent_module.y, z=parent_module.z, roll=parent_module.roll, pitch=parent_module.pitch, yaw=parent_module.yaw)
+	ET.SubElement(root, "xacro:add_fixed_joint", type="fixed_joint", name=fixed_joint_name, father=parent_module.name, child=name_con1, x=parent_module.x, y=parent_module.y, z=parent_module.z, roll=parent_module.roll, pitch=parent_module.pitch, yaw=parent_module.yaw)
 
 	filename = path_name + '/web/static/yaml/master_cube.yaml'
 	slavecube = slavecube_from_yaml(filename, name, slavecube_con1)
@@ -193,7 +195,11 @@ def add_slave_cube(father, angle_offset):
 	# ET.SubElement(root, "xacro:add_fixed_joint", name=fixed_joint_name, type="fixed_joint", father=past_Link.name, child=new_Link.name, x=new_Link.x, y=new_Link.y, z=new_Link.z, roll=new_Link.roll, pitch=new_Link.pitch, yaw=new_Link.yaw)
 
 	#update the urdf file, adding the new module
-	string = write_urdf(path_name + '/urdf/ModularBot_test.urdf', urdf_tree)
+	#string = write_urdf(path_name + '/urdf/ModularBot_test.urdf', urdf_tree)
+	
+	string = process_urdf()
+
+	parent_module = slavecube
 
 	data = {'result': string, 'lastModule_type': 'mastercube', 'lastModule_name': name, 'size': 3, 'count': n_cubes}
 
@@ -219,18 +225,26 @@ def read_file(file_str):
 	data = {'string': string}
 	return data
 
-def add_module(filename, selected_module, angle_offset):
+def process_urdf():
+	global urdf_tree
+	#write the urdf tree to a string
+	xmlstr = xml.dom.minidom.parseString(ET.tostring(urdf_tree.getroot())).toprettyxml(indent="   ")
+
+	#parse the string to convert from xacro
+	doc = xacro.parse(xmlstr)
+	#perform macro replacement
+	xacro.process_doc(doc)
+
+	string = doc.toprettyxml(indent='  ')
+
+	return string
+
+def add_module(filename, angle_offset):
 	"""Add a module specified by filename to the selected module. Return info on the new module"""
-	global tag
+	global tag, parent_module
 	
-	if selected_module.endswith('_stator'):
-		selected_module = selected_module[:-7]
-
 	module_name = path_name + '/web/static/yaml/' + filename
-
-	print(selected_module)
-	parent_module = anytree.search.findall_by_attr(L_0a, selected_module)[0]
-	print(parent_module)
+	
 	new_module = module_from_yaml(module_name, parent_module)
 
 	print(angle_offset)
@@ -278,15 +292,7 @@ def add_module(filename, selected_module, angle_offset):
 			#link + link
 			link_after_link(new_module, parent_module, angle_offset)
 
-	#write the urdf tree to a string
-	xmlstr = xml.dom.minidom.parseString(ET.tostring(urdf_tree.getroot())).toprettyxml(indent="   ")
-
-	#parse the string to convert from xacro
-	doc = xacro.parse(xmlstr)
-	#perform macro replacement
-	xacro.process_doc(doc)
-
-	string = doc.toprettyxml(indent='  ')
+	string = process_urdf()
 
 	#update the urdf file, adding the new module
 	#string = write_urdf(path_name + '/urdf/ModularBot_test.urdf', urdf_tree)
@@ -296,17 +302,30 @@ def add_module(filename, selected_module, angle_offset):
 		print("%s%s" % (pre, node.name))
 
 	data = {'result': string, 'lastModule_type': new_module.type, 'lastModule_name': new_module.name, 'size': new_module.size, 'count': new_module.i}
+	
+	#if new_module.name.endswith('_stator'):
+	#	new_module.name = selected_module[:-7]
+	#last_module = anytree.search.findall_by_attr(L_0a, selected_module)[0]
+
+	parent_module = new_module
+	print(parent_module)
 
 	return data
 
-def remove_module(selected_module):
+def remove_module(selected_module=0):
 	"""Remove the selected module and return info on its parent"""
-	global tag, n_cubes
+	global tag, n_cubes, parent_module
 
-	if isinstance(selected_module, basestring):
-		last_module = access_module(selected_module)
-	else:
+	# if isinstance(selected_module, basestring):
+	# 	last_module = access_module(selected_module)
+	# else:
+	# 	last_module = selected_module
+	if selected_module != 0:
 		last_module = selected_module
+	else:
+		last_module = parent_module
+
+
 	print(last_module.name)
 	if '_con' in last_module.name:
 		last_module = last_module.parent
@@ -349,15 +368,15 @@ def remove_module(selected_module):
 			if node.attrib['name'] == last_module.name:
 				root.remove(node)
 		# last_module.parent = None
-		parent_module = access_module(last_module.parent.name)
-		joint_name = 'FJ_' + parent_module.parent.parent.name + '_' + last_module.name
+		father_module = access_module(last_module.parent.name)
+		joint_name = 'FJ_' + father_module.parent.parent.name + '_' + father_module.name
 		print(joint_name)
 		for node in root.findall("*"):
 			if node.attrib['name'] == joint_name:
 				print(joint_name)
 				root.remove(node)
-		parent_module.parent = None
-		del parent_module
+		father_module.parent = None
+		del father_module
 	else:
 		father = last_module.parent
 
@@ -385,7 +404,11 @@ def remove_module(selected_module):
 					root.remove(node)
 
 	#update the urdf file, removing the module
-	string = write_urdf(path_name + '/urdf/ModularBot_test.urdf', urdf_tree)
+	string = process_urdf()
+
+	if not parent_module.children:
+		parent_module = father
+
 	if father.type=='cube':
 		data = {'result': string, 'lastModule_type': father.type, 'lastModule_name': father.name, 'size': father.size, 'count': n_cubes}
 	else:
@@ -408,9 +431,13 @@ def remove_module(selected_module):
 
 def access_module(selected_module):
 	"""Find the selected module in the tree"""
+	global parent_module
 	if selected_module.endswith('_stator'):
 		selected_module = selected_module[:-7]
 	last_module = anytree.search.findall_by_attr(L_0a, selected_module)[0]
+
+	parent_module = last_module
+	print(parent_module)
 
 	return last_module
 

@@ -18,7 +18,7 @@ def changeURDF():
     print(parent)
     offset = float(request.form.get('angle_offset', 0))
     print(offset)
-    data = URDF_writer.add_module(filename, parent, offset)
+    data = URDF_writer.add_module(filename, offset)
     data = jsonify(data)
     return data 
 
@@ -39,7 +39,7 @@ def addCube():
     print(parent)
     offset = float(request.form.get('angle_offset', 0))
     print(offset)
-    data = URDF_writer.add_slave_cube(parent, offset)
+    data = URDF_writer.add_slave_cube(offset)
     data = jsonify(data)
     return data 
 
@@ -47,7 +47,7 @@ def addCube():
 @app.route('/removeModule/', methods=['POST'])
 def remove():
     parent = request.form.get('parent', 0)
-    data = URDF_writer.remove_module(parent)
+    data = URDF_writer.remove_module()
     data = jsonify(data)
     return data
 
