@@ -26,7 +26,7 @@ def changeURDF():
 def writeURDF():
     string = request.form.get('string', 0)
     print(string)
-    data = URDF_writer.write_urdf(string)
+    data = URDF_writer.write_urdf()
     # data = jsonify(data)
     return data 
 

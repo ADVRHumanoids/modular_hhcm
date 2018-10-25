@@ -521,25 +521,27 @@ def link_after_link(new_Link, past_Link, offset):
 	ET.SubElement(root, "xacro:add_fixed_joint", name=fixed_joint_name, type="fixed_joint", father=past_Link.name, child=new_Link.name, x=new_Link.x, y=new_Link.y, z=new_Link.z, roll=new_Link.roll, pitch=new_Link.pitch, yaw=new_Link.yaw)
 
 #Function writin the urdf file after converting from .xacro (See xacro/__init__.py for reference)
-def write_urdf(doc):
+def write_urdf():
 	"""Returns the string with the URDF, after writing it to file"""
+	global path_name
 	urdf_filename = path_name + '/urdf/ModularBot_test.urdf'
 	
 	out = xacro.open_output(urdf_filename)
 
 	urdf_xacro_filename = urdf_filename + '.xacro'
 
-	# #writing .xacro file
-	# # tree.write(urdf_xacro_filename, xml_declaration=True, encoding='utf-8')
-	# xmlstr = xml.dom.minidom.parseString(ET.tostring(tree.getroot())).toprettyxml(indent="   ")
-	# with open(urdf_xacro_filename, "w") as f:
-	# 	f.write(xmlstr)
+	#writing .xacro file
+	# tree.write(urdf_xacro_filename, xml_declaration=True, encoding='utf-8')
+	xmlstr = xml.dom.minidom.parseString(ET.tostring(urdf_tree.getroot())).toprettyxml(indent="   ")
+	with open(urdf_xacro_filename, "w") as f:
+		f.write(xmlstr)
 
-	# #parse the document into a xml.dom tree
-	# doc = xacro.parse(None, urdf_xacro_filename)
-	doc = xacro.parse(doc)
-	# #perform macro replacement
-	# xacro.process_doc(doc)
+	#parse the document into a xml.dom tree
+	doc = xacro.parse(None, urdf_xacro_filename)
+	#doc = xacro.parse(doc)
+	
+	#perform macro replacement
+	xacro.process_doc(doc)
 
 	#print(doc.lastChild.toprettyxml(indent='  '))
 
