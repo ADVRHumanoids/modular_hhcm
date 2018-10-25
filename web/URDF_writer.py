@@ -40,7 +40,15 @@ branch_switcher = {
 	5 : '_E',
 	6 : '_F',
 	7 : '_G',
-	8 : '_H'
+	8 : '_H',
+	9: '_I',
+	10 : '_L',
+	11 : '_M',
+	12 : '_N',
+	13 : '_O',
+	14 : '_P',
+	15 : '_Q',
+	16 : '_R'
 }
 
 n_cubes = 0
@@ -130,6 +138,7 @@ for pre, _, node in anytree.render.RenderTree(L_0a):
 	print("%s%s" % (pre, node.name))
 
 def add_slave_cube(father):
+def add_slave_cube(father, angle_offset):
 	global T_con, L_0a, n_cubes
 	
 	n_cubes+=1
@@ -142,7 +151,7 @@ def add_slave_cube(father):
 	data1 = {'Homogeneous_tf': T_con_inv, 'type': "link", 'name': name_con1, 'i': 0, 'p': 0, 'size': 3}
 	slavecube_con1 = ModuleNode(data1, name_con1, parent=parent_module)
 
-	parent_module.get_rototranslation(tf.transformations.identity_matrix(), parent_module.Homogeneous_tf)
+	parent_module.get_rototranslation(parent_module.Homogeneous_tf, tf.transformations.rotation_matrix(angle_offset, zaxis))
 	fixed_joint_name = 'FJ_' + parent_module.parent.name + '_' + name
 	ET.SubElement(root, "xacro:add_fixed_joint", type="fixed_joint", name=fixed_joint_name, father=father, child=name_con1, x=parent_module.x, y=parent_module.y, z=parent_module.z, roll=parent_module.roll, pitch=parent_module.pitch, yaw=parent_module.yaw)
 
@@ -210,7 +219,7 @@ def read_file(file_str):
 	data = {'string': string}
 	return data
 
-def add_module(filename, selected_module):
+def add_module(filename, selected_module, angle_offset):
 	"""Add a module specified by filename to the selected module. Return info on the new module"""
 	global tag
 	
@@ -223,6 +232,8 @@ def add_module(filename, selected_module):
 	parent_module = anytree.search.findall_by_attr(L_0a, selected_module)[0]
 	print(parent_module)
 	new_module = module_from_yaml(module_name, parent_module)
+
+	print(angle_offset)
 
 	# print(anytree.search.find_by_attr(L_0a, name="tag"))
 
@@ -265,10 +276,20 @@ def add_module(filename, selected_module):
 			joint_after_link(new_module, parent_module)
 		else:
 			#link + link
-			link_after_link(new_module, parent_module)
+			link_after_link(new_module, parent_module, angle_offset)
+
+	#write the urdf tree to a string
+	xmlstr = xml.dom.minidom.parseString(ET.tostring(urdf_tree.getroot())).toprettyxml(indent="   ")
+
+	#parse the string to convert from xacro
+	doc = xacro.parse(xmlstr)
+	#perform macro replacement
+	xacro.process_doc(doc)
+
+	string = doc.toprettyxml(indent='  ')
 
 	#update the urdf file, adding the new module
-	string = write_urdf(path_name + '/urdf/ModularBot_test.urdf', urdf_tree)
+	#string = write_urdf(path_name + '/urdf/ModularBot_test.urdf', urdf_tree)
 
 	#Render tree
 	for pre, _, node in anytree.render.RenderTree(L_0a):
@@ -447,9 +468,9 @@ def joint_after_link(new_Joint, past_Link):
 	velocity = str(jointData.velocity)
 	ET.SubElement(root, "xacro:add_joint", type="joint", name=new_Joint.name, father=stator_name, child='L_'+str(new_Joint.i)+new_Joint.tag, x=new_Joint.x, y=new_Joint.y, z=new_Joint.z, roll=new_Joint.roll, pitch=new_Joint.pitch, yaw=new_Joint.yaw, upper_lim=upper_lim, lower_lim=lower_lim, effort=effort, velocity=velocity)
 
-def link_after_link(new_Link, past_Link):
+def link_after_link(new_Link, past_Link, offset):
 	"""Adds to the URDF tree a link module as a child of a link module"""
-	new_Link.get_rototranslation(past_Link.Homogeneous_tf, tf.transformations.identity_matrix())
+	new_Link.get_rototranslation(past_Link.Homogeneous_tf, tf.transformations.rotation_matrix(offset, zaxis))
 	print(new_Link.z)
 
 	setattr(new_Link, 'p', past_Link.p + 1)
@@ -473,22 +494,25 @@ def link_after_link(new_Link, past_Link):
 	ET.SubElement(root, "xacro:add_fixed_joint", name=fixed_joint_name, type="fixed_joint", father=past_Link.name, child=new_Link.name, x=new_Link.x, y=new_Link.y, z=new_Link.z, roll=new_Link.roll, pitch=new_Link.pitch, yaw=new_Link.yaw)
 
 #Function writin the urdf file after converting from .xacro (See xacro/__init__.py for reference)
-def write_urdf(urdf_filename, tree):
+def write_urdf(doc):
 	"""Returns the string with the URDF, after writing it to file"""
+	urdf_filename = path_name + '/urdf/ModularBot_test.urdf'
+	
 	out = xacro.open_output(urdf_filename)
 
 	urdf_xacro_filename = urdf_filename + '.xacro'
 
-	#writing .xacro file
-	# tree.write(urdf_xacro_filename, xml_declaration=True, encoding='utf-8')
-	xmlstr = xml.dom.minidom.parseString(ET.tostring(tree.getroot())).toprettyxml(indent="   ")
-	with open(urdf_xacro_filename, "w") as f:
-		f.write(xmlstr)
+	# #writing .xacro file
+	# # tree.write(urdf_xacro_filename, xml_declaration=True, encoding='utf-8')
+	# xmlstr = xml.dom.minidom.parseString(ET.tostring(tree.getroot())).toprettyxml(indent="   ")
+	# with open(urdf_xacro_filename, "w") as f:
+	# 	f.write(xmlstr)
 
-	#parse the document into a xml.dom tree
-	doc = xacro.parse(None, urdf_xacro_filename)
-	#perform macro replacement
-	xacro.process_doc(doc)
+	# #parse the document into a xml.dom tree
+	# doc = xacro.parse(None, urdf_xacro_filename)
+	doc = xacro.parse(doc)
+	# #perform macro replacement
+	# xacro.process_doc(doc)
 
 	#print(doc.lastChild.toprettyxml(indent='  '))
 

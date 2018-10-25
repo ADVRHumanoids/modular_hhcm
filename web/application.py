@@ -16,8 +16,18 @@ def changeURDF():
     print(filename)
     parent = request.form.get('parent', 0)
     print(parent)
-    data = URDF_writer.add_module(filename, parent)
+    offset = float(request.form.get('angle_offset', 0))
+    print(offset)
+    data = URDF_writer.add_module(filename, parent, offset)
     data = jsonify(data)
+    return data 
+
+@app.route('/writeURDF/', methods=['POST'])
+def writeURDF():
+    string = request.form.get('string', 0)
+    print(string)
+    data = URDF_writer.write_urdf(string)
+    # data = jsonify(data)
     return data 
 
 #call URDF_writer.py to add another master cube
@@ -27,7 +37,9 @@ def addCube():
     print(filename)
     parent = request.form.get('parent', 0)
     print(parent)
-    data = URDF_writer.add_slave_cube(parent)
+    offset = float(request.form.get('angle_offset', 0))
+    print(offset)
+    data = URDF_writer.add_slave_cube(parent, offset)
     data = jsonify(data)
     return data 
 

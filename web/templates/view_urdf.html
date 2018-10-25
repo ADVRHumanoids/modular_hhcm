@@ -325,6 +325,8 @@
 
             //Function to add a new module. Called at the click of the linked button
             function addModule(modulename, size_value) {
+                var offset = parseFloat(prompt("Enter the angle offset for the module:", "0"));
+                
                 //opening YAML file containing kin. and dyn. parameters and URDF path
                 //var url = 'http://127.0.0.1:5000/yaml/' + filename;
                 //openfile(url, callBack_YAML)  
@@ -350,7 +352,7 @@
                 //making an ajax request to the server to proceed to write the modified URDF
                 $.ajax({
                     url: 'http://127.0.0.1:5000/changeURDF/',
-                    data: {'module_name': filename, 'parent': CURRENT_PARENT},
+                    data: {'module_name': filename, 'parent': CURRENT_PARENT, 'angle_offset': offset},
                     method: 'POST',
                     success: function(data) {
                         console.log(data)
@@ -359,11 +361,25 @@
                         updateShownButtons(data['lastModule_type'], data['count'], data['size'])
                         // console.log(size)
                         CURRENT_PARENT = data['lastModule_name']
+                        //write the file
+                        writeRequest(data['result'])
                     },
                     async: true
                 });
 
             };
+
+            function writeRequest(URDF_string){
+                $.ajax({
+                    url: 'http://127.0.0.1:5000/writeURDF/',
+                    data: {'string': URDF_string},
+                    method: 'POST',
+                    success: function(data) {
+                    console.log(data)    
+                    },
+                    async: true
+                });
+            }
 
             function removeModule() {
                 $.ajax({
@@ -384,10 +400,12 @@
 
             function addCube(modulename) {
                 //making an ajax request to the server to proceed to write the modified URDF
+                var offset = parseFloat(prompt("Enter the angle offset for the module:", "0"));
+                
                 filename = modulename + '.yaml'
                 $.ajax({
                     url: 'http://127.0.0.1:5000/addMasterCube/',
-                    data: {'module_name': filename, 'parent': CURRENT_PARENT},
+                    data: {'module_name': filename, 'parent': CURRENT_PARENT, 'angle_offset': offset},
                     method: 'POST',
                     success: function(data) {
                         console.log(data)
