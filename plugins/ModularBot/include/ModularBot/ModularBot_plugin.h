@@ -91,82 +91,92 @@ private:
 
     Eigen::MatrixXd M, B, B_inv, B_theta, B_theta_inv, I, K_theta, D_theta, D_m, K_s, D_s, nu, K_s_inv;
 
-    Eigen::VectorXd tau, tau_m, u;
+    Eigen::VectorXd tau, tau_m, u, tau_meas;
 
     Eigen::VectorXd _theta, _thetadot, _thetadotdot, _theta0, _theta_home, _delta;
 
-    Eigen::VectorXd gcomp;
+    Eigen::VectorXd gcomp, gcomp_analytic;
 
-    Eigen::Vector3d gravity;
+    Eigen::VectorXd _qmodel;
+
+    KDL::Vector gravity;
+
+    KDL::Vector COM;
+
+    double mass;
+
+    Eigen::MatrixXd COMJacobian;
+
+    Eigen::Affine3d link_pose;
     
     //ODEINT
 
-    // /* The type of container used to hold the state vector */
-    // typedef Eigen::VectorXd state_type;
+    /* The type of container used to hold the state vector */
+    typedef Eigen::VectorXd state_type;
 
-    // state_type dxout, xout;
+    state_type dxout, xout;
 
-    // /*type of stepper*/
-    // boost::numeric::odeint::runge_kutta_dopri5<state_type,double,state_type,double, boost::numeric::odeint::vector_space_algebra> stepper; //
-    // //boost::numeric::odeint::symplectic_euler<state_type,state_type,double,state_type,state_type,double, boost::numeric::odeint::vector_space_algebra> stepper; //
+    /*type of stepper*/
+    boost::numeric::odeint::runge_kutta_dopri5<state_type,double,state_type,double, boost::numeric::odeint::vector_space_algebra> stepper; //
+    //boost::numeric::odeint::symplectic_euler<state_type,state_type,double,state_type,state_type,double, boost::numeric::odeint::vector_space_algebra> stepper; //
 
-    // /*class defining the system*/
-    // class motor_dynamics {
+    /*class defining the system*/
+    class motor_dynamics {
 
-    //     Eigen::VectorXd theta_ref;
-    //     Eigen::VectorXd thetadot_ref;
-    //     Eigen::VectorXd q;
-    //     Eigen::VectorXd qdot;
-    //     Eigen::MatrixXd K_theta;
-    //     Eigen::MatrixXd D_theta;
-    //     Eigen::MatrixXd K_s;
-    //     Eigen::MatrixXd D_s;
-    //     Eigen::MatrixXd B_theta_inv;
-    //     Eigen::MatrixXd D_m;
+        Eigen::VectorXd theta_ref;
+        Eigen::VectorXd thetadot_ref;
+        Eigen::VectorXd q;
+        Eigen::VectorXd qdot;
+        Eigen::MatrixXd K_theta;
+        Eigen::MatrixXd D_theta;
+        Eigen::MatrixXd K_s;
+        Eigen::MatrixXd D_s;
+        Eigen::MatrixXd B_theta_inv;
+        Eigen::MatrixXd D_m;
 
-    // public:
-    //     motor_dynamics(Eigen::VectorXd theta_ref_i, 
-    //                     Eigen::VectorXd thetadot_ref_i, 
-    //                     Eigen::VectorXd q_i, 
-    //                     Eigen::VectorXd qdot_i, 
-    //                     Eigen::MatrixXd K_theta_i,
-    //                     Eigen::MatrixXd D_theta_i,
-    //                     Eigen::MatrixXd K_s_i,
-    //                     Eigen::MatrixXd D_s_i,
-    //                     Eigen::MatrixXd B_theta_inv_i,
-    //                     Eigen::MatrixXd D_m_i) : 
+    public:
+        motor_dynamics(Eigen::VectorXd theta_ref_i, 
+                        Eigen::VectorXd thetadot_ref_i, 
+                        Eigen::VectorXd q_i, 
+                        Eigen::VectorXd qdot_i, 
+                        Eigen::MatrixXd K_theta_i,
+                        Eigen::MatrixXd D_theta_i,
+                        Eigen::MatrixXd K_s_i,
+                        Eigen::MatrixXd D_s_i,
+                        Eigen::MatrixXd B_theta_inv_i,
+                        Eigen::MatrixXd D_m_i) : 
 
-    //     theta_ref(theta_ref_i), 
-    //     thetadot_ref(thetadot_ref_i),
-    //     q(q_i),
-    //     qdot(qdot_i),
-    //     K_theta(K_theta_i),
-    //     D_theta(D_theta_i),
-    //     K_s(K_s_i),
-    //     D_s(D_s_i),
-    //     B_theta_inv(B_theta_inv_i),
-    //     D_m(D_m_i) { }
+        theta_ref(theta_ref_i), 
+        thetadot_ref(thetadot_ref_i),
+        q(q_i),
+        qdot(qdot_i),
+        K_theta(K_theta_i),
+        D_theta(D_theta_i),
+        K_s(K_s_i),
+        D_s(D_s_i),
+        B_theta_inv(B_theta_inv_i),
+        D_m(D_m_i) { }
     
-    //     void operator() ( const state_type &x , state_type &dxdt, const double t )
-    //     {
-    //         //"trick" to avoid errors given by the size of the dxdt vector 
-    //         dxdt=x;
+        void operator() ( const state_type &x , state_type &dxdt, const double t )
+        {
+            //"trick" to avoid errors given by the size of the dxdt vector 
+            dxdt=x;
 
-    //         //
-    //         Eigen::VectorXd u_inte = - K_theta * (x.head(x.size()/2) - theta_ref) - D_theta * (x.tail(x.size()/2) - thetadot_ref);
-    //         // std::cout << "u_inte: \n"
-    //         //     << u_inte << std::endl; //;
-    //         Eigen::VectorXd tau_int = K_s * (x.head(x.size()/2) - q) + D_s * (x.tail(x.size()/2) - qdot);
-    //         // std::cout << "tau_int: \n"
-    //         //     << tau_int << std::endl; //;
-    //         dxdt.head(dxdt.size()/2) = x.tail(x.size()/2);
-    //         // std::cout << "dxdt vel: \n"
-    //         //     << dxdt.head(dxdt.size()/2) << std::endl; //;
-    //         dxdt.tail(dxdt.size()/2) = B_theta_inv * (u_inte - D_m * x.tail(x.size()/2) - tau_int); //, u_inte
-    //         // std::cout << "dxdt acc): \n"
-    //         //     << dxdt.tail(dxdt.size()/2) << std::endl; //;
-    //     }
-    // };
+            //
+            Eigen::VectorXd u_inte = - K_theta * (x.head(x.size()/2) - theta_ref) - D_theta * (x.tail(x.size()/2) - thetadot_ref);
+            // std::cout << "u_inte: \n"
+            //     << u_inte << std::endl; //;
+            Eigen::VectorXd tau_int = K_s * (x.head(x.size()/2) - q) + D_s * (x.tail(x.size()/2) - qdot);
+            // std::cout << "tau_int: \n"
+            //     << tau_int << std::endl; //;
+            dxdt.head(dxdt.size()/2) = x.tail(x.size()/2);
+            // std::cout << "dxdt vel: \n"
+            //     << dxdt.head(dxdt.size()/2) << std::endl; //;
+            dxdt.tail(dxdt.size()/2) = B_theta_inv * (u_inte - D_m * x.tail(x.size()/2) - tau_int); //, u_inte
+            // std::cout << "dxdt acc): \n"
+            //     << dxdt.tail(dxdt.size()/2) << std::endl; //;
+        }
+    };
 
 };
 

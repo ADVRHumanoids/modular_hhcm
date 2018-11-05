@@ -61,7 +61,7 @@ bool ModularBot::init_control_plugin(XBot::Handle::Ptr handle)
 
     /* Print the robot state */
     _robot->print();
-
+    // _model->print();
 
     /* Get number of joints */
     N = _robot->getJointNum();
@@ -97,11 +97,42 @@ bool ModularBot::init_control_plugin(XBot::Handle::Ptr handle)
     /* Save actual robot q to a private member */
     _robot->getJointPosition(_q0);
     
-    gravity << 0,-9.81,0;
-    _robot->model().setGravity(gravity);
+    
+    // gravity::Vector(0,0,9.81);
+    //KDL::Vector gravity(0.0,0.0,-9.81);
+    // _robot->model().setGravity(gravity);
+    // std::cout << "gravity vector : " << gravity << std::endl;
+    _model->getGravity(gravity);
     std::cout << "gravity vector : " << gravity << std::endl;
-    _robot->model().computeGravityCompensation(gcomp);
+    mass = _model->getMass();
+    std::cout << "mass : " << mass << std::endl;
+    // KDL::Vector new_gravity(-9.81, 0.0, 0.0);
+    // _model->setGravity(new_gravity);
+    // _model->getGravity(gravity);
+    // std::cout << "gravity vector : " << gravity << std::endl;
+    _model->computeGravityCompensation(gcomp);
     std::cout << "gravity term = joint torque at equilibrum : " << gcomp << std::endl;
+    std::cout << "model : " << _model << std::endl;
+    _model->getCOMJacobian(COMJacobian);
+    std::cout << "COM jacobian: " << COMJacobian << std::endl;
+    _model->getCOM(COM);
+    std::cout << "COM: " << COM << std::endl;
+    _model->getPose("L_1_link_2_A", "world", link_pose);
+    std::cout << "link pose rotation: " << link_pose.rotation() << std::endl;
+    std::cout << "link pose translation: " << link_pose.translation() << std::endl;
+    _model->getPose("L_1_link_2_B", "world", link_pose);
+    std::cout << "link pose rotation: " << link_pose.rotation() << std::endl;
+    std::cout << "link pose translation: " << link_pose.translation() << std::endl;
+    _model->getPose("L_3_link_2_A", "world", link_pose);
+    std::cout << "link pose rotation: " << link_pose.rotation() << std::endl;
+    std::cout << "link pose translation: " << link_pose.translation() << std::endl;
+    // _model->setGravity(gravity);
+    // std::cout << "gravity vector : " << gravity << std::endl;
+    // _model->getGravity(gravity);
+    // std::cout << "gravity vector : " << gravity << std::endl;
+    // _model->computeGravityCompensation(gcomp);
+    // std::cout << "gravity term = joint torque at equilibrum : " << gcomp << std::endl;
+    //gcomp = _theta.array().sin()*1*9.81*0.175;
     K_s_inv = K_s.inverse();
     std::cout << "K_s_inv : " << K_s_inv << std::endl;
     _delta = K_s_inv * gcomp;
@@ -129,8 +160,8 @@ bool ModularBot::init_control_plugin(XBot::Handle::Ptr handle)
     std::cout << "Damping: \n"
               << _d0 << std::endl;
 
-    _k = _k0 * 0;
-    _d = _d0 * 0;
+    _k = qdot_max*60;//_k0;// * 0;
+    _d = qdot_max/5;//_d0;// * 0;
     std::cout << "Stiffness: \n"
               << _k << std::endl;
     std::cout << "Damping: \n"
@@ -190,6 +221,7 @@ void ModularBot::control_loop(double time, double period)
      * Since this function is called within the real-time loop, you should not perform
      * operations that are not rt-safe. */
 
+    
     XBot::Utils::FifthOrderTrajectory(_first_loop_time,
                                       _theta0,
                                       _theta_home,
@@ -199,8 +231,8 @@ void ModularBot::control_loop(double time, double period)
                                       thetadot_ref,
                                       _homing_time);
 
-    // _robot->setPositionReference(q_ref);
-    // _robot->setVelocityReference(qdot_ref);
+    // _robot->setPositionReference(theta_ref);
+    // _robot->setVelocityReference(thetadot_ref);
 
     _robot->getJointPosition(_q);
     _robot->getJointVelocity(_qdot);
@@ -208,16 +240,9 @@ void ModularBot::control_loop(double time, double period)
     // _robot->getMotorPosition(_theta);
     // _robot->getMotorVelocity(_thetadot);
 
-    //Eigen::VectorXd tau_m = P.cwiseProduct( q_ref - _q ) + D.cwiseProduct( qdot_ref - _qdot );
-
-    //Eigen::VectorXd u = - K_theta*(_theta - q_ref) - D_theta*(_thetadot) ;
-    //Eigen::VectorXd u = (D / 30) * sin(time) ;
-    //_robot->getJointEffort(tau);
-    // Eigen::VectorXd tau_m = B*B_theta_inv*u + (I - B*B_theta_inv)*tau;
-
     // if(i>100)
     // {
-    //     // _model->update();
+    //     // _model->updat();
     //     // _model->getInertiaMatrix(M);
     //     // std::cout << "Inertia Matrix: \n" << M << std::endl;//;
     //     std::cout << "Joint Effort: \n" << tau << std::endl;
@@ -229,26 +254,53 @@ void ModularBot::control_loop(double time, double period)
     //     torque += getTorqueReference();
     // }
 
-    //u = -K_theta * (_q - q_ref) - D_theta * (_qdot);
-    // std::cout << "u: \n"
-    //             << u << std::endl; //;
+    // _model->getCOM(COM);
+    // std::cout << "COM : " << COM << std::endl;
+    // mass = _model->getMass();
+    // std::cout << "mass : " << mass << std::endl;
+    
+    //_robot->sense();
+    // _robot->model().syncFrom(*_robot);
+    // _robot->model().update();
+    // _model->syncFrom(*_robot);
+    // _model->update();
+    _model->setJointPosition(_q);
+    _model->setJointVelocity(_qdot);
+    _model->update();
+    _model->getJointPosition(_qmodel);
+    _logger->add("model_pos", _qmodel);
+    _model->getCOMAcceleration(COM);
+    //std::cout << "com acc : " << COM << std::endl;
+    // _robot->model().setJointPosition(_q);
+    // _robot->model().update();
+    // _robot->model().computeGravityCompensation(gcomp);
+    // _logger->add("gcomp1", gcomp);
+    _model->computeGravityCompensation(gcomp);
+    _logger->add("gcomp", gcomp);
+    gcomp_analytic = _theta.array().sin()*2*9.81*0.425;
+    _logger->add("gcomp_analytic", gcomp_analytic);
+    _model->getPose("L_1_link_2_B", link_pose);
+    _logger->add("link_pose", link_pose.rotation());
+
+    // gcomp = _theta.array().sin()*1*9.81*0.175;
+    // _logger->add("gcomp", gcomp);
 
     //tau = K_s * (xout.head(N) - _q) + D_s * (xout.tail(N) - _qdot);
     tau = K_s * (_theta - _q) + D_s * (_thetadot - _qdot);
     //u = - K_theta * (xout.head(N) - theta_ref) - D_theta * (xout.tail(N) - thetadot_ref);
-    u = - K_theta * (_theta - theta_ref) - D_theta * (_thetadot - thetadot_ref);
+    u = - K_theta * (_theta - theta_ref) - D_theta * (_thetadot - thetadot_ref) + gcomp;
     tau_m = B*B_theta_inv * u + (I - B*B_theta_inv) * tau;
     
     // std::cout << "tau: \n"
     //             << tau << std::endl; //;
 
     _logger->add("torque_cmd", u);
-    _logger->add("torque_meas", tau);
+    _logger->add("torque_joint", tau);
 
     _logger->add("link_pos", _q);
     //_logger->add("motor_pos", xout.head(N));
     _logger->add("motor_pos", _theta);
-    _logger->add("ref", q_ref);
+    _logger->add("theta_ref", theta_ref);
 
     // motor_dynamics md(theta_ref, thetadot_ref, _q, _qdot, K_theta, D_theta, K_s, D_s, B_theta_inv, D_m);
 
@@ -264,6 +316,10 @@ void ModularBot::control_loop(double time, double period)
     _robot->setEffortReference(tau);
 
     _robot->move();
+
+    _robot->getJointEffort(tau_meas);
+
+    _logger->add("torque_meas", tau_meas);
 
     //_robot->getJointEffort(tau);
     
