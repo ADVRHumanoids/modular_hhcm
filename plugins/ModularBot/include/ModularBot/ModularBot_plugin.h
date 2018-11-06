@@ -78,7 +78,7 @@ protected:
 private:
 
     XBot::RobotInterface::Ptr _robot;
-    Eigen::VectorXd _q0, _q_home, _q, _qdot, _k, _d, _k0, _d0, _qref;
+    Eigen::VectorXd _q0, _q_home, _q, _qdot, _k, _d, _k0, _d0, _qref, q_i;
     double _time, _homing_time, _first_loop_time;
 
     XBot::MatLogger::Ptr _logger;
@@ -95,7 +95,7 @@ private:
 
     Eigen::VectorXd _theta, _thetadot, _thetadotdot, _theta0, _theta_home, _delta;
 
-    Eigen::VectorXd gcomp, gcomp_analytic;
+    Eigen::VectorXd gcomp, gcomp_analytic, gcomp_i;
 
     Eigen::VectorXd _qmodel;
 
