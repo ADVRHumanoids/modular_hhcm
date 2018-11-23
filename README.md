@@ -28,6 +28,10 @@ Deactivate the environment
 
 `deactivate`
 
+Install anytree
+
+`pip install anytree`
+
 **Run the configurator tool**
 
 The online tool to configurate the robot can be run with: 
