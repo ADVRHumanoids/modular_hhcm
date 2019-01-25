@@ -98,8 +98,8 @@ def send_file(path):
 
 @app.route('/syncHW/', methods=['POST'])
 def syncHW():
-    zmq_server.socket.send(b"Topology_REQ")
-    message = zmq_server.socket.recv()
+    zmq_server.requester.send(b"Topology_REQ")
+    message = zmq_server.requester.recv()
     print("Received reply: %s" % (message))
     data = message
     return data

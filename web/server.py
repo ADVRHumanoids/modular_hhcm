@@ -4,41 +4,63 @@ import threading
 class Server:
     def __init__(self):
 
-        self.url_listener = "inproc://listener"
+        self.url_poller = "inproc://listener"
+
+        self.topology = "None"
 
         # Prepare our context and sockets
         self.context = zmq.Context()#.instance()
 
-        # Socket to talk to listener
-        self.socket = self.context.socket(zmq.REQ)
-        self.socket.connect(self.url_listener)
+        # Socket to talk to poller
+        self.requester = self.context.socket(zmq.REQ)
+        self.requester.connect(self.url_poller)
 
-        self.thread = threading.Thread(target=self.listener_routine)#, args=(self.url_listener,))
+        self.thread = threading.Thread(target=self.poller_routine)#, args=(self.url_poller,))
         self.thread.start()
 
-    def listener_routine(self):
-        """Listener routine"""
+    def poller_routine(self):
+        """Poller routine"""
 
         # Socket to talk to web-server thread
-        self.webserver_socket = self.context.socket(zmq.REP)
-        self.webserver_socket.bind(self.url_listener)
+        self.replier = self.context.socket(zmq.REP)
+        self.replier.bind(self.url_poller)
 
-        # # Socket to talk to topology generator node
-        # topology_socket = context.socket(zmq.SUB)
-        # topology_socket.connect("tcp://*:5556")
-        #
-        # # Subscribe to zipcode, default is NYC, 10001
-        # zip_filter = "10001"
-        #
-        # # Python 2 - ascii bytes to unicode str
-        # if isinstance(zip_filter, bytes):
-        #     zip_filter = zip_filter.decode('ascii')
-        #
-        # topology_socket.setsockopt_string(zmq.SUBSCRIBE, zip_filter)
-        #
-        # string = topology_socket.recv_string()
+        # Socket to talk to topology generator node
+        self.subscriber = self.context.socket(zmq.SUB)
+        self.subscriber.connect("tcp://localhost:5556")
+        # Subscribe to zipcode, default is NYC, 10001
+        zip_filter = "10001"
 
+        # Python 2 - ascii bytes to unicode str
+        if isinstance(zip_filter, bytes):
+            zip_filter = zip_filter.decode('ascii')
+        self.subscriber.setsockopt_string(zmq.SUBSCRIBE, zip_filter)
+
+        # Initialize poll set
+        self.poller = zmq.Poller()
+        self.poller.register(self.replier, zmq.POLLIN)
+        self.poller.register(self.subscriber, zmq.POLLIN)
+
+        # Process messages from both sockets
         while True:
-            message = self.webserver_socket.recv()
-            print("Received request: %s" % message)
-            self.webserver_socket.send(b"Topology_REP")
+
+            # message = self.webserver_socket.recv()
+            # print("Received request: %s" % message)
+            # self.webserver_socket.send(b"Topology_REP")
+
+            try:
+                socks = dict(self.poller.poll())
+            except KeyboardInterrupt:
+                break
+
+            if self.replier in socks:
+                message = self.replier.recv()
+                # process task
+                print("Received request: %s" % message)
+                self.replier.send(self.topology)
+
+            if self.subscriber in socks:
+                message = self.subscriber.recv()
+                # process weather update
+                print("Received from publisher: %s" % message)
+                self.topology = message
