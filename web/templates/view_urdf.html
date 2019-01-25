@@ -199,6 +199,16 @@
                 padding: 12px 16px;
                 display: none;
             }
+            #syncHardware {
+                background-color: rgb(206, 33, 33);
+                border: none;
+                position: absolute;
+                top: 0;
+                right: 40%;
+                font-size: 16px;
+                color: white;
+                padding: 12px 16px;
+            }
             button > div {
                 padding-top: 50%;
             }
@@ -223,6 +233,7 @@
                 <ul></ul>
             </div>
             <button id=removeLast class="btn"><i class="fa fa-trash"></i> Remove Module</button>
+            <button id=syncHardware class="btn"><i class="fa fa-trash"></i> Sync with hardware</button>
             <div id="selector" style="overflow-y:auto;">
                 Select a module to add: 
                 <!-- <input type="file" id="moduleInput"> -->
@@ -259,6 +270,7 @@
                 var addSizeAdapter_Medium2Small = document.getElementById('addSizeAdapter_Medium2Small');
                 var addSlaveCube = document.getElementById('addSlaveCube');
                 var removeLast = document.getElementById('removeLast');
+                var syncHardware = document.getElementById('syncHardware');
 
                 fileInput.addEventListener('change', function(e) {
                     var file = fileInput.files[0];
@@ -321,6 +333,8 @@
                 addSlaveCube.onclick = function() {addCube("mastercube", size)};
 
                 removeLast.onclick = function() {removeModule()};
+
+                syncHardware.onclick = function() {syncHW()};
             }
 
             //Function to add a new module. Called at the click of the linked button
@@ -381,20 +395,12 @@
                 });
             }
 
-            function removeModule() {
+            function syncHW() {
                 $.ajax({
-                    url: 'http://127.0.0.1:5000/removeModule/',
-                    data: {'parent': CURRENT_PARENT},
+                    url: 'http://127.0.0.1:5000/syncHW/',
                     method: 'POST',
                     success: function(data) {
                         console.log(data)
-                        robots = URDF_viewer.updateURDF(data['result'])
-                        //size = data['size']
-                        updateShownButtons(data['lastModule_type'], data['count'], data['size'])
-                        //console.log(size)
-                        CURRENT_PARENT = data['lastModule_name']
-                        //write the file
-                        writeRequest(data['result'])
                     },
                     async: true
                 });
@@ -421,6 +427,25 @@
                 });
 
             };
+
+            function removeModule() {
+                $.ajax({
+                    url: 'http://127.0.0.1:5000/removeModule/',
+                    data: {'parent': CURRENT_PARENT},
+                    method: 'POST',
+                    success: function(data) {
+                        console.log(data)
+                        robots = URDF_viewer.updateURDF(data['result'])
+                        //size = data['size']
+                        updateShownButtons(data['lastModule_type'], data['count'], data['size'])
+                        //console.log(size)
+                        CURRENT_PARENT = data['lastModule_name']
+                        //write the file
+                        writeRequest(data['result'])
+                    },
+                    async: true
+                });
+            }
 
 
             // //Function to open a file on the server side from the HTML page
