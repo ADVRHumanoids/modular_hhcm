@@ -11,6 +11,8 @@ app = Flask(__name__, static_folder='static', static_url_path='')
 # Instance of ZMQ Poller class (create sockets, etc.)
 zmq_poller = poller.ZmqPoller()
 
+# Instance of UrdfWriter class
+urdf_writer = URDF_writer.UrdfWriter()
 
 # load view_urdf.html
 @app.route('/')
@@ -26,7 +28,7 @@ def changeURDF():
     print(parent)
     offset = float(request.form.get('angle_offset', 0))
     print(offset)
-    data = URDF_writer.add_module(filename, offset)
+    data = urdf_writer.add_module(filename, offset)
     data = jsonify(data)
     return data 
 
@@ -34,7 +36,7 @@ def changeURDF():
 def writeURDF():
     string = request.form.get('string', 0)
     print(string)
-    data = URDF_writer.write_urdf()
+    data = urdf_writer.write_urdf()
     # data = jsonify(data)
     return data 
 
@@ -47,7 +49,7 @@ def addCube():
     print(parent)
     offset = float(request.form.get('angle_offset', 0))
     print(offset)
-    data = URDF_writer.add_slave_cube(offset)
+    data = urdf_writer.add_slave_cube(offset)
     data = jsonify(data)
     return data 
 
@@ -55,7 +57,7 @@ def addCube():
 @app.route('/removeModule/', methods=['POST'])
 def remove():
     parent = request.form.get('parent', 0)
-    data = URDF_writer.remove_module()
+    data = urdf_writer.remove_module()
     data = jsonify(data)
     return data
 
@@ -63,7 +65,7 @@ def remove():
 @app.route('/updateLastModule/', methods=['POST'])
 def accessModule():
     parent = request.form.get('parent', 0)
-    data = URDF_writer.select_module(parent)
+    data = urdf_writer.select_module(parent)
     data = jsonify(data)
     return data
 
@@ -72,7 +74,7 @@ def accessModule():
 def openFile():
     file_str = request.form.get('file', 0)
     print(file_str)
-    data = URDF_writer.read_file(file_str)
+    data = urdf_writer.read_file(file_str)
     data = jsonify(data)
     return data
 
