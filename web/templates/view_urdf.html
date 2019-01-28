@@ -370,7 +370,7 @@
                     method: 'POST',
                     success: function(data) {
                         console.log(data)
-                        robots = URDF_viewer.updateURDF(data['result'], data['lastModule_name'])
+                        robots = URDF_viewer.updateURDF(data['result'])//, data['lastModule_name'])
                         // size = data['size']
                         updateShownButtons(data['lastModule_type'], data['count'], data['size'])
                         // console.log(size)
@@ -401,6 +401,8 @@
                     method: 'POST',
                     success: function(data) {
                         console.log(data)
+                        robots = URDF_viewer.updateURDF(data['result'])//, data['lastModule_name'])
+                        writeRequest(data['result'])
                     },
                     async: true
                 });
@@ -417,7 +419,7 @@
                     method: 'POST',
                     success: function(data) {
                         console.log(data)
-                        robots = URDF_viewer.updateURDF(data['result'], data['lastModule_name'])
+                        robots = URDF_viewer.updateURDF(data['result'])//, data['lastModule_name'])
                         // size = data['size']
                         updateShownButtons(data['lastModule_type'], data['count'], data['size'])
                         // console.log(size)

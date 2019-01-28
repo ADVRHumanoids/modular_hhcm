@@ -1,11 +1,13 @@
 import zmq
 import threading
 
-class Server:
+class ZmqPoller:
     def __init__(self):
 
-        self.url_poller = "inproc://listener"
+        self.url_poller = "inproc://poller"
 
+        # initialize topology var. This will be reset by the poller thread each time the subscriber receive a message.
+        # It will be sent as a reply for each request by the main thread.
         self.topology = "None"
 
         # Prepare our context and sockets
@@ -15,6 +17,7 @@ class Server:
         self.requester = self.context.socket(zmq.REQ)
         self.requester.connect(self.url_poller)
 
+        # This will launch a thread where the poller will run
         self.thread = threading.Thread(target=self.poller_routine)#, args=(self.url_poller,))
         self.thread.start()
 
@@ -44,10 +47,6 @@ class Server:
         # Process messages from both sockets
         while True:
 
-            # message = self.webserver_socket.recv()
-            # print("Received request: %s" % message)
-            # self.webserver_socket.send(b"Topology_REP")
-
             try:
                 socks = dict(self.poller.poll())
             except KeyboardInterrupt:
@@ -64,3 +63,7 @@ class Server:
                 # process weather update
                 print("Received from publisher: %s" % message)
                 self.topology = message
+
+            # message = self.webserver_socket.recv()
+            # print("Received request: %s" % message)
+            # self.webserver_socket.send(b"Topology_REP")

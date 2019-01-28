@@ -4,28 +4,13 @@ from flask import Flask, render_template, request, jsonify, send_from_directory
 
 # import logging
 import URDF_writer
-import server
-
-import zmq
-import sys
-import threading
+import poller
 
 app = Flask(__name__, static_folder='static', static_url_path='')
 
-# logging.basicConfig(level=logging.INFO)
-# logger = logging.getLogger(__name__)
+# Instance of ZMQ Poller class (create sockets, etc.)
+zmq_poller = poller.ZmqPoller()
 
-
-# url_listener = "inproc://listener"
-#
-# # Prepare our context and sockets
-# context = zmq.Context()#.instance()
-#
-# # Socket to talk to listener
-# socket = context.socket(zmq.REQ)
-# socket.connect(url_listener)
-
-zmq_server = server.Server()
 
 # load view_urdf.html
 @app.route('/')
@@ -96,10 +81,11 @@ def openFile():
 def send_file(path):
     return send_from_directory(app.static_folder, path)
 
+# send a request to the poller thread to get ECat topology and synchronize with hardware
 @app.route('/syncHW/', methods=['POST'])
 def syncHW():
-    zmq_server.requester.send(b"Topology_REQ")
-    message = zmq_server.requester.recv()
+    zmq_poller.requester.send(b"Topology_REQ")
+    message = zmq_poller.requester.recv()
     print("Received reply: %s" % (message))
     data = message
     return data

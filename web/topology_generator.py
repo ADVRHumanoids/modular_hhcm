@@ -3,6 +3,7 @@ from random import randrange
 
 context = zmq.Context()
 socket = context.socket(zmq.PUB)
+# bind to the subscriber. * is needed here instead of localhost otherwise error. TODO: understand why
 socket.bind("tcp://*:5556")
 
 def main():
