@@ -8,7 +8,7 @@ class ZmqPoller:
 
         # initialize topology var. This will be reset by the poller thread each time the subscriber receive a message.
         # It will be sent as a reply for each request by the main thread.
-        self.topology = "None"
+        self.topology = {} #"None"
 
         # Prepare our context and sockets
         self.context = zmq.Context()#.instance()
@@ -32,12 +32,12 @@ class ZmqPoller:
         self.subscriber = self.context.socket(zmq.SUB)
         self.subscriber.connect("tcp://localhost:5556")
         # Subscribe to zipcode, default is NYC, 10001
-        zip_filter = "10001"
+        #zip_filter = "10001"
 
         # Python 2 - ascii bytes to unicode str
-        if isinstance(zip_filter, bytes):
-            zip_filter = zip_filter.decode('ascii')
-        self.subscriber.setsockopt_string(zmq.SUBSCRIBE, zip_filter)
+        # if isinstance(zip_filter, bytes):
+        #     zip_filter = zip_filter.decode('ascii')
+        self.subscriber.setsockopt(zmq.SUBSCRIBE, "")
 
         # Initialize poll set
         self.poller = zmq.Poller()
@@ -56,12 +56,12 @@ class ZmqPoller:
                 message = self.replier.recv()
                 # process task
                 print("Received request: %s" % message)
-                self.replier.send(self.topology)
+                self.replier.send_json(self.topology)
 
             if self.subscriber in socks:
-                message = self.subscriber.recv()
+                message = self.subscriber.recv_json()
                 # process weather update
-                print("Received from publisher: %s" % message)
+                #print(message)
                 self.topology = message
 
             # message = self.webserver_socket.recv()
