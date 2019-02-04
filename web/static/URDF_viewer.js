@@ -1,5 +1,10 @@
 class URDF_viewer extends HTMLElement {
 
+    // constructor() {
+    //     super();
+    //     // this.robots = [];
+    // }
+    
     //
     // get angles() {
     //     const angles = {}
@@ -382,7 +387,7 @@ class URDF_viewer extends HTMLElement {
             this.forEach(links, l => {
                 const name = l.getAttribute('name')
                 if(!this.linkMap[name]) {
-                    this.linkMap[name] = this._processLink(l);
+                    this.linkMap[name] = this._processLink(l, this.materialMap);
                     //this.lastModule = this.linkMap[name];   
                 }
             })
@@ -409,7 +414,7 @@ class URDF_viewer extends HTMLElement {
             this.forEach(joints, j => {
                 const name = j.getAttribute('name')
                 if(!this.jointMap[name]) 
-                    this.jointMap[name] = this._processJoint(j)               
+                    this.jointMap[name] = this._processJoint(j, this.linkMap)               
             })
 
             //Find the joints that are still on the jointMap but were cancelled from the URDF
@@ -511,7 +516,7 @@ class URDF_viewer extends HTMLElement {
         //     }, 
         //     link: { a_l: 0, alpha_l: 0, p_l: 0, n_l: 0, delta_l_in: 0, delta_l_out: 0}
         // }
-
+        console.log(string)
         const parser = new DOMParser()
         const urdf = parser.parseFromString(string, 'text/xml')
 
@@ -545,7 +550,7 @@ class URDF_viewer extends HTMLElement {
             this.materialMap = {}
             this.forEach(materials, m => {
                 const name = m.getAttribute('name')
-                this.materialMap[name] = this._processMaterial(m)
+                this.materialMap[name] = this._processMaterial(m, false)
             })
 
             console.log(this.materialMap)
@@ -554,7 +559,7 @@ class URDF_viewer extends HTMLElement {
             this.linkMap = {}
             this.forEach(links, l => {
                 const name = l.getAttribute('name')
-                this.linkMap[name] = this._processLink(l)
+                this.linkMap[name] = this._processLink(l, this.materialMap)
             })
 
             console.log(this.linkMap)
@@ -563,7 +568,7 @@ class URDF_viewer extends HTMLElement {
             this.jointMap = {}
             this.forEach(joints, j => {
                 const name = j.getAttribute('name')
-                this.jointMap[name] = this._processJoint(j)
+                this.jointMap[name] = this._processJoint(j, this.linkMap)
             })
 
             console.log(this.jointMap)
@@ -608,6 +613,137 @@ class URDF_viewer extends HTMLElement {
 
         console.log(this.robots[0])
         console.log(Object.keys(this.linkMap))
+
+        return this.robots
+    }
+
+    static addURDF(string) {
+        //Note: uncomment if you want to use the addModuleYAML method! 
+        // this.lastModKin = {
+        //     joint: { proximal: { a_pl: 0, alpha_pl: 0, p_pl: 0, n_pl: 0, delta_pl: 0}, 
+        //     distal: { a_dl: 0, alpha_dl: 0, p_dl: 0, n_dl: 0.4, delta_dl: 0},
+        //     joint: { delta_j: 0, type: 'rotational'}
+        //     }, 
+        //     link: { a_l: 0, alpha_l: 0, p_l: 0, n_l: 0, delta_l_in: 0, delta_l_out: 0}
+        // }
+        console.log(string)
+        const parser = new DOMParser()
+        const urdf = parser.parseFromString(string, 'text/xml')
+
+
+        console.log(urdf.children)
+        this.forEach(urdf.children, r => {
+
+            const links = []
+            const joints = []
+            const materials = []
+            const obj = new THREE.Object3D()
+            obj.name = r.getAttribute('name')
+            obj.urdf = { node: r }
+            console.log(r.children)
+
+            // Process the <joint> and <link> nodes
+            this.forEach(r.children, n => {
+                const type = n.nodeName.toLowerCase()
+                if (type === 'link') links.push(n)
+                else if (type === 'joint') joints.push(n)
+                else if (type === 'material') materials.push(n)
+            })
+
+            console.log(links)
+            console.log(joints)
+            console.log(materials)
+
+            // Create the <material> map
+            const _materialMap = {}
+            this.forEach(materials, m => {
+                const name = m.getAttribute('name')
+                _materialMap[name] = this._processMaterial(m, true)
+                // this.forEach(m.children, c => {
+                //     if (c.nodeName.toLowerCase() === 'color') {
+                //         c.opacity = 0.5;
+                //         m.transparent = true;
+                //         m.color.setHex(0xff0000);
+                //     };
+                // });                
+            });
+
+            console.log(_materialMap)
+
+            // Create the <link> map
+            const _linkMap = {}
+            this.forEach(links, l => {
+                const name = l.getAttribute('name')
+                _linkMap[name] = this._processLink(l, _materialMap)
+            })
+
+            console.log(_linkMap)
+
+            // // Create the <joint> map
+            const _jointMap = {}
+            this.forEach(joints, j => {
+                const name = j.getAttribute('name')
+                _jointMap[name] = this._processJoint(j, _linkMap)
+            })
+
+            console.log(_jointMap)
+
+            for (let key in _linkMap) _linkMap[key].parent ? null : obj.add(_linkMap[key])
+
+            obj.urdf.joints = _jointMap
+            obj.urdf.links = _linkMap
+
+            // for (let key in obj.urdf.joints) {
+            //     const l = obj.urdf.joints[key];
+            //     console.log(l);
+            //     // var meshes = this.filter(l.children, c => c.type == "Mesh");
+            //     // console.log(meshes);
+            //     //Highlight the clicked module
+            //     this.forEach(l.children, s => {
+            //         console.log(s);
+            //         this.forEach(s.children, m => {
+            //             console.log(m);
+            //             if(m.type == 'Mesh') {
+            //                 m.material.opacity = 0.5;
+            //                 m.material.transparent = true;
+            //             };
+            //         });                    
+            //     });
+            // };
+            //console.log(obj)
+
+            const rpy_ros2three = [-Math.PI / 2, -Math.PI / 2, 0]
+            //console.log(rpy_ros2three)
+            this._applyRotation(obj, rpy_ros2three)
+            //object.rotateOnAxis ( new THREE.Vector3(1, 0, 0), - Math.PI / 2 )
+
+            this._addObject(obj)
+
+            this.robots.push(obj)
+        })
+
+        var URDF_processed_eH2 = new URDF_processed_eventHandler();
+        //this.module_selection_eH = new module_selection_eventHandler();
+
+        var self = this;
+        URDF_processed_eH2.addEventListener('urdf-processed', function (event) {
+
+            alert(event.message);
+
+            //console.log(self.jointMap)
+            // for (let key in self.jointMap) {
+            //     //console.log(self.jointMap[key])
+            //     const joint = self.jointMap[key]
+            //     if (joint.urdf.type !== 'fixed')
+            //         self._createSlider(joint)
+            // }
+
+        });
+
+        URDF_processed_eH2.start();
+
+        console.log(this.robots)
+        //console.log(Object.keys(_linkMap))
 
         return this.robots
     }
@@ -658,11 +794,15 @@ class URDF_viewer extends HTMLElement {
     }
 
     static setAngle(jointname, angle) {
-        this.robots.forEach(r => {
-            const joint = r.urdf.joints[jointname]
-            if (joint) joint.urdf.setAngle(angle)
-        })
-        this._dirty = true
+        // this.robots.forEach(r => {
+        //     const joint = r.urdf.joints[jointname]
+        //     if (joint) joint.urdf.setAngle(angle)
+        // })
+        const r = this.robots[0]
+        const joint = r.urdf.joints[jointname]
+        if (joint) joint.urdf.setAngle(angle)
+        
+        //this._dirty = true
     }
 
     static setAngles(angles) {
@@ -808,7 +948,7 @@ class URDF_viewer extends HTMLElement {
             //console.log(self.robots[0].urdf.links['L_1'].getObjectByProperty('type', 'Mesh') )
             
             //console.log(self.Meshes)
-            var intersects = self.raycaster.intersectObject( self.robots[0], true );
+            var intersects = self.raycaster.intersectObject( object, true );
             var mesh_intersects = intersects.filter(inters => inters.object.type == 'Mesh')
             console.log(mesh_intersects.length)
             if ( mesh_intersects.length > 0 ) {                
@@ -823,6 +963,10 @@ class URDF_viewer extends HTMLElement {
             event.clientY = event.touches[0].clientY;
             onDocumentMouseDown( event );
         }
+    }
+
+    static _addObject(object) {
+        this.scene.add(object)
     }
 
     static _animate() {
@@ -936,14 +1080,20 @@ class URDF_viewer extends HTMLElement {
 
     }
 
-    static _processMaterial(m) {
+    static _makeItTransparent(m){
+        m.opacity = 0.25;
+        m.transparent = true;
+        m.color.setHex(0xff0000);
+    }
+    
+    static _processMaterial(m, makeTransparent) {
         const name = m.getAttribute('name')
         const material = new THREE.MeshLambertMaterial()
         material.name = name
         material.urdf = { node: m }
 
         this.forEach(m.children, c => {
-
+            self = this;
             if (c.nodeName.toLowerCase() === 'color') {
                 let rgba = c.getAttribute('rgba')
                     .split(/\s/g)
@@ -955,6 +1105,10 @@ class URDF_viewer extends HTMLElement {
                 material.opacity = rgba[3]
 
                 if (material.opacity < 1) material.transparent = true
+
+                if (makeTransparent) {
+                    self._makeItTransparent(material)
+                }
             }
         })
 
@@ -989,7 +1143,7 @@ class URDF_viewer extends HTMLElement {
         return joint_obj
     }
 
-    static _processJoint(j) {
+    static _processJoint(j, linkMap) {
         const jointType = j.getAttribute('type')
         const joint_obj = new THREE.Object3D()
         joint_obj.name = j.getAttribute('name')
@@ -1012,9 +1166,9 @@ class URDF_viewer extends HTMLElement {
                 xyz = this._processTuple(n.getAttribute('xyz'))
                 rpy = this._processTuple(n.getAttribute('rpy'))
             } else if (type === 'child') {
-                child = this.linkMap[n.getAttribute('link')]
+                child = linkMap[n.getAttribute('link')]
             } else if (type === 'parent') {
-                parent = this.linkMap[n.getAttribute('link')]
+                parent = linkMap[n.getAttribute('link')]
             } else if (type === 'limit') {
                 joint_obj.urdf.limits.lower = parseFloat(n.getAttribute('lower') || joint_obj.urdf.limits.lower)
                 joint_obj.urdf.limits.upper = parseFloat(n.getAttribute('upper') || joint_obj.urdf.limits.upper)
@@ -1134,19 +1288,19 @@ class URDF_viewer extends HTMLElement {
         return joint_obj
     }
 
-    static _processLink(l) {
+    static _processLink(l, materialMap) {
         const visualNodes = this.filter(l.children, n => n.nodeName.toLowerCase() === 'visual')
         const link_obj = new THREE.Object3D()
         link_obj.name = l.getAttribute('name')
         link_obj.urdf = { node: l }
         //console.log(link_obj)
 
-        this.forEach(visualNodes, vn => this._processVisualNode(vn, link_obj))
+        this.forEach(visualNodes, vn => this._processVisualNode(vn, link_obj, materialMap))
 
         return link_obj
     }
 
-    static _processVisualNode(vn, link_obj) {
+    static _processVisualNode(vn, link_obj, materialMap) {
         let xyz = [0, 0, 0]
         let rpy = [0, 0, 0]
         let size = [0, 0, 0]
@@ -1158,8 +1312,8 @@ class URDF_viewer extends HTMLElement {
             const type = n.nodeName.toLowerCase()
             if (type === 'material') {
                 //if the material is one of those stored in materialMap copy it from there
-                for (var key in this.materialMap) {
-                    var value = this.materialMap[key];
+                for (var key in materialMap) {
+                    var value = materialMap[key];
                     //console.log(value.name)
                     if (n.getAttribute('name') === value.name) {
                         //console.log(value)
@@ -1402,4 +1556,9 @@ Object.assign(URDF_change_eventHandler.prototype, THREE.EventDispatcher.prototyp
 //     return !evt.defaultPrevented;
 // };
 
-window.URDF_viewer = URDF_viewer
+// var urdfViewer = new URDF_viewer()
+// var urdfViewer2 = new URDF_viewer()
+
+window.urdfViewer = URDF_viewer
+window.visualizer = visualizer
+// window.urdfViewer2 = urdfViewer2

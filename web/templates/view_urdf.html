@@ -1,7 +1,7 @@
 <html lang="en">
     <head>
         <meta charset="utf-8">
-        <title>File API</title>
+        <title>URDF builder</title>
 
         <link rel="stylesheet" >
     </head>
@@ -280,7 +280,7 @@
                     reader.onload = function(e) {
                         //fileDisplayArea.innerText = reader.result;
                         document.getElementById('header').style.display="none";
-                        //robots = URDF_viewer.showURDF(reader);
+                        //robots = urdfViewer.showURDF(reader);
                         selector.style.display = 'block';
 
                         //console.log(reader.result)
@@ -292,7 +292,7 @@
                             // processData: false,
                             success: function(data) {
                                 console.log(data['string'])
-                                robots = URDF_viewer.showURDF(data['string']);
+                                robots = urdfViewer.showURDF(data['string']);
                             },
                             async: true
                         });
@@ -309,7 +309,7 @@
                 //     reader = new FileReader();    
                 //     reader.onload = function(e) {
                 //         //fileDisplayArea.innerText = reader.result;
-                //         URDF_viewer.addModule(reader);
+                //         urdfViewer.addModule(reader);
                 //     }    
                 //     reader.readAsText(file);      
                 // });
@@ -370,7 +370,7 @@
                     method: 'POST',
                     success: function(data) {
                         console.log(data)
-                        robots = URDF_viewer.updateURDF(data['result'])//, data['lastModule_name'])
+                        robots = urdfViewer.updateURDF(data['result'])//, data['lastModule_name'])
                         // size = data['size']
                         updateShownButtons(data['lastModule_type'], data['count'], data['size'])
                         // console.log(size)
@@ -400,9 +400,9 @@
                     url: 'http://127.0.0.1:5000/syncHW/',
                     method: 'POST',
                     success: function(data) {
-                        console.log(data)
-                        robots = URDF_viewer.updateURDF(data['result'])//, data['lastModule_name'])
-                        writeRequest(data['result'])
+                        console.log(data['string'])
+                        robots = urdfViewer.addURDF(data['string'])//, data['lastModule_name'])
+                        // writeRequest(data['result'])
                     },
                     async: true
                 });
@@ -419,7 +419,7 @@
                     method: 'POST',
                     success: function(data) {
                         console.log(data)
-                        robots = URDF_viewer.updateURDF(data['result'])//, data['lastModule_name'])
+                        robots = urdfViewer.updateURDF(data['result'])//, data['lastModule_name'])
                         // size = data['size']
                         updateShownButtons(data['lastModule_type'], data['count'], data['size'])
                         // console.log(size)
@@ -437,7 +437,7 @@
                     method: 'POST',
                     success: function(data) {
                         console.log(data)
-                        robots = URDF_viewer.updateURDF(data['result'])
+                        robots = urdfViewer.updateURDF(data['result'])
                         //size = data['size']
                         updateShownButtons(data['lastModule_type'], data['count'], data['size'])
                         //console.log(size)
@@ -501,7 +501,7 @@
             //     //console.log(URDF_string)
                 
             //     //Finally addModuleYAML gets called. THREE.js 3D model gets updated
-            //     robots = URDF_viewer.addModuleYAML(doc, URDF_string);
+            //     robots = urdfViewer.addModuleYAML(doc, URDF_string);
             // }
 
             
