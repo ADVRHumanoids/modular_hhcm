@@ -14,6 +14,9 @@ zmq_poller = poller.ZmqPoller()
 # Instance of UrdfWriter class
 urdf_writer = URDF_writer.UrdfWriter()
 
+# 2nd instance of UrdfWriter class for the robot got from HW
+urdf_writer_fromHW = URDF_writer.UrdfWriter()
+
 # load view_urdf.html
 @app.route('/')
 def index():
@@ -75,6 +78,7 @@ def openFile():
     file_str = request.form.get('file', 0)
     print(file_str)
     data = urdf_writer.read_file(file_str)
+    print('data:', data)
     data = jsonify(data)
     return data
 
@@ -87,9 +91,12 @@ def send_file(path):
 @app.route('/syncHW/', methods=['POST'])
 def syncHW():
     zmq_poller.requester.send(b"Topology_REQ")
-    message = zmq_poller.requester.recv()
+    message = zmq_poller.requester.recv_json()
     print("Received reply: %s" % (message))
-    data = message
+    
+    data = urdf_writer_fromHW.read_from_json(message)
+    #print('data:', data)
+    data = jsonify(data)
     return data
 
 # def main():

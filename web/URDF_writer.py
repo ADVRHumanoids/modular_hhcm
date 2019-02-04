@@ -9,6 +9,7 @@ import re
 import xml.etree.ElementTree as ET
 import xacro
 import xml.dom.minidom
+import codecs
 
 from read_yaml import module_from_yaml, ModuleNode, mastercube_from_yaml, slavecube_from_yaml
 
@@ -68,146 +69,329 @@ class UrdfWriter:
 
 		self.origin, self.xaxis, self.yaxis, self.zaxis = (0, 0, 0.4), (1, 0, 0), (0, 1, 0), (0, 0, 1)
 
-		# T = tf.transformations.translation_matrix(origin)
-		# R = tf.transformations.identity_matrix()
-		# H0 = tf.transformations.concatenate_matrices(T, R)
-		# data = {'Homogeneous_tf': H0, 'type': "link", 'name': "L_0", 'i': 0, 'p': 0, 'size': 3}
-		# L_0 = ModuleNode(data, 'L_0')
+		# # T = tf.transformations.translation_matrix(origin)
+		# # R = tf.transformations.identity_matrix()
+		# # H0 = tf.transformations.concatenate_matrices(T, R)
+		# # data = {'Homogeneous_tf': H0, 'type': "link", 'name': "L_0", 'i': 0, 'p': 0, 'size': 3}
+		# # L_0 = ModuleNode(data, 'L_0')
 
-		# #create ModuleNode for branch A connector
-		# origin_A = (0, 0, 0.1) #origin_A = (0, 0.3, 0.3)
-		# T_A = tf.transformations.translation_matrix(origin_A)
-		# R_A = tf.transformations.identity_matrix() #rotation_matrix(-1.57, xaxis)
-		# H0_A = tf.transformations.concatenate_matrices(T_A, R_A)
-		# data = {'Homogeneous_tf': H0_A, 'type': "link", 'name': "L_0_A", 'i': 0, 'p': 0, 'size': 3, 'tag': "_A"}
-		# L_0_A = ModuleNode(data, 'L_0_A', parent=L_0)
+		# # #create ModuleNode for branch A connector
+		# # origin_A = (0, 0, 0.1) #origin_A = (0, 0.3, 0.3)
+		# # T_A = tf.transformations.translation_matrix(origin_A)
+		# # R_A = tf.transformations.identity_matrix() #rotation_matrix(-1.57, xaxis)
+		# # H0_A = tf.transformations.concatenate_matrices(T_A, R_A)
+		# # data = {'Homogeneous_tf': H0_A, 'type': "link", 'name': "L_0_A", 'i': 0, 'p': 0, 'size': 3, 'tag': "_A"}
+		# # L_0_A = ModuleNode(data, 'L_0_A', parent=L_0)
 
-		# #create ModuleNode for branch B connector
-		# origin_B = (0, 0, 0.1) #origin_B = (0, -0.3, 0.3)
-		# T_B = tf.transformations.translation_matrix(origin_B)
-		# R_B = tf.transformations.identity_matrix() #rotation_matrix(1.57, xaxis)
-		# H0_B = tf.transformations.concatenate_matrices(T_B, R_B)
-		# data = {'Homogeneous_tf': H0_B, 'type': "link", 'name': "L_0_B", 'i': 0, 'p': 0, 'size': 3, 'tag': "_B"}
-		# L_0_B = ModuleNode(data, 'L_0_B', parent=L_0)
+		# # #create ModuleNode for branch B connector
+		# # origin_B = (0, 0, 0.1) #origin_B = (0, -0.3, 0.3)
+		# # T_B = tf.transformations.translation_matrix(origin_B)
+		# # R_B = tf.transformations.identity_matrix() #rotation_matrix(1.57, xaxis)
+		# # H0_B = tf.transformations.concatenate_matrices(T_B, R_B)
+		# # data = {'Homogeneous_tf': H0_B, 'type': "link", 'name': "L_0_B", 'i': 0, 'p': 0, 'size': 3, 'tag': "_B"}
+		# # L_0_B = ModuleNode(data, 'L_0_B', parent=L_0)
 
-		# data = {'type': "link", 'name': "L_0a", 'i': 0, 'p': 0, 'size': 3}
-		# base = ModuleNode(data, 'L_0a')
-		self.L_0a = mastercube_from_yaml(path_name + '/web/static/yaml/master_cube.yaml')
-		self.T_con = tf.transformations.translation_matrix((0, 0, self.L_0a.geometry.connector_length))
-		setattr(self.L_0a, 'name', "L_0a")
+		# # data = {'type': "link", 'name': "L_0a", 'i': 0, 'p': 0, 'size': 3}
+		# # base = ModuleNode(data, 'L_0a')
+		# self.L_0a = mastercube_from_yaml(path_name + '/web/static/yaml/master_cube.yaml')
+		# self.T_con = tf.transformations.translation_matrix((0, 0, self.L_0a.geometry.connector_length))
+		# setattr(self.L_0a, 'name', "L_0a")
 
-		#create ModuleNode for branch 1 connector
-		#H0_1 = L_0a.kinematics.connector_1.Homogeneous_tf
-		# origin_1 = (0, 0.2, 0.2)
-		# T_1 = tf.transformations.translation_matrix(origin_1)
-		# R_1 = tf.transformations.rotation_matrix(-1.57, xaxis)
-		#H0_1 = tf.transformations.concatenate_matrices(H0_1, T_con)
-		name_con1 = 'L_0a' + '_con1' 
-		data1 = {'Homogeneous_tf': self.T_con, 'type': "link", 'name': name_con1, 'i': 0, 'p': 0, 'size': 3}
-		self.L_0a_con1 = ModuleNode(data1, name_con1, parent=self.L_0a)
+		# #create ModuleNode for branch 1 connector
+		# #H0_1 = L_0a.kinematics.connector_1.Homogeneous_tf
+		# # origin_1 = (0, 0.2, 0.2)
+		# # T_1 = tf.transformations.translation_matrix(origin_1)
+		# # R_1 = tf.transformations.rotation_matrix(-1.57, xaxis)
+		# #H0_1 = tf.transformations.concatenate_matrices(H0_1, T_con)
+		# name_con1 = 'L_0a' + '_con1' 
+		# data1 = {'Homogeneous_tf': self.T_con, 'type': "link", 'name': name_con1, 'i': 0, 'p': 0, 'size': 3}
+		# self.L_0a_con1 = ModuleNode(data1, name_con1, parent=self.L_0a)
 
-		#create ModuleNode for branch 2 connector
-		#H0_2 = L_0a.kinematics.connector_2.Homogeneous_tf
-		#origin_2 = (0, -0.2, 0.2)
-		# T_2 = tf.transformations.translation_matrix(origin_2)
-		# R_2 = tf.transformations.rotation_matrix(1.57, xaxis)
-		#H0_2 = tf.transformations.concatenate_matrices(H0_2, T_con)
-		name_con2 = 'L_0a' + '_con2'
-		data2 = {'Homogeneous_tf': self.T_con, 'type': "link", 'name': name_con2, 'i': 0, 'p': 0, 'size': 3}
-		self.L_0a_con2 = ModuleNode(data2, name_con2, parent=self.L_0a)
+		# #create ModuleNode for branch 2 connector
+		# #H0_2 = L_0a.kinematics.connector_2.Homogeneous_tf
+		# #origin_2 = (0, -0.2, 0.2)
+		# # T_2 = tf.transformations.translation_matrix(origin_2)
+		# # R_2 = tf.transformations.rotation_matrix(1.57, xaxis)
+		# #H0_2 = tf.transformations.concatenate_matrices(H0_2, T_con)
+		# name_con2 = 'L_0a' + '_con2'
+		# data2 = {'Homogeneous_tf': self.T_con, 'type': "link", 'name': name_con2, 'i': 0, 'p': 0, 'size': 3}
+		# self.L_0a_con2 = ModuleNode(data2, name_con2, parent=self.L_0a)
 
-		#create ModuleNode for branch 3 connector
-		#H0_3 = L_0a.kinematics.connector_3.Homogeneous_tf
-		# origin_3 = (0, 0, 0.4)
-		# T_3 = tf.transformations.translation_matrix(origin_3)
-		# R_3 = tf.transformations.identity_matrix()
-		#H0_3 = tf.transformations.concatenate_matrices(H0_3, T_con)
-		name_con3 = 'L_0a' + '_con3'
-		data3 = {'Homogeneous_tf': self.T_con, 'type': "link", 'name': name_con3, 'i': 0, 'p': 0, 'size': 3}
-		self.L_0a_con3 = ModuleNode(data3, name_con3, parent=self.L_0a)
+		# #create ModuleNode for branch 3 connector
+		# #H0_3 = L_0a.kinematics.connector_3.Homogeneous_tf
+		# # origin_3 = (0, 0, 0.4)
+		# # T_3 = tf.transformations.translation_matrix(origin_3)
+		# # R_3 = tf.transformations.identity_matrix()
+		# #H0_3 = tf.transformations.concatenate_matrices(H0_3, T_con)
+		# name_con3 = 'L_0a' + '_con3'
+		# data3 = {'Homogeneous_tf': self.T_con, 'type': "link", 'name': name_con3, 'i': 0, 'p': 0, 'size': 3}
+		# self.L_0a_con3 = ModuleNode(data3, name_con3, parent=self.L_0a)
 
-		#create ModuleNode for branch 3 connector
-		#H0_4 = L_0a.kinematics.connector_4.Homogeneous_tf
-		# origin_4 = (0, 0, 0)
-		# T_4 = tf.transformations.translation_matrix(origin_4)
-		# R_4 = tf.transformations.rotation_matrix(3.14, xaxis)
-		#H0_4 = tf.transformations.concatenate_matrices(H0_4, T_con)
-		name_con4 = 'L_0a' + '_con4'
-		data4 = {'Homogeneous_tf': self.T_con, 'type': "link", 'name': name_con4, 'i': 0, 'p': 0, 'size': 3}
-		self.L_0a_con4 = ModuleNode(data4, name_con4, parent=self.L_0a)
+		# #create ModuleNode for branch 3 connector
+		# #H0_4 = L_0a.kinematics.connector_4.Homogeneous_tf
+		# # origin_4 = (0, 0, 0)
+		# # T_4 = tf.transformations.translation_matrix(origin_4)
+		# # R_4 = tf.transformations.rotation_matrix(3.14, xaxis)
+		# #H0_4 = tf.transformations.concatenate_matrices(H0_4, T_con)
+		# name_con4 = 'L_0a' + '_con4'
+		# data4 = {'Homogeneous_tf': self.T_con, 'type': "link", 'name': name_con4, 'i': 0, 'p': 0, 'size': 3}
+		# self.L_0a_con4 = ModuleNode(data4, name_con4, parent=self.L_0a)
 
-		#Render tree
-		for pre, _, node in anytree.render.RenderTree(self.L_0a):
-			print("%s%s" % (pre, node.name))
+		# #Render tree
+		# for pre, _, node in anytree.render.RenderTree(self.L_0a):
+		# 	print("%s%s" % (pre, node.name))
 
-		# parent_module = anytree.search.findall_by_attr(L_0a, "L_0a_con1")[0]
-		# print(parent_module)
+		# # parent_module = anytree.search.findall_by_attr(L_0a, "L_0a_con1")[0]
+		# # print(parent_module)
+
+		self.base_link = ModuleNode({}, "base_link")
+		setattr(self.base_link, 'name', "base_link")
+		self.parent_module = self.base_link
+
+	# def add_master_cube(self):
+	# 	#global T_con, L_0a, n_cubes, parent_module
+		
+	# 	self.n_cubes+=1
+	# 	name = 'L_0' + self.cube_switcher.get(self.n_cubes)
+
+	# 	#parent_module = anytree.search.findall_by_attr(L_0a, father)[0]
+
+	# 	self.T_con = tf.transformations.translation_matrix((0, 0, 0.1))#self.mastercube.geometry.connector_length))
+		
+	# 	filename = path_name + '/web/static/yaml/master_cube.yaml'
+	# 	mastercube = mastercube_from_yaml(filename, self.base_link)
+	# 	setattr(mastercube, 'name', name)
+	# 	setattr(mastercube, 'i', 0)
+	# 	setattr(mastercube, 'p', 0)
+
+	# 	ET.SubElement(self.root, "xacro:add_master_cube", name=name)
+
+	# 	#create ModuleNode for branch 1 connector
+	# 	name_con1 = name + '_con1' 
+	# 	data1 = {'Homogeneous_tf': self.T_con, 'type': "link", 'name': name_con1, 'i': 0, 'p': 0, 'size': 3}
+	# 	slavecube_con1 = ModuleNode(data1, name_con1, parent=mastercube)
+
+	# 	#create ModuleNode for branch 2 connector
+	# 	name_con2 = name + '_con2'
+	# 	data2 = {'Homogeneous_tf': self.T_con, 'type': "link", 'name': name_con2, 'i': 0, 'p': 0, 'size': 3}
+	# 	slavecube_con2 = ModuleNode(data2, name_con2, parent=mastercube)
+
+	# 	#create ModuleNode for branch 3 connector
+	# 	name_con3 = name + '_con3'
+	# 	data3 = {'Homogeneous_tf': self.T_con, 'type': "link", 'name': name_con3, 'i': 0, 'p': 0, 'size': 3}
+	# 	slavecube_con3 = ModuleNode(data3, name_con3, parent=mastercube)
+
+	# 	#create ModuleNode for branch 3 connector
+	# 	name_con4 = name + '_con4'
+	# 	data4 = {'Homogeneous_tf': self.T_con, 'type': "link", 'name': name_con4, 'i': 0, 'p': 0, 'size': 3}
+	# 	slavecube_con4 = ModuleNode(data4, name_con4, parent=mastercube)
+
+	# 	#Render tree
+	# 	for pre, _, node in anytree.render.RenderTree(self.base_link):
+	# 		print("%s%s" % (pre, node.name))
+
+	# 	# new_Link = slavecube_con1 
+	# 	# past_Link = parent_module
+	# 	# new_Link.get_rototranslation(past_Link.Homogeneous_tf, tf.transformations.identity_matrix())
+	# 	# print(new_Link.z)
+
+	# 	# ET.SubElement(root, "xacro:add_master_cube", name=name)
+
+	# 	# fixed_joint_name = 'cube_joint'
+	# 	# ET.SubElement(root, "xacro:add_fixed_joint", name=fixed_joint_name, type="fixed_joint", father=past_Link.name, child=new_Link.name, x=new_Link.x, y=new_Link.y, z=new_Link.z, roll=new_Link.roll, pitch=new_Link.pitch, yaw=new_Link.yaw)
+
+	# 	#update the urdf file, adding the new module
+	# 	#string = write_urdf(path_name + '/urdf/ModularBot_test.urdf', urdf_tree)
+		
+	# 	string = self.process_urdf()
+
+	# 	self.parent_module = mastercube
+
+	# 	data = {'result': string, 'lastModule_type': 'mastercube', 'lastModule_name': name, 'size': 3, 'count': self.n_cubes}
+
+	# 	return data
 
 	def add_slave_cube(self, angle_offset):
 		#global T_con, L_0a, n_cubes, parent_module
 		
-		self.n_cubes+=1
-		name = 'L_0' + self.cube_switcher.get(self.n_cubes)
+		if self.n_cubes > 0 :
+			# add slave cube
 
-		#parent_module = anytree.search.findall_by_attr(L_0a, father)[0]
+			name = 'L_0' + self.cube_switcher.get(self.n_cubes)
+			self.n_cubes+=1
 
-		T_con_inv = tf.transformations.inverse_matrix(self.T_con)
-		name_con1 = name + '_con1' 
-		data1 = {'Homogeneous_tf': T_con_inv, 'type': "link", 'name': name_con1, 'i': 0, 'p': 0, 'size': 3}
-		slavecube_con1 = ModuleNode(data1, name_con1, parent=self.parent_module)
+			#parent_module = anytree.search.findall_by_attr(L_0a, father)[0]
 
-		self.parent_module.get_rototranslation(self.parent_module.Homogeneous_tf, tf.transformations.rotation_matrix(angle_offset, self.zaxis))
-		fixed_joint_name = 'FJ_' + self.parent_module.parent.name + '_' + name
-		ET.SubElement(self.root, "xacro:add_fixed_joint", type="fixed_joint", name=fixed_joint_name, father=self.parent_module.name, child=name_con1, x=self.parent_module.x, y=self.parent_module.y, z=self.parent_module.z, roll=self.parent_module.roll, pitch=self.parent_module.pitch, yaw=self.parent_module.yaw)
+			self.T_con = tf.transformations.translation_matrix((0, 0, 0.1))#self.slavecube.geometry.connector_length))
+			T_con_inv = tf.transformations.inverse_matrix(self.T_con)
+			name_con1 = name + '_con1' 
+			data1 = {'Homogeneous_tf': T_con_inv, 'type': "link", 'name': name_con1, 'i': 0, 'p': 0, 'size': 3}
+			slavecube_con1 = ModuleNode(data1, name_con1, parent=self.parent_module)
 
-		filename = path_name + '/web/static/yaml/master_cube.yaml'
-		slavecube = slavecube_from_yaml(filename, name, slavecube_con1)
-		setattr(slavecube, 'name', name)
-		setattr(slavecube, 'i', 0)
-		setattr(slavecube, 'p', 0)
+			self.parent_module.get_rototranslation(self.parent_module.Homogeneous_tf, tf.transformations.rotation_matrix(angle_offset, self.zaxis))
+			fixed_joint_name = 'FJ_' + self.parent_module.parent.name + '_' + name
+			ET.SubElement(self.root, "xacro:add_fixed_joint", type="fixed_joint", name=fixed_joint_name, father=self.parent_module.name, child=name_con1, x=self.parent_module.x, y=self.parent_module.y, z=self.parent_module.z, roll=self.parent_module.roll, pitch=self.parent_module.pitch, yaw=self.parent_module.yaw)
 
-		ET.SubElement(self.root, "xacro:add_slave_cube", name=name)
+			filename = path_name + '/web/static/yaml/master_cube.yaml'
+			slavecube = slavecube_from_yaml(filename, name, slavecube_con1)
+			setattr(slavecube, 'name', name)
+			setattr(slavecube, 'i', 0)
+			setattr(slavecube, 'p', 0)
 
-		#create ModuleNode for branch 2 connector
-		name_con2 = name + '_con2'
-		data2 = {'Homogeneous_tf': self.T_con, 'type': "link", 'name': name_con2, 'i': 0, 'p': 0, 'size': 3}
-		slavecube_con2 = ModuleNode(data2, name_con2, parent=slavecube)
+			ET.SubElement(self.root, "xacro:add_slave_cube", name=name)
 
-		#create ModuleNode for branch 3 connector
-		name_con3 = name + '_con3'
-		data3 = {'Homogeneous_tf': self.T_con, 'type': "link", 'name': name_con3, 'i': 0, 'p': 0, 'size': 3}
-		slavecube_con3 = ModuleNode(data3, name_con3, parent=slavecube)
+			#create ModuleNode for branch 2 connector
+			name_con2 = name + '_con2'
+			data2 = {'Homogeneous_tf': self.T_con, 'type': "link", 'name': name_con2, 'i': 0, 'p': 0, 'size': 3}
+			slavecube_con2 = ModuleNode(data2, name_con2, parent=slavecube)
 
-		#create ModuleNode for branch 3 connector
-		name_con4 = name + '_con4'
-		data4 = {'Homogeneous_tf': self.T_con, 'type': "link", 'name': name_con4, 'i': 0, 'p': 0, 'size': 3}
-		slavecube_con4 = ModuleNode(data4, name_con4, parent=slavecube)
+			#create ModuleNode for branch 3 connector
+			name_con3 = name + '_con3'
+			data3 = {'Homogeneous_tf': self.T_con, 'type': "link", 'name': name_con3, 'i': 0, 'p': 0, 'size': 3}
+			slavecube_con3 = ModuleNode(data3, name_con3, parent=slavecube)
 
-		#Render tree
-		for pre, _, node in anytree.render.RenderTree(self.L_0a):
-			print("%s%s" % (pre, node.name))
+			#create ModuleNode for branch 3 connector
+			name_con4 = name + '_con4'
+			data4 = {'Homogeneous_tf': self.T_con, 'type': "link", 'name': name_con4, 'i': 0, 'p': 0, 'size': 3}
+			slavecube_con4 = ModuleNode(data4, name_con4, parent=slavecube)
 
-		# new_Link = slavecube_con1 
-		# past_Link = parent_module
-		# new_Link.get_rototranslation(past_Link.Homogeneous_tf, tf.transformations.identity_matrix())
-		# print(new_Link.z)
+			#Render tree
+			for pre, _, node in anytree.render.RenderTree(self.base_link):
+				print("%s%s" % (pre, node.name))
 
-		# ET.SubElement(root, "xacro:add_master_cube", name=name)
+			# new_Link = slavecube_con1 
+			# past_Link = parent_module
+			# new_Link.get_rototranslation(past_Link.Homogeneous_tf, tf.transformations.identity_matrix())
+			# print(new_Link.z)
 
-		# fixed_joint_name = 'cube_joint'
-		# ET.SubElement(root, "xacro:add_fixed_joint", name=fixed_joint_name, type="fixed_joint", father=past_Link.name, child=new_Link.name, x=new_Link.x, y=new_Link.y, z=new_Link.z, roll=new_Link.roll, pitch=new_Link.pitch, yaw=new_Link.yaw)
+			# ET.SubElement(root, "xacro:add_master_cube", name=name)
 
-		#update the urdf file, adding the new module
-		#string = write_urdf(path_name + '/urdf/ModularBot_test.urdf', urdf_tree)
-		
+			# fixed_joint_name = 'cube_joint'
+			# ET.SubElement(root, "xacro:add_fixed_joint", name=fixed_joint_name, type="fixed_joint", father=past_Link.name, child=new_Link.name, x=new_Link.x, y=new_Link.y, z=new_Link.z, roll=new_Link.roll, pitch=new_Link.pitch, yaw=new_Link.yaw)
+
+			#update the urdf file, adding the new module
+			#string = write_urdf(path_name + '/urdf/ModularBot_test.urdf', urdf_tree)
+			
+			string = self.process_urdf()
+
+			self.parent_module = slavecube
+
+			data = {'result': string, 'lastModule_type': 'mastercube', 'lastModule_name': name, 'size': 3, 'count': self.n_cubes}
+
+			return data
+
+		else:
+			#add master cube
+
+			name = 'L_0' + self.cube_switcher.get(self.n_cubes)
+			self.n_cubes+=1
+
+			#parent_module = anytree.search.findall_by_attr(L_0a, father)[0]
+
+			self.T_con = tf.transformations.translation_matrix((0, 0, 0.1))#self.mastercube.geometry.connector_length))
+			
+			filename = path_name + '/web/static/yaml/master_cube.yaml'
+			mastercube = mastercube_from_yaml(filename, self.parent_module)
+			setattr(mastercube, 'name', name)
+			setattr(mastercube, 'i', 0)
+			setattr(mastercube, 'p', 0)
+
+			ET.SubElement(self.root, "xacro:add_master_cube", name=name)
+
+			#create ModuleNode for branch 1 connector
+			name_con1 = name + '_con1' 
+			data1 = {'Homogeneous_tf': self.T_con, 'type': "link", 'name': name_con1, 'i': 0, 'p': 0, 'size': 3}
+			slavecube_con1 = ModuleNode(data1, name_con1, parent=mastercube)
+
+			#create ModuleNode for branch 2 connector
+			name_con2 = name + '_con2'
+			data2 = {'Homogeneous_tf': self.T_con, 'type': "link", 'name': name_con2, 'i': 0, 'p': 0, 'size': 3}
+			slavecube_con2 = ModuleNode(data2, name_con2, parent=mastercube)
+
+			#create ModuleNode for branch 3 connector
+			name_con3 = name + '_con3'
+			data3 = {'Homogeneous_tf': self.T_con, 'type': "link", 'name': name_con3, 'i': 0, 'p': 0, 'size': 3}
+			slavecube_con3 = ModuleNode(data3, name_con3, parent=mastercube)
+
+			#create ModuleNode for branch 3 connector
+			name_con4 = name + '_con4'
+			data4 = {'Homogeneous_tf': self.T_con, 'type': "link", 'name': name_con4, 'i': 0, 'p': 0, 'size': 3}
+			slavecube_con4 = ModuleNode(data4, name_con4, parent=mastercube)
+
+			#Render tree
+			for pre, _, node in anytree.render.RenderTree(self.base_link):
+				print("%s%s" % (pre, node.name))
+
+			# new_Link = slavecube_con1 
+			# past_Link = parent_module
+			# new_Link.get_rototranslation(past_Link.Homogeneous_tf, tf.transformations.identity_matrix())
+			# print(new_Link.z)
+
+			# ET.SubElement(root, "xacro:add_master_cube", name=name)
+
+			# fixed_joint_name = 'cube_joint'
+			# ET.SubElement(root, "xacro:add_fixed_joint", name=fixed_joint_name, type="fixed_joint", father=past_Link.name, child=new_Link.name, x=new_Link.x, y=new_Link.y, z=new_Link.z, roll=new_Link.roll, pitch=new_Link.pitch, yaw=new_Link.yaw)
+
+			#update the urdf file, adding the new module
+			#string = write_urdf(path_name + '/urdf/ModularBot_test.urdf', urdf_tree)
+			
+			string = self.process_urdf()
+
+			self.parent_module = mastercube
+
+			data = {'result': string, 'lastModule_type': 'mastercube', 'lastModule_name': name, 'size': 3, 'count': self.n_cubes}
+
+			return data
+
+	def read_from_json(self, json_data):
+		filename = path_name + '/urdf/ModularBot_new.urdf.xacro'
+		with codecs.open(filename, 'r') as f:
+			string = f.read()#.replace('\n', '') #.encode('utf-8')
+		# string = string.encode('utf-8')
+		self.root = ET.fromstring(string)
+		self.urdf_tree = ET.ElementTree(self.root)
+		print(ET.tostring(self.urdf_tree.getroot()))
+
+		modules = json_data['modules']
+		for module in modules :
+			
+			if module['connections'][0] == 0 :
+				print('\n Module: \n')
+				print(module)
+				if module['type'] == 'master_cube' :
+					data = self.add_slave_cube(0)
+				else:
+					data = self.add_module(module['type'], 0)
+				module_name = data['lastModule_name']
+				module_type = data['lastModule_type']
+				self.process_connections(module['connections'], modules, module_name, module_type)
+					
+		# doc = xacro.parse(string)
+		# xacro.process_doc(doc, in_order=True)
+		# string = doc.toprettyxml(indent='  ')
 		string = self.process_urdf()
 
-		self.parent_module = slavecube
-
-		data = {'result': string, 'lastModule_type': 'mastercube', 'lastModule_name': name, 'size': 3, 'count': self.n_cubes}
-
+		data = {'string': string}
 		return data
 
+	def process_connections(self, connections_list, modules_list, name, m_type):
+		print('enter!')
+		for i in connections_list[1:] :					
+			print('ok: ', i)
+			self.select_module(name)
+			print(self.parent_module.name)
+			if i != 0 :
+				child = modules_list[i-1]
+				if m_type =='mastercube':
+					con_name = name + '_con' + str(i)
+					self.select_module(con_name)
+				if child['type'] == 'master_cube' :
+					data = self.add_slave_cube(0)
+				else:
+					data = self.add_module(child['type']+'.yaml', 0)
+				module_name = data['lastModule_name']
+				module_type = data['lastModule_type']
+				self.process_connections(child['connections'], modules_list, module_name, module_type)
 
 	def read_file(self, file_str):
 		"""Open the URDF chosen from the front-end and import it as a tree"""
@@ -301,7 +485,7 @@ class UrdfWriter:
 		#string = write_urdf(path_name + '/urdf/ModularBot_test.urdf', urdf_tree)
 
 		#Render tree
-		for pre, _, node in anytree.render.RenderTree(self.L_0a):
+		for pre, _, node in anytree.render.RenderTree(self.base_link):
 			print("%s%s" % (pre, node.name))
 
 		data = {'result': string, 'lastModule_type': new_module.type, 'lastModule_name': new_module.name, 'size': new_module.size, 'count': new_module.i}
@@ -427,7 +611,7 @@ class UrdfWriter:
 		del last_module
 
 		#Render tree
-		for pre, _, node in anytree.render.RenderTree(self.L_0a):
+		for pre, _, node in anytree.render.RenderTree(self.base_link):
 			print("%s%s" % (pre, node.name))
 
 		return data
@@ -437,7 +621,7 @@ class UrdfWriter:
 		#global parent_module
 		if selected_module.endswith('_stator'):
 			selected_module = selected_module[:-7]
-		last_module = anytree.search.findall_by_attr(self.L_0a, selected_module)[0]
+		last_module = anytree.search.findall_by_attr(self.base_link, selected_module)[0]
 
 		self.parent_module = last_module
 		print(self.parent_module)
