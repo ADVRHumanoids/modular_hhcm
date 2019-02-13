@@ -84,10 +84,13 @@ class Module(object):
         setattr(self, 'Distal_tf', D)
 
         #TO BE CHECKED!!!
-        size_x = 0
-        size_y = proximal.p_pl + distal.p_dl
+        scale, shear, angles, trans, persp = tf.transformations.decompose_matrix(P)
+
+        #TO BE CHECKED!!!
+        size_x = trans[0] #0
+        size_y = trans[1] #proximal.p_pl + distal.p_dl
         # print(size_y)
-        size_z = proximal.n_pl + distal.n_dl 
+        size_z = trans[2] #proximal.n_pl + distal.n_dl 
         #print(size_z)
 
         setattr(self, 'joint_size_x', str(size_x))
