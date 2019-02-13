@@ -669,7 +669,7 @@
 
     </xacro:macro>
 
-    <!-- Macro for adding the joint (it has no size) -->
+    <!-- Macro for adding the joint. A dummy link is also added with no visual tag, but with inertial parameters corresponding to the rotating part -->
     <xacro:macro name="add_joint" params="type name father child x y z roll pitch yaw upper_lim lower_lim effort velocity">    
         <joint name="${name}" type="revolute">
             <axis xyz="0 0 1" rpy="0 0 0" />
@@ -678,7 +678,18 @@
             <origin xyz="${x} ${y} ${z}" rpy="${roll} ${pitch} ${yaw}"/>
             <limit lower="${lower_lim}" upper="${upper_lim}" effort="${effort}" velocity="${velocity}"/>
         </joint>
-        <link name="${child}"/>
+
+        <link name="${child}">
+            <!-- inertial parameters for avocado rotating part. wrt a point on one end of the rod -->
+            <inertial>
+                <origin xyz="0 0 -0.0635" rpy="0 0 0"/>
+                <mass value="${mass}"/>
+                <inertia
+                ixx="${mass / 3.0 * (0.127*0.127)}" ixy="0.0" ixz="0.0"
+                iyy="${mass / 3.0 * (0.127*0.127)}" iyz="0.0"
+                izz="0.0000148"/>
+            </inertial>
+        </link>
 
     </xacro:macro>
 
@@ -697,29 +708,58 @@
             </xacro:unless>  
         </xacro:unless>
         
-        <link name="${name}">
-            <visual>
-                <origin xyz="0 0 ${size_z/2}" rpy="0 0 0" />
-                <geometry>
-                    <cylinder radius="${radius}" length="${size_z}"/>
-                </geometry>
-                <material name="blue"/>
-            </visual>
-            <collision>
-                <origin xyz="0 0 ${size_z/2}" rpy="0 0 0" />
-                <geometry>
-                    <cylinder radius="${radius}" length="${size_z}"/>
-                </geometry>
-            </collision>
-            <inertial>
-                <origin xyz="0 0 ${size_z/2}" rpy="0 0 0"/>
-                <mass value="${mass}"/>
-                <inertia
-                ixx="${mass / 12.0 * (3*radius*radius + size_z*size_z)}" ixy="0.0" ixz="0.0"
-                iyy="${mass / 12.0 * (size_z*size_z + 3*radius*radius)}" iyz="0.0"
-                izz="${mass / 2.0 * (radius*radius)}"/>
-            </inertial>
-        </link>
+        <xacro:if value="${size_y==0}">
+            <link name="${name}">
+                <visual>
+                    <origin xyz="0 0 ${size_z/2}" rpy="0 0 0" />
+                    <geometry>
+                        <cylinder radius="${radius}" length="${size_z}"/>
+                    </geometry>
+                    <material name="blue"/>
+                </visual>
+                <collision>
+                    <origin xyz="0 0 ${size_z/2}" rpy="0 0 0" />
+                    <geometry>
+                        <cylinder radius="${radius}" length="${size_z}"/>
+                    </geometry>
+                </collision>
+                <inertial>
+                    <origin xyz="0 0 ${size_z/2}" rpy="0 0 0"/>
+                    <mass value="${mass}"/>
+                    <inertia
+                    ixx="${mass / 12.0 * (3*radius*radius + size_z*size_z)}" ixy="0.0" ixz="0.0"
+                    iyy="${mass / 12.0 * (size_z*size_z + 3*radius*radius)}" iyz="0.0"
+                    izz="${mass / 2.0 * (radius*radius)}"/>
+                </inertial>
+            </link>
+        </xacro:if> 
+        <xacro:unless value="${size_y==0}">
+            <link name="${name}">
+                <visual>
+                    <!-- Load mesh. Rotate the origin frame (this is because of how the .stl was saved) -->
+                    <origin rpy="3.14 0 1.57" xyz="0 0 0"/>
+                    <geometry>
+                        <mesh filename="package://asm0001.stl" scale="0.001 0.001 0.001"/>
+                    </geometry>
+                </visual>
+                <collision>
+                    <origin rpy="3.14 0 1.57" xyz="0 0 0"/>
+                    <geometry>
+                        <mesh filename="package://asm0001.stl" scale="0.001 0.001 0.001"/>
+                    </geometry>
+                </collision>
+                <!-- TODO: change inertial parameters with the one from CAD. This will be the inertia tensor of only the housing/stator part -->
+                <inertial>
+                    <origin xyz="0 0 ${size_z/2}" rpy="3.14 0 1.57"/>
+                    <mass value="${mass}"/>
+                    <inertia
+                    ixx="${mass / 2 *( 1 / 12.0 * (3*radius*radius + 4*size_y*size_y) + size_z*size_z) + mass / 24.0 * (3*radius*radius + 4*size_z*size_z)}" ixy="0.0" ixz="0.0"
+                    iyy="${mass / 24.0 * (3*radius*radius + 4*size_z*size_z) + mass / 2 *( 1 / 2 *radius*radius + size_z*size_z)}" iyz="0.0"
+                    izz="${mass / 4.0 * (radius*radius) + mass / 24.0 * (3*radius*radius + 4*size_y*size_y)}"/>
+                </inertial>
+                
+            </link>
+        </xacro:unless>   
         <gazebo reference="${name}">
             <mu1>0.2</mu1>
             <mu2>0.2</mu2>
