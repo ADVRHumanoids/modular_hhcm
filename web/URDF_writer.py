@@ -463,11 +463,13 @@ class UrdfWriter:
 		setattr(new_module, 'i', self.parent_module.i)
 		setattr(new_module, 'p', self.parent_module.p)
 
+		print("parent module:") 
+		print(self.parent_module.type)
+
 		if self.parent_module.type == 'joint':
 			if new_module.type == 'joint':
 				#joint + joint
-				data = {'result' == 'Cannot attach two consecutive joints'}
-				return data
+				self.joint_after_joint(new_module, self.parent_module)
 			else:
 				#joint + link
 				self.link_after_joint(new_module, self.parent_module)
@@ -661,6 +663,27 @@ class UrdfWriter:
 
 		fixed_joint_name = 'L_'+str(new_Link.i)+'_fixed_joint_'+str(new_Link.p)+new_Link.tag
 		ET.SubElement(self.root, "xacro:add_fixed_joint", type="fixed_joint", name=fixed_joint_name, father='L_'+str(new_Link.i)+new_Link.tag, child=new_Link.name, x=new_Link.x, y=new_Link.y, z=new_Link.z, roll=new_Link.roll, pitch=new_Link.pitch, yaw=new_Link.yaw)
+
+	def joint_after_joint(self, new_Joint, past_Joint):
+		"""Adds to the URDF tree a joint module as a child of a joint module"""
+		new_Joint.get_rototranslation(past_Joint.Distal_tf, tf.transformations.identity_matrix())
+
+		setattr(new_Joint, 'i', past_Joint.i + 1)
+		setattr(new_Joint, 'p', 0)
+
+		setattr(new_Joint, 'name', 'J' + str(new_Joint.i)+new_Joint.tag)
+		stator_name = new_Joint.name + '_stator'
+		joint_stator_name = "fixed_" + new_Joint.name
+		father_name = 'L_' + str(past_Joint.i) + past_Joint.tag
+		ET.SubElement(self.root, "xacro:add_fixed_joint_stator", type="fixed_joint_stator", name=joint_stator_name, father=father_name, child=stator_name, x=new_Joint.x, y=new_Joint.y, z=new_Joint.z, roll=new_Joint.roll, pitch=new_Joint.pitch, yaw=new_Joint.yaw)
+		ET.SubElement(self.root, "xacro:add_joint_stator", type="joint_stator", name=stator_name, size_y=new_Joint.joint_size_y, size_z=new_Joint.joint_size_z, size=str(new_Joint.size))
+		new_Joint.get_rototranslation(tf.transformations.identity_matrix(), new_Joint.Proximal_tf)
+		jointData = new_Joint.kinematics.joint.joint
+		upper_lim = str(jointData.upper_limit)
+		lower_lim = str(jointData.lower_limit)
+		effort = str(jointData.effort)
+		velocity = str(jointData.velocity)
+		ET.SubElement(self.root, "xacro:add_joint", type="joint", name=new_Joint.name, father=stator_name, child='L_'+str(new_Joint.i)+new_Joint.tag, x=new_Joint.x, y=new_Joint.y, z=new_Joint.z, roll=new_Joint.roll, pitch=new_Joint.pitch, yaw=new_Joint.yaw, upper_lim=upper_lim, lower_lim=lower_lim, effort=effort, velocity=velocity)
 
 	def joint_after_link(self, new_Joint, past_Link):
 		"""Adds to the URDF tree a joint module as a child of a link module"""

@@ -1,0 +1,56 @@
+kinematics:
+  joint:
+    proximal:
+      a_pl: 0
+      alpha_pl: -1.57
+      p_pl: 0.0591857
+      n_pl: 0.095508
+      delta_pl: 0
+
+    distal:
+      a_dl: 0
+      alpha_dl: 0
+      p_dl: 0
+      n_dl: 0
+      delta_dl: 0
+
+    joint:
+      delta_j: 0
+      type: 'revolute'
+      lower_limit: -3.14
+      upper_limit: 3.14
+      effort: 35 
+      velocity: 5.7
+      
+  link:
+    a_l: 0
+    alpha_l: 0
+    p_l: 0
+    n_l: 0
+    delta_l_in: 0
+    delta_l_out: 0
+
+dynamics:
+  joint:
+
+  link:
+    mass: '0.5'
+    inertia_tensor:
+    CoM_coordinates:
+    
+size: 'big'
+size_in:
+size_out:
+
+type: 'joint'
+
+control:
+  K_theta: 500
+  D_theta: 70
+  B: 0.000031
+  K_s: 80000
+  D_s: 2
+  D_m: 0.0000578
+  nu: 100
+
+urdf: "urdf/joint_module.urdf"
