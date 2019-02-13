@@ -3,6 +3,12 @@
 
     <!-- <xacro:include filename="$(find modular)/urdf/config.xacro" />
     <xacro:include filename="$(find modular)/urdf/modular.gazebo" /> -->
+    <gazebo>
+        <plugin name="gazebo_xbot_plugin" filename="libGazeboXBotPlugin.so">
+            <!-- <path_to_config_file>${xbot_config_file}</path_to_config_file> -->
+            <path_to_config_file>configs/ADVR_shared/ModularBot/configs/config_ModularBot.yaml</path_to_config_file>
+        </plugin>
+    </gazebo>
 
     <xacro:property name="size1" value="0.05" />
     <xacro:property name="size2" value="0.055" />
@@ -739,13 +745,13 @@
                     <!-- Load mesh. Rotate the origin frame (this is because of how the .stl was saved) -->
                     <origin rpy="3.14 0 1.57" xyz="0 0 0"/>
                     <geometry>
-                        <mesh filename="package://asm0001.stl" scale="0.001 0.001 0.001"/>
+                        <mesh filename="package://modular/meshes/asm0001.stl" scale="0.001 0.001 0.001"/>
                     </geometry>
                 </visual>
                 <collision>
                     <origin rpy="3.14 0 1.57" xyz="0 0 0"/>
                     <geometry>
-                        <mesh filename="package://asm0001.stl" scale="0.001 0.001 0.001"/>
+                        <mesh filename="package://modular/meshes/asm0001.stl" scale="0.001 0.001 0.001"/>
                     </geometry>
                 </collision>
                 <!-- TODO: change inertial parameters with the one from CAD. This will be the inertia tensor of only the housing/stator part -->
