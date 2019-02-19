@@ -5,6 +5,7 @@ from flask import Flask, render_template, request, jsonify, send_from_directory
 # import logging
 import URDF_writer
 import poller
+import zmq
 
 app = Flask(__name__, static_folder='static', static_url_path='')
 
@@ -16,6 +17,16 @@ urdf_writer = URDF_writer.UrdfWriter()
 
 # 2nd instance of UrdfWriter class for the robot got from HW
 urdf_writer_fromHW = URDF_writer.UrdfWriter()
+
+# Prepare context and sockets. When not using Poller class
+
+# Prepare our context and sockets
+context = zmq.Context()#.instance()
+
+# Socket to talk to poller
+requester = context.socket(zmq.REQ)
+requester.connect('tcp://localhost:5555')
+#
 
 # load view_urdf.html
 @app.route('/')
@@ -90,23 +101,23 @@ def send_file(path):
 # send a request to the poller thread to get ECat topology and synchronize with hardware
 @app.route('/syncHW/', methods=['POST'])
 def syncHW():
-    zmq_poller.requester.send(b"Topology_REQ")
-    message = zmq_poller.requester.recv_json()
+    ## Method using the poller
+    # zmq_poller.requester.send(b"Topology_REQ")
+    # message = zmq_poller.requester.recv_json()
+    # print("Received reply: %s" % (message))
+    # data = urdf_writer_fromHW.read_from_json(message)
+    # #print('data:', data)
+    # data = jsonify(data)
+    # return data
+
+    requester.send(b"Topology_REQ")
+    message = requester.recv_json()
     print("Received reply: %s" % (message))
     
     data = urdf_writer_fromHW.read_from_json(message)
     #print('data:', data)
     data = jsonify(data)
     return data
-
-# def main():
-#     """Server routine"""
-#
-#     thread = threading.Thread(target=listener_routine, args=(url_listener,))
-#     thread.start()
-#
-#     # Start Flask web-server
-#     app.run(debug=True, threaded=True)
 
 
 if __name__ == '__main__':
