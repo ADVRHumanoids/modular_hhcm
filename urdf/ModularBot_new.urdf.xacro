@@ -744,20 +744,20 @@
             <link name="${name}">
                 <visual>
                     <!-- Load mesh. Rotate the origin frame (this is because of how the .stl was saved) -->
-                    <origin rpy="3.14 0 1.57" xyz="0 0 0"/>
+                    <origin rpy="3.14 0 -1.57" xyz="0 0 0"/>
                     <geometry>
                         <mesh filename="package://modular/meshes/asm0001.stl" scale="0.001 0.001 0.001"/>
                     </geometry>
                 </visual>
                 <collision>
-                    <origin rpy="3.14 0 1.57" xyz="0 0 0"/>
+                    <origin rpy="3.14 0 -1.57" xyz="0 0 0"/>
                     <geometry>
                         <mesh filename="package://modular/meshes/asm0001.stl" scale="0.001 0.001 0.001"/>
                     </geometry>
                 </collision>
                 <!-- TODO: change inertial parameters with the one from CAD. This will be the inertia tensor of only the housing/stator part -->
                 <inertial>
-                    <origin xyz="0 0 ${size_z/2}" rpy="3.14 0 1.57"/>
+                    <origin xyz="0 0 ${size_z/2}" rpy="0 0 0"/>
                     <mass value="${mass}"/>
                     <inertia
                     ixx="${mass / 2 *( 1 / 12.0 * (3*radius*radius + 4*size_y*size_y) + size_z*size_z) + mass / 24.0 * (3*radius*radius + 4*size_z*size_z)}" ixy="0.0" ixz="0.0"

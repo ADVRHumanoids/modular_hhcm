@@ -1438,7 +1438,8 @@ class URDF_viewer extends HTMLElement {
                                 link_obj.add(mesh)
 
                                 mesh.position.set(xyz[0], xyz[1], xyz[2])
-                                mesh.rotation.set(rpy[0], rpy[1], rpy[2])
+                                //TODO: to be changed! the two minus probably work only for the latest joint elbow mesh!
+                                mesh.rotation.set(rpy[0], -rpy[1], -rpy[2])
 
                                 mesh.scale.set(scale[0], scale[1], scale[2])
 
