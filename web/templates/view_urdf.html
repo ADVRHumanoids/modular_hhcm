@@ -413,6 +413,11 @@
                     url: 'http://127.0.0.1:5000/syncHW/',
                     method: 'POST',
                     success: function(data) {
+                        // If there is already a "red URDF" shown, erase it before adding the new one.
+                        console.log(data['erase_previous'])
+                        if(data['erase_previous']) {
+                            urdfViewer.removeLastURDF()
+                        }
                         console.log(data['string'])
                         robots = urdfViewer.addURDF(data['string'])//, data['lastModule_name'])
                         // writeRequest(data['result'])

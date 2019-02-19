@@ -344,14 +344,23 @@ class UrdfWriter:
 			return data
 
 	def read_from_json(self, json_data):
+		erasePrevious = False
+
+		# If a tree representing the topology was already instantiated, re-initialize and start from scratch
+		if(self.root != 0):
+			print("Re-initialization")
+			self.__init__()
+			erasePrevious = True
+
+		# Open the base xacro file 
 		filename = path_name + '/urdf/ModularBot_new.urdf.xacro'
 		with codecs.open(filename, 'r') as f:
-			string = f.read()#.replace('\n', '') #.encode('utf-8')
-		# string = string.encode('utf-8')
+			string = f.read()
+		# Instantiate an Element Tree
 		self.root = ET.fromstring(string)
 		self.urdf_tree = ET.ElementTree(self.root)
 		print(ET.tostring(self.urdf_tree.getroot()))
-
+		# Process the modules described in the json to create the tree
 		modules = json_data['modules']
 		for module in modules :
 			
@@ -371,7 +380,7 @@ class UrdfWriter:
 		# string = doc.toprettyxml(indent='  ')
 		string = self.process_urdf()
 
-		data = {'string': string}
+		data = {'string': string, 'erase_previous': erasePrevious}
 		return data
 
 	def process_connections(self, connections_list, modules_list, name, m_type):

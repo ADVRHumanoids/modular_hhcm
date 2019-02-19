@@ -617,6 +617,11 @@ class URDF_viewer extends HTMLElement {
         return this.robots
     }
 
+    static removeLastURDF() {
+        this.scene.remove(this.robots[this.robots.length -1])
+        this.robots.pop()
+    }
+
     static addURDF(string) {
         //Note: uncomment if you want to use the addModuleYAML method! 
         // this.lastModKin = {
