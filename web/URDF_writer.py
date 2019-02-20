@@ -389,7 +389,7 @@ class UrdfWriter:
 			print('ok: ', i)
 			self.select_module(name)
 			print(self.parent_module.name)
-			if i != 0 :
+			if i != -1 :
 				child = modules_list[i-1]
 				if m_type =='mastercube':
 					con_name = name + '_con' + str(i)
