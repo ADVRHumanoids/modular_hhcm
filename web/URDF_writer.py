@@ -230,7 +230,11 @@ class UrdfWriter:
 
 			self.parent_module.get_rototranslation(self.parent_module.Homogeneous_tf, tf.transformations.rotation_matrix(angle_offset, self.zaxis))
 			fixed_joint_name = 'FJ_' + self.parent_module.parent.name + '_' + name
-			ET.SubElement(self.root, "xacro:add_fixed_joint", type="fixed_joint", name=fixed_joint_name, father=self.parent_module.name, child=name_con1, x=self.parent_module.x, y=self.parent_module.y, z=self.parent_module.z, roll=self.parent_module.roll, pitch=self.parent_module.pitch, yaw=self.parent_module.yaw)
+			if self.parent_module.type == "joint" :
+				parent_name = 'L_'+str(self.parent_module.i)+self.parent_module.tag
+			else:
+				parent_name = self.parent_module.name
+			ET.SubElement(self.root, "xacro:add_fixed_joint", type="fixed_joint", name=fixed_joint_name, father=parent_name, child=name_con1, x=self.parent_module.x, y=self.parent_module.y, z=self.parent_module.z, roll=self.parent_module.roll, pitch=self.parent_module.pitch, yaw=self.parent_module.yaw)
 
 			filename = path_name + '/web/static/yaml/master_cube.yaml'
 			slavecube = slavecube_from_yaml(filename, name, slavecube_con1)
@@ -392,7 +396,8 @@ class UrdfWriter:
 			if i != -1 :
 				child = modules_list[i-1]
 				if m_type =='mastercube':
-					con_name = name + '_con' + str(i)
+					_connector_index = connections_list.index(i) + 1
+					con_name = name + '_con' + str(_connector_index)
 					self.select_module(con_name)
 				if child['type'] == 'master_cube' :
 					data = self.add_slave_cube(0)
