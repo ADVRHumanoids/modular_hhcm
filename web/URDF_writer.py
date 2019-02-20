@@ -541,21 +541,29 @@ class UrdfWriter:
 		print(last_module.children)
 		print(last_module.parent.name)
 
+		# Generator expression for list of urdf elements without the gazebo tag.
+		# This is needed because of the change in the xacro file, as gazebo simulation tags 
+		# are now added from the start and this creates problems with the search
+		gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
+
 		if last_module.type == 'joint':
 			father = last_module.parent
 
 			stator_name = last_module.name + '_stator'
 			joint_stator_name = "fixed_" + last_module.name
 
-			for node in self.root.findall("*"):
+			for node in gen:
 				if node.attrib['name'] == last_module.name:
 					self.root.remove(node)
-			for node in self.root.findall("*"):
+					gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
+			for node in gen:
 				if node.attrib['name'] == stator_name:
 					self.root.remove(node)
-			for node in self.root.findall("*"):
+					gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
+			for node in gen:
 				if node.attrib['name'] == joint_stator_name:
 					self.root.remove(node)
+					gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
 			# root.remove(root.findall("*[@name=last_module.name]", ns)[-1])
 			# root.remove(root.findall("*[@name=stator_name]", ns)[-1])
 			# root.remove(root.findall("*[@name=joint_stator_name]", ns)[-1])
@@ -564,20 +572,23 @@ class UrdfWriter:
 			print(last_module.parent.name)
 			self.n_cubes-=1
 			for child in last_module.children:
-				for node in self.root.findall("*"):
+				for node in gen:
 					if node.attrib['name'] == child.name:
 						self.root.remove(node)
-			for node in self.root.findall("*"):
+						gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
+			for node in gen:
 				if node.attrib['name'] == last_module.name:
 					self.root.remove(node)
+					gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
 			# last_module.parent = None
 			father_module = self.access_module(last_module.parent.name)
 			joint_name = 'FJ_' + father_module.parent.parent.name + '_' + father_module.name
 			print(joint_name)
-			for node in self.root.findall("*"):
+			for node in gen:
 				if node.attrib['name'] == joint_name:
 					print(joint_name)
 					self.root.remove(node)
+					gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
 			father_module.parent = None
 			del father_module
 		else:
@@ -586,26 +597,28 @@ class UrdfWriter:
 			#print(root.findall("*[@type='link']", ns)[-1])
 			fixed_joint_name = 'L_'+str(last_module.i)+'_fixed_joint_'+str(last_module.p)+last_module.tag
 			#root.remove(root.findall("*[@name=fixed_joint_name]", ns)[-1])
-			for node in self.root.findall("*"):
+			for node in gen:
 				if node.attrib['name'] == fixed_joint_name:
 					self.root.remove(node)
-
+					gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
 			if last_module.type == 'link':
 				#root.remove(root.findall("*[@name=last_module.name]", ns)[-1])
-				for node in self.root.findall("*"):
+				for node in gen:
 					if node.attrib['name'] == last_module.name:
 						self.root.remove(node)
+						gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
 			elif last_module.type == 'elbow':
 				#root.remove(root.findall("*[@name=last_module.name]", ns)[-1])
-				for node in self.root.findall("*"):
+				for node in gen:
 					if node.attrib['name'] == last_module.name:
 						self.root.remove(node)
+						gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
 			elif last_module.type == 'size_adapter':
 				#root.remove(root.findall("*[@name=last_module.name]", ns)[-1])
-				for node in self.root.findall("*"):
+				for node in gen:
 					if node.attrib['name'] == last_module.name:
 						self.root.remove(node)
-
+						gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
 		#update the urdf file, removing the module
 		string = self.process_urdf()
 
