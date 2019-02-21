@@ -10,6 +10,7 @@ import xml.etree.ElementTree as ET
 import xacro
 import xml.dom.minidom
 import codecs
+import yaml
 
 from read_yaml import module_from_yaml, ModuleNode, mastercube_from_yaml, slavecube_from_yaml
 
@@ -787,6 +788,21 @@ class UrdfWriter:
 
 		fixed_joint_name = 'L_'+str(new_Link.i)+'_fixed_joint_'+str(new_Link.p)+new_Link.tag
 		ET.SubElement(self.root, "xacro:add_fixed_joint", name=fixed_joint_name, type="fixed_joint", father=past_Link.name, child=new_Link.name, x=new_Link.x, y=new_Link.y, z=new_Link.z, roll=new_Link.roll, pitch=new_Link.pitch, yaw=new_Link.yaw)
+
+	def write_joint_map(self):
+		global path_name
+		jointmap_filename = path_name + '/urdf/ModularBot_joint_map.yaml'
+		i=0
+		joint_map = {'joint_map':{}}
+		for joints_chain in self.listofchains :
+			for joint_module in joints_chain :
+				i+=1
+				joint_map['joint_map'][i] = joint_module.name
+				print(str(i), joint_module.name)
+				print(joint_map)
+		with open(jointmap_filename, 'w') as outfile:
+			yaml.dump(joint_map, outfile, default_flow_style=False)
+		return joint_map
 
 	def write_srdf(self):
 		global path_name

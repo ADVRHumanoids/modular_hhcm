@@ -52,8 +52,11 @@ def writeURDF():
     print(string)
     data = urdf_writer.write_urdf()
     srdf = urdf_writer.write_srdf()
+    joint_map = urdf_writer.write_joint_map()
     print("\nSRDF\n")
     print(srdf)
+    print("\nJoint Map\n")
+    print(joint_map)
     # data = jsonify(data)
     return data 
 
