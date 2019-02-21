@@ -370,7 +370,7 @@ class UrdfWriter:
 			
 			if module['connections'][0] == 0 :
 				print('\n Module: \n')
-				print(module)
+				print(module['id'], module['type'])
 				if module['type'] == 'master_cube' :
 					data = self.add_slave_cube(0)
 				else:
@@ -388,24 +388,38 @@ class UrdfWriter:
 		return data
 
 	def process_connections(self, connections_list, modules_list, name, m_type):
+		"""Process connections of the module as described in the JSON as a list"""
 		print('enter!')
-		for i in connections_list[1:] :					
-			print('ok: ', i)
+		for mod_id in connections_list[1:] :					
+			print('child: ', mod_id)
 			self.select_module(name)
 			print(self.parent_module.name)
-			if i != -1 :
-				child = modules_list[i-1]
+			if mod_id != -1 :
+				# Find child module to process searching by id  
+				child = self.find_module_from_id(mod_id, modules_list)
+				# If the processed module is a mastercube we need first to select the connector to which attach to
 				if m_type =='mastercube':
-					_connector_index = connections_list.index(i) + 1
+					_connector_index = connections_list.index(mod_id) + 1
 					con_name = name + '_con' + str(_connector_index)
 					self.select_module(con_name)
+				# Add the module
 				if child['type'] == 'master_cube' :
 					data = self.add_slave_cube(0)
 				else:
 					data = self.add_module(child['type']+'.yaml', 0)
+				# Update variables and process its connections
 				module_name = data['lastModule_name']
 				module_type = data['lastModule_type']
 				self.process_connections(child['connections'], modules_list, module_name, module_type)
+
+	def find_module_from_id(self, module_id, modules):
+		"""Given the module id find the corresponding dictionary entry"""
+		for child_module in modules:
+			if child_module['id'] == module_id:
+				break
+			else :
+				continue
+		return child_module
 
 	def read_file(self, file_str):
 		"""Open the URDF chosen from the front-end and import it as a tree"""
@@ -653,7 +667,7 @@ class UrdfWriter:
 		last_module = anytree.search.findall_by_attr(self.base_link, selected_module)[0]
 
 		self.parent_module = last_module
-		print(self.parent_module)
+		#print(self.parent_module)
 
 		return last_module
 

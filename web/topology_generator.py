@@ -52,7 +52,7 @@ def generate_random_tree():
         root = AnyNode(id=0)
         new_module = AnyNode(id=1, type='master_cube', parent=root)
         modules.append(new_module)
-        while n < 6:
+        while n < 10:
                 n+=1
                 moduleType = random.choice(types)
                 moduleParent = select_parent(moduleType, modules)
