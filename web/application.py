@@ -51,6 +51,9 @@ def writeURDF():
     string = request.form.get('string', 0)
     print(string)
     data = urdf_writer.write_urdf()
+    srdf = urdf_writer.write_srdf()
+    print("\nSRDF\n")
+    print(srdf)
     # data = jsonify(data)
     return data 
 

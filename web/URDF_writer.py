@@ -55,6 +55,8 @@ class UrdfWriter:
 			16 : '_R'
 		}
 
+		self.inverse_branch_switcher = {y:x for x,y in self.branch_switcher.iteritems()}
+
 		self.n_cubes = 0
 		self.cube_switcher = {
 			0: 'a',
@@ -66,6 +68,8 @@ class UrdfWriter:
 			6 : 'g',
 			7 : 'h'
 		}
+
+		self.listofchains = []
 
 		self.origin, self.xaxis, self.yaxis, self.zaxis = (0, 0, 0.4), (1, 0, 0), (0, 1, 0), (0, 0, 1)
 
@@ -454,6 +458,15 @@ class UrdfWriter:
 
 		return string
 
+	def add_to_chain(self, new_joint):
+		tag_index = self.inverse_branch_switcher.get(new_joint.tag)
+		chain = [new_joint]
+		print(461, tag_index, len(self.listofchains))
+		if tag_index > len(self.listofchains):
+			self.listofchains.append(chain)
+		else:
+			self.listofchains[tag_index - 1].append(new_joint)
+
 	def add_module(self, filename, angle_offset):
 		"""Add a module specified by filename to the selected module. Return info on the new module"""
 		#global tag, parent_module
@@ -498,6 +511,8 @@ class UrdfWriter:
 			if new_module.type == 'joint':
 				#joint + joint
 				self.joint_after_joint(new_module, self.parent_module)
+				# Add the joint to the list of chains
+				self.add_to_chain(new_module)
 			else:
 				#joint + link
 				self.link_after_joint(new_module, self.parent_module)
@@ -505,6 +520,8 @@ class UrdfWriter:
 			if new_module.type == 'joint':
 				#link + joint
 				self.joint_after_link(new_module, self.parent_module)
+				# Add the joint to the list of chains
+				self.add_to_chain(new_module)
 			else:
 				#link + link
 				self.link_after_link(new_module, self.parent_module, angle_offset)
@@ -770,6 +787,50 @@ class UrdfWriter:
 
 		fixed_joint_name = 'L_'+str(new_Link.i)+'_fixed_joint_'+str(new_Link.p)+new_Link.tag
 		ET.SubElement(self.root, "xacro:add_fixed_joint", name=fixed_joint_name, type="fixed_joint", father=past_Link.name, child=new_Link.name, x=new_Link.x, y=new_Link.y, z=new_Link.z, roll=new_Link.roll, pitch=new_Link.pitch, yaw=new_Link.yaw)
+
+	def write_srdf(self):
+		global path_name
+		srdf_filename = path_name + '/urdf/ModularBot_test.srdf'
+		
+		out = xacro.open_output(srdf_filename)
+		root = ET.Element('robot', name="ModularBot")
+		chains_group = ET.SubElement(root, 'group', name="chains")
+		group_state = ET.SubElement(root, 'group_state', name="home", group="chains")
+		group = []
+		chain = []
+		joint = []
+		group_in_chains_group = []
+		base_link = ""
+		tip_link = ""
+		i=0
+		for joints_chain in self.listofchains :
+			group_name = "chain_"+str(i+1)
+			group.append(ET.SubElement(root, 'group', name=group_name))
+			if "con" in joints_chain[0].parent.name :
+				base_link = joints_chain[0].parent.parent.name
+			else :
+				base_link = joints_chain[0].parent.name
+			if joints_chain[-1].children :
+				if "con" in joints_chain[-1].children[0].name :
+					tip_link = joints_chain[-1].children[0].children[0].name
+				else :
+					tip_link = joints_chain[-1].children[0].name
+			else :
+				tip_link = 'L_' + str(joints_chain[-1].i) + joints_chain[-1].tag
+			chain.append(ET.SubElement(group[i], 'chain', base_link=base_link, tip_link=tip_link))
+			group_in_chains_group.append(ET.SubElement(chains_group, 'group', name=group_name))
+			for joint_module in joints_chain :
+				joint.append(ET.SubElement(group_state, 'joint', name=joint_module.name, value="1.57"))
+			i+=1
+		
+		xmlstr = xml.dom.minidom.parseString(ET.tostring(root)).toprettyxml(indent="   ")
+		with open(srdf_filename, "w") as f:
+			f.write(xmlstr)
+
+		print("\nList of chains\n")
+		print(self.listofchains)
+
+		return xmlstr
 
 	#Function writin the urdf file after converting from .xacro (See xacro/__init__.py for reference)
 	def write_urdf(self):

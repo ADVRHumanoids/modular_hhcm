@@ -1,0 +1,26 @@
+<?xml version="1.0" ?>
+<robot name="ModularBot">
+   <group name="chains">
+      <group name="chain_1"/>
+      <group name="chain_2"/>
+      <group name="chain_3"/>
+   </group>
+   <group_state group="chains" name="home">
+      <joint name="J1_A" value="1.57"/>
+      <joint name="J2_A" value="1.57"/>
+      <joint name="J1_B" value="1.57"/>
+      <joint name="J2_B" value="1.57"/>
+      <joint name="J3_B" value="1.57"/>
+      <joint name="J1_C" value="1.57"/>
+      <joint name="J2_C" value="1.57"/>
+   </group_state>
+   <group name="chain_1">
+      <chain base_link="L_0a" tip_link="L_2_A"/>
+   </group>
+   <group name="chain_2">
+      <chain base_link="L_0a" tip_link="L_0b"/>
+   </group>
+   <group name="chain_3">
+      <chain base_link="L_0b" tip_link="L_2_C"/>
+   </group>
+</robot>
