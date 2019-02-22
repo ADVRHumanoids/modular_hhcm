@@ -42,7 +42,8 @@ python application.py
 ```
 
 A generic URDF file can be selected to be opened by the online tool or the **ModularBot_new.urdf.xacro** file to start building a modular robot. 
-While creating the robot the file **ModularBot_test.urdf.xacro** will be modified, and can then be opened by rviz or Gazebo.
+While creating the robot the file **ModularBot.urdf.xacro** will be modified, and can then be opened by rviz or Gazebo.
+Also urdf, srdf, joint map, etc. files will be created in the configs folder of the superbuild.
 
 To launch rviz:
 
@@ -52,3 +53,19 @@ To launch Gazebo:
 
 ` roslaunch modular gazebo.launch model:='$(find modular)/urdf/ModularBot_test.urdf' `
 
+**Run the simulation**
+
+After generating the robot with the configurator, and installing the package via the superbuild: 
+
+```
+cd $ROBOTOLOGY_ROOT/build
+make modular 
+```
+
+Gazebo simulation can be run with:
+
+` roslaunch modular modular_world.launch `
+
+and then the plugins in the **modular_plugins** repo can be used to control the robot. For instance:
+
+` rosservice call /Modularbot_switch 1 `
