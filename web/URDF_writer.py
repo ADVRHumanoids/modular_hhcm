@@ -811,12 +811,12 @@ class UrdfWriter:
 		
 		out = xacro.open_output(srdf_filename)
 		root = ET.Element('robot', name="ModularBot")
-		chains_group = ET.SubElement(root, 'group', name="chains")
-		group_state = ET.SubElement(root, 'group_state', name="home", group="chains")
+		
 		group = []
 		chain = []
 		joint = []
 		group_in_chains_group = []
+		group_in_arms_group = []
 		base_link = ""
 		tip_link = ""
 		i=0
@@ -835,7 +835,15 @@ class UrdfWriter:
 			else :
 				tip_link = 'L_' + str(joints_chain[-1].i) + joints_chain[-1].tag
 			chain.append(ET.SubElement(group[i], 'chain', base_link=base_link, tip_link=tip_link))
+			i+=1
+		i=0	
+		arms_group = ET.SubElement(root, 'group', name="arms")
+		chains_group = ET.SubElement(root, 'group', name="chains")
+		group_state = ET.SubElement(root, 'group_state', name="home", group="chains")
+		for joints_chain in self.listofchains :
+			group_name = "chain_"+str(i+1)
 			group_in_chains_group.append(ET.SubElement(chains_group, 'group', name=group_name))
+			group_in_arms_group.append(ET.SubElement(arms_group, 'group', name=group_name))
 			for joint_module in joints_chain :
 				joint.append(ET.SubElement(group_state, 'joint', name=joint_module.name, value="1.57"))
 			i+=1
