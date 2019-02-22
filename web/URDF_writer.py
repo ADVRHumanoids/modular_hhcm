@@ -25,6 +25,7 @@ ET.register_namespace('xacro', 'http://ros.org/wiki/xacro')
 ns = {'xacro': 'http://ros.org/wiki/xacro'}
 
 path_name = os.path.dirname(modular.__file__)
+path_superbuild = os.path.abspath(os.path.join(path_name, '../..'))
 # #obtaining tree from base file
 # basefile_name=path_name + '/urdf/ModularBot_new.urdf.xacro'
 # urdf_tree = ET.parse(basefile_name)
@@ -791,22 +792,22 @@ class UrdfWriter:
 
 	def write_joint_map(self):
 		global path_name
-		jointmap_filename = path_name + '/urdf/ModularBot_joint_map.yaml'
+		jointmap_filename = path_superbuild + '/configs/ADVR_shared/ModularBot/joint_map/ModularBot_joint_map.yaml'
 		i=0
 		joint_map = {'joint_map':{}}
 		for joints_chain in self.listofchains :
 			for joint_module in joints_chain :
 				i+=1
 				joint_map['joint_map'][i] = joint_module.name
-				print(str(i), joint_module.name)
-				print(joint_map)
+				# print(str(i), joint_module.name)
+				# print(joint_map)
 		with open(jointmap_filename, 'w') as outfile:
 			yaml.dump(joint_map, outfile, default_flow_style=False)
 		return joint_map
 
 	def write_srdf(self):
 		global path_name
-		srdf_filename = path_name + '/urdf/ModularBot_test.srdf'
+		srdf_filename = path_superbuild + '/configs/ADVR_shared/ModularBot/srdf/ModularBot.srdf'
 		
 		out = xacro.open_output(srdf_filename)
 		root = ET.Element('robot', name="ModularBot")
@@ -843,20 +844,20 @@ class UrdfWriter:
 		with open(srdf_filename, "w") as f:
 			f.write(xmlstr)
 
-		print("\nList of chains\n")
-		print(self.listofchains)
+		# print("\nList of chains\n")
+		# print(self.listofchains)
 
 		return xmlstr
 
 	#Function writin the urdf file after converting from .xacro (See xacro/__init__.py for reference)
 	def write_urdf(self):
 		"""Returns the string with the URDF, after writing it to file"""
-		global path_name
-		urdf_filename = path_name + '/urdf/ModularBot_test.urdf'
+		global path_name, path_superbuild
+		urdf_filename = path_superbuild + '/configs/ADVR_shared/ModularBot/urdf/ModularBot.urdf'
 		
 		out = xacro.open_output(urdf_filename)
 
-		urdf_xacro_filename = urdf_filename + '.xacro'
+		urdf_xacro_filename = path_name + '/urdf/ModularBot.urdf.xacro'
 
 		#writing .xacro file
 		# tree.write(urdf_xacro_filename, xml_declaration=True, encoding='utf-8')

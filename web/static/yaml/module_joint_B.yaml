@@ -19,7 +19,7 @@ kinematics:
       type: 'revolute'
       lower_limit: -3.14
       upper_limit: 3.14
-      effort: 35 
+      effort: 235 
       velocity: 5.7
       
   link:
