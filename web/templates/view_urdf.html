@@ -442,6 +442,8 @@
                         updateShownButtons(data['lastModule_type'], data['count'], data['size'])
                         // console.log(size)
                         CURRENT_PARENT = data['lastModule_name']
+                        //write the file
+                        writeRequest(data['result'])
                     },
                     async: true
                 });
