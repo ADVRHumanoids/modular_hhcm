@@ -28,10 +28,12 @@ requester = context.socket(zmq.REQ)
 requester.connect('tcp://localhost:5555')
 #
 
+
 # load view_urdf.html
 @app.route('/')
 def index():
     return render_template('view_urdf.html')
+
 
 # call URDF_writer.py to modify the urdf
 @app.route('/changeURDF/', methods=['POST'])
@@ -45,6 +47,7 @@ def changeURDF():
     data = urdf_writer.add_module(filename, offset)
     data = jsonify(data)
     return data 
+
 
 @app.route('/writeURDF/', methods=['POST'])
 def writeURDF():
@@ -60,6 +63,7 @@ def writeURDF():
     # data = jsonify(data)
     return data 
 
+
 # call URDF_writer.py to add another master cube
 @app.route('/addMasterCube/', methods=['POST'])
 def addCube():
@@ -73,6 +77,7 @@ def addCube():
     data = jsonify(data)
     return data 
 
+
 # call URDF_writer.py to remove the last module
 @app.route('/removeModule/', methods=['POST'])
 def remove():
@@ -81,6 +86,7 @@ def remove():
     data = jsonify(data)
     return data
 
+
 # update "last module" (and so shown buttons) when clicking on it
 @app.route('/updateLastModule/', methods=['POST'])
 def accessModule():
@@ -88,6 +94,7 @@ def accessModule():
     data = urdf_writer.select_module(parent)
     data = jsonify(data)
     return data
+
 
 # update "last module" (and so shown buttons) when clicking on it
 @app.route('/openFile/', methods=['POST'])
@@ -99,10 +106,12 @@ def openFile():
     data = jsonify(data)
     return data
 
+
 # upload on the server the /static folder
 @app.route('/<path:path>')
 def send_file(path):
     return send_from_directory(app.static_folder, path)
+
 
 # send a request to the poller thread to get ECat topology and synchronize with hardware
 @app.route('/syncHW/', methods=['POST'])
