@@ -3,7 +3,9 @@
         <meta charset="utf-8">
         <title>URDF builder</title>
 
-        <link rel="stylesheet" >
+        <!-- <link rel="stylesheet" > -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     </head>
 
     <body>
@@ -64,12 +66,15 @@
 
         <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
 
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-
         <style type="text/css">
             html, body {
                 height: 100%;
                 margin:0
+            }
+            #header {
+                position: relative;
+                top: 50%;
+                left: 50%;
             }
             #container {
                 width: 100%;
@@ -192,22 +197,24 @@
                 background-color: rgb(206, 33, 33);
                 border: none;
                 position: absolute;
-                top: 0;
+                bottom: 0;
                 right: 20%;
-                font-size: 16px;
+                font-size: 19px;
                 color: white;
                 padding: 12px 16px;
                 display: none;
             }
             #syncHardware {
-                background-color: rgb(206, 33, 33);
+                background-color: rgb(31, 101, 206);
                 border: none;
                 position: absolute;
-                top: 0;
-                right: 40%;
-                font-size: 16px;
+                bottom: 0;
+                right: 35%;
+                font-size: 19px;
                 color: white;
-                padding: 12px 16px;
+                padding: 11px 16px;
+                vertical-align: bottom;
+                display: none;
             }
             #addJointElbow {
                 background-image: url(images/joint_elbow.png);
@@ -221,7 +228,125 @@
             button > div {
                 padding-top: 50%;
             }
+             /* The switch - the box around the slider */
+            .switch {
+                position: relative;
+                display: inline-block;
+                width: 120px;
+                height: 50px;
+                /* background: rgb(31, 101, 206); */
+            }
 
+            /* Hide default HTML checkbox */
+            .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+            }
+
+            /* The slider */
+            .slider {
+            position: absolute;
+            /* display: none; */
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            -webkit-transition: .4s;
+            transition: .4s;
+            }
+
+            .slider:before {
+            position: absolute;
+            content: "";
+            height: 38px;
+            width: 38px;
+            left: 6px;
+            bottom: 6px;
+            background-color: white;
+            -webkit-transition: .4s;
+            transition: .4s;
+            }
+
+            input:not(:checked) + .slider{
+                background-color: rgb(31, 101, 206)
+            }
+
+            input:checked + .slider {
+            background-color: rgb(206, 33, 33);
+            }
+
+            input:focus + .slider {
+            box-shadow: 0 0 1px rgb(206, 33, 33);
+            }
+
+            input:checked + .slider:before {
+            -webkit-transform: translateX(70px);
+            -ms-transform: translateX(70px);
+            transform: translateX(70px);
+            }
+
+            /* Rounded sliders */
+            .slider.round {
+            border-radius: 34px;
+            }
+
+            .slider.round:before {
+            border-radius: 50%;
+            } 
+
+            /* divisions for text around toggle switch */
+            #div-switchWrapper {
+                /* border: solid; */
+                width: 350px;
+                position: absolute;
+                display: inline-block;
+                right: 40%;
+                /* padding-top: 10px;
+                padding-bottom: 10px; */
+                top: 0;
+                height: 90px;
+            }
+
+            #div-BuildingMode {
+                display: inline-block;
+                /* border: solid; */
+                width: 100px;
+                position: relative;
+                left: 0%;
+                top: 15px;
+                text-align: center;
+                font-size: 20px;
+                font-weight: bold;
+                font-family: Verdana, Geneva, Tahoma, sans-serif;
+                /* background-color: rgb(31, 101, 206); */
+                color: rgb(31, 101, 206);
+            }
+
+            #div-switch {
+                /* border: solid; */
+                display: inline-block;
+                width: 120px;
+                vertical-align: middle;
+            }
+
+            #div-DiscoveryMode {
+                display: inline-block;
+                /* border: solid; */
+                width: 100px;
+                position: relative;
+                right: 0%;
+                top: 15px;
+                text-align: center;
+                font-size: 20px;
+                font-weight: bold;
+                font-family: Verdana, Geneva, Tahoma, sans-serif;
+                /* background-color: rgb(206, 33, 33); */
+                color:  rgb(206, 33, 33);
+            }
+            
             /* .range {
                 float:left;
             }
@@ -241,8 +366,19 @@
             <div id="controls" style="overflow-y:auto;">
                 <ul></ul>
             </div>
+            <!-- Rounded switch -->
+            <div id="div-switchWrapper">
+                <div id="div-BuildingMode">Building Mode</div>
+                <div id="div-switch">
+                    <label class="switch" id="modeSwitch" style="overflow-y:auto;">
+                        <input type="checkbox" id="modeInput">
+                        <span class="slider round" id="modeSwitchSlider" style="overflow-y:auto;"></span>
+                    </label>
+                </div>
+                <div id="div-DiscoveryMode">Discovery Mode</div>
+            </div>
             <button id=removeLast class="btn"><i class="fa fa-trash"></i> Remove Module</button>
-            <button id=syncHardware class="btn"><i class="fa fa-trash"></i> Sync with hardware</button>
+            <button id=syncHardware class="btn"><span style="padding-right: 4px"><i class="material-icons">developer_board</i></span>Sync with hardware</button>
             <div id="selector" style="overflow-y:auto;">
                 Select a module to add: 
                 <!-- <input type="file" id="moduleInput"> -->
@@ -267,6 +403,7 @@
             var size = 3;
             window.onload = function() {
                 var fileInput = document.getElementById('fileInput');
+                var modeInput = document.getElementById('modeInput');
                 //var fileDisplayArea = document.getElementById('fileDisplayArea');
                 //var moduleInput = document.getElementById('moduleInput');
                 var selector = document.getElementById('selector')
@@ -282,6 +419,8 @@
                 var removeLast = document.getElementById('removeLast');
                 var syncHardware = document.getElementById('syncHardware');
                 var addElbowJoint = document.getElementById('addElbowJoint');
+                var modeSwitch = document.getElementById('modeSwitch');
+                var modeSwitchSlider = document.getElementById('modeSwitchSlider');
 
                 fileInput.addEventListener('change', function(e) {
                     var file = fileInput.files[0];
@@ -293,6 +432,16 @@
                         document.getElementById('header').style.display="none";
                         //robots = urdfViewer.showURDF(reader);
                         selector.style.display = 'block';
+                        // modeSwitch.style.display = 'inline-block';
+                        // modeSwitchSlider.style.display = 'block';
+                        syncHardware.style.display = 'inline-flex';
+
+                        if(modeInput.checked) {
+                            console.log("Discovery mode on")
+                        }
+                        else {
+                            console.log("Building mode on")
+                        }
 
                         //console.log(reader.result)
                         $.ajax({
