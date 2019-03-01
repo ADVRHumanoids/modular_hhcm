@@ -386,14 +386,14 @@ class UrdfWriter:
             )
 
             # Generate the name of the fixed joint used to connect the cube
-            if self.parent_module.type == "joint":
+            if self.parent_module.type == "cube":
                 fixed_joint_name = 'FJ_' + self.parent_module.parent.name + '_' + name
             else:
                 fixed_joint_name = 'FJ_' + self.parent_module.name + '_' + name
 
             # Select the name of the parent to use to generate the urdf. If the parent is a joint use the name of the
             # dummy link attached to it
-            if self.parent_module.type == "cube":
+            if self.parent_module.type == "joint":
                 parent_name = 'L_'+str(self.parent_module.i)+self.parent_module.tag
             else:
                 parent_name = self.parent_module.name

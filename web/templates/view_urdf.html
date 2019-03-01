@@ -401,6 +401,7 @@
         <script>
             var flag, reader, robots, doc;
             var size = 3;
+            var buildingModeON = true;
             window.onload = function() {
                 var fileInput = document.getElementById('fileInput');
                 var modeInput = document.getElementById('modeInput');
@@ -461,6 +462,35 @@
                     reader.readAsText(file);  
 
                 });
+
+                modeInput.addEventListener('change', function(e) {
+                    $.ajax({
+                        url: 'http://127.0.0.1:5000/changeMode/',
+                        data: {'state': modeInput.checked},
+                        method: 'POST',
+                        // contentType: false,
+                        // processData: false,
+                        success: function(data) {
+                            console.log(modeInput.checked)
+                            if(urdfViewer.robots[1]) {
+                                urdfViewer.removeLastURDF()
+                            }
+                            //urdfViewer.removeLastURDF()
+                            console.log(data['building mode'])
+                            console.log(data['discovery mode'])
+                            //robots = urdfViewer.showURDF(data['string']);
+                            if((data['building mode'] == true) && (data['discovery mode'] == false)){
+                                buildingModeON = true;
+                            }
+                            else {
+                                buildingModeON = false;
+                            }
+                            console.log(buildingModeON);
+                        },
+                        async: true
+                    }); 
+                });
+
 
                 //Old way used for adding a module: the urdf file is picked manually by the user
                 //
@@ -562,14 +592,23 @@
                     url: 'http://127.0.0.1:5000/syncHW/',
                     method: 'POST',
                     success: function(data) {
-                        // If there is already a "red URDF" shown, erase it before adding the new one.
-                        console.log(data['erase_previous'])
-                        if(data['erase_previous']) {
-                            urdfViewer.removeLastURDF()
+                        console.log(buildingModeON)
+                        if(buildingModeON){
+                            // If there is already a "red URDF" shown, erase it before adding the new one.
+                            console.log(data['erase_previous'])
+                            if(data['erase_previous']) {
+                                urdfViewer.removeLastURDF()
+                            }
+                            console.log(data['string'])
+                            robots = urdfViewer.addURDF(data['string'])//, data['lastModule_name'])
+                            // writeRequest(data['result'])
                         }
-                        console.log(data['string'])
-                        robots = urdfViewer.addURDF(data['string'])//, data['lastModule_name'])
-                        // writeRequest(data['result'])
+                        else {
+                            console.log(data['string'])
+                            robots = urdfViewer.updateURDF(data['string']);
+                            //write the file
+                            writeRequest(data['string'])
+                        }
                     },
                     async: true
                 });

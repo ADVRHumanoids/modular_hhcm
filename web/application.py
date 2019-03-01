@@ -26,8 +26,10 @@ context = zmq.Context()#.instance()
 # Socket to talk to poller
 requester = context.socket(zmq.REQ)
 requester.connect('tcp://localhost:5555')
-#
 
+# Flags defining which mode are in
+building_mode_ON = True
+discovery_mode_ON = False
 
 # load view_urdf.html
 @app.route('/')
@@ -53,9 +55,17 @@ def changeURDF():
 def writeURDF():
     string = request.form.get('string', 0)
     print(string)
-    data = urdf_writer.write_urdf()
-    srdf = urdf_writer.write_srdf()
-    joint_map = urdf_writer.write_joint_map()
+    print (building_mode_ON)
+    print (discovery_mode_ON)
+    print (building_mode_ON and (not discovery_mode_ON))
+    if building_mode_ON and (not discovery_mode_ON):
+        data = urdf_writer.write_urdf()
+        srdf = urdf_writer.write_srdf()
+        joint_map = urdf_writer.write_joint_map()
+    else:
+        data = urdf_writer_fromHW.write_urdf()
+        srdf = urdf_writer_fromHW.write_srdf()
+        joint_map = urdf_writer_fromHW.write_joint_map()
     print("\nSRDF\n")
     print(srdf)
     print("\nJoint Map\n")
@@ -133,6 +143,38 @@ def syncHW():
     #print('data:', data)
     data = jsonify(data)
     return data
+
+
+# Change mode and reset
+@app.route('/changeMode/', methods=['POST'])
+def changeMode():
+    global building_mode_ON, discovery_mode_ON
+    
+    # Get the state of the toggle switch. Convert the boolean from Javascript to Python
+    state = True if request.form.get('state', 0) == 'true' else False
+
+    # Change Mode flag
+    if state:
+        building_mode_ON = False
+        discovery_mode_ON = True
+    else:
+        building_mode_ON = True
+        discovery_mode_ON = False
+
+    print(building_mode_ON)
+    print(discovery_mode_ON)
+
+    # Re-initialize the two object instances
+    urdf_writer.__init__()
+    urdf_writer_fromHW.__init__()
+
+    #data = urdf_writer_fromHW.read_file(file_str)
+    data = {'building mode': building_mode_ON, 'discovery mode': discovery_mode_ON}
+
+    data = jsonify(data)
+    return data
+
+
 
 
 if __name__ == '__main__':
