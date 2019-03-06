@@ -585,7 +585,11 @@ class URDF_viewer extends HTMLElement {
             this._applyRotation(obj, rpy_ros2three)
             //object.rotateOnAxis ( new THREE.Vector3(1, 0, 0), - Math.PI / 2 )
 
-            this._init(obj);
+            this._removeSliders();
+            //this._init();
+            this._addObject(obj);
+            this._addControls(obj);
+            this._addRaycaster(obj);
             this._animate();
 
             this.robots.push(obj)
@@ -837,7 +841,7 @@ class URDF_viewer extends HTMLElement {
 
     /* Private Functions */
 
-    static _init(object) {
+    static _init() {
         const rnd = document.getElementById('renderer')
 
         this.scene = new THREE.Scene();
@@ -896,40 +900,7 @@ class URDF_viewer extends HTMLElement {
         var worldAxis = new THREE.AxesHelper(20);
         this.scene.add(worldAxis);
 
-        for (let key in object.urdf.jointMap) {
-            //console.log(self.jointMap[key])
-            const joint = object.urdf.jointMap[key]
-            if (joint.urdf.type !== 'fixed')
-                this.scene.add(joint.axes)
-        }
-
-        this.scene.add(object);
-
-        this.orbitControls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
-
-        this.transformControls = new THREE.TransformControls(this.camera, this.renderer.domElement);
-        this.transformControls.addEventListener( 'change', this.renderer.render(this.scene, this.camera) );
-        self = this;
-        window.addEventListener( 'keydown', function ( event ) {
-            switch ( event.keyCode ) {
-                case 87: // W
-                    self.transformControls.setMode( "translate" );
-                    break;
-                case 69: // E
-                    self.transformControls.setMode( "rotate" );
-                    break;
-            }
-        });
-        // this.transformControls.setMode( "rotate" );
-
-        this.transformControls.attach(object)
-        this.scene.add(this.transformControls)
-
-        this.raycaster = new THREE.Raycaster();
-        this.mouse = new THREE.Vector2();
-        
-        rnd.addEventListener( 'mousedown', onDocumentMouseDown, false );
-        rnd.addEventListener( 'touchstart', onDocumentTouchStart, false );
+        //this.scene.add(object);
 
         self = this
         window.addEventListener('resize', onWindowResize, false);
@@ -942,6 +913,17 @@ class URDF_viewer extends HTMLElement {
             self.renderer.setSize(window.innerWidth, window.innerHeight);
 
         }
+
+    }
+
+    static _addRaycaster(object){
+        const rnd = document.getElementById('renderer');
+        
+        this.raycaster = new THREE.Raycaster();
+        this.mouse = new THREE.Vector2();
+        
+        rnd.addEventListener( 'mousedown', onDocumentMouseDown, false );
+        rnd.addEventListener( 'touchstart', onDocumentTouchStart, false );
 
         self=this
         function onDocumentMouseDown( event ) {
@@ -968,6 +950,36 @@ class URDF_viewer extends HTMLElement {
             event.clientY = event.touches[0].clientY;
             onDocumentMouseDown( event );
         }
+    }
+
+    static _addControls(object){
+        // I've no idea what this is for. Probably useless
+        for (let key in object.urdf.jointMap) {
+            //console.log(self.jointMap[key])
+            const joint = object.urdf.jointMap[key]
+            if (joint.urdf.type !== 'fixed')
+                this.scene.add(joint.axes)
+        }
+
+        this.orbitControls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+
+        this.transformControls = new THREE.TransformControls(this.camera, this.renderer.domElement);
+        this.transformControls.addEventListener( 'change', this.renderer.render(this.scene, this.camera) );
+        self = this;
+        window.addEventListener( 'keydown', function ( event ) {
+            switch ( event.keyCode ) {
+                case 87: // W
+                    self.transformControls.setMode( "translate" );
+                    break;
+                case 69: // E
+                    self.transformControls.setMode( "rotate" );
+                    break;
+            }
+        });
+        // this.transformControls.setMode( "rotate" );
+
+        this.transformControls.attach(object)
+        this.scene.add(this.transformControls)
     }
 
     static _addObject(object) {
@@ -1565,6 +1577,7 @@ Object.assign(URDF_change_eventHandler.prototype, THREE.EventDispatcher.prototyp
 // var urdfViewer = new URDF_viewer()
 // var urdfViewer2 = new URDF_viewer()
 
-window.urdfViewer = URDF_viewer
-window.visualizer = visualizer
+window.urdfViewer = URDF_viewer;
+//window.urdfViewer._init();
+//window.visualizer = visualizer
 // window.urdfViewer2 = urdfViewer2

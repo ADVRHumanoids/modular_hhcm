@@ -423,6 +423,8 @@
                 var modeSwitch = document.getElementById('modeSwitch');
                 var modeSwitchSlider = document.getElementById('modeSwitchSlider');
 
+                
+
                 fileInput.addEventListener('change', function(e) {
                     var file = fileInput.files[0];
                     console.log(file)
@@ -452,6 +454,8 @@
                             // contentType: false,
                             // processData: false,
                             success: function(data) {
+                                // Initialize the urdfViewer class: create a scene, renderer, etc.
+                                urdfViewer._init();
                                 console.log(data['string'])
                                 robots = urdfViewer.showURDF(data['string']);
                             },
@@ -604,8 +608,9 @@
                             // writeRequest(data['result'])
                         }
                         else {
+                            urdfViewer.removeLastURDF()
                             console.log(data['string'])
-                            robots = urdfViewer.updateURDF(data['string']);
+                            robots = urdfViewer.showURDF(data['string']);
                             //write the file
                             writeRequest(data['string'])
                         }
