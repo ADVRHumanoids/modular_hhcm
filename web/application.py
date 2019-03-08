@@ -116,6 +116,16 @@ def openFile():
     data = jsonify(data)
     return data
 
+# request the urdf generated from the currently stored tree
+@app.route('/requestURDF/', methods=['POST'])
+def requestURDF():
+    # building_mode_on_str = request.form.get('mode', 0)
+    # print(building_mode_on_str)
+    urdf_string = urdf_writer.process_urdf()
+    data = {'string': urdf_string}
+    print('data:', data)
+    data = jsonify(data)
+    return data
 
 # upload on the server the /static folder
 @app.route('/<path:path>')

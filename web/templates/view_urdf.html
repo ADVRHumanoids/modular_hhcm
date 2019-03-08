@@ -423,7 +423,8 @@
                 var modeSwitch = document.getElementById('modeSwitch');
                 var modeSwitchSlider = document.getElementById('modeSwitchSlider');
 
-                
+                urdfViewer._init();
+                requestURDF();
 
                 fileInput.addEventListener('change', function(e) {
                     var file = fileInput.files[0];
@@ -479,12 +480,14 @@
                             if(urdfViewer.robots[1]) {
                                 urdfViewer.removeLastURDF()
                             }
+                            urdfViewer.removeLastURDF();
                             //urdfViewer.removeLastURDF()
                             console.log(data['building mode'])
                             console.log(data['discovery mode'])
                             //robots = urdfViewer.showURDF(data['string']);
                             if((data['building mode'] == true) && (data['discovery mode'] == false)){
                                 buildingModeON = true;
+                                requestURDF();
                             }
                             else {
                                 buildingModeON = false;
@@ -578,6 +581,26 @@
                 });
 
             };
+
+            function requestURDF(){
+                $.ajax({
+                    url: 'http://127.0.0.1:5000/requestURDF/',
+                    data: {'mode': buildingModeON},
+                    method: 'POST',
+                    // contentType: false,
+                    // processData: false,
+                    success: function(data) {
+                        // Initialize the urdfViewer class: create a scene, renderer, etc.
+                        //urdfViewer._init();
+                        console.log(data['string'])
+                        robots = urdfViewer.showURDF(data['string']);
+
+                        selector.style.display = 'block';
+                        syncHardware.style.display = 'inline-flex';
+                    },
+                    async: true
+                });
+            }
 
             function writeRequest(URDF_string){
                 $.ajax({

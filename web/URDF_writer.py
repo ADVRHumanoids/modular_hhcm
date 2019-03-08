@@ -38,9 +38,17 @@ path_superbuild = os.path.abspath(os.path.join(path_name, '../..'))
 class UrdfWriter:
     def __init__(self):
 
-        # root = urdf_tree.getroot()
-        self.root = 0
-        self.urdf_tree = 0
+        # self.root = 0
+        # self.urdf_tree = 0
+
+        # Open the base xacro file
+        filename = path_name + '/urdf/ModularBot_new.urdf.xacro'
+        with codecs.open(filename, 'r') as f:
+            string = f.read()
+        # Instantiate an Element Tree
+        self.root = ET.fromstring(string)
+        self.urdf_tree = ET.ElementTree(self.root)
+        # print(ET.tostring(self.urdf_tree.getroot()))
 
         self.tag_num = 1
         self.branch_switcher = {
@@ -246,14 +254,17 @@ class UrdfWriter:
             self.__init__()
             erase_previous = True
 
-        # Open the base xacro file
-        filename = path_name + '/urdf/ModularBot_new.urdf.xacro'
-        with codecs.open(filename, 'r') as f:
-            string = f.read()
-        # Instantiate an Element Tree
-        self.root = ET.fromstring(string)
-        self.urdf_tree = ET.ElementTree(self.root)
-        print(ET.tostring(self.urdf_tree.getroot()))
+        
+        # # Open the base xacro file
+        # filename = path_name + '/urdf/ModularBot_new.urdf.xacro'
+        # with codecs.open(filename, 'r') as f:
+        #     string = f.read()
+        # # Instantiate an Element Tree
+        # self.root = ET.fromstring(string)
+        # self.urdf_tree = ET.ElementTree(self.root)
+        # print(ET.tostring(self.urdf_tree.getroot()))
+
+
         # Process the modules described in the json to create the tree
         modules = json_data['modules']
         for module in modules:
