@@ -622,6 +622,12 @@ class URDF_viewer extends HTMLElement {
     }
 
     static removeLastURDF() {
+        // If this.robots is not undefined and not empty detach transform controls from it
+        if(Array.isArray(this.robots) && this.robots.length){
+            if(this.robots[this.robots.length - 1].tfControls) {
+                this.robots[this.robots.length - 1].tfControls.detach();
+            }
+        }
         this.scene.remove(this.robots[this.robots.length -1])
         this.robots.pop()
     }
@@ -980,6 +986,8 @@ class URDF_viewer extends HTMLElement {
 
         this.transformControls.attach(object)
         this.scene.add(this.transformControls)
+
+        object.tfControls = this.transformControls;
     }
 
     static _addObject(object) {

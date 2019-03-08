@@ -402,6 +402,7 @@
             var flag, reader, robots, doc;
             var size = 3;
             var buildingModeON = true;
+            var erasePrevious = false;
             window.onload = function() {
                 var fileInput = document.getElementById('fileInput');
                 var modeInput = document.getElementById('modeInput');
@@ -487,6 +488,7 @@
                             //robots = urdfViewer.showURDF(data['string']);
                             if((data['building mode'] == true) && (data['discovery mode'] == false)){
                                 buildingModeON = true;
+                                erasePrevious = false;
                                 requestURDF();
                             }
                             else {
@@ -622,12 +624,12 @@
                         console.log(buildingModeON)
                         if(buildingModeON){
                             // If there is already a "red URDF" shown, erase it before adding the new one.
-                            console.log(data['erase_previous'])
-                            if(data['erase_previous']) {
+                            if(erasePrevious) {
                                 urdfViewer.removeLastURDF()
                             }
                             console.log(data['string'])
                             robots = urdfViewer.addURDF(data['string'])//, data['lastModule_name'])
+                            erasePrevious = true;
                             // writeRequest(data['result'])
                         }
                         else {

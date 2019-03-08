@@ -246,13 +246,11 @@ class UrdfWriter:
         return found_module
 
     def read_from_json(self, json_data):
-        erase_previous = False
 
         # If a tree representing the topology was already instantiated, re-initialize and start from scratch
         if self.root != 0:
             print("Re-initialization")
             self.__init__()
-            erase_previous = True
 
         
         # # Open the base xacro file
@@ -285,7 +283,7 @@ class UrdfWriter:
         # string = doc.toprettyxml(indent='  ')
         string = self.process_urdf()
 
-        data = {'string': string, 'erase_previous': erase_previous}
+        data = {'string': string}
         return data
 
     def process_connections(self, connections_list, modules_list, name, m_type):
