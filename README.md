@@ -69,3 +69,14 @@ Gazebo simulation can be run with:
 and then the plugins in the **modular_plugins** repo can be used to control the robot. For instance:
 
 ` rosservice call /Modularbot_switch 1 `
+
+
+**When reading configuration from hardware**
+
+Python 3 package for Protocol Buffers need to be installed 
+
+` pip3 install protobuf `
+
+and then the .bashrc has to be modified adding the line:
+
+` export PYTHONPATH=$PYTHONPATH:/usr/lib/python3.5/dist-packages `
