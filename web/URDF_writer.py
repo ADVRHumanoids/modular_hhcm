@@ -7,6 +7,7 @@ import xacro
 import xml.dom.minidom
 import codecs
 import yaml
+import json
 
 import read_yaml  # import module_from_yaml, ModuleNode, mastercube_from_yaml, slavecube_from_yaml
 
@@ -286,19 +287,85 @@ class UrdfWriter:
         data = {'string': string}
         return data
 
+    def read_from_json_alt(self, json_data):
+
+        # If a tree representing the topology was already instantiated, re-initialize and start from scratch
+        if self.root != 0:
+            print("Re-initialization")
+            self.__init__()
+
+        
+        # # Open the base xacro file
+        # filename = path_name + '/urdf/ModularBot_new.urdf.xacro'
+        # with codecs.open(filename, 'r') as f:
+        #     string = f.read()
+        # # Instantiate an Element Tree
+        # self.root = ET.fromstring(string)
+        # self.urdf_tree = ET.ElementTree(self.root)
+        # print(ET.tostring(self.urdf_tree.getroot()))
+
+        # Add a first cube for the initial ethercat test with no Hub. TODO: remove it once the hub is implemented and can be added automatically
+        data = self.add_slave_cube(0)
+        # module_name = data['lastModule_name']
+        module_name = 'L_0a_con2'
+        module_type = data['lastModule_type']
+
+        # Process the modules described in the json to create the tree
+        modules = json.loads(json_data)
+        for module in modules:
+            print(module)
+
+            for module_id in module.keys():
+                
+                if module[module_id]['esc_type'] == 512:
+                    data = self.add_module('module_joint_elbow_B.yaml', 0)
+                else:
+                    print('Error')
+
+                module_name = data['lastModule_name']
+                module_type = data['lastModule_type']
+
+                connections = []
+                if module[module_id]['topology'] == 2:
+                    connections.append(str(int(module_id)+1))
+                print(connections)
+
+                self.process_connections_alt(connections, modules, module_name, module_type)
+                
+            break
+            # if module['connections'][0] == 0:
+            #     print('\n Module: \n')
+            #     print(module['id'], module['type'])
+            #     if module['type'] == 'master_cube':
+            #         data = self.add_slave_cube(0)
+            #     else:
+            #         data = self.add_module(module['type'], 0)
+            #     module_name = data['lastModule_name']
+            #     module_type = data['lastModule_type']
+            #     self.process_connections_alt(connections, modules, module_name, module_type)
+                
+        
+        # doc = xacro.parse(string)
+        # xacro.process_doc(doc, in_order=True)
+        # string = doc.toprettyxml(indent='  ')
+        string = self.process_urdf()
+
+        data = {'string': string}
+        return data
+
     def process_connections(self, connections_list, modules_list, name, m_type):
         """Process connections of the module as described in the JSON as a list"""
         print('enter!')
-        for mod_id in connections_list[1:]:
-            print('child: ', mod_id)
+        for child_id in connections_list[1:]:
+            print('child: ', child_id)
             self.select_module(name)
             print(self.parent_module.name)
-            if mod_id != -1:
+            if child_id != -1:
                 # Find child module to process searching by id
-                child = self.find_module_from_id(mod_id, modules_list)
+                child = self.find_module_from_id(child_id, modules_list)
                 # If the processed module is a mastercube we need first to select the connector to which attach to
                 if m_type == 'mastercube':
-                    _connector_index = connections_list.index(mod_id) + 1
+                    _connector_index = connections_list.index(child_id) + 1
                     con_name = name + '_con' + str(_connector_index)
                     self.select_module(con_name)
                 # Add the module
@@ -310,6 +377,39 @@ class UrdfWriter:
                 module_name = data['lastModule_name']
                 module_type = data['lastModule_type']
                 self.process_connections(child['connections'], modules_list, module_name, module_type)
+
+    def process_connections_alt(self, connections_list, modules_list, name, m_type):
+        """Process connections of the module as described in the JSON as a list"""
+        print('enter!')
+        for child_id in connections_list:
+            print('child: ', child_id)
+            self.select_module(name)
+            print(self.parent_module.name)
+            if child_id != -1:
+                # Find child module to process searching by id
+                child = modules_list[int(child_id) - 1] #self.find_module_from_id(child_id, modules_list)
+                print(child[child_id])
+                # If the processed module is a mastercube we need first to select the connector to which attach to
+                # if m_type == 'mastercube':
+                #     _connector_index = connections_list.index(child_id) + 1
+                #     con_name = name + '_con' + str(_connector_index)
+                #     self.select_module(con_name)
+                # Add the module
+                if child[child_id]['esc_type'] == 512:
+                    data = self.add_module('module_joint_elbow_B.yaml', 0)
+                else:
+                    print('Error')
+                # Update variables and process its connections
+                module_name = data['lastModule_name']
+                module_type = data['lastModule_type']
+                
+                connections = []
+                if child[child_id]['topology'] == 2:
+                    connections.append(str(int(child_id)+1))
+                print('connections:', connections)
+                    
+                self.process_connections_alt(connections, modules_list, module_name, module_type)
+
 
     def read_file(self, file_str):
         """Open the URDF chosen from the front-end and import it as a tree"""
@@ -542,7 +642,7 @@ class UrdfWriter:
             string = self.process_urdf()
 
             # Update the parent_module attribute of the URDF_writer class
-            self.parent_module = mastercube
+            self.parent_module = slavecube_con2 
 
             # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
             data = {'result': string,

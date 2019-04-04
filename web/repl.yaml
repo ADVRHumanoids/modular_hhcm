@@ -1,0 +1,132 @@
+
+use_zmq : true
+uri : "10.255.36.12:5555"
+# uri : "com-exp.local:5555"
+#uri : "localhost:5555"
+
+
+cmdss:
+  - type: ECAT_MASTER_CMD
+    ecat_master_cmd:
+      type: GET_SLAVES_DESCR
+
+cmdsssss:
+  - type: CTRL_CMD
+    board_id_list: [123,11,12,13,14,15,33]
+    ctrl_cmd:
+      type: CTRL_FAN
+      value: 1
+      #type: CTRL_SET_ZERO_POSITION
+      #value: 3.14156
+
+  - type: CTRL_CMD
+    board_id_list: [123,11,12,13,14,15,33]
+    ctrl_cmd:
+      type: CTRL_LED
+      value: 1
+
+  - type: ECAT_MASTER_CMD
+    ecat_master_cmd:
+      type: GET_SLAVES_DESCR
+
+  - type: ECAT_MASTER_CMD
+    ecat_master_cmd:
+      type: STOP_MASTER
+
+  - type: ECAT_MASTER_CMD
+    ecat_master_cmd:
+      type: START_MASTER
+
+  - type: ECAT_MASTER_CMD
+    ecat_master_cmd:
+      type: GET_SLAVES_DESCR
+
+  - type: CTRL_CMD
+    board_id_list: [123,11,12,13,14,15,33]
+    ctrl_cmd:
+      type: CTRL_FAN
+      value: 0
+
+  - type: CTRL_CMD
+    board_id_list: [123,11,12,13,14,15,33]
+    ctrl_cmd:
+      type: CTRL_LED
+      value: 0
+
+
+_cmds :
+  - type: CTRL_CMD
+    ctrl_cmd:
+      type: CTRL_FAN
+      board_id: 123
+      value: 1
+
+  - type: CTRL_CMD
+    ctrl_cmd:
+      type: CTRL_LED
+      board_id: 123
+      value: 1
+
+  - type: ECAT_MASTER_CMD
+    ecat_master_cmd:
+      type: GET_SLAVES_DESCR
+
+  - type: CTRL_CMD
+    ctrl_cmd:
+      type: CTRL_CMD_START
+      board_id: 123
+
+  - type: CTRL_CMD
+    ctrl_cmd:
+      type: CTRL_FAN
+      board_id: 123
+      value: 0
+
+  - type: CTRL_CMD
+    ctrl_cmd:
+      type: CTRL_LED
+      board_id: 123
+      value: 0
+
+  - type: CTRL_CMD
+    ctrl_cmd:
+      type: CTRL_CMD_STOP
+      board_id: 123
+
+no_cmds :
+  - type: CTRL_CMD
+    ctrl_cmd:
+      type: CTRL_TEST_DONE
+      board_id: 696
+
+  - type: CTRL_CMD
+    ctrl_cmd:
+      type: CTRL_TEST_ERROR
+      board_id: 696
+
+  - type: CTRL_CMD
+    ctrl_cmd:
+      type: CTRL_SET_ZERO_POSITION
+      board_id: 123
+      value : 3.14156
+
+  - type: FLASH_CMD
+    flash_cmd:
+      type: LOAD_DEFAULT_PARAMS
+      board_id: 696
+
+  - type : CTRL_CMD
+    ctrl_cmd :
+      type: CTRL_DAC_TUNE
+      board_id: 696
+
+  - type: FLASH_CMD
+    flash_cmd:
+      type: SAVE_PARAMS_TO_FLASH
+      board_id: 696
+
+  - type: FLASH_CMD
+    flash_cmd:
+      type: LOAD_PARAMS_FROM_FLASH
+      board_id: 696
+

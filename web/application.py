@@ -4,13 +4,16 @@ from flask import Flask, render_template, request, jsonify, send_from_directory
 
 # import logging
 import URDF_writer
-import poller
+import zmq_poller
 import zmq
+import yaml
+
+import zmq_requester
 
 app = Flask(__name__, static_folder='static', static_url_path='')
 
 # Instance of ZMQ Poller class (create sockets, etc.)
-zmq_poller = poller.ZmqPoller()
+zmq_poller = zmq_poller.ZmqPoller()
 
 # Instance of UrdfWriter class
 urdf_writer = URDF_writer.UrdfWriter()
@@ -26,6 +29,7 @@ context = zmq.Context()#.instance()
 # Socket to talk to poller
 requester = context.socket(zmq.REQ)
 requester.connect('tcp://localhost:5555')
+#requester.connect('tcp://10.255.36.12:5555')
 
 # Flags defining which mode are in
 building_mode_ON = True
@@ -145,15 +149,55 @@ def syncHW():
     # data = jsonify(data)
     # return data
 
-    requester.send(b"Topology_REQ")
-    message = requester.recv_json()
-    print("Received reply: %s" % (message))
+
+    # requester.send(b"Topology_REQ")
+    # message = requester.recv_json()
+    # print("Received reply: %s" % (message))
     
-    data = urdf_writer_fromHW.read_from_json(message)
+    # # data = urdf_writer_fromHW.read_from_json(message)
+    # data = urdf_writer_fromHW.read_from_json_alt(message)
+
+    # #print('data:', data)
+    # data = jsonify(data)
+    # return data
+
+    opts = zmq_requester.repl_option()
+    d = yaml.load(open(opts["repl_yaml"], 'r'))
+
+    io = zmq_requester.zmqIO(d['uri'])
+
+    cnt = opts["cmd_exec_cnt"]
+    while cnt:
+
+        print("cmd_exec_cnt", cnt)
+        cnt -= 1
+
+        test_dict = {"type": "ECAT_MASTER_CMD", "ecat_master_cmd": {"type": "GET_SLAVES_DESCR"}}
+        io.send_to(test_dict)
+        ''' wait reply ... blocking'''
+        reply = io.recv_from()
+
+        if not 'cmds' in d:
+            continue
+
+        for cmd_dict in gen_cmds(d['cmds']):
+            ''' send cmd '''
+            io.send_to(cmd_dict)
+            ''' wait reply ... blocking'''
+            reply = io.recv_from()
+
+            #time.sleep(0.01)
+
+        #time.sleep(0.05)
+
+    print("Exit")
+
+    # data = urdf_writer_fromHW.read_from_json(message)
+    data = urdf_writer_fromHW.read_from_json_alt(reply)
+
     #print('data:', data)
     data = jsonify(data)
     return data
-
 
 # Change mode and reset
 @app.route('/changeMode/', methods=['POST'])
