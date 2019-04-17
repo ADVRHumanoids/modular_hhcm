@@ -45,7 +45,7 @@ class EscCmdMessage(MultiPartMessage):
         return [self.header, self.cmd]
 
 class EcatMasterCmdMessage(MultiPartMessage):
-    header = b"ECAT_MASTER_CMD"
+    header = b"MASTER_CMD"
 
     def __init__(self, cmd):
         self.cmd = cmd

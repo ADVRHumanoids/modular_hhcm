@@ -317,8 +317,16 @@ class UrdfWriter:
 
             for module_id in module.keys():
                 
-                if module[module_id]['esc_type'] == 512:
+                if module[module_id]['esc_type'] == 21:
                     data = self.add_module('module_joint_elbow_B.yaml', 0)
+                elif module[module_id]['esc_type'] == 513:
+                    data = self.add_module('module_link_300mm_B.yaml', 0)
+                elif module[module_id]['esc_type'] == 514:
+                    data = self.add_module('module_link_500mm_B.yaml', 0)
+                elif module[module_id]['esc_type'] == 515:
+                    data = self.add_module('module_link_700mm_B.yaml', 0)
+                elif module[module_id]['esc_type'] == 516:
+                    data = self.add_module('module_elbow_B.yaml', 0)
                 else:
                     print('Error')
 
@@ -395,8 +403,16 @@ class UrdfWriter:
                 #     con_name = name + '_con' + str(_connector_index)
                 #     self.select_module(con_name)
                 # Add the module
-                if child[child_id]['esc_type'] == 512:
+                if child[child_id]['esc_type'] == 21:
                     data = self.add_module('module_joint_elbow_B.yaml', 0)
+                elif child[child_id]['esc_type'] == 513:
+                    data = self.add_module('module_link_300mm_B.yaml', 0)
+                elif child[child_id]['esc_type'] == 514:
+                    data = self.add_module('module_link_500mm_B.yaml', 0)
+                elif child[child_id]['esc_type'] == 515:
+                    data = self.add_module('module_link_700mm_B.yaml', 0)
+                elif child[child_id]['esc_type'] == 516:
+                    data = self.add_module('module_elbow_B.yaml', 0)
                 else:
                     print('Error')
                 # Update variables and process its connections
