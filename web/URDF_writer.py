@@ -10,6 +10,7 @@ import yaml
 import json
 
 import read_yaml  # import module_from_yaml, ModuleNode, mastercube_from_yaml, slavecube_from_yaml
+import argparse
 
 import tf
 
@@ -34,6 +35,14 @@ path_superbuild = os.path.abspath(os.path.join(path_name, '../..'))
 # #obtaining tree from base file
 # basefile_name=path_name + '/urdf/ModularBot_new.urdf.xacro'
 # urdf_tree = ET.parse(basefile_name)
+
+def repl_option():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-f", "--file_yaml", dest="esc_type_yaml", action="store", default="esc_type.yaml")
+    parser.add_argument("-c", dest="cmd_exec_cnt", action="store", type=int, default=1)
+    args = parser.parse_args()
+    dict_opt = vars(args)
+    return dict_opt
 
 
 class UrdfWriter:
@@ -304,6 +313,10 @@ class UrdfWriter:
         # self.urdf_tree = ET.ElementTree(self.root)
         # print(ET.tostring(self.urdf_tree.getroot()))
 
+        #Load the dictionary yaml file
+        opts = repl_option()
+        d = yaml.load(open(opts["esc_type_yaml"], 'r'))
+
         # Add a first cube for the initial ethercat test with no Hub. TODO: remove it once the hub is implemented and can be added automatically
         data = self.add_slave_cube(0)
         # module_name = data['lastModule_name']
@@ -313,32 +326,27 @@ class UrdfWriter:
         # Process the modules described in the json to create the tree
         modules = json.loads(json_data)
         for module in modules:
-            print(module)
+            print(329,module)
 
+            # This loop actually has only one iteration over the first element of the module list in the json msg
             for module_id in module.keys():
-                
-                if module[module_id]['esc_type'] == 21:
-                    data = self.add_module('module_joint_elbow_B.yaml', 0)
-                elif module[module_id]['esc_type'] == 513:
-                    data = self.add_module('module_link_300mm_B.yaml', 0)
-                elif module[module_id]['esc_type'] == 514:
-                    data = self.add_module('module_link_500mm_B.yaml', 0)
-                elif module[module_id]['esc_type'] == 515:
-                    data = self.add_module('module_link_700mm_B.yaml', 0)
-                elif module[module_id]['esc_type'] == 516:
-                    data = self.add_module('module_elbow_B.yaml', 0)
-                else:
-                    print('Error')
+
+                #Find the name of the yaml describing the module to be added, searching the dictionary by the esc_type
+                module_filename = d.get(module[module_id]['esc_type'])
+                data = self.add_module(module_filename, 0)
 
                 module_name = data['lastModule_name']
                 module_type = data['lastModule_type']
 
+                #generate the list of connections. Right now since only unbranched chains are supported the only connection is the next module on the list
+                #TODO: get the connections list where branches will be present in the robot
                 connections = []
                 if module[module_id]['topology'] == 2:
                     connections.append(str(int(module_id)+1))
+                #if topology is not 2, the only other option is 1 right now so the connections list is empty
                 print(connections)
 
-                self.process_connections_alt(connections, modules, module_name, module_type)
+                self.process_connections_alt(connections, modules, module_name, module_type, d)
                 
             break
             # if module['connections'][0] == 0:
@@ -357,6 +365,8 @@ class UrdfWriter:
         # xacro.process_doc(doc, in_order=True)
         # string = doc.toprettyxml(indent='  ')
         string = self.process_urdf()
+
+        print(d.get(515))
 
         data = {'string': string}
         return data
@@ -386,7 +396,7 @@ class UrdfWriter:
                 module_type = data['lastModule_type']
                 self.process_connections(child['connections'], modules_list, module_name, module_type)
 
-    def process_connections_alt(self, connections_list, modules_list, name, m_type):
+    def process_connections_alt(self, connections_list, modules_list, name, m_type, esc_dict):
         """Process connections of the module as described in the JSON as a list"""
         print('enter!')
         for child_id in connections_list:
@@ -403,18 +413,10 @@ class UrdfWriter:
                 #     con_name = name + '_con' + str(_connector_index)
                 #     self.select_module(con_name)
                 # Add the module
-                if child[child_id]['esc_type'] == 21:
-                    data = self.add_module('module_joint_elbow_B.yaml', 0)
-                elif child[child_id]['esc_type'] == 513:
-                    data = self.add_module('module_link_300mm_B.yaml', 0)
-                elif child[child_id]['esc_type'] == 514:
-                    data = self.add_module('module_link_500mm_B.yaml', 0)
-                elif child[child_id]['esc_type'] == 515:
-                    data = self.add_module('module_link_700mm_B.yaml', 0)
-                elif child[child_id]['esc_type'] == 516:
-                    data = self.add_module('module_elbow_B.yaml', 0)
-                else:
-                    print('Error')
+
+                esc_type = esc_dict.get(child[child_id]['esc_type'])
+                data = self.add_module(esc_type, 0)
+
                 # Update variables and process its connections
                 module_name = data['lastModule_name']
                 module_type = data['lastModule_type']
@@ -424,7 +426,7 @@ class UrdfWriter:
                     connections.append(str(int(child_id)+1))
                 print('connections:', connections)
                     
-                self.process_connections_alt(connections, modules_list, module_name, module_type)
+                self.process_connections_alt(connections, modules_list, module_name, module_type, esc_dict)
 
 
     def read_file(self, file_str):
