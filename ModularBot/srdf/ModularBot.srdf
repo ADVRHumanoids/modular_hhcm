@@ -1,0 +1,15 @@
+<?xml version="1.0" ?>
+<robot name="ModularBot">
+   <group name="chain_1">
+      <chain base_link="L_0a" tip_link="L_1_elbow_1_A"/>
+   </group>
+   <group name="arms">
+      <group name="chain_1"/>
+   </group>
+   <group name="chains">
+      <group name="chain_1"/>
+   </group>
+   <group_state group="chains" name="home">
+      <joint name="J1_A" value="1.57"/>
+   </group_state>
+</robot>

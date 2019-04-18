@@ -1,0 +1,140 @@
+# CENTAURO config
+XBotInterface:
+  urdf_path: "configs/ADVR_shared/ModularBot/urdf/ModularBot.urdf"
+  srdf_path: "configs/ADVR_shared/ModularBot/srdf/ModularBot.srdf"
+  joint_map_path: "configs/ADVR_shared/ModularBot/joint_map/ModularBot_joint_map.yaml"
+
+RobotInterface:
+  #framework_name: "XBotRT"
+  framework_name: "ROS"
+
+ModelInterface:
+  model_type: "RBDL"
+  is_model_floating_base: "false"
+
+RobotInterfaceROS:
+  subclass_name: "RobotInterfaceROS"
+  path_to_shared_lib: "libRobotInterfaceROS.so"
+  subclass_factory_name: "robot_interface_ros"
+  control_message_type: "AdvrCommandMessage"
+  jointstate_message_type: "AdvrJointStateMessage"
+
+RobotInterfaceXBotRT:
+  subclass_name: "RobotInterfaceXBotRT"
+  path_to_shared_lib: "libRobotInterfaceXBotRT.so"
+  subclass_factory_name: "robot_interface_xbot_rt"
+
+XBotRTPlugins:
+  #plugins: ["ExoskeletonCommunicationPlugin", "TwoPriorityRtIkPlugin"]
+  #plugins: ["ExoskeletonCommunicationPlugin", "HomingExample"]
+  #plugins: ["HomingExample", "IkRosSharedMemoryPublisher", "OpenSotIk"]
+  plugins: ["HomingExample"]
+  io_plugins: []
+  #io_plugins: ["IkRosIo"]
+  #plugins: ["ExoskeletonCommunicationPlugin"]
+  #plugins: ["PlayJointSpaceDemo"] #, "TwoPriorityRtIkPlugin"]
+  
+MasterCommunicationInterface:
+  framework_name: "ROS"
+
+CustomCmnd:
+  subclass_name: "CustomCmndMessage"
+  path_to_shared_lib: "libCustomCmndMessage.so"
+  subclass_factory_name: "customcmnd_control_message"
+  joint_service_name: "/centauro/position_controller/get_joint_names"
+  command_topic_name: "/centauro/position_controller/command"
+
+JointState:
+  subclass_name: "JointStateMessage"
+  path_to_shared_lib: "libJointStateMessage.so"
+  subclass_factory_name: "jointstate_jointstate_message"
+  joint_state_topic_name: "/centauro/joint_states"
+
+AdvrCommandMessage:
+  subclass_name: "CommandAdvr"
+  path_to_shared_lib: "libAdvrCommandMessage.so"
+  subclass_factory_name: "advrcommandmessage_control_message"
+  joint_service_name: "/centauro/position_controller/get_joint_names"
+  command_topic_name: "/xbotcore/centauro/command"
+
+AdvrJointStateMessage:
+  subclass_name: "AdvrJointState"
+  path_to_shared_lib: "libAdvrJointStateMessage.so"
+  subclass_factory_name: "advrjointstate_jointstate_message"
+  joint_state_topic_name: "/xbotcore/centauro/joint_states"
+
+RobotInterfaceDUMMY:
+  subclass_name: "RobotInterfaceDUMMY"
+  path_to_shared_lib: "libRobotInterfaceDUMMY.so"
+  subclass_factory_name: "robot_interface_dummy"
+
+ModelInterfaceRBDL:
+  subclass_name: "ModelInterfaceRBDL"
+  path_to_shared_lib: "libModelInterfaceRBDL.so"
+  subclass_factory_name: "model_interface_rbdl"
+
+# GazeboXBotPlugin:
+#   gains:
+#     J1_A: {p: 5000, d: 30}
+#     J2_A: {p: 5000, d: 30}
+#     J3_A: {p: 5000, d: 30}
+#     J1_B: {p: 5000, d: 30}
+#     J2_B: {p: 5000, d: 30}
+#     J3_B: {p: 5000, d: 30}
+
+# x_bot_core:
+#   urdf_path: /home/embedded/robotology-superbuild/configs/ADVR_shared/centauro/urdf/centauro_bonn_review.urdf
+#   srdf_path: /home/embedded/robotology-superbuild/configs/ADVR_shared/centauro/srdf/centauro_bonn_review.srdf
+#   joint_map_config: /home/embedded/robotology-superbuild/configs/ADVR_shared/centauro/joint_map/centauro_bonn_review.yaml
+
+x_bot_ecat:
+  name: XBotCore
+  sdo_xddp_prefix :
+  # periodic - priority if needed here
+
+
+#
+ec_board_ctrl:
+  eth_iface: rteth0
+  #eth_iface: eth1
+  #sync_cycle_time_ns: 500000
+  sync_cycle_time_ns: 1000000
+  #sync_cycle_time_ns: 2000000
+  #sync_cycle_time_ns: 5000000
+  #sync_cycle_time_ns: 10000000
+  #sync_cycle_time_ns: 0
+  sync_cycle_offset_ns: 1000000000
+  power_off_boards: false
+
+#
+ec_boards_base:
+  create_pipes: false
+
+firmware_update:
+  #
+  fw_path: ../examples/fw_update/fw_test/
+  #slave_pos_list: [7]
+  #slave_rId_list: [7]
+  # all esc
+  #slave_pos_list: [0]
+  # all BigMotor
+  #slave_pos_list: [-1]
+  # all MedMotor
+  #slave_pos_list: [-2]
+  # all LowPower motor
+  #slave_pos_list: [-3]
+  # all CentAC motor
+  slave_pos_list: [-4]
+  #slave_pos_list: [1]
+
+  cent_AC:
+    m3:
+      bin_file: cent_AC_m3.bin
+      passwd: 0xA550
+    c28:
+      bin_file: cent_AC_c28.bin
+      passwd: 0xDAD0
+
+#############################
+# GENERIC ESC config
+#############################
