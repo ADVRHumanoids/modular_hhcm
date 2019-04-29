@@ -722,16 +722,16 @@ class UrdfWriter:
         if self.parent_module.type == 'joint':
             if new_module.type == 'joint':
                 # joint + joint
-                self.joint_after_joint(new_module, self.parent_module)
+                self.joint_after_joint(new_module, self.parent_module, angle_offset)
                 # Add the joint to the list of chains
                 self.add_to_chain(new_module)
             else:
                 # joint + link
-                self.link_after_joint(new_module, self.parent_module)
+                self.link_after_joint(new_module, self.parent_module, angle_offset)
         else:
             if new_module.type == 'joint':
                 # link + joint
-                self.joint_after_link(new_module, self.parent_module)
+                self.joint_after_link(new_module, self.parent_module, angle_offset)
                 # Add the joint to the list of chains
                 self.add_to_chain(new_module)
             else:
@@ -1017,7 +1017,7 @@ class UrdfWriter:
         return data
 
     # noinspection PyPep8Naming
-    def link_after_joint(self, new_Link, past_Joint):
+    def link_after_joint(self, new_Link, past_Joint, offset):
         """Adds to the URDF tree a link module as a child of a joint module
 
         Parameters
@@ -1029,7 +1029,7 @@ class UrdfWriter:
             ModuleNode object of the joint module to which attach the link
         """
 
-        new_Link.get_rototranslation(past_Joint.Distal_tf, tf.transformations.identity_matrix())
+        new_Link.get_rototranslation(past_Joint.Distal_tf, tf.transformations.rotation_matrix(offset, self.zaxis))
 
         setattr(new_Link, 'p', past_Joint.p + 1)
 
@@ -1081,7 +1081,7 @@ class UrdfWriter:
 
     # TODO: put a check to avoid attach 2 normal joints together, only elbow joints are allowed
     # noinspection PyPep8Naming
-    def joint_after_joint(self, new_Joint, past_Joint):
+    def joint_after_joint(self, new_Joint, past_Joint, offset):
         """Adds to the URDF tree a joint module as a child of a joint module
 
         Parameters
@@ -1092,7 +1092,7 @@ class UrdfWriter:
         past_Joint: read_yaml.ModuleNode
             ModuleNode object of the joint module to which attach the joint
         """
-        new_Joint.get_rototranslation(past_Joint.Distal_tf, tf.transformations.identity_matrix())
+        new_Joint.get_rototranslation(past_Joint.Distal_tf, tf.transformations.rotation_matrix(offset, self.zaxis))
 
         setattr(new_Joint, 'i', past_Joint.i + 1)
         setattr(new_Joint, 'p', 0)
@@ -1144,9 +1144,9 @@ class UrdfWriter:
                       velocity=velocity)
 
     # noinspection PyPep8Naming
-    def joint_after_link(self, new_Joint, past_Link):
+    def joint_after_link(self, new_Joint, past_Link, offset):
         """Adds to the URDF tree a joint module as a child of a link module"""
-        new_Joint.get_rototranslation(past_Link.Homogeneous_tf, tf.transformations.identity_matrix())
+        new_Joint.get_rototranslation(past_Link.Homogeneous_tf, tf.transformations.rotation_matrix(offset, self.zaxis))
 
         setattr(new_Joint, 'i', past_Link.i + 1)
         setattr(new_Joint, 'p', 0)
