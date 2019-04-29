@@ -36,6 +36,7 @@ path_superbuild = os.path.abspath(os.path.join(path_name, '../..'))
 # basefile_name=path_name + '/urdf/ModularBot_new.urdf.xacro'
 # urdf_tree = ET.parse(basefile_name)
 
+
 def repl_option():
     parser = argparse.ArgumentParser()
     parser.add_argument("-f", "--file_yaml", dest="esc_type_yaml", action="store", default="esc_type.yaml")
@@ -230,7 +231,18 @@ class UrdfWriter:
     # 	# ET.SubElement(root, "xacro:add_master_cube", name=name)
 
     # 	# fixed_joint_name = 'cube_joint'
-    # 	# ET.SubElement(root, "xacro:add_fixed_joint", name=fixed_joint_name, type="fixed_joint", father=past_Link.name, child=new_Link.name, x=new_Link.x, y=new_Link.y, z=new_Link.z, roll=new_Link.roll, pitch=new_Link.pitch, yaw=new_Link.yaw)
+    #   # ET.SubElement(root,
+    #   #               "xacro:add_fixed_joint",
+    #   #               name=fixed_joint_name,
+    #   #               type="fixed_joint",
+    #   #               father=past_Link.name,
+    #   #               child=new_Link.name,
+    #   #               x=new_Link.x,
+    #   #               y=new_Link.y,
+    #   #               z=new_Link.z,
+    #   #               roll=new_Link.roll,
+    #   #               pitch=new_Link.pitch,
+    #   #               yaw=new_Link.yaw)
 
     # 	#update the urdf file, adding the new module
     # 	#string = write_urdf(path_name + '/urdf/ModularBot_test.urdf', urdf_tree)
@@ -238,8 +250,12 @@ class UrdfWriter:
     # 	string = self.process_urdf()
 
     # 	self.parent_module = mastercube
-
-    # 	data = {'result': string, 'lastModule_type': 'mastercube', 'lastModule_name': name, 'size': 3, 'count': self.n_cubes}
+    #
+    #  	data = {'result': string,
+    #             'lastModule_type': 'mastercube',
+    #             'lastModule_name': name,
+    #             'size': 3,
+    #             'count': self.n_cubes}
 
     # 	return data
 
@@ -255,13 +271,13 @@ class UrdfWriter:
                 continue
         return found_module
 
+    # This method will be used when branches in the robot will be supported.
     def read_from_json(self, json_data):
 
         # If a tree representing the topology was already instantiated, re-initialize and start from scratch
         if self.root != 0:
             print("Re-initialization")
             self.__init__()
-
         
         # # Open the base xacro file
         # filename = path_name + '/urdf/ModularBot_new.urdf.xacro'
@@ -271,7 +287,6 @@ class UrdfWriter:
         # self.root = ET.fromstring(string)
         # self.urdf_tree = ET.ElementTree(self.root)
         # print(ET.tostring(self.urdf_tree.getroot()))
-
 
         # Process the modules described in the json to create the tree
         modules = json_data['modules']
@@ -296,14 +311,26 @@ class UrdfWriter:
         data = {'string': string}
         return data
 
+    # Until the robot can be only an unbranched robot this function needs to be called. No "connections" in json msg
     def read_from_json_alt(self, json_data):
+        """Read the JSON msg with info on the topology and produce the URDF
+
+            Parameters
+            ----------
+            json_data: str
+                String containing the JSON msg received from 0MQ
+
+            Returns
+            ----------
+            data: dict
+                Dictionary containing the URDF string
+        """
 
         # If a tree representing the topology was already instantiated, re-initialize and start from scratch
         if self.root != 0:
             print("Re-initialization")
             self.__init__()
 
-        
         # # Open the base xacro file
         # filename = path_name + '/urdf/ModularBot_new.urdf.xacro'
         # with codecs.open(filename, 'r') as f:
@@ -313,39 +340,45 @@ class UrdfWriter:
         # self.urdf_tree = ET.ElementTree(self.root)
         # print(ET.tostring(self.urdf_tree.getroot()))
 
-        #Load the dictionary yaml file
+        # Load the esc_type dictionary from yaml file
         opts = repl_option()
         d = yaml.load(open(opts["esc_type_yaml"], 'r'))
 
-        # Add a first cube for the initial ethercat test with no Hub. TODO: remove it once the hub is implemented and can be added automatically
+        # Add a first cube for the initial ethercat test with no Hub.
+        # TODO: remove it once the hub is implemented and can be added automatically
         data = self.add_slave_cube(0)
         # module_name = data['lastModule_name']
         module_name = 'L_0a_con2'
-        module_type = data['lastModule_type']
+        # module_type = data['lastModule_type']
 
         # Process the modules described in the json to create the tree
         modules = json.loads(json_data)
         for module in modules:
-            print(329,module)
+            print(329, module)
 
-            # This loop actually has only one iteration over the first element of the module list in the json msg
+            # This loop has only one iteration over the first element of each chain in the module list from the json msg
+            # The others modules in the chain are processed by process_connections_alt
+            # TODO: The "IDs" actually are now the "positions" in the ECAT network (from get_ec_positions()).
+            #       Need to change when branches are implemented
             for module_id in module.keys():
 
-                #Find the name of the yaml describing the module to be added, searching the dictionary by the esc_type
+                # Find the name of the yaml describing the module to be added, searching the dictionary by the esc_type
                 module_filename = d.get(module[module_id]['esc_type'])
                 data = self.add_module(module_filename, 0)
 
                 module_name = data['lastModule_name']
                 module_type = data['lastModule_type']
 
-                #generate the list of connections. Right now since only unbranched chains are supported the only connection is the next module on the list
-                #TODO: get the connections list where branches will be present in the robot
+                # generate the list of connections.
+                # Right now only unbranched chains are supported so the only connection is the next module on the list
+                # TODO: get the connections list when branches will be present in the robot
                 connections = []
                 if module[module_id]['topology'] == 2:
                     connections.append(str(int(module_id)+1))
-                #if topology is not 2, the only other option is 1 right now so the connections list is empty
+                # if topology is not 2, the only other option is 1 right now so the connections list is empty
                 print(connections)
 
+                # Process the connections of the module and add the modules as child of the current one
                 self.process_connections_alt(connections, modules, module_name, module_type, d)
                 
             break
@@ -359,7 +392,6 @@ class UrdfWriter:
             #     module_name = data['lastModule_name']
             #     module_type = data['lastModule_type']
             #     self.process_connections_alt(connections, modules, module_name, module_type)
-                
         
         # doc = xacro.parse(string)
         # xacro.process_doc(doc, in_order=True)
@@ -397,24 +429,46 @@ class UrdfWriter:
                 self.process_connections(child['connections'], modules_list, module_name, module_type)
 
     def process_connections_alt(self, connections_list, modules_list, name, m_type, esc_dict):
-        """Process connections of the module as described in the JSON as a list"""
+        """Process connections of a module as described in the list obtained from the JSON
+
+        Parameters
+        ----------
+        connections_list: list
+            List containing the IDs of the modules connected
+
+        modules_list: object
+            Python object obtained deserializing the JSON containing all the modules in the robot
+
+        name: str
+            Name of the module we are processing the connections of
+
+        m_type: str
+            String identifyng the type of module
+
+        esc_dict: dict
+            Dictionary assigning esc_type numbers to the relative modules and the yaml file describing it
+
+        """
         print('enter!')
         for child_id in connections_list:
             print('child: ', child_id)
             self.select_module(name)
             print(self.parent_module.name)
             if child_id != -1:
-                # Find child module to process searching by id
-                child = modules_list[int(child_id) - 1] #self.find_module_from_id(child_id, modules_list)
+                # Find child module to process searching by id in the modules_list
+                child = modules_list[int(child_id) - 1]  # self.find_module_from_id(child_id, modules_list)
                 print(child[child_id])
-                # If the processed module is a mastercube we need first to select the connector to which attach to
+                # TODO: Uncomment below when switching to branched robot
+                # # If the processed module is a mastercube we need first to select the connector to which attach to
                 # if m_type == 'mastercube':
                 #     _connector_index = connections_list.index(child_id) + 1
                 #     con_name = name + '_con' + str(_connector_index)
                 #     self.select_module(con_name)
-                # Add the module
 
+                # child is an element of the JSON. child_id is the key to access its value.
+                # esc_type is a number specifying the type of module
                 esc_type = esc_dict.get(child[child_id]['esc_type'])
+                # Add the module
                 data = self.add_module(esc_type, 0)
 
                 # Update variables and process its connections
@@ -422,15 +476,18 @@ class UrdfWriter:
                 module_type = data['lastModule_type']
                 
                 connections = []
+                # Check topology to determine the num of connections and put them in the list.
+                # TODO: add cases for different topologies when switching to branched robots
                 if child[child_id]['topology'] == 2:
                     connections.append(str(int(child_id)+1))
                 print('connections:', connections)
-                    
+
+                # Recursively call the function.
+                # Process the connections of the module and add the modules as child of the current one
                 self.process_connections_alt(connections, modules_list, module_name, module_type, esc_dict)
 
-
     def read_file(self, file_str):
-        """Open the URDF chosen from the front-end and import it as a tree"""
+        """Open the URDF chosen from the front-end and import it as a ElemenTree tree"""
         # global root, urdf_tree
         print(file_str)
         self.root = ET.fromstring(file_str.encode('utf-8'))
@@ -449,6 +506,7 @@ class UrdfWriter:
         return data
 
     def process_urdf(self):
+        """Process the urdf to convert from xacro and perform macro substitutions"""
         # global urdf_tree
         # write the urdf tree to a string
         xmlstr = xml.dom.minidom.parseString(ET.tostring(self.urdf_tree.getroot())).toprettyxml(indent="   ")
@@ -463,6 +521,7 @@ class UrdfWriter:
         return string
 
     def add_to_chain(self, new_joint):
+        """Add joint to the chain"""
         tag_index = self.inverse_branch_switcher.get(new_joint.tag)
         chain = [new_joint]
         print(461, tag_index, len(self.listofchains))
@@ -581,7 +640,18 @@ class UrdfWriter:
             # ET.SubElement(root, "xacro:add_master_cube", name=name)
 
             # fixed_joint_name = 'cube_joint'
-            # ET.SubElement(root, "xacro:add_fixed_joint", name=fixed_joint_name, type="fixed_joint", father=past_Link.name, child=new_Link.name, x=new_Link.x, y=new_Link.y, z=new_Link.z, roll=new_Link.roll, pitch=new_Link.pitch, yaw=new_Link.yaw)
+            # ET.SubElement(root,
+            #               "xacro:add_fixed_joint",
+            #               name=fixed_joint_name,
+            #               type="fixed_joint",
+            #               father=past_Link.name,
+            #               child=new_Link.name,
+            #               x=new_Link.x,
+            #               y=new_Link.y,
+            #               z=new_Link.z,
+            #               roll=new_Link.roll,
+            #               pitch=new_Link.pitch,
+            #               yaw=new_Link.yaw)
 
             # update the urdf file, adding the new module
             # string = write_urdf(path_name + '/urdf/ModularBot_test.urdf', urdf_tree)
@@ -593,7 +663,11 @@ class UrdfWriter:
             self.parent_module = slavecube
 
             # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
-            data = {'result': string, 'lastModule_type': 'mastercube', 'lastModule_name': name, 'size': 3, 'count': self.n_cubes}
+            data = {'result': string,
+                    'lastModule_type': 'mastercube',
+                    'lastModule_name': name,
+                    'size': 3,
+                    'count': self.n_cubes}
 
             return data
 
@@ -604,7 +678,8 @@ class UrdfWriter:
             name = 'L_0' + self.cube_switcher.get(self.n_cubes)
             self.n_cubes += 1
 
-            # self.T_con = tf.transformations.translation_matrix((0, 0, 0.1))  # self.mastercube.geometry.connector_length))
+            # self.T_con = tf.transformations.translation_matrix((0, 0, 0.1))
+            # self.T_con = self.mastercube.geometry.connector_length))
 
             filename = path_name + '/web/static/yaml/master_cube.yaml'
 
@@ -651,7 +726,18 @@ class UrdfWriter:
             # ET.SubElement(root, "xacro:add_master_cube", name=name)
 
             # fixed_joint_name = 'cube_joint'
-            # ET.SubElement(root, "xacro:add_fixed_joint", name=fixed_joint_name, type="fixed_joint", father=past_Link.name, child=new_Link.name, x=new_Link.x, y=new_Link.y, z=new_Link.z, roll=new_Link.roll, pitch=new_Link.pitch, yaw=new_Link.yaw)
+            # ET.SubElement(root,
+            #               "xacro:add_fixed_joint",
+            #               name=fixed_joint_name,
+            #               type="fixed_joint",
+            #               father=past_Link.name,
+            #               child=new_Link.name,
+            #               x=new_Link.x,
+            #               y=new_Link.y,
+            #               z=new_Link.z,
+            #               roll=new_Link.roll,
+            #               pitch=new_Link.pitch,
+            #               yaw=new_Link.yaw)
 
             # update the urdf file, adding the new module
             # string = write_urdf(path_name + '/urdf/ModularBot_test.urdf', urdf_tree)
@@ -1027,6 +1113,9 @@ class UrdfWriter:
 
         past_Joint: read_yaml.ModuleNode
             ModuleNode object of the joint module to which attach the link
+
+        offset: float
+            Value of the angle between the parent module output frame and the module input frame
         """
 
         new_Link.get_rototranslation(past_Joint.Distal_tf, tf.transformations.rotation_matrix(offset, self.zaxis))
@@ -1090,7 +1179,10 @@ class UrdfWriter:
             ModuleNode object of the joint module to add
 
         past_Joint: read_yaml.ModuleNode
-            ModuleNode object of the joint module to which attach the joint
+            ModuleNode object of the joint module to which the joint will be attached
+
+        offset: float
+            Value of the angle between the parent module output frame and the module input frame
         """
         new_Joint.get_rototranslation(past_Joint.Distal_tf, tf.transformations.rotation_matrix(offset, self.zaxis))
 
@@ -1145,7 +1237,19 @@ class UrdfWriter:
 
     # noinspection PyPep8Naming
     def joint_after_link(self, new_Joint, past_Link, offset):
-        """Adds to the URDF tree a joint module as a child of a link module"""
+        """Adds to the URDF tree a joint module as a child of a link module
+
+        Parameters
+        ----------
+        new_Joint: read_yaml.ModuleNode
+            ModuleNode object of the joint module to add
+
+        past_Link: read_yaml.ModuleNode
+            ModuleNode object of the link module to which the joint will be attached
+
+        offset: float
+            Value of the angle between the parent module output frame and the module input frame
+        """
         new_Joint.get_rototranslation(past_Link.Homogeneous_tf, tf.transformations.rotation_matrix(offset, self.zaxis))
 
         setattr(new_Joint, 'i', past_Link.i + 1)
@@ -1197,7 +1301,19 @@ class UrdfWriter:
 
     # noinspection PyPep8Naming
     def link_after_link(self, new_Link, past_Link, offset):
-        """Adds to the URDF tree a link module as a child of a link module"""
+        """Adds to the URDF tree a joint module as a child of a link module
+
+        Parameters
+        ----------
+        new_Link: read_yaml.ModuleNode
+            ModuleNode object of the link module to add
+
+        past_Link: read_yaml.ModuleNode
+            ModuleNode object of the link module to which the joint will be attached
+
+        offset: float
+            Value of the angle between the parent module output frame and the module input frame
+        """
         new_Link.get_rototranslation(past_Link.Homogeneous_tf, tf.transformations.rotation_matrix(offset, self.zaxis))
         print(new_Link.z)
 
@@ -1250,6 +1366,8 @@ class UrdfWriter:
                       yaw=new_Link.yaw)
 
     def write_joint_map(self):
+        """Creates the joint map needed by XBotCore """
+
         global path_name
         jointmap_filename = path_superbuild + '/configs/ADVR_shared/ModularBot/joint_map/ModularBot_joint_map.yaml'
         i = 0
@@ -1265,10 +1383,10 @@ class UrdfWriter:
         return joint_map
 
     def write_srdf(self):
+        """Generates a basic srdf so that the model can be used right away with XBotCore"""
         global path_name
         srdf_filename = path_superbuild + '/configs/ADVR_shared/ModularBot/srdf/ModularBot.srdf'
 
-        out = xacro.open_output(srdf_filename)
         root = ET.Element('robot', name="ModularBot")
 
         group = []
@@ -1276,8 +1394,8 @@ class UrdfWriter:
         joint = []
         group_in_chains_group = []
         group_in_arms_group = []
-        base_link = ""
-        tip_link = ""
+        # base_link = ""
+        # tip_link = ""
         i = 0
         for joints_chain in self.listofchains:
             group_name = "chain_"+str(i+1)
@@ -1303,7 +1421,7 @@ class UrdfWriter:
             group_name = "chain_"+str(i+1)
             group_in_chains_group.append(ET.SubElement(chains_group, 'group', name=group_name))
             group_in_arms_group.append(ET.SubElement(arms_group, 'group', name=group_name))
-            for joint_module in joints_chain :
+            for joint_module in joints_chain:
                 joint.append(ET.SubElement(group_state, 'joint', name=joint_module.name, value="1.57"))
             i += 1
 
