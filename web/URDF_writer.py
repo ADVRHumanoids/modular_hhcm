@@ -8,6 +8,7 @@ import xml.dom.minidom
 import codecs
 import yaml
 import json
+from collections import OrderedDict
 
 import read_yaml  # import module_from_yaml, ModuleNode, mastercube_from_yaml, slavecube_from_yaml
 import argparse
@@ -18,6 +19,7 @@ import tf
 import anytree
 
 
+from shutil import copyfile
 import os
 import sys
 currDir = os.path.dirname(os.path.realpath(__file__))
@@ -35,6 +37,43 @@ path_superbuild = os.path.abspath(os.path.join(path_name, '../..'))
 # #obtaining tree from base file
 # basefile_name=path_name + '/urdf/ModularBot_new.urdf.xacro'
 # urdf_tree = ET.parse(basefile_name)
+
+
+# noinspection PyPep8Naming
+def ordered_load(stream, Loader=yaml.Loader, object_pairs_hook=OrderedDict):
+    class OrderedLoader(Loader):
+        pass
+
+    def construct_mapping(loader, node):
+        loader.flatten_mapping(node)
+        return object_pairs_hook(loader.construct_pairs(node))
+
+    OrderedLoader.add_constructor(
+        yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
+        construct_mapping)
+
+    return yaml.load(stream, OrderedLoader)
+
+
+class MyDumper(yaml.Dumper):
+
+    def increase_indent(self, flow=False, indentless=False):
+        return super(MyDumper, self).increase_indent(flow, False)
+
+
+# noinspection PyPep8Naming
+def ordered_dump(data, stream=None, Dumper=MyDumper, **kwds):
+    class OrderedDumper(Dumper):
+        pass
+
+    def _dict_representer(dumper, data):
+        return dumper.represent_mapping(
+            yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
+            data.items())
+
+    OrderedDumper.add_representer(OrderedDict, _dict_representer)
+
+    return yaml.dump(data, stream, OrderedDumper, **kwds)
 
 
 def repl_option():
@@ -468,7 +507,7 @@ class UrdfWriter:
                 # child is an element of the JSON. child_id is the key to access its value.
                 # esc_type is a number specifying the type of module
                 esc_type = esc_dict.get(child[child_id]['esc_type'])
-                # Add the module
+                # Add the module with an angle offset of 0. as default always zero relative orientation is assumed
                 data = self.add_module(esc_type, 0)
 
                 # Update variables and process its connections
@@ -521,12 +560,23 @@ class UrdfWriter:
         return string
 
     def add_to_chain(self, new_joint):
-        """Add joint to the chain"""
+        """Add joint to one of the robot kinematic chains
+
+        Parameters
+        ----------
+        new_joint: read_yaml.ModuleNode
+            New ModuleNode object representing a joint to be added to a kinematic chain"""
+
+        # get tag_index, an integer representing on which branch of the robot the joint has been added
         tag_index = self.inverse_branch_switcher.get(new_joint.tag)
         chain = [new_joint]
-        print(461, tag_index, len(self.listofchains))
+        print("tag_index: ", tag_index, "list of chains: ", len(self.listofchains))
+        # if tag_index is bigger than the length of the list of chains, it means this chain hasn't been added yet.
+        # then we need to append a new list representing the new chain formed by the new joint only
         if tag_index > len(self.listofchains):
             self.listofchains.append(chain)
+        # if instead tag_index is not bigger it means the chain the new joint is part of has already beeen added.
+        # then the new joint is appended to the list representing the chain it's part of.
         else:
             self.listofchains[tag_index - 1].append(new_joint)
 
@@ -1365,11 +1415,30 @@ class UrdfWriter:
                       pitch=new_Link.pitch,
                       yaw=new_Link.yaw)
 
+    def write_cartesio_stack(self):
+        """Creates the config file needed by CartesIO """
+
+        cartesio_filename = path_name + '/cartesio/ModularBot.yaml'
+        cartesio_stack = {'joint_map': {}}
+
+        with open(cartesio_filename, 'r') as stream:
+            try:
+                cartesio_stack = ordered_load(stream, yaml.SafeLoader)
+                # cartesio_stack['EE']['base_link'] = self.listofchains[0]
+                print(cartesio_stack.items()[0])
+            except yaml.YAMLError as exc:
+                print(exc)
+
+        # with open(cartesio_filename, 'w') as outfile:
+        #     yaml.dump(cartesio_stack, outfile, default_flow_style=False)
+        return cartesio_stack['EE']
+
     def write_joint_map(self):
         """Creates the joint map needed by XBotCore """
 
-        global path_name
-        jointmap_filename = path_superbuild + '/configs/ADVR_shared/ModularBot/joint_map/ModularBot_joint_map.yaml'
+        # global path_name
+        jointmap_filename = path_name + '/joint_map/ModularBot_joint_map.yaml'
+        # jointmap_filename = path_superbuild + '/configs/ADVR_shared/ModularBot/joint_map/ModularBot_joint_map.yaml'
         i = 0
         joint_map = {'joint_map': {}}
         for joints_chain in self.listofchains:
@@ -1385,7 +1454,19 @@ class UrdfWriter:
     def write_srdf(self):
         """Generates a basic srdf so that the model can be used right away with XBotCore"""
         global path_name
-        srdf_filename = path_superbuild + '/configs/ADVR_shared/ModularBot/srdf/ModularBot.srdf'
+        srdf_filename = path_name + '/srdf/ModularBot.srdf'
+        # srdf_filename = path_superbuild + '/configs/ADVR_shared/ModularBot/srdf/ModularBot.srdf'
+        cartesio_filename = path_name + '/cartesio/ModularBot.yaml'
+
+        # cartesio_stack = {}
+
+        with open(cartesio_filename, 'r') as stream:
+            try:
+                cartesio_stack = ordered_load(stream, yaml.SafeLoader)
+                # cartesio_stack['EE']['base_link'] = self.listofchains[0]
+                print(cartesio_stack.items()[0])
+            except yaml.YAMLError as exc:
+                print(exc)
 
         root = ET.Element('robot', name="ModularBot")
 
@@ -1412,6 +1493,13 @@ class UrdfWriter:
             else:
                 tip_link = 'L_' + str(joints_chain[-1].i) + joints_chain[-1].tag
             chain.append(ET.SubElement(group[i], 'chain', base_link=base_link, tip_link=tip_link))
+            # TODO: update this!! it's only ok for single chain robots
+            cartesio_stack['EE']['base_link'] = base_link
+            cartesio_stack['EE_XYZ']['base_link'] = base_link
+            cartesio_stack['EE_RPY']['base_link'] = base_link
+            cartesio_stack['EE']['distal_link'] = tip_link
+            cartesio_stack['EE_XYZ']['distal_link'] = tip_link
+            cartesio_stack['EE_RPY']['distal_link'] = tip_link
             i += 1
         i = 0
         arms_group = ET.SubElement(root, 'group', name="arms")
@@ -1429,16 +1517,23 @@ class UrdfWriter:
         with open(srdf_filename, "w") as f:
             f.write(xmlstr)
 
+        with open(cartesio_filename, 'w') as outfile:
+            ordered_dump(cartesio_stack, stream=outfile, Dumper=yaml.SafeDumper,  default_flow_style=False, line_break='\n\n', indent=4)
+
         # print("\nList of chains\n")
         # print(self.listofchains)
 
-        return xmlstr
+        print("\nCartesIO stack\n")
+        print(cartesio_stack)
+
+        return xmlstr, cartesio_stack
 
     # Function writin the urdf file after converting from .xacro (See xacro/__init__.py for reference)
     def write_urdf(self):
         """Returns the string with the URDF, after writing it to file"""
         global path_name, path_superbuild
-        urdf_filename = path_superbuild + '/configs/ADVR_shared/ModularBot/urdf/ModularBot.urdf'
+        urdf_filename = path_name + '/urdf/ModularBot.urdf'
+        # urdf_filename = path_superbuild + '/configs/ADVR_shared/ModularBot/urdf/ModularBot.urdf'
 
         out = xacro.open_output(urdf_filename)
 
