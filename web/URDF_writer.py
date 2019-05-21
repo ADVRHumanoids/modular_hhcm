@@ -10,7 +10,7 @@ import yaml
 import json
 from collections import OrderedDict
 
-import read_yaml  # import module_from_yaml, ModuleNode, mastercube_from_yaml, slavecube_from_yaml
+import ModuleNode  # import module_from_yaml, ModuleNode, mastercube_from_yaml, slavecube_from_yaml
 import argparse
 
 import tf
@@ -216,7 +216,7 @@ class UrdfWriter:
         # # parent_module = anytree.search.findall_by_attr(L_0a, "L_0a_con1")[0]
         # # print(parent_module)
 
-        self.base_link = read_yaml.ModuleNode({}, "base_link")
+        self.base_link = ModuleNode.ModuleNode({}, "base_link")
         setattr(self.base_link, 'name', "base_link")
         self.parent_module = self.base_link
 
@@ -564,7 +564,7 @@ class UrdfWriter:
 
         Parameters
         ----------
-        new_joint: read_yaml.ModuleNode
+        new_joint: ModuleNode.ModuleNode
             New ModuleNode object representing a joint to be added to a kinematic chain"""
 
         # get tag_index, an integer representing on which branch of the robot the joint has been added
@@ -613,7 +613,7 @@ class UrdfWriter:
             data1 = {'Homogeneous_tf': T_con_inv, 'type': "link", 'name': name_con1, 'i': 0, 'p': 0, 'size': 3}
 
             # Add the 1st connector module to the tree
-            slavecube_con1 = read_yaml.ModuleNode(data1, name_con1, parent=self.parent_module)
+            slavecube_con1 = ModuleNode.ModuleNode(data1, name_con1, parent=self.parent_module)
 
             # Get transform representing the output frame of the parent module after a rotation of angle_offset
             self.parent_module.get_rototranslation(
@@ -653,7 +653,7 @@ class UrdfWriter:
             filename = path_name + '/web/static/yaml/master_cube.yaml'
 
             # call the method that reads the yaml file describing the cube and instantiate a new module object
-            slavecube = read_yaml.slavecube_from_yaml(filename, slavecube_con1)
+            slavecube = ModuleNode.slavecube_from_yaml(filename, slavecube_con1)
 
             # set attributes of the newly added module object
             setattr(slavecube, 'name', name)
@@ -666,17 +666,17 @@ class UrdfWriter:
             # instantate a ModuleNode for branch 2 connector
             name_con2 = name + '_con2'
             data2 = {'Homogeneous_tf': self.T_con, 'type': "link", 'name': name_con2, 'i': 0, 'p': 0, 'size': 3}
-            slavecube_con2 = read_yaml.ModuleNode(data2, name_con2, parent=slavecube)
+            slavecube_con2 = ModuleNode.ModuleNode(data2, name_con2, parent=slavecube)
 
             # instantate a ModuleNode for branch 3 connector
             name_con3 = name + '_con3'
             data3 = {'Homogeneous_tf': self.T_con, 'type': "link", 'name': name_con3, 'i': 0, 'p': 0, 'size': 3}
-            slavecube_con3 = read_yaml.ModuleNode(data3, name_con3, parent=slavecube)
+            slavecube_con3 = ModuleNode.ModuleNode(data3, name_con3, parent=slavecube)
 
             # instantate a ModuleNode for branch 4 connector
             name_con4 = name + '_con4'
             data4 = {'Homogeneous_tf': self.T_con, 'type': "link", 'name': name_con4, 'i': 0, 'p': 0, 'size': 3}
-            slavecube_con4 = read_yaml.ModuleNode(data4, name_con4, parent=slavecube)
+            slavecube_con4 = ModuleNode.ModuleNode(data4, name_con4, parent=slavecube)
 
             # Render tree
             for pre, _, node in anytree.render.RenderTree(self.base_link):
@@ -734,7 +734,7 @@ class UrdfWriter:
             filename = path_name + '/web/static/yaml/master_cube.yaml'
 
             # call the method that reads the yaml file describing the cube and instantiate a new module object
-            mastercube = read_yaml.mastercube_from_yaml(filename, self.parent_module)
+            mastercube = ModuleNode.mastercube_from_yaml(filename, self.parent_module)
 
             # set attributes of the newly added module object
             setattr(mastercube, 'name', name)
@@ -747,22 +747,22 @@ class UrdfWriter:
             # instantate a ModuleNode for branch 1 connector
             name_con1 = name + '_con1'
             data1 = {'Homogeneous_tf': self.T_con, 'type': "link", 'name': name_con1, 'i': 0, 'p': 0, 'size': 3}
-            slavecube_con1 = read_yaml.ModuleNode(data1, name_con1, parent=mastercube)
+            slavecube_con1 = ModuleNode.ModuleNode(data1, name_con1, parent=mastercube)
 
             # instantate a ModuleNode for branch 2 connector
             name_con2 = name + '_con2'
             data2 = {'Homogeneous_tf': self.T_con, 'type': "link", 'name': name_con2, 'i': 0, 'p': 0, 'size': 3}
-            slavecube_con2 = read_yaml.ModuleNode(data2, name_con2, parent=mastercube)
+            slavecube_con2 = ModuleNode.ModuleNode(data2, name_con2, parent=mastercube)
 
             # instantate a ModuleNode for branch 3 connector
             name_con3 = name + '_con3'
             data3 = {'Homogeneous_tf': self.T_con, 'type': "link", 'name': name_con3, 'i': 0, 'p': 0, 'size': 3}
-            slavecube_con3 = read_yaml.ModuleNode(data3, name_con3, parent=mastercube)
+            slavecube_con3 = ModuleNode.ModuleNode(data3, name_con3, parent=mastercube)
 
             # instantate a ModuleNode for branch 4 connector
             name_con4 = name + '_con4'
             data4 = {'Homogeneous_tf': self.T_con, 'type': "link", 'name': name_con4, 'i': 0, 'p': 0, 'size': 3}
-            slavecube_con4 = read_yaml.ModuleNode(data4, name_con4, parent=mastercube)
+            slavecube_con4 = ModuleNode.ModuleNode(data4, name_con4, parent=mastercube)
 
             # Render tree
             for pre, _, node in anytree.render.RenderTree(self.base_link):
@@ -830,7 +830,7 @@ class UrdfWriter:
         module_name = path_name + '/web/static/yaml/' + filename
 
         # Load the module from YAML and create a ModuleNode instance
-        new_module = read_yaml.module_from_yaml(module_name, self.parent_module)
+        new_module = ModuleNode.module_from_yaml(module_name, self.parent_module)
 
         # print(angle_offset)
 
@@ -907,7 +907,7 @@ class UrdfWriter:
 
         Parameters
         ----------
-        selected_module: read_yaml.ModuleNode
+        selected_module: ModuleNode.ModuleNode
             NodeModule object of the module to remove. Default value is 0, in which case the current parent_module is
             selected as the module to be removed.
 
@@ -1098,7 +1098,7 @@ class UrdfWriter:
 
         Returns
         -------
-        last_module: read_yaml.ModuleNode
+        last_module: ModuleNode.ModuleNode
             The object of the module with the name as passed by the string.
 
         """
@@ -1158,10 +1158,10 @@ class UrdfWriter:
 
         Parameters
         ----------
-        new_Link: read_yaml.ModuleNode
+        new_Link: ModuleNode.ModuleNode
             ModuleNode object of the link module to add
 
-        past_Joint: read_yaml.ModuleNode
+        past_Joint: ModuleNode.ModuleNode
             ModuleNode object of the joint module to which attach the link
 
         offset: float
@@ -1225,10 +1225,10 @@ class UrdfWriter:
 
         Parameters
         ----------
-        new_Joint: read_yaml.ModuleNode
+        new_Joint: ModuleNode.ModuleNode
             ModuleNode object of the joint module to add
 
-        past_Joint: read_yaml.ModuleNode
+        past_Joint: ModuleNode.ModuleNode
             ModuleNode object of the joint module to which the joint will be attached
 
         offset: float
@@ -1291,10 +1291,10 @@ class UrdfWriter:
 
         Parameters
         ----------
-        new_Joint: read_yaml.ModuleNode
+        new_Joint: ModuleNode.ModuleNode
             ModuleNode object of the joint module to add
 
-        past_Link: read_yaml.ModuleNode
+        past_Link: ModuleNode.ModuleNode
             ModuleNode object of the link module to which the joint will be attached
 
         offset: float
@@ -1355,10 +1355,10 @@ class UrdfWriter:
 
         Parameters
         ----------
-        new_Link: read_yaml.ModuleNode
+        new_Link: ModuleNode.ModuleNode
             ModuleNode object of the link module to add
 
-        past_Link: read_yaml.ModuleNode
+        past_Link: ModuleNode.ModuleNode
             ModuleNode object of the link module to which the joint will be attached
 
         offset: float
