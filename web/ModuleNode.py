@@ -146,29 +146,6 @@ class Module(object):
         setattr(self, 'link_size_x', str(size_x))
         setattr(self, 'link_size_y', str(size_y))
         setattr(self, 'link_size_z', str(size_z))
-    
-    #
-    # noinspection PyPep8Naming
-    def get_rototranslation(self, distal_previous, proximal):
-        """Computes the rototranslation from the frame centered at the previous joint
-        to the frame at the center of this joint module.
-
-        Parameters:
-        distal_previous: transform relative to the distal part of the previous module
-        proximal: transform relative to the proximal part of the current module
-
-        """
-        F = tf.transformations.concatenate_matrices(distal_previous, proximal)
-
-        print(F)
-        scale, shear, angles, trans, persp = tf.transformations.decompose_matrix(F)
-
-        setattr(self, 'x', str(trans[0]))
-        setattr(self, 'y', str(trans[1]))
-        setattr(self, 'z', str(trans[2]))
-        setattr(self, 'roll', str(angles[0]))
-        setattr(self, 'pitch', str(angles[1]))
-        setattr(self, 'yaw', str(angles[2]))
 
     # 
     def get_transform(self):
@@ -206,6 +183,31 @@ class ModuleNode(Module, anytree.NodeMixin):
         super(ModuleNode, self).__init__(dictionary)
         self.name = name
         self.parent = parent
+
+
+# noinspection PyPep8Naming
+def get_rototranslation(distal_previous, proximal):
+    """Computes the rototranslation from the frame centered at the previous joint
+    to the frame at the center of this joint module.
+
+    Parameters:
+    distal_previous: transform relative to the distal part of the previous module
+    proximal: transform relative to the proximal part of the current module
+
+    """
+    F = tf.transformations.concatenate_matrices(distal_previous, proximal)
+
+    print(F)
+    scale, shear, angles, trans, persp = tf.transformations.decompose_matrix(F)
+
+    x = str(trans[0])
+    y = str(trans[1])
+    z = str(trans[2])
+    roll = str(angles[0])
+    pitch = str(angles[1])
+    yaw = str(angles[2])
+
+    return x, y, z, roll, pitch, yaw
 
 
 # 

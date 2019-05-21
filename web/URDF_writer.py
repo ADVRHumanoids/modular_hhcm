@@ -10,7 +10,7 @@ import yaml
 import json
 from collections import OrderedDict
 
-import ModuleNode  # import module_from_yaml, ModuleNode, mastercube_from_yaml, slavecube_from_yaml
+import ModuleNode # import module_from_yaml, ModuleNode, mastercube_from_yaml, slavecube_from_yaml
 import argparse
 
 import tf
@@ -616,10 +616,9 @@ class UrdfWriter:
             slavecube_con1 = ModuleNode.ModuleNode(data1, name_con1, parent=self.parent_module)
 
             # Get transform representing the output frame of the parent module after a rotation of angle_offset
-            self.parent_module.get_rototranslation(
-                self.parent_module.Homogeneous_tf,
-                tf.transformations.rotation_matrix(angle_offset, self.zaxis)
-            )
+            x, y, z, roll, pitch, yaw = ModuleNode.get_rototranslation(self.parent_module.Homogeneous_tf,
+                                                            tf.transformations.rotation_matrix(angle_offset,
+                                                                                               self.zaxis))
 
             # Generate the name of the fixed joint used to connect the cube
             if self.parent_module.type == "cube":
@@ -642,12 +641,12 @@ class UrdfWriter:
                 name=fixed_joint_name,
                 father=parent_name,
                 child=name_con1,
-                x=self.parent_module.x,
-                y=self.parent_module.y,
-                z=self.parent_module.z,
-                roll=self.parent_module.roll,
-                pitch=self.parent_module.pitch,
-                yaw=self.parent_module.yaw
+                x=x,
+                y=y,
+                z=z,
+                roll=roll,
+                pitch=pitch,
+                yaw=yaw
             )
 
             filename = path_name + '/web/static/yaml/master_cube.yaml'
@@ -1168,8 +1167,6 @@ class UrdfWriter:
             Value of the angle between the parent module output frame and the module input frame
         """
 
-        new_Link.get_rototranslation(past_Joint.Distal_tf, tf.transformations.rotation_matrix(offset, self.zaxis))
-
         setattr(new_Link, 'p', past_Joint.p + 1)
 
         if new_Link.type == 'link':
@@ -1204,6 +1201,10 @@ class UrdfWriter:
                 # ERROR
                 print("Error")
 
+        x, y, z, roll, pitch, yaw = ModuleNode.get_rototranslation(past_Joint.Distal_tf,
+                                                                   tf.transformations.rotation_matrix(offset,
+                                                                                                      self.zaxis))
+
         fixed_joint_name = 'L_'+str(new_Link.i)+'_fixed_joint_'+str(new_Link.p)+new_Link.tag
         ET.SubElement(self.root,
                       "xacro:add_fixed_joint",
@@ -1211,12 +1212,12 @@ class UrdfWriter:
                       name=fixed_joint_name,
                       father='L_'+str(new_Link.i)+new_Link.tag,
                       child=new_Link.name,
-                      x=new_Link.x,
-                      y=new_Link.y,
-                      z=new_Link.z,
-                      roll=new_Link.roll,
-                      pitch=new_Link.pitch,
-                      yaw=new_Link.yaw)
+                      x=x,
+                      y=y,
+                      z=z,
+                      roll=roll,
+                      pitch=pitch,
+                      yaw=yaw)
 
     # TODO: put a check to avoid attach 2 normal joints together, only elbow joints are allowed
     # noinspection PyPep8Naming
@@ -1234,7 +1235,9 @@ class UrdfWriter:
         offset: float
             Value of the angle between the parent module output frame and the module input frame
         """
-        new_Joint.get_rototranslation(past_Joint.Distal_tf, tf.transformations.rotation_matrix(offset, self.zaxis))
+        x, y, z, roll, pitch, yaw = ModuleNode.get_rototranslation(past_Joint.Distal_tf,
+                                                                   tf.transformations.rotation_matrix(offset,
+                                                                                                      self.zaxis))
 
         setattr(new_Joint, 'i', past_Joint.i + 1)
         setattr(new_Joint, 'p', 0)
@@ -1249,12 +1252,12 @@ class UrdfWriter:
                       name=joint_stator_name,
                       father=father_name,
                       child=stator_name,
-                      x=new_Joint.x,
-                      y=new_Joint.y,
-                      z=new_Joint.z,
-                      roll=new_Joint.roll,
-                      pitch=new_Joint.pitch,
-                      yaw=new_Joint.yaw)
+                      x=x,
+                      y=y,
+                      z=z,
+                      roll=roll,
+                      pitch=pitch,
+                      yaw=yaw)
         ET.SubElement(self.root,
                       "xacro:add_joint_stator",
                       type="joint_stator",
@@ -1262,24 +1265,27 @@ class UrdfWriter:
                       size_y=new_Joint.joint_size_y,
                       size_z=new_Joint.joint_size_z,
                       size=str(new_Joint.size))
-        new_Joint.get_rototranslation(tf.transformations.identity_matrix(), new_Joint.Proximal_tf)
+
+        x, y, z, roll, pitch, yaw = ModuleNode.get_rototranslation(tf.transformations.identity_matrix(),
+                                                                   new_Joint.Proximal_tf)
         joint_data = new_Joint.kinematics.joint.joint
         upper_lim = str(joint_data.upper_limit)
         lower_lim = str(joint_data.lower_limit)
         effort = str(joint_data.effort)
         velocity = str(joint_data.velocity)
+
         ET.SubElement(self.root,
                       "xacro:add_joint",
                       type="joint",
                       name=new_Joint.name,
                       father=stator_name,
                       child='L_'+str(new_Joint.i)+new_Joint.tag,
-                      x=new_Joint.x,
-                      y=new_Joint.y,
-                      z=new_Joint.z,
-                      roll=new_Joint.roll,
-                      pitch=new_Joint.pitch,
-                      yaw=new_Joint.yaw,
+                      x=x,
+                      y=y,
+                      z=z,
+                      roll=roll,
+                      pitch=pitch,
+                      yaw=yaw,
                       upper_lim=upper_lim,
                       lower_lim=lower_lim,
                       effort=effort,
@@ -1300,7 +1306,8 @@ class UrdfWriter:
         offset: float
             Value of the angle between the parent module output frame and the module input frame
         """
-        new_Joint.get_rototranslation(past_Link.Homogeneous_tf, tf.transformations.rotation_matrix(offset, self.zaxis))
+        x, y, z, roll, pitch, yaw = ModuleNode.get_rototranslation(past_Link.Homogeneous_tf,
+                                                                   tf.transformations.rotation_matrix(offset, self.zaxis))
 
         setattr(new_Joint, 'i', past_Link.i + 1)
         setattr(new_Joint, 'p', 0)
@@ -1313,12 +1320,12 @@ class UrdfWriter:
                       name=joint_stator_name,
                       father=past_Link.name,
                       child=stator_name,
-                      x=new_Joint.x,
-                      y=new_Joint.y,
-                      z=new_Joint.z,
-                      roll=new_Joint.roll,
-                      pitch=new_Joint.pitch,
-                      yaw=new_Joint.yaw)
+                      x=x,
+                      y=y,
+                      z=z,
+                      roll=roll,
+                      pitch=pitch,
+                      yaw=yaw)
         ET.SubElement(self.root,
                       "xacro:add_joint_stator",
                       type="joint_stator",
@@ -1326,24 +1333,28 @@ class UrdfWriter:
                       size_y=new_Joint.joint_size_y,
                       size_z=new_Joint.joint_size_z,
                       size=str(new_Joint.size))
-        new_Joint.get_rototranslation(tf.transformations.identity_matrix(), new_Joint.Proximal_tf)
+
+        x, y, z, roll, pitch, yaw = ModuleNode.get_rototranslation(tf.transformations.identity_matrix(),
+                                                                   new_Joint.Proximal_tf)
+
         joint_data = new_Joint.kinematics.joint.joint
         upper_lim = str(joint_data.upper_limit)
         lower_lim = str(joint_data.lower_limit)
         effort = str(joint_data.effort)
         velocity = str(joint_data.velocity)
+
         ET.SubElement(self.root,
                       "xacro:add_joint",
                       type="joint",
                       name=new_Joint.name,
                       father=stator_name,
                       child='L_'+str(new_Joint.i)+new_Joint.tag,
-                      x=new_Joint.x,
-                      y=new_Joint.y,
-                      z=new_Joint.z,
-                      roll=new_Joint.roll,
-                      pitch=new_Joint.pitch,
-                      yaw=new_Joint.yaw,
+                      x=x,
+                      y=y,
+                      z=z,
+                      roll=roll,
+                      pitch=pitch,
+                      yaw=yaw,
                       upper_lim=upper_lim,
                       lower_lim=lower_lim,
                       effort=effort,
@@ -1364,8 +1375,6 @@ class UrdfWriter:
         offset: float
             Value of the angle between the parent module output frame and the module input frame
         """
-        new_Link.get_rototranslation(past_Link.Homogeneous_tf, tf.transformations.rotation_matrix(offset, self.zaxis))
-        print(new_Link.z)
 
         setattr(new_Link, 'p', past_Link.p + 1)
 
@@ -1401,6 +1410,10 @@ class UrdfWriter:
                 # ERROR
                 print("Error")
 
+        x, y, z, roll, pitch, yaw = ModuleNode.get_rototranslation(past_Link.Homogeneous_tf,
+                                                                   tf.transformations.rotation_matrix(offset,
+                                                                                                      self.zaxis))
+
         fixed_joint_name = 'L_'+str(new_Link.i)+'_fixed_joint_'+str(new_Link.p)+new_Link.tag
         ET.SubElement(self.root,
                       "xacro:add_fixed_joint",
@@ -1408,12 +1421,12 @@ class UrdfWriter:
                       type="fixed_joint",
                       father=past_Link.name,
                       child=new_Link.name,
-                      x=new_Link.x,
-                      y=new_Link.y,
-                      z=new_Link.z,
-                      roll=new_Link.roll,
-                      pitch=new_Link.pitch,
-                      yaw=new_Link.yaw)
+                      x=x,
+                      y=y,
+                      z=z,
+                      roll=roll,
+                      pitch=pitch,
+                      yaw=yaw)
 
     def write_cartesio_stack(self):
         """Creates the config file needed by CartesIO """
