@@ -31,13 +31,34 @@ kinematics:
     delta_l_out: 0
 
 dynamics:
-  joint:
-
-  link:
-    mass: '0.5'
+  body_1:
+    mass: 0.5
     inertia_tensor:
+      I_xx: 0.05
+      I_yy: 0.05
+      I_zz: 0.001
+      I_xy: 0.0
+      I_xz: 0.0
+      I_yz: 0.0
     CoM_coordinates:
-    
+      x: 0.0
+      y: 0.01
+      z: 0.05
+
+  body_2:
+    mass: 0.5
+    inertia_tensor:
+      I_xx: 0.05
+      I_yy: 0.05
+      I_zz: 0.001
+      I_xy: 0.0
+      I_xz: 0.0
+      I_yz: 0.0
+    CoM_coordinates:
+      x: 0.0
+      y: 0.01
+      z: 0.05
+
 size: 'big'
 size_in:
 size_out:
