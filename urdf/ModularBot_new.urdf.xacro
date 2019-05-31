@@ -685,23 +685,66 @@
             <origin xyz="${x} ${y} ${z}" rpy="${roll} ${pitch} ${yaw}"/>
             <limit lower="${lower_lim}" upper="${upper_lim}" effort="${effort}" velocity="${velocity}"/>
         </joint>
+        <!--<link name="${child}">-->
+            <!--<xacro:if value="${type==joint_mesh}">-->
+                <!--<visual>-->
+                    <!--&lt;!&ndash; Load mesh. Rotate the origin frame (this is because of how the .stl was saved) &ndash;&gt;-->
+                    <!--<origin rpy="${roll} ${pitch} ${yaw}" xyz="${x} ${y} ${z}"/>-->
+                    <!--<geometry>-->
+                        <!--<mesh filename="package://modular/meshes/asm0001.stl" scale="0.001 0.001 0.001"/>-->
+                    <!--</geometry>-->
+                <!--</visual>-->
+                <!--<collision>-->
+                    <!--<origin rpy="${roll} ${pitch} ${yaw}" xyz="${x} ${y} ${z}"/>-->
+                    <!--<geometry>-->
+                        <!--<mesh filename="package://modular/meshes/asm0001.stl" scale="0.001 0.001 0.001"/>-->
+                    <!--</geometry>-->
+                <!--</collision>-->
+            <!--</xacro:if>-->
+            <!--&lt;!&ndash; inertial parameters for avocado rotating part. wrt a point on one end of the rod &ndash;&gt;-->
+            <!--<inertial>-->
+                <!--<origin xyz="0 0 -0.0635" rpy="0 0 0"/>-->
+                <!--<mass value="${mass}"/>-->
+                <!--<inertia-->
+                <!--ixx="${mass / 3.0 * (0.127*0.127)}" ixy="0.0" ixz="0.0"-->
+                <!--iyy="${mass / 3.0 * (0.127*0.127)}" iyz="0.0"-->
+                <!--izz="0.0000148"/>-->
+            <!--</inertial>-->
+        <!--</link>-->
+    </xacro:macro>
 
-        <link name="${child}">
-            <!-- inertial parameters for avocado rotating part. wrt a point on one end of the rod -->
+
+    <xacro:macro name="add_distal" params="type name mesh x y z roll pitch yaw">
+        <link name="${name}">
+            <xacro:unless value="${mesh == 0}">
+                <visual>
+                    <!-- Load mesh. Rotate the origin frame (this is because of how the .stl was saved) -->
+                    <origin rpy="${roll} ${pitch} ${yaw}" xyz="${x} ${y} ${z}"/>
+                    <geometry>
+                        <mesh filename="package://modular/meshes/asm0001.stl" scale="0.001 0.001 0.001"/>
+                    </geometry>
+                </visual>
+                <collision>
+                    <origin rpy="${roll} ${pitch} ${yaw}" xyz="${x} ${y} ${z}"/>
+                    <geometry>
+                        <mesh filename="package://modular/meshes/asm0001.stl" scale="0.001 0.001 0.001"/>
+                    </geometry>
+                </collision>
+            </xacro:unless>
+            <!--inertial parameters for avocado rotating part. wrt a point on one end of the rod-->
             <inertial>
                 <origin xyz="0 0 -0.0635" rpy="0 0 0"/>
                 <mass value="${mass}"/>
                 <inertia
-                ixx="${mass / 3.0 * (0.127*0.127)}" ixy="0.0" ixz="0.0"
-                iyy="${mass / 3.0 * (0.127*0.127)}" iyz="0.0"
-                izz="0.0000148"/>
+                        ixx="${mass / 3.0 * (0.127*0.127)}" ixy="0.0" ixz="0.0"
+                        iyy="${mass / 3.0 * (0.127*0.127)}" iyz="0.0"
+                        izz="0.0000148"/>
             </inertial>
         </link>
-
     </xacro:macro>
 
     <!-- Macro for adding the physical module housing the actuator -->
-    <xacro:macro name="add_joint_stator" params="type name size_y size_z size">
+    <xacro:macro name="add_joint_stator" params="type name size_y size_z size x y z roll pitch yaw">
 
         <xacro:if value="${size==1}">
             <xacro:property name="radius" value="${size1}" />
@@ -712,7 +755,7 @@
             </xacro:if>
             <xacro:unless value="${size==2}">
                 <xacro:property name="radius" value="${size3}" />
-            </xacro:unless>  
+            </xacro:unless>
         </xacro:unless>
         
         <xacro:if value="${size_y==0}">
@@ -734,9 +777,9 @@
                     <origin xyz="0 0 ${size_z/2}" rpy="0 0 0"/>
                     <mass value="${mass}"/>
                     <inertia
-                    ixx="${mass / 12.0 * (3*radius*radius + size_z*size_z)}" ixy="0.0" ixz="0.0"
-                    iyy="${mass / 12.0 * (size_z*size_z + 3*radius*radius)}" iyz="0.0"
-                    izz="${mass / 2.0 * (radius*radius)}"/>
+                            ixx="${mass / 12.0 * (3*radius*radius + size_z*size_z)}" ixy="0.0" ixz="0.0"
+                            iyy="${mass / 12.0 * (size_z*size_z + 3*radius*radius)}" iyz="0.0"
+                            izz="${mass / 2.0 * (radius*radius)}"/>
                 </inertial>
             </link>
         </xacro:if> 
@@ -744,13 +787,13 @@
             <link name="${name}">
                 <visual>
                     <!-- Load mesh. Rotate the origin frame (this is because of how the .stl was saved) -->
-                    <origin rpy="3.14 0 -1.57" xyz="0 0 0"/>
+                    <origin rpy="${roll} ${pitch} ${yaw}" xyz="${x} ${y} ${z}"/>
                     <geometry>
                         <mesh filename="package://modular/meshes/asm0001.stl" scale="0.001 0.001 0.001"/>
                     </geometry>
                 </visual>
                 <collision>
-                    <origin rpy="3.14 0 -1.57" xyz="0 0 0"/>
+                    <origin rpy="${roll} ${pitch} ${yaw}" xyz="${x} ${y} ${z}"/>
                     <geometry>
                         <mesh filename="package://modular/meshes/asm0001.stl" scale="0.001 0.001 0.001"/>
                     </geometry>
@@ -760,13 +803,13 @@
                     <origin xyz="0 0 ${size_z/2}" rpy="0 0 0"/>
                     <mass value="${mass}"/>
                     <inertia
-                    ixx="${mass / 2 *( 1 / 12.0 * (3*radius*radius + 4*size_y*size_y) + size_z*size_z) + mass / 24.0 * (3*radius*radius + 4*size_z*size_z)}" ixy="0.0" ixz="0.0"
-                    iyy="${mass / 24.0 * (3*radius*radius + 4*size_z*size_z) + mass / 2 *( 1 / 2 *radius*radius + size_z*size_z)}" iyz="0.0"
-                    izz="${mass / 4.0 * (radius*radius) + mass / 24.0 * (3*radius*radius + 4*size_y*size_y)}"/>
+                            ixx="${mass / 2 *( 1 / 12.0 * (3*radius*radius + 4*size_y*size_y) + size_z*size_z) + mass / 24.0 * (3*radius*radius + 4*size_z*size_z)}" ixy="0.0" ixz="0.0"
+                            iyy="${mass / 24.0 * (3*radius*radius + 4*size_z*size_z) + mass / 2 *( 1 / 2 *radius*radius + size_z*size_z)}" iyz="0.0"
+                            izz="${mass / 4.0 * (radius*radius) + mass / 24.0 * (3*radius*radius + 4*size_y*size_y)}"/>
                 </inertial>
-                
+
             </link>
-        </xacro:unless>   
+        </xacro:unless>
         <gazebo reference="${name}">
             <mu1>0.2</mu1>
             <mu2>0.2</mu2>
@@ -780,9 +823,9 @@
     </xacro:macro>
 
     <!-- Macro for adding a fixed joint (rigid interconnection between links and statoric part of the joint) -->
-    <xacro:macro name="add_fixed_joint_stator" params="type name father child x y z roll pitch yaw">    
+    <xacro:macro name="add_fixed_joint_stator" params="type name father child x y z roll pitch yaw">
         <joint name="${name}" type="fixed">
-            <axis xyz="0 0 1" rpy="0 0 0" />        
+            <axis xyz="0 0 1" rpy="0 0 0" />
             <parent link="${father}"/>
             <child link="${child}"/>
             <origin xyz="${x} ${y} ${z}" rpy="${roll} ${pitch} ${yaw}"/>

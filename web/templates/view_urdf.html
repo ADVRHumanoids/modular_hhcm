@@ -541,6 +541,7 @@
             //Function to add a new module. Called at the click of the linked button
             function addModule(modulename, size_value) {
                 var offset = parseFloat(prompt("Enter the angle offset for the module:", "0"));
+                var reverse = confirm("Do you want to connect it backwards?");
                 
                 //opening YAML file containing kin. and dyn. parameters and URDF path
                 //var url = 'http://127.0.0.1:5000/yaml/' + filename;
@@ -567,7 +568,7 @@
                 //making an ajax request to the server to proceed to write the modified URDF
                 $.ajax({
                     url: 'http://127.0.0.1:5000/changeURDF/',
-                    data: {'module_name': filename, 'parent': CURRENT_PARENT, 'angle_offset': offset},
+                    data: {'module_name': filename, 'parent': CURRENT_PARENT, 'angle_offset': offset, 'reverse': reverse},
                     method: 'POST',
                     success: function(data) {
                         console.log(data)

@@ -72,13 +72,14 @@ class Module(object):
 
     #
     # noinspection PyPep8Naming
-    def get_proximal_distal_matrices(self):
+    def get_proximal_distal_matrices(self, reverse):
         """Computes the homogeneous transformation matrices for the distal and proximal part of the joint"""
         origin, xaxis, yaxis, zaxis = (0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1)
 
         proximal = self.kinematics.joint.proximal
         distal = self.kinematics.joint.distal
 
+        # if not reverse:
         H1 = tf.transformations.rotation_matrix(proximal.delta_pl, zaxis)
         H2 = tf.transformations.translation_matrix((0, 0, proximal.p_pl))
         H3 = tf.transformations.translation_matrix((proximal.a_pl, 0, 0))
@@ -86,9 +87,6 @@ class Module(object):
         H5 = tf.transformations.translation_matrix((0, 0, proximal.n_pl))
 
         P = tf.transformations.concatenate_matrices(H1, H2, H3, H4, H5)
-
-        # Add the transformation matrix for the Proximal part as attribute of the class
-        setattr(self, 'Proximal_tf', P)
 
         H1 = tf.transformations.translation_matrix((0, 0, distal.p_dl))
         H2 = tf.transformations.translation_matrix((distal.a_dl, 0, 0))
@@ -98,19 +96,57 @@ class Module(object):
 
         D = tf.transformations.concatenate_matrices(H1, H2, H3, H4, H5)
 
+        if reverse:
+            P = tf.transformations.inverse_matrix(D)
+            D = tf.transformations.inverse_matrix(P)
+
+        # Add the transformation matrix for the Proximal part as attribute of the class
+        setattr(self, 'Proximal_tf', P)
+
         # Add the transformation matrix for the Distal part as attribute of the class
         setattr(self, 'Distal_tf', D)
+
+        # else:
+        #     H1 = tf.transformations.translation_matrix((0, 0, -proximal.n_pl))
+        #     H2 = tf.transformations.rotation_matrix(-proximal.alpha_pl, xaxis)
+        #     H3 = tf.transformations.translation_matrix((-proximal.a_pl, 0, 0))
+        #     H4 = tf.transformations.translation_matrix((0, 0, -proximal.p_pl))
+        #     H5 = tf.transformations.rotation_matrix(-proximal.delta_pl, zaxis)
+        #
+        #     D = tf.transformations.concatenate_matrices(H1, H2, H3, H4, H5)
+        #
+        #     # Add the transformation matrix for the Distal part as attribute of the class
+        #     setattr(self, 'Distal_tf', D)
+        #
+        #     H1 = tf.transformations.translation_matrix((0, 0, -distal.p_dl))
+        #     H2 = tf.transformations.translation_matrix((-distal.a_dl, 0, 0))
+        #     H3 = tf.transformations.rotation_matrix(-distal.alpha_dl, xaxis)
+        #     H4 = tf.transformations.translation_matrix((0, 0, -distal.n_dl))
+        #     H5 = tf.transformations.rotation_matrix(-distal.delta_dl, zaxis)  # 3.14
+        #
+        #     P = tf.transformations.concatenate_matrices(H1, H2, H3, H4, H5)
+        #
+        #     # Add the transformation matrix for the Proximal part as attribute of the class
+        #     setattr(self, 'Proximal_tf', P)
 
         # TO BE CHECKED!!!
         # Decompose proximal transform. Translation part will be used to set the size of the joint
         scale, shear, angles, trans, persp = tf.transformations.decompose_matrix(P)
 
-        # TO BE CHECKED!!!
-        size_x = trans[0]  # 0
-        size_y = trans[1]  # proximal.p_pl + distal.p_dl
-        # print(size_y)
-        size_z = trans[2]  # proximal.n_pl + distal.n_dl
-        # print(size_z)
+        if not reverse:
+            # TO BE CHECKED!!!
+            size_x = trans[0]  # 0
+            size_y = trans[1]  # proximal.p_pl + distal.p_dl
+            # print(size_y)
+            size_z = trans[2]  # proximal.n_pl + distal.n_dl
+            # print(size_z)
+        else:
+            # TO BE CHECKED!!!
+            size_x = -trans[0]  # 0
+            size_y = trans[1]  # proximal.p_pl + distal.p_dl
+            # print(size_y)
+            size_z = -trans[2]  # proximal.n_pl + distal.n_dl
+            # print(size_z)
 
         # Set the joint size
         setattr(self, 'joint_size_x', str(size_x))
@@ -119,19 +155,28 @@ class Module(object):
     
     # 
     # noinspection PyPep8Naming
-    def get_homogeneous_matrix(self):
+    def get_homogeneous_matrix(self, reverse):
         """Computes the homogeneous transformation matrix for the link"""
         origin, xaxis, yaxis, zaxis = (0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1)
 
         link = self.kinematics.link
 
-        # TO BE CHECKED!!!
-        H1 = tf.transformations.rotation_matrix(link.delta_l_in, zaxis)
-        H2 = tf.transformations.translation_matrix((0, 0, link.p_l))
-        H3 = tf.transformations.translation_matrix((link.a_l, 0, 0))
-        H4 = tf.transformations.rotation_matrix(link.alpha_l, xaxis)
-        H5 = tf.transformations.translation_matrix((0, 0, link.n_l))
-        H6 = tf.transformations.rotation_matrix(link.delta_l_out, zaxis)
+        if not reverse:
+            # TO BE CHECKED!!!
+            H1 = tf.transformations.rotation_matrix(link.delta_l_in, zaxis)
+            H2 = tf.transformations.translation_matrix((0, 0, link.p_l))
+            H3 = tf.transformations.translation_matrix((link.a_l, 0, 0))
+            H4 = tf.transformations.rotation_matrix(link.alpha_l, xaxis)
+            H5 = tf.transformations.translation_matrix((0, 0, link.n_l))
+            H6 = tf.transformations.rotation_matrix(link.delta_l_out, zaxis)
+        else:
+            # TO BE CHECKED!!!
+            H1 = tf.transformations.rotation_matrix(-link.delta_l_out, zaxis)
+            H2 = tf.transformations.translation_matrix((0, 0, -link.n_l))
+            H3 = tf.transformations.rotation_matrix(-link.alpha_l, xaxis)
+            H4 = tf.transformations.translation_matrix((-link.a_l, 0, 0))
+            H5 = tf.transformations.translation_matrix((0, 0, -link.p_l))
+            H6 = tf.transformations.rotation_matrix(-link.delta_l_in, zaxis)
 
         H = tf.transformations.concatenate_matrices(H1, H2, H3, H4, H5, H6)
 
@@ -148,15 +193,16 @@ class Module(object):
         setattr(self, 'link_size_z', str(size_z))
 
     # 
-    def get_transform(self):
+    def get_transform(self, reverse):
         """Computes the correct transformation depending on the module type"""
         x = self.type
         print(self.type)
         return {
-            'joint': self.get_proximal_distal_matrices(),
-            'link': self.get_homogeneous_matrix(),
-            'elbow': self.get_homogeneous_matrix(),
-            'size_adapter': self.get_homogeneous_matrix()
+            'joint': self.get_proximal_distal_matrices(reverse),
+            'joint_mesh': self.get_proximal_distal_matrices(reverse),
+            'link': self.get_homogeneous_matrix(reverse),
+            'elbow': self.get_homogeneous_matrix(reverse),
+            'size_adapter': self.get_homogeneous_matrix(reverse)
         }.get(x, 'Invalid type')
 
     # def get_connector_tf(self, connector):
@@ -197,8 +243,12 @@ def get_rototranslation(distal_previous, proximal):
     """
     F = tf.transformations.concatenate_matrices(distal_previous, proximal)
 
-    print(F)
-    scale, shear, angles, trans, persp = tf.transformations.decompose_matrix(F)
+    return F
+
+
+def get_xyzrpy(transform):
+    print(transform)
+    scale, shear, angles, trans, persp = tf.transformations.decompose_matrix(transform)
 
     x = str(trans[0])
     y = str(trans[1])
@@ -210,8 +260,14 @@ def get_rototranslation(distal_previous, proximal):
     return x, y, z, roll, pitch, yaw
 
 
+def inverse(transform_matrix):
+    inv = tf.transformations.inverse_matrix(transform_matrix)
+
+    return inv
+
+
 # 
-def module_from_yaml(filename, father):
+def module_from_yaml(filename, father, reverse):
     """Function parsing YAML file describing a generic module and returning an instance of a Module class"""
     with open(filename, 'r') as stream:
         try:
@@ -221,7 +277,7 @@ def module_from_yaml(filename, father):
     # Create an instance of a ModuleNode class from the dictionary obtained from YAML
     result = ModuleNode(data, filename, parent=father)
     # result.set_type(filename)
-    result.get_transform()
+    result.get_transform(reverse)
     result.set_size(result)
     return result 
 

@@ -616,9 +616,10 @@ class UrdfWriter:
             slavecube_con1 = ModuleNode.ModuleNode(data1, name_con1, parent=self.parent_module)
 
             # Get transform representing the output frame of the parent module after a rotation of angle_offset
-            x, y, z, roll, pitch, yaw = ModuleNode.get_rototranslation(self.parent_module.Homogeneous_tf,
-                                                            tf.transformations.rotation_matrix(angle_offset,
-                                                                                               self.zaxis))
+            transform = ModuleNode.get_rototranslation(self.parent_module.Homogeneous_tf,
+                                                       tf.transformations.rotation_matrix(angle_offset,
+                                                                                          self.zaxis))
+            x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(transform)
 
             # Generate the name of the fixed joint used to connect the cube
             if self.parent_module.type == "cube":
@@ -815,6 +816,9 @@ class UrdfWriter:
             String with the name of the YAML file to load, describing the module parameters
         angle_offset: float
             Value of the angle between the parent module output frame and the module input frame
+        reverse: bool
+            Bool value expressing if the module is mounted in reverse direction (true) or in standard one (false).
+            By default it is false.
 
         Returns
         -------
@@ -829,7 +833,7 @@ class UrdfWriter:
         module_name = path_name + '/web/static/yaml/' + filename
 
         # Load the module from YAML and create a ModuleNode instance
-        new_module = ModuleNode.module_from_yaml(module_name, self.parent_module)
+        new_module = ModuleNode.module_from_yaml(module_name, self.parent_module, reverse)
 
         # print(angle_offset)
 
@@ -857,21 +861,21 @@ class UrdfWriter:
         if self.parent_module.type == 'joint':
             if new_module.type == 'joint':
                 # joint + joint
-                self.joint_after_joint(new_module, self.parent_module, angle_offset)
+                self.joint_after_joint(new_module, self.parent_module, angle_offset, reverse=reverse)
                 # Add the joint to the list of chains
                 self.add_to_chain(new_module)
             else:
                 # joint + link
-                self.link_after_joint(new_module, self.parent_module, angle_offset)
+                self.link_after_joint(new_module, self.parent_module, angle_offset, reverse=reverse)
         else:
             if new_module.type == 'joint':
                 # link + joint
-                self.joint_after_link(new_module, self.parent_module, angle_offset)
+                self.joint_after_link(new_module, self.parent_module, angle_offset, reverse=reverse)
                 # Add the joint to the list of chains
                 self.add_to_chain(new_module)
             else:
                 # link + link
-                self.link_after_link(new_module, self.parent_module, angle_offset)
+                self.link_after_link(new_module, self.parent_module, angle_offset, reverse=reverse)
 
         # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string
         string = self.process_urdf()
@@ -1152,7 +1156,7 @@ class UrdfWriter:
         return data
 
     # noinspection PyPep8Naming
-    def link_after_joint(self, new_Link, past_Joint, offset):
+    def link_after_joint(self, new_Link, past_Joint, offset, reverse):
         """Adds to the URDF tree a link module as a child of a joint module
 
         Parameters
@@ -1201,9 +1205,10 @@ class UrdfWriter:
                 # ERROR
                 print("Error")
 
-        x, y, z, roll, pitch, yaw = ModuleNode.get_rototranslation(past_Joint.Distal_tf,
-                                                                   tf.transformations.rotation_matrix(offset,
-                                                                                                      self.zaxis))
+        transform = ModuleNode.get_rototranslation(past_Joint.Distal_tf,
+                                                   tf.transformations.rotation_matrix(offset,
+                                                                                      self.zaxis))
+        x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(transform)
 
         fixed_joint_name = 'L_'+str(new_Link.i)+'_fixed_joint_'+str(new_Link.p)+new_Link.tag
         ET.SubElement(self.root,
@@ -1221,7 +1226,7 @@ class UrdfWriter:
 
     # TODO: put a check to avoid attach 2 normal joints together, only elbow joints are allowed
     # noinspection PyPep8Naming
-    def joint_after_joint(self, new_Joint, past_Joint, offset):
+    def joint_after_joint(self, new_Joint, past_Joint, offset, reverse):
         """Adds to the URDF tree a joint module as a child of a joint module
 
         Parameters
@@ -1235,9 +1240,10 @@ class UrdfWriter:
         offset: float
             Value of the angle between the parent module output frame and the module input frame
         """
-        x, y, z, roll, pitch, yaw = ModuleNode.get_rototranslation(past_Joint.Distal_tf,
-                                                                   tf.transformations.rotation_matrix(offset,
-                                                                                                      self.zaxis))
+        transform = ModuleNode.get_rototranslation(past_Joint.Distal_tf,
+                                                   tf.transformations.rotation_matrix(offset,
+                                                                                      self.zaxis))
+        x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(transform)
 
         setattr(new_Joint, 'i', past_Joint.i + 1)
         setattr(new_Joint, 'p', 0)
@@ -1258,16 +1264,30 @@ class UrdfWriter:
                       roll=roll,
                       pitch=pitch,
                       yaw=yaw)
+
+        mesh_transform = ModuleNode.get_rototranslation(tf.transformations.rotation_matrix(-1.57, self.zaxis),
+                                                        tf.transformations.rotation_matrix(3.14, self.xaxis))
+
+        x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(mesh_transform)
+
         ET.SubElement(self.root,
                       "xacro:add_joint_stator",
                       type="joint_stator",
                       name=stator_name,
                       size_y=new_Joint.joint_size_y,
                       size_z=new_Joint.joint_size_z,
-                      size=str(new_Joint.size))
+                      size=str(new_Joint.size),
+                      x=x,
+                      y=y,
+                      z=z,
+                      roll=roll,
+                      pitch=pitch,
+                      yaw=yaw)
 
-        x, y, z, roll, pitch, yaw = ModuleNode.get_rototranslation(tf.transformations.identity_matrix(),
-                                                                   new_Joint.Proximal_tf)
+        transform = ModuleNode.get_rototranslation(tf.transformations.identity_matrix(),
+                                                   new_Joint.Proximal_tf)
+        x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(transform)
+
         joint_data = new_Joint.kinematics.joint.joint
         upper_lim = str(joint_data.upper_limit)
         lower_lim = str(joint_data.lower_limit)
@@ -1291,8 +1311,28 @@ class UrdfWriter:
                       effort=effort,
                       velocity=velocity)
 
+        x, y, z, roll, pitch, yaw = '0', '0', '0', '0', '0', '0'
+
+        # set a bool to specify if the distal part has a mesh or not, by looking at the module type
+        if new_Joint.type == 'joint_mesh':
+            mesh_bool = str('1')
+        else:
+            mesh_bool = str('0')
+
+        ET.SubElement(self.root,
+                      "xacro:add_distal",
+                      type="add_distal",
+                      name='L_' + str(new_Joint.i) + new_Joint.tag,
+                      mesh=mesh_bool,
+                      x=x,
+                      y=y,
+                      z=z,
+                      roll=roll,
+                      pitch=pitch,
+                      yaw=yaw)
+
     # noinspection PyPep8Naming
-    def joint_after_link(self, new_Joint, past_Link, offset):
+    def joint_after_link(self, new_Joint, past_Link, offset, reverse):
         """Adds to the URDF tree a joint module as a child of a link module
 
         Parameters
@@ -1306,8 +1346,14 @@ class UrdfWriter:
         offset: float
             Value of the angle between the parent module output frame and the module input frame
         """
-        x, y, z, roll, pitch, yaw = ModuleNode.get_rototranslation(past_Link.Homogeneous_tf,
-                                                                   tf.transformations.rotation_matrix(offset, self.zaxis))
+        transform = ModuleNode.get_rototranslation(past_Link.Homogeneous_tf,
+                                                   tf.transformations.rotation_matrix(offset,
+                                                                                      self.zaxis))
+        # If the module is mounted in the opposite direction rotate the final frame by 180 deg., as per convention
+        if reverse:
+            transform = ModuleNode.get_rototranslation(transform,
+                                                       tf.transformations.rotation_matrix(3.14, self.yaxis))
+        x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(transform)
 
         setattr(new_Joint, 'i', past_Link.i + 1)
         setattr(new_Joint, 'p', 0)
@@ -1326,16 +1372,39 @@ class UrdfWriter:
                       roll=roll,
                       pitch=pitch,
                       yaw=yaw)
+
+        mesh_transform = ModuleNode.get_rototranslation(tf.transformations.rotation_matrix(-1.57, self.zaxis),
+                                                   tf.transformations.rotation_matrix(3.14, self.xaxis))
+
+        # If the module is mounted in the opposite direction rotate the final frame by 180 deg., as per convention
+        if reverse:
+            prox_mesh_transform = ModuleNode.get_rototranslation(mesh_transform, tf.transformations.rotation_matrix(-3.14, self.yaxis))
+            prox_mesh_transform = ModuleNode.get_rototranslation(prox_mesh_transform, tf.transformations.inverse_matrix(new_Joint.Proximal_tf))
+            # prox_mesh_transform = ModuleNode.get_rototranslation(mesh_transform, tf.transformations.translation_matrix((-0.0591857,0,-0.095508)))#tf.transformations.inverse_matrix(new_Joint.Proximal_tf))
+            # prox_mesh_transform = ModuleNode.get_rototranslation(prox_mesh_transform, tf.transformations.rotation_matrix(3.14, self.xaxis))
+            # prox_mesh_transform = ModuleNode.get_rototranslation(prox_mesh_transform,
+            #                                                      tf.transformations.rotation_matrix(1.57, self.zaxis))
+        else:
+            prox_mesh_transform = mesh_transform
+        x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(prox_mesh_transform)
+
         ET.SubElement(self.root,
                       "xacro:add_joint_stator",
                       type="joint_stator",
                       name=stator_name,
                       size_y=new_Joint.joint_size_y,
                       size_z=new_Joint.joint_size_z,
-                      size=str(new_Joint.size))
+                      size=str(new_Joint.size),
+                      x=x,
+                      y=y,
+                      z=z,
+                      roll=roll,
+                      pitch=pitch,
+                      yaw=yaw)
 
-        x, y, z, roll, pitch, yaw = ModuleNode.get_rototranslation(tf.transformations.identity_matrix(),
-                                                                   new_Joint.Proximal_tf)
+        joint_transform = ModuleNode.get_rototranslation(tf.transformations.identity_matrix(),
+                                                         new_Joint.Proximal_tf)
+        x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(joint_transform)
 
         joint_data = new_Joint.kinematics.joint.joint
         upper_lim = str(joint_data.upper_limit)
@@ -1360,8 +1429,37 @@ class UrdfWriter:
                       effort=effort,
                       velocity=velocity)
 
+        if reverse:
+            dist_mesh_transform = ModuleNode.get_rototranslation(new_Joint.Distal_tf, mesh_transform)
+        else:
+            dist_mesh_transform = mesh_transform
+
+        x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(dist_mesh_transform)
+
+        # set a bool to specify if the distal part has a mesh or not, by looking at the module type
+        if new_Joint.type == 'joint_mesh':
+            mesh_bool = str('1')
+        else:
+            mesh_bool = str('0')
+
+        ET.SubElement(self.root,
+                      "xacro:add_distal",
+                      type="add_distal",
+                      name='L_'+str(new_Joint.i)+new_Joint.tag,
+                      mesh=mesh_bool,
+                      x=x,
+                      y=y,
+                      z=z,
+                      roll=roll,
+                      pitch=pitch,
+                      yaw=yaw)
+
+        if reverse:
+            new_Joint.Distal_tf = ModuleNode.get_rototranslation(new_Joint.Distal_tf,
+                                                                 tf.transformations.rotation_matrix(3.14, self.yaxis))
+
     # noinspection PyPep8Naming
-    def link_after_link(self, new_Link, past_Link, offset):
+    def link_after_link(self, new_Link, past_Link, offset, reverse):
         """Adds to the URDF tree a joint module as a child of a link module
 
         Parameters
@@ -1410,9 +1508,10 @@ class UrdfWriter:
                 # ERROR
                 print("Error")
 
-        x, y, z, roll, pitch, yaw = ModuleNode.get_rototranslation(past_Link.Homogeneous_tf,
-                                                                   tf.transformations.rotation_matrix(offset,
-                                                                                                      self.zaxis))
+        transform = ModuleNode.get_rototranslation(past_Link.Homogeneous_tf,
+                                                   tf.transformations.rotation_matrix(offset,
+                                                                                      self.zaxis))
+        x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(transform)
 
         fixed_joint_name = 'L_'+str(new_Link.i)+'_fixed_joint_'+str(new_Link.p)+new_Link.tag
         ET.SubElement(self.root,

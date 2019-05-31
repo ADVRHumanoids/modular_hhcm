@@ -28,22 +28,22 @@ urdf_writer = URDF_writer.UrdfWriter()
 
 
 def Joint1(child):
-    data = urdf_writer.add_module('module_joint_elbow_B.yaml', 0)
+    data = urdf_writer.add_module('module_joint_elbow_B.yaml', 0, False)
     return data
 
 
 def Joint2(child):
-    data = urdf_writer.add_module('module_joint_elbow_B.yaml', 1.57)
+    data = urdf_writer.add_module('module_joint_elbow_B.yaml', 1.57, False)
     return data
 
 
 def Joint3(child):
-    data = urdf_writer.add_module('module_joint_elbow_B.yaml', 3.14)
+    data = urdf_writer.add_module('module_joint_elbow_B.yaml', 3.14, False)
     return data
 
 
 def Joint4(child):
-    data = urdf_writer.add_module('module_joint_elbow_B.yaml', -1.57)
+    data = urdf_writer.add_module('module_joint_elbow_B.yaml', -1.57, False)
     return data
 
 
@@ -123,9 +123,9 @@ def evaluate_manipulability(individual, cartesian_points):
     # cartesIO_server = subprocess.call(args)
 
     uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
+    cartesio_launch = "/home/edoardo/advr-superbuild/external/modular/launch/cartesio_local.launch"
     roslaunch.configure_logging(uuid)
-    launch = roslaunch.parent.ROSLaunchParent(uuid,
-                                              ["/home/edoardo/advr-superbuild/external/modular/launch/cartesio.launch"])
+    launch = roslaunch.parent.ROSLaunchParent(uuid, [cartesio_launch])
     launch.start()
     rospy.loginfo("started")
 
@@ -209,7 +209,7 @@ toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 toolbox.register("compile", gp.compile, pset=pset)
 
 toolbox.register("evaluate", evaluate_manipulability, cartesian_points=[[1, 2, 3], [3, 2, 1]])
-toolbox.register("select", tools.selNSGA2)
+toolbox.register("select", tools.selNSGA2) # change this change a lot the results
 toolbox.register("mate", gp.cxOnePoint)
 toolbox.register("expr_mut", gp.genFull, min_=0, max_=2)
 toolbox.register("mutate", gp.mutUniform, expr=toolbox.expr_mut, pset=pset)

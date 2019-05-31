@@ -50,7 +50,9 @@ def changeURDF():
     print(parent)
     offset = float(request.form.get('angle_offset', 0))
     print(offset)
-    data = urdf_writer.add_module(filename, offset)
+    reverse = True if request.form.get('reverse', 0) == 'true' else False
+    print(reverse)
+    data = urdf_writer.add_module(filename, offset, reverse)
     data = jsonify(data)
     return data 
 
