@@ -225,6 +225,7 @@
                 /* display: none; */
                 font-size: 16px;
             }
+            
             button > div {
                 padding-top: 50%;
             }
@@ -392,6 +393,8 @@
                 <button type="button" id="addSizeAdapter_Medium2Small"><div>Size Adapter: Medium to Small</div></button>
                 <button type="button" id="addElbowJoint"><div>Elbow joint</div></button>
                 <button type="button" id="addSlaveCube"><div>Slave cube</div></button>
+                <button type="button" id="addYawJoint"><div>Yaw joint</div></button>
+                <button type="button" id="addDoubleElbowJoint"><div>Double Elbow joint</div></button>
                 <!-- <button type="button" id="remove"><div>Remove module</div></button> -->
             </div>
         </div>
@@ -423,6 +426,8 @@
                 var addElbowJoint = document.getElementById('addElbowJoint');
                 var modeSwitch = document.getElementById('modeSwitch');
                 var modeSwitchSlider = document.getElementById('modeSwitchSlider');
+                var addYawJoint = document.getElementById('addYawJoint');
+                var addDoubleElbowJoint = document.getElementById('addDoubleElbowJoint');
 
                 urdfViewer._init();
                 requestURDF();
@@ -535,7 +540,11 @@
 
                 syncHardware.onclick = function() {syncHW()};
 
-                addElbowJoint.onclick = function() {addModule("module_joint_elbow", size)};
+                addElbowJoint.onclick = function() {addModule("module_joint_elbow_AVOCADO", size)};
+                
+                addYawJoint.onclick = function() {addModule("module_joint_yaw_AVOCADO", size)};
+
+                addDoubleElbowJoint.onclick = function() {addModule("module_joint_double_elbow_AVOCADO", size)};
             }
 
             //Function to add a new module. Called at the click of the linked button
