@@ -2,9 +2,9 @@ kinematics:
   joint:
     proximal:
       a_pl: 0
-      alpha_pl: 0
-      p_pl: 0
-      n_pl: 0.2
+      alpha_pl: -1.57
+      p_pl: 0.0591857
+      n_pl: 0.095508
       delta_pl: 0
 
     distal:
@@ -19,8 +19,8 @@ kinematics:
       type: 'revolute'
       lower_limit: -3.14
       upper_limit: 3.14
-      effort: 35 
-      velocity: 5.7
+      effort: 55 
+      velocity: 11.7
       
   link:
     a_l: 0
@@ -32,35 +32,38 @@ kinematics:
 
 dynamics:
   body_1:
-    mass: 0.5
+    mass: 0.890557
     inertia_tensor:
-      I_xx: 0.05
-      I_yy: 0.05
-      I_zz: 0.001
+      I_xx: 0.001172126
+      I_yy: 0.000792081
+      I_zz: 0.001115561
       I_xy: 0.0
       I_xz: 0.0
       I_yz: 0.0
     CoM:
       x: 0.0
-      y: 0.01
-      z: 0.05
+      y: 0.027416
+      z: 0.055419
 
   body_2:
-    mass: 0.5
+    mass: 0.153466
     inertia_tensor:
-      I_xx: 0.05
-      I_yy: 0.05
-      I_zz: 0.001
+      I_xx: 0.000034763
+      I_yy: 0.000034827
+      I_zz: 0.000031822
       I_xy: 0.0
       I_xz: 0.0
       I_yz: 0.0
     CoM:
       x: 0.0
-      y: 0.01
-      z: 0.05
+      y: 0.0
+      z: -0.002265
 
+visual:
+  mesh_body_1: 'package://modular/meshes/fixed_parts.stl'
+  mesh_body_2: 'package://modular/meshes/rotating_parts.stl'
     
-size: 'medium'
+size: 'big'
 size_in:
 size_out:
 

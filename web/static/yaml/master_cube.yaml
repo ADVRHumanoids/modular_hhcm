@@ -38,7 +38,7 @@ dynamics:
   link:
     mass: '0.5'
     inertia_tensor:
-    CoM_coordinates:
+    CoM:
       
 size: 'big'
 
