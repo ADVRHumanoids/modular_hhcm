@@ -228,6 +228,7 @@ class ModuleNode(Module, anytree.NodeMixin):
         # when calling a method of a class that has been extended super is needed
         super(ModuleNode, self).__init__(dictionary)
         self.name = name
+        self.filename = name
         self.parent = parent
 
 

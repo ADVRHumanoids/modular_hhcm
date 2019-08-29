@@ -853,6 +853,9 @@ class UrdfWriter:
         setattr(new_module, 'i', self.parent_module.i)
         setattr(new_module, 'p', self.parent_module.p)
 
+        setattr(new_module, 'angle_offset', angle_offset)
+        setattr(new_module, 'reverse', reverse)
+
         # print("parent module:")
         # print(self.parent_module.type)
 
@@ -958,6 +961,7 @@ class UrdfWriter:
             # Generate names of the stator link and fixed joint to be removed from the xml tree
             stator_name = selected_module.name + '_stator'
             joint_stator_name = "fixed_" + selected_module.name
+            distal_link_name = 'L_' + str(selected_module.i) + selected_module.tag
 
             # From the list of xml elements find the ones with name corresponding to the relative joint, stator link
             # and fixed joint before the stator link and remove them from the xml tree
@@ -969,6 +973,9 @@ class UrdfWriter:
                     self.root.remove(node)
                     # gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
                 elif node.attrib['name'] == joint_stator_name:
+                    self.root.remove(node)
+                    # gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
+                elif node.attrib['name'] == distal_link_name:
                     self.root.remove(node)
                     # gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
 
@@ -1253,7 +1260,7 @@ class UrdfWriter:
         joint_stator_name = "fixed_" + new_Joint.name
         father_name = 'L_' + str(past_Joint.i) + past_Joint.tag
         ET.SubElement(self.root,
-                      "xacro:add_fixed_joint_stator",
+                      "xacro:add_fixed_joint",
                       type="fixed_joint_stator",
                       name=joint_stator_name,
                       father=father_name,
@@ -1265,15 +1272,29 @@ class UrdfWriter:
                       pitch=pitch,
                       yaw=yaw)
 
-        mesh_transform = ModuleNode.get_rototranslation(tf.transformations.rotation_matrix(-1.57, self.zaxis),
-                                                        tf.transformations.rotation_matrix(3.14, self.xaxis))
+        # mesh_transform = ModuleNode.get_rototranslation(tf.transformations.rotation_matrix(-1.57, self.zaxis),
+        #                                                 tf.transformations.rotation_matrix(3.14, self.xaxis))
+        mesh_transform = tf.transformations.identity_matrix()
 
         x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(mesh_transform)
+
+        # set a bool to specify if the distal part has a mesh or not, by looking at the module type
+        if hasattr(new_Joint, 'visual'):
+            mesh_bool = str('1')
+            mesh_1=new_Joint.visual.mesh_body_1
+            mesh_2=new_Joint.visual.mesh_body_2
+        else:
+            mesh_bool = str('0')
+            mesh_1=''
+            mesh_2=''
 
         ET.SubElement(self.root,
                       "xacro:add_joint_stator",
                       type="joint_stator",
                       name=stator_name,
+                      filename=new_Joint.filename,
+                      mesh_bool=mesh_bool,
+                      mesh=mesh_1,
                       size_y=new_Joint.joint_size_y,
                       size_z=new_Joint.joint_size_z,
                       size=str(new_Joint.size),
@@ -1313,17 +1334,13 @@ class UrdfWriter:
 
         x, y, z, roll, pitch, yaw = '0', '0', '0', '0', '0', '0'
 
-        # set a bool to specify if the distal part has a mesh or not, by looking at the module type
-        if new_Joint.type == 'joint_mesh':
-            mesh_bool = str('1')
-        else:
-            mesh_bool = str('0')
-
         ET.SubElement(self.root,
                       "xacro:add_distal",
                       type="add_distal",
                       name='L_' + str(new_Joint.i) + new_Joint.tag,
-                      mesh=mesh_bool,
+                      filename=new_Joint.filename,
+                      mesh_bool=mesh_bool,
+                      mesh=mesh_2,
                       x=x,
                       y=y,
                       z=z,
@@ -1361,7 +1378,7 @@ class UrdfWriter:
         setattr(new_Joint, 'name', 'J' + str(new_Joint.i)+new_Joint.tag)
         stator_name = new_Joint.name + '_stator'
         joint_stator_name = "fixed_" + new_Joint.name
-        ET.SubElement(self.root, "xacro:add_fixed_joint_stator",
+        ET.SubElement(self.root, "xacro:add_fixed_joint",
                       type="fixed_joint_stator",
                       name=joint_stator_name,
                       father=past_Link.name,
@@ -1373,8 +1390,9 @@ class UrdfWriter:
                       pitch=pitch,
                       yaw=yaw)
 
-        mesh_transform = ModuleNode.get_rototranslation(tf.transformations.rotation_matrix(-1.57, self.zaxis),
-                                                   tf.transformations.rotation_matrix(3.14, self.xaxis))
+        # mesh_transform = ModuleNode.get_rototranslation(tf.transformations.rotation_matrix(-1.57, self.zaxis),
+        #                                            tf.transformations.rotation_matrix(3.14, self.xaxis))
+        mesh_transform = tf.transformations.identity_matrix()
 
         # If the module is mounted in the opposite direction rotate the final frame by 180 deg., as per convention
         if reverse:
@@ -1388,10 +1406,23 @@ class UrdfWriter:
             prox_mesh_transform = mesh_transform
         x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(prox_mesh_transform)
 
+        # set a bool to specify if the distal part has a mesh or not, by looking at the module type
+        if hasattr(new_Joint, 'visual'):
+            mesh_bool = str('1')
+            mesh_1=new_Joint.visual.mesh_body_1
+            mesh_2=new_Joint.visual.mesh_body_2
+        else:
+            mesh_bool = str('0')
+            mesh_1=''
+            mesh_2=''
+
         ET.SubElement(self.root,
                       "xacro:add_joint_stator",
                       type="joint_stator",
                       name=stator_name,
+                      filename=new_Joint.filename,
+                      mesh_bool=mesh_bool,
+                      mesh=mesh_1,
                       size_y=new_Joint.joint_size_y,
                       size_z=new_Joint.joint_size_z,
                       size=str(new_Joint.size),
@@ -1436,17 +1467,13 @@ class UrdfWriter:
 
         x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(dist_mesh_transform)
 
-        # set a bool to specify if the distal part has a mesh or not, by looking at the module type
-        if new_Joint.type == 'joint_mesh':
-            mesh_bool = str('1')
-        else:
-            mesh_bool = str('0')
-
         ET.SubElement(self.root,
                       "xacro:add_distal",
                       type="add_distal",
                       name='L_'+str(new_Joint.i)+new_Joint.tag,
-                      mesh=mesh_bool,
+                      filename=new_Joint.filename,
+                      mesh_bool=mesh_bool,
+                      mesh=mesh_2,
                       x=x,
                       y=y,
                       z=z,
@@ -1635,8 +1662,8 @@ class UrdfWriter:
         # print("\nList of chains\n")
         # print(self.listofchains)
 
-        print("\nCartesIO stack\n")
-        print(cartesio_stack)
+        # print("\nCartesIO stack\n")
+        # print(cartesio_stack)
 
         return xmlstr, cartesio_stack
 
