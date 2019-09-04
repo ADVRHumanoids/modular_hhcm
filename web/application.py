@@ -60,10 +60,10 @@ def changeURDF():
 @app.route('/writeURDF/', methods=['POST'])
 def writeURDF():
     string = request.form.get('string', 0)
-    print(string)
-    print (building_mode_ON)
-    print (discovery_mode_ON)
-    print (building_mode_ON and (not discovery_mode_ON))
+    # print(string)
+    # print (building_mode_ON)
+    # print (discovery_mode_ON)
+    # print (building_mode_ON and (not discovery_mode_ON))
     if building_mode_ON and (not discovery_mode_ON):
         data = urdf_writer.write_urdf()
         srdf, cartesio_stack = urdf_writer.write_srdf()
@@ -74,12 +74,12 @@ def writeURDF():
         srdf, cartesio_stack = urdf_writer_fromHW.write_srdf()
         joint_map = urdf_writer_fromHW.write_joint_map()
         # cartesio_stack = urdf_writer_fromHW.write_cartesio_stack()
-    print("\nSRDF\n")
-    print(srdf)
-    print("\nJoint Map\n")
-    print(joint_map)
-    print("\nCartesIO stack\n")
-    print(cartesio_stack)
+    # print("\nSRDF\n")
+    # print(srdf)
+    # print("\nJoint Map\n")
+    # print(joint_map)
+    # print("\nCartesIO stack\n")
+    # print(cartesio_stack)
     # data = jsonify(data)
     return data 
 

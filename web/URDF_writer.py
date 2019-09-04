@@ -78,7 +78,8 @@ def ordered_dump(data, stream=None, Dumper=MyDumper, **kwds):
 
 def repl_option():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-f", "--file_yaml", dest="esc_type_yaml", action="store", default="esc_type.yaml")
+    # parser.add_argument("-f", "--file_yaml", dest="esc_type_yaml", action="store", default="esc_type.yaml")
+    parser.add_argument("-f", "--file_yaml", dest="robot_id_yaml", action="store", default="robot_id.yaml")
     parser.add_argument("-c", dest="cmd_exec_cnt", action="store", type=int, default=1)
     args = parser.parse_args()
     dict_opt = vars(args)
@@ -86,19 +87,23 @@ def repl_option():
 
 
 class UrdfWriter:
-    def __init__(self):
+    def __init__(self, elementree=None, parent=None):
 
         # self.root = 0
         # self.urdf_tree = 0
 
-        # Open the base xacro file
-        filename = path_name + '/urdf/ModularBot_new.urdf.xacro'
-        with codecs.open(filename, 'r') as f:
-            string = f.read()
-        # Instantiate an Element Tree
-        self.root = ET.fromstring(string)
-        self.urdf_tree = ET.ElementTree(self.root)
-        # print(ET.tostring(self.urdf_tree.getroot()))
+        if elementree is None:
+            # Open the base xacro file
+            filename = path_name + '/urdf/ModularBot_new.urdf.xacro'
+            with codecs.open(filename, 'r') as f:
+                string = f.read()
+            # Instantiate an Element Tree
+            self.root = ET.fromstring(string)
+            self.urdf_tree = ET.ElementTree(self.root)
+            # print(ET.tostring(self.urdf_tree.getroot()))
+        else:
+            self.root = elementree
+            self.urdf_tree = ET.ElementTree(self.root)
 
         self.tag_num = 1
         self.branch_switcher = {
@@ -216,7 +221,9 @@ class UrdfWriter:
         # # parent_module = anytree.search.findall_by_attr(L_0a, "L_0a_con1")[0]
         # # print(parent_module)
 
-        self.base_link = ModuleNode.ModuleNode({}, "base_link")
+        data = {'type': "base_link", 'name': "base_link"}
+
+        self.base_link = ModuleNode.ModuleNode(data, "base_link")
         setattr(self.base_link, 'name', "base_link")
         self.parent_module = self.base_link
 
@@ -381,13 +388,14 @@ class UrdfWriter:
 
         # Load the esc_type dictionary from yaml file
         opts = repl_option()
-        d = yaml.load(open(opts["esc_type_yaml"], 'r'))
+        # d = yaml.load(open(opts["esc_type_yaml"], 'r'))
+        d = yaml.load(open(opts["robot_id_yaml"], 'r'))
 
         # Add a first cube for the initial ethercat test with no Hub.
         # TODO: remove it once the hub is implemented and can be added automatically
         data = self.add_slave_cube(0)
         # module_name = data['lastModule_name']
-        module_name = 'L_0a_con2'
+        # module_name = 'L_0a_con2'
         # module_type = data['lastModule_type']
 
         # Process the modules described in the json to create the tree
@@ -402,7 +410,7 @@ class UrdfWriter:
             for module_id in module.keys():
 
                 # Find the name of the yaml describing the module to be added, searching the dictionary by the esc_type
-                module_filename = d.get(module[module_id]['esc_type'])
+                module_filename = d.get(module[module_id]['robot_id'])
                 data = self.add_module(module_filename, 0)
 
                 module_name = data['lastModule_name']
@@ -506,9 +514,10 @@ class UrdfWriter:
 
                 # child is an element of the JSON. child_id is the key to access its value.
                 # esc_type is a number specifying the type of module
-                esc_type = esc_dict.get(child[child_id]['esc_type'])
+                # esc_type = esc_dict.get(child[child_id]['esc_type'])
+                robot_id = esc_dict.get(child[child_id]['robot_id'])
                 # Add the module with an angle offset of 0. as default always zero relative orientation is assumed
-                data = self.add_module(esc_type, 0)
+                data = self.add_module(robot_id, 0)
 
                 # Update variables and process its connections
                 module_name = data['lastModule_name']
@@ -552,6 +561,7 @@ class UrdfWriter:
 
         # parse the string to convert from xacro
         doc = xacro.parse(xmlstr)
+
         # perform macro replacement
         xacro.process_doc(doc)
 
@@ -610,7 +620,7 @@ class UrdfWriter:
 
             # Generate name and dict for the 1st connector module
             name_con1 = name + '_con1'
-            data1 = {'Homogeneous_tf': T_con_inv, 'type': "link", 'name': name_con1, 'i': 0, 'p': 0, 'size': 3}
+            data1 = {'Homogeneous_tf': T_con_inv, 'type': "con", 'name': name_con1, 'i': 0, 'p': 0, 'size': 3}
 
             # Add the 1st connector module to the tree
             slavecube_con1 = ModuleNode.ModuleNode(data1, name_con1, parent=self.parent_module)
@@ -665,17 +675,17 @@ class UrdfWriter:
 
             # instantate a ModuleNode for branch 2 connector
             name_con2 = name + '_con2'
-            data2 = {'Homogeneous_tf': self.T_con, 'type': "link", 'name': name_con2, 'i': 0, 'p': 0, 'size': 3}
+            data2 = {'Homogeneous_tf': self.T_con, 'type': "con", 'name': name_con2, 'i': 0, 'p': 0, 'size': 3}
             slavecube_con2 = ModuleNode.ModuleNode(data2, name_con2, parent=slavecube)
 
             # instantate a ModuleNode for branch 3 connector
             name_con3 = name + '_con3'
-            data3 = {'Homogeneous_tf': self.T_con, 'type': "link", 'name': name_con3, 'i': 0, 'p': 0, 'size': 3}
+            data3 = {'Homogeneous_tf': self.T_con, 'type': "con", 'name': name_con3, 'i': 0, 'p': 0, 'size': 3}
             slavecube_con3 = ModuleNode.ModuleNode(data3, name_con3, parent=slavecube)
 
             # instantate a ModuleNode for branch 4 connector
             name_con4 = name + '_con4'
-            data4 = {'Homogeneous_tf': self.T_con, 'type': "link", 'name': name_con4, 'i': 0, 'p': 0, 'size': 3}
+            data4 = {'Homogeneous_tf': self.T_con, 'type': "con", 'name': name_con4, 'i': 0, 'p': 0, 'size': 3}
             slavecube_con4 = ModuleNode.ModuleNode(data4, name_con4, parent=slavecube)
 
             # Render tree
@@ -746,22 +756,22 @@ class UrdfWriter:
 
             # instantate a ModuleNode for branch 1 connector
             name_con1 = name + '_con1'
-            data1 = {'Homogeneous_tf': self.T_con, 'type': "link", 'name': name_con1, 'i': 0, 'p': 0, 'size': 3}
+            data1 = {'Homogeneous_tf': self.T_con, 'type': "con", 'name': name_con1, 'i': 0, 'p': 0, 'size': 3}
             slavecube_con1 = ModuleNode.ModuleNode(data1, name_con1, parent=mastercube)
 
             # instantate a ModuleNode for branch 2 connector
             name_con2 = name + '_con2'
-            data2 = {'Homogeneous_tf': self.T_con, 'type': "link", 'name': name_con2, 'i': 0, 'p': 0, 'size': 3}
+            data2 = {'Homogeneous_tf': self.T_con, 'type': "con", 'name': name_con2, 'i': 0, 'p': 0, 'size': 3}
             slavecube_con2 = ModuleNode.ModuleNode(data2, name_con2, parent=mastercube)
 
             # instantate a ModuleNode for branch 3 connector
             name_con3 = name + '_con3'
-            data3 = {'Homogeneous_tf': self.T_con, 'type': "link", 'name': name_con3, 'i': 0, 'p': 0, 'size': 3}
+            data3 = {'Homogeneous_tf': self.T_con, 'type': "con", 'name': name_con3, 'i': 0, 'p': 0, 'size': 3}
             slavecube_con3 = ModuleNode.ModuleNode(data3, name_con3, parent=mastercube)
 
             # instantate a ModuleNode for branch 4 connector
             name_con4 = name + '_con4'
-            data4 = {'Homogeneous_tf': self.T_con, 'type': "link", 'name': name_con4, 'i': 0, 'p': 0, 'size': 3}
+            data4 = {'Homogeneous_tf': self.T_con, 'type': "con", 'name': name_con4, 'i': 0, 'p': 0, 'size': 3}
             slavecube_con4 = ModuleNode.ModuleNode(data4, name_con4, parent=mastercube)
 
             # Render tree
@@ -795,8 +805,8 @@ class UrdfWriter:
             # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string.
             string = self.process_urdf()
 
-            # Update the parent_module attribute of the URDF_writer class
-            self.parent_module = slavecube_con2 
+            # Update the parent_module attribute of the URDF_writer class. A default connection is chosen.
+            self.parent_module = slavecube_con3
 
             # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
             data = {'result': string,
@@ -807,7 +817,13 @@ class UrdfWriter:
 
             return data
 
-    def add_module(self, filename, angle_offset):
+    def get_ET(self):
+        return self.urdf_tree
+
+    def get_parent_module(self):
+        return self.parent_module
+
+    def add_module(self, filename, angle_offset, reverse=False):
         """Add a module specified by filename as child of the currently selected module.
 
         Parameters
