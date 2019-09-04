@@ -1,6 +1,6 @@
 <launch>
 
-  <arg name="model" default="$(find modular)/urdf/ModularBot_test.urdf"/>
+  <arg name="model" default="$(find modular)/urdf/ModularBot.urdf"/>
   <arg name="gui" default="true" />
   <arg name="rvizconfig" default="$(find modular)/rviz/urdf.rviz" />
 
