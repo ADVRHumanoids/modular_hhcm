@@ -729,6 +729,7 @@
     <xacro:macro name="add_rotor_fast" params="type name filename x y z roll pitch yaw">
 
         <xacro:property name="module" value="${load_yaml(filename)}"/>
+        <xacro:property name="gear_ratio" value="${module['control']['nu']}"/>
         
         <link name="${name}">
             <inertial>
@@ -740,33 +741,43 @@
                         ixx="${module['dynamics']['body_2_fast']['inertia_tensor']['I_xx']}" 
                         ixy="${module['dynamics']['body_2_fast']['inertia_tensor']['I_xy']}" 
                         iyy="${module['dynamics']['body_2_fast']['inertia_tensor']['I_yy']}" 
-                        ixz="${module['control']['nu']} * ${module['dynamics']['body_2_fast']['inertia_tensor']['I_xz']}"
-                        iyz="${module['control']['nu']} * ${module['dynamics']['body_2_fast']['inertia_tensor']['I_yz']}"
-                        izz="${module['control']['nu']} * ${module['control']['nu']} * ${module['dynamics']['body_2_fast']['inertia_tensor']['I_zz']}"/>
+                        ixz="${ gear_ratio * module['dynamics']['body_2_fast']['inertia_tensor']['I_xz'] }"
+                        iyz="${ gear_ratio * module['dynamics']['body_2_fast']['inertia_tensor']['I_yz'] }"
+                        izz="${ gear_ratio * gear_ratio * module['dynamics']['body_2_fast']['inertia_tensor']['I_zz'] }"/>
             </inertial>
         </link>
     </xacro:macro>
 
-    <xacro:macro name="add_distal" params="type name filename mesh_bool mesh x y z roll pitch yaw">
+    <xacro:macro name="add_distal" params="type name filename">
         
         <xacro:property name="module" value="${load_yaml(filename)}"/>
+        <!-- <xacro:property name="visual" value="${module['visual']['mesh_body_1']}"/> -->
         
+        <xacro:property name="mesh_bool" value="false"/>
+        <xacro:unless value="${ module['visual']['mesh_body_1'] == '' }">
+            <xacro:property name="mesh_bool" value="true"/>
+        </xacro:unless>
+
         <link name="${name}">
-            <xacro:unless value="${mesh_bool == 0}">
+            <xacro:if value="${ mesh_bool }">
                 <visual>
                     <!-- Load mesh. Rotate the origin frame (this is because of how the .stl was saved) -->
-                    <origin rpy="${roll} ${pitch} ${yaw}" xyz="${x} ${y} ${z}"/>
+                    <origin 
+                        rpy="${module['visual']['tf_mesh_2']['roll']} ${module['visual']['tf_mesh_2']['pitch']} ${module['visual']['tf_mesh_2']['yaw']}" 
+                        xyz="${module['visual']['tf_mesh_2']['x']} ${module['visual']['tf_mesh_2']['y']} ${module['visual']['tf_mesh_2']['z']}"/>
                     <geometry>
-                        <mesh filename="${mesh}" scale="0.001 0.001 0.001"/>
+                        <mesh filename="${module['visual']['mesh_body_2']}" scale="0.001 0.001 0.001"/>
                     </geometry>
                 </visual>
                 <collision>
-                    <origin rpy="${roll} ${pitch} ${yaw}" xyz="${x} ${y} ${z}"/>
+                    <origin 
+                        rpy="${module['visual']['tf_mesh_2']['roll']} ${module['visual']['tf_mesh_2']['pitch']} ${module['visual']['tf_mesh_2']['yaw']}" 
+                        xyz="${module['visual']['tf_mesh_2']['x']} ${module['visual']['tf_mesh_2']['y']} ${module['visual']['tf_mesh_2']['z']}"/>
                     <geometry>
-                        <mesh filename="${mesh}" scale="0.001 0.001 0.001"/>
+                        <mesh filename="${module['visual']['mesh_body_2']}" scale="0.001 0.001 0.001"/>
                     </geometry>
                 </collision>
-            </xacro:unless>
+            </xacro:if>
             <!--inertial parameters for avocado rotating part. wrt a point on one end of the rod-->
             <!-- <inertial>
                 <origin xyz="0 0 -0.002265" rpy="0 0 0"/>
