@@ -75,7 +75,21 @@ dynamics:
 
 visual:
   mesh_body_1: 'package://modular/meshes/yaw_base.stl'
+  tf_mesh_1:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    roll: 0.0
+    pitch: 0.0
+    yaw: 0.0
   mesh_body_2: 'package://modular/meshes/yaw_link.stl'
+  tf_mesh_2:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    roll: 0.0
+    pitch: 0.0
+    yaw: 0.0
     
 size: 'big'
 size_in:

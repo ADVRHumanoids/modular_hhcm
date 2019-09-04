@@ -39,7 +39,7 @@ dynamics:
     mass: '0.5'
     inertia_tensor:
     CoM:
-      
+
 size: 'big'
 
 type: 'cube'

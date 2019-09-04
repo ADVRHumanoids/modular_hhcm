@@ -59,6 +59,38 @@ dynamics:
       y: 0.01
       z: 0.05
     
+  body_2_fast:
+    mass: 0.0
+    inertia_tensor:
+      I_xx: 0.0
+      I_yy: 0.0
+      I_zz: 0.0
+      I_xy: 0.0
+      I_xz: 0.0
+      I_yz: 0.0
+    CoM:
+      x: 0.0      
+      y: 0.0      
+      z: 0.0
+
+visual:
+  mesh_body_1: ''
+  tf_mesh_1:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    roll: 0.0
+    pitch: 0.0
+    yaw: 0.0
+  mesh_body_2: ''
+  tf_mesh_2:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    roll: 0.0
+    pitch: 0.0
+    yaw: 0.0
+
 size: 'big'
 size_in:
 size_out:
