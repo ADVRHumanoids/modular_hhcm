@@ -152,7 +152,7 @@ venv.bak/
 .pylintrc
 
 # Folders to ignore
-web/static/models/*
 configs/*
 .idea/*
+ModularBot/*
 
