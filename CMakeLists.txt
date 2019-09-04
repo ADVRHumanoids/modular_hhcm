@@ -9,7 +9,7 @@ if(CATKIN_ENABLE_TESTING)
   roslaunch_add_file_check(launch)
 endif()
 
-install(DIRECTORY launch urdf rviz srdf cartesio scripts
+install(DIRECTORY launch urdf rviz srdf cartesio scripts web/static/models/modular/meshes
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
 #configure_file(${CMAKE_CURRENT_SOURCE_DIR}/urdf/ModularBot.urdf ${CMAKE_CURRENT_SOURCE_DIR}/../../configs/ADVR_shared/ModularBot/urdf/ModularBot.urdf COPYONLY)
