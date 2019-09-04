@@ -1,0 +1,1047 @@
+<?xml version="1.0"?>
+<robot name="ModularBot" xmlns:xacro="http://ros.org/wiki/xacro">
+
+    <!-- <xacro:include filename="$(find modular)/urdf/config.xacro" />
+    <xacro:include filename="$(find modular)/urdf/modular.gazebo" /> -->
+    <gazebo>
+        <plugin name="gazebo_xbot_plugin" filename="libGazeboXBotPlugin.so">
+            <!-- <path_to_config_file>${xbot_config_file}</path_to_config_file> -->
+            <path_to_config_file>configs/ADVR_shared/ModularBot/configs/config_ModularBot.yaml</path_to_config_file>
+        </plugin>
+    </gazebo>
+
+    <xacro:property name="size1" value="0.05" />
+    <xacro:property name="size2" value="0.055" />
+    <xacro:property name="size3" value="0.06" />
+    <!-- <xacro:property name="leglen" value="0.3" /> -->
+    <xacro:property name="len1" value="0.4" />
+    <xacro:property name="len2" value="0.6" />
+    <xacro:property name="len3" value="0.8" />
+    <xacro:property name="mass" value="0.5" />
+    <!-- <xacro:property name="pi" value="3.1415" /> -->
+
+    <material name="blue">
+        <color rgba="0 0 0.8 1"/>
+    </material>
+
+    <material name="black">
+        <color rgba="0 0 0 1"/>
+    </material>
+
+    <material name="white">
+        <color rgba="1 1 1 1"/>
+    </material>
+
+    <material name="grey">
+        <color rgba="0.5 0.5 0.5 1"/>
+    </material>
+
+    <material name="red">
+        <color rgba="1 0 0 1"/>
+    </material>
+
+    <material name="green">
+        <color rgba="0 1 0 1"/>
+    </material>
+
+    <material name="yellow">
+        <color rgba="1 1 0 1"/>
+    </material>
+
+
+    <xacro:macro name="default_inertial" params="mass">
+        <inertial>
+        <mass value="${mass}" />
+        <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0" />
+        </inertial>
+    </xacro:macro>
+
+    <!-- adding world link for Gazebo simulation -->
+    <link name="world"/>
+    <joint name="world" type="fixed">
+        <parent link="world"/>
+        <child link="base_link"/>
+    </joint>
+
+    <link name="base_link"/>
+
+    <!-- <link name="L_0">
+        <visual>
+            <origin xyz="0 0 ${len1/2}" rpy="0 0 0" />
+            <geometry>
+                <cylinder radius="${size1}" length="${len1}"/>
+            </geometry>
+            <material name="black"/>
+        </visual>
+        <collision>
+            <origin xyz="0 0 ${len1/2}" rpy="0 0 0" />
+            <geometry>
+                <cylinder radius="${size1}" length="${len1}"/>
+            </geometry>
+        </collision>
+        <xacro:default_inertial mass="1"/>
+    </link> -->
+
+
+    <!-- L_0a first link -->
+    <!-- <joint name="fixed" type="fixed">
+        <parent link="base_link"/>
+        <child link="L_0a"/>
+        <axis rpy="0 0 0" xyz="0 0 1"/>
+        <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+    </joint>
+
+    <link name="L_0a">
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0.2"/>
+            <geometry>
+                <box size="0.4 0.4 0.4"/>
+            </geometry>
+            <material name="black"/>
+        </visual>
+        <collision>
+            <geometry>
+                <box size="0.4 0.4 0.4"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="2"/>
+            <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+        </inertial>
+    </link>
+
+    <link name="L_0a_con1">
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0.05"/>
+            <geometry>
+                <cylinder length="0.1" radius="0.06"/>
+            </geometry>
+            <material name="black"/>
+        </visual>
+        <collision>
+            <geometry>
+                <cylinder length="0.1" radius="0.06"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="0.5"/>
+            <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+        </inertial>
+    </link>
+
+    <link name="L_0a_con2">
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0.05"/>
+            <geometry>
+                <cylinder length="0.1" radius="0.06"/>
+            </geometry>
+            <material name="black"/>
+        </visual>
+        <collision>
+            <geometry>
+                <cylinder length="0.1" radius="0.06"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="0.5"/>
+            <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+        </inertial>
+    </link>
+    
+    <link name="L_0a_con3">
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0.05"/>
+            <geometry>
+                <cylinder length="0.1" radius="0.06"/>
+            </geometry>
+            <material name="black"/>
+        </visual>
+        <collision>
+            <geometry>
+                <cylinder length="0.1" radius="0.06"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="0.5"/>
+            <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+        </inertial>
+    </link>
+
+    <link name="L_0a_con4">
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0.05"/>
+            <geometry>
+                <cylinder length="0.1" radius="0.06"/>
+            </geometry>
+            <material name="black"/>
+        </visual>
+        <collision>
+            <geometry>
+                <cylinder length="0.1" radius="0.06"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="0.5"/>
+            <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+        </inertial>
+    </link>
+
+    <joint name="L_0a_fixed_1" type="fixed">
+        <parent link="L_0a"/>
+        <child link="L_0a_con1"/>
+        <axis rpy="0 0 0" xyz="0 0 1"/>
+        <origin rpy="3.14 0 0" xyz="0 0 0"/>
+    </joint>
+
+    <joint name="L_0a_fixed_2" type="fixed">
+        <parent link="L_0a"/>
+        <child link="L_0a_con2"/>
+        <axis rpy="0 0 0" xyz="0 0 1"/>
+        <origin rpy="1.57 0 0" xyz="0 -0.2 0.2"/>
+    </joint>
+
+    <joint name="L_0a_fixed_3" type="fixed">
+        <parent link="L_0a"/>
+        <child link="L_0a_con3"/>
+        <axis rpy="0 0 0" xyz="0 0 1"/>
+        <origin rpy="0 0 0" xyz="0 0 0.4"/>
+    </joint>
+
+    <joint name="L_0a_fixed_4" type="fixed">
+        <parent link="L_0a"/>
+        <child link="L_0a_con4"/>
+        <axis rpy="0 0 0" xyz="0 0 1"/>
+        <origin rpy="-1.57 0 0" xyz="0 0.2 0.2"/>
+    </joint> -->
+
+    <!-- Macro for adding a fixed joint (rigid interconnection between links) -->
+    <xacro:macro name="add_fixed_joint" params="type name father child x y z roll pitch yaw">    
+        <joint name="${name}" type="fixed">
+            <axis xyz="0 0 1" rpy="0 0 0" />
+            <parent link="${father}"/>
+            <child link="${child}"/>
+            <origin xyz="${x} ${y} ${z}" rpy="${roll} ${pitch} ${yaw}"/>
+        </joint>
+    </xacro:macro>
+
+    <!-- Macro for adding a master cube -->
+    <xacro:macro name="add_master_cube" params="name">
+        
+        <joint name="fixed" type="fixed">
+            <parent link="base_link"/>
+            <child link="${name}"/>
+            <axis rpy="0 0 0" xyz="0 0 1"/>
+            <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+        </joint>
+
+        <link name="${name}">
+            <visual>
+                <origin rpy="0 0 0" xyz="0 0 0.2"/>
+                <geometry>
+                    <box size="0.4 0.4 0.4"/>
+                </geometry>
+                <material name="black"/>
+            </visual>
+            <collision>
+                <origin rpy="0 0 0" xyz="0 0 0.2"/>
+                <geometry>
+                    <box size="0.4 0.4 0.4"/>
+                </geometry>
+            </collision>
+            <inertial>
+                <mass value="2"/>
+                <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+            </inertial>
+        </link>
+
+        <link name="${name}_con1">
+            <visual>
+                <origin rpy="0 0 0" xyz="0 0 0.05"/>
+                <geometry>
+                    <cylinder length="0.1" radius="0.06"/>
+                </geometry>
+                <material name="black"/>
+            </visual>
+            <collision>
+                <geometry>
+                    <cylinder length="0.1" radius="0.06"/>
+                </geometry>
+            </collision>
+            <inertial>
+                <mass value="0.5"/>
+                <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+            </inertial>
+        </link>
+
+        <link name="${name}_con2">
+            <visual>
+                <origin rpy="0 0 0" xyz="0 0 0.05"/>
+                <geometry>
+                    <cylinder length="0.1" radius="0.06"/>
+                </geometry>
+                <material name="black"/>
+            </visual>
+            <collision>
+                <geometry>
+                    <cylinder length="0.1" radius="0.06"/>
+                </geometry>
+            </collision>
+            <inertial>
+                <mass value="0.5"/>
+                <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+            </inertial>
+        </link>
+        
+        <link name="${name}_con3">
+            <visual>
+                <origin rpy="0 0 0" xyz="0 0 0.05"/>
+                <geometry>
+                    <cylinder length="0.1" radius="0.06"/>
+                </geometry>
+                <material name="black"/>
+            </visual>
+            <collision>
+                <geometry>
+                    <cylinder length="0.1" radius="0.06"/>
+                </geometry>
+            </collision>
+            <inertial>
+                <mass value="0.5"/>
+                <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+            </inertial>
+        </link>
+
+        <link name="${name}_con4">
+            <visual>
+                <origin rpy="0 0 0" xyz="0 0 0.05"/>
+                <geometry>
+                    <cylinder length="0.1" radius="0.06"/>
+                </geometry>
+                <material name="black"/>
+            </visual>
+            <collision>
+                <geometry>
+                    <cylinder length="0.1" radius="0.06"/>
+                </geometry>
+            </collision>
+            <inertial>
+                <mass value="0.5"/>
+                <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+            </inertial>
+        </link>
+
+        <joint name="${name}_fixed_1" type="fixed">
+            <parent link="${name}"/>
+            <child link="${name}_con1"/>
+            <axis rpy="0 0 0" xyz="0 0 1"/>
+            <origin rpy="3.14 0 0" xyz="0 0 0.0"/>
+        </joint>
+
+        <joint name="${name}_fixed_2" type="fixed">
+            <parent link="${name}"/>
+            <child link="${name}_con2"/>
+            <axis rpy="0 0 0" xyz="0 0 1"/>
+            <origin rpy="1.57 0 0" xyz="0 -0.2 0.2"/>
+        </joint>
+
+        <joint name="${name}_fixed_3" type="fixed">
+            <parent link="${name}"/>
+            <child link="${name}_con3"/>
+            <axis rpy="0 0 0" xyz="0 0 1"/>
+            <origin rpy="0 0 0" xyz="0 0 0.4"/>
+        </joint>
+
+        <joint name="${name}_fixed_4" type="fixed">
+            <parent link="${name}"/>
+            <child link="${name}_con4"/>
+            <axis rpy="0 0 0" xyz="0 0 1"/>
+            <origin rpy="-1.57 0 0" xyz="0 0.2 0.2"/>
+        </joint>
+
+    </xacro:macro>
+
+    <!-- Macro for adding a slave cube -->
+    <xacro:macro name="add_slave_cube" params="name">
+        
+        <link name="${name}">
+            <visual>
+                <origin rpy="0 0 0" xyz="0 0 0.2"/>
+                <geometry>
+                    <box size="0.4 0.4 0.4"/>
+                </geometry>
+                <material name="black"/>
+            </visual>
+            <collision>
+                <geometry>
+                    <box size="0.4 0.4 0.4"/>
+                </geometry>
+            </collision>
+            <inertial>
+                <mass value="2"/>
+                <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+            </inertial>
+        </link>
+
+        <link name="${name}_con1">
+            <visual>
+                <origin rpy="0 0 0" xyz="0 0 0.05"/>
+                <geometry>
+                    <cylinder length="0.1" radius="0.06"/>
+                </geometry>
+                <material name="black"/>
+            </visual>
+            <collision>
+                <geometry>
+                    <cylinder length="0.1" radius="0.06"/>
+                </geometry>
+            </collision>
+            <inertial>
+                <mass value="0.5"/>
+                <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+            </inertial>
+        </link>
+
+        <link name="${name}_con2">
+            <visual>
+                <origin rpy="0 0 0" xyz="0 0 0.05"/>
+                <geometry>
+                    <cylinder length="0.1" radius="0.06"/>
+                </geometry>
+                <material name="black"/>
+            </visual>
+            <collision>
+                <geometry>
+                    <cylinder length="0.1" radius="0.06"/>
+                </geometry>
+            </collision>
+            <inertial>
+                <mass value="0.5"/>
+                <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+            </inertial>
+        </link>
+        
+        <link name="${name}_con3">
+            <visual>
+                <origin rpy="0 0 0" xyz="0 0 0.05"/>
+                <geometry>
+                    <cylinder length="0.1" radius="0.06"/>
+                </geometry>
+                <material name="black"/>
+            </visual>
+            <collision>
+                <geometry>
+                    <cylinder length="0.1" radius="0.06"/>
+                </geometry>
+            </collision>
+            <inertial>
+                <mass value="0.5"/>
+                <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+            </inertial>
+        </link>
+
+        <link name="${name}_con4">
+            <visual>
+                <origin rpy="0 0 0" xyz="0 0 0.05"/>
+                <geometry>
+                    <cylinder length="0.1" radius="0.06"/>
+                </geometry>
+                <material name="black"/>
+            </visual>
+            <collision>
+                <geometry>
+                    <cylinder length="0.1" radius="0.06"/>
+                </geometry>
+            </collision>
+            <inertial>
+                <mass value="0.5"/>
+                <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+            </inertial>
+        </link>
+
+        <joint name="${name}_fixed_1" type="fixed">
+            <parent link="${name}_con1"/>
+            <child link="${name}"/>
+            <axis rpy="0 0 0" xyz="0 0 1"/>
+            <origin rpy="0 0 0" xyz="0 0 0.1"/>
+        </joint>
+
+        <joint name="${name}_fixed_2" type="fixed">
+            <parent link="${name}"/>
+            <child link="${name}_con2"/>
+            <axis rpy="0 0 0" xyz="0 0 1"/>
+            <origin rpy="1.57 0 0" xyz="0 -0.2 0.2"/>
+        </joint>
+
+        <joint name="${name}_fixed_3" type="fixed">
+            <parent link="${name}"/>
+            <child link="${name}_con3"/>
+            <axis rpy="0 0 0" xyz="0 0 1"/>
+            <origin rpy="0 0 0" xyz="0 0 0.4"/>
+        </joint>
+
+        <joint name="${name}_fixed_4" type="fixed">
+            <parent link="${name}"/>
+            <child link="${name}_con4"/>
+            <axis rpy="0 0 0" xyz="0 0 1"/>
+            <origin rpy="-1.57 0 0" xyz="0 0.2 0.2"/>
+        </joint>
+
+    </xacro:macro>
+
+    <!-- Macro for adding a straight link -->
+    <xacro:macro name="add_link" params="name type size_z size">
+        
+        <xacro:if value="${size==1}">
+            <xacro:property name="radius" value="${size1}" />
+        </xacro:if>
+        <xacro:unless value="${size==1}">
+            <xacro:if value="${size==2}">
+                <xacro:property name="radius" value="${size2}" />
+            </xacro:if>
+            <xacro:unless value="${size==2}">
+                <xacro:property name="radius" value="${size3}" />
+            </xacro:unless>  
+        </xacro:unless>
+
+        <link name="${name}">
+            <visual>
+                <origin xyz="0 0 ${size_z/2}" rpy="0 0 0" />
+                <geometry>
+                    <cylinder radius="${radius}" length="${size_z}"/>
+                </geometry>
+                <material name="white"/>
+            </visual>
+            <collision>
+                <origin xyz="0 0 ${size_z/2}" rpy="0 0 0" />
+                <geometry>
+                    <cylinder radius="${radius}" length="${size_z}"/>
+                </geometry>
+            </collision>
+            <inertial>
+                <origin xyz="0 0 ${size_z/2}" rpy="0 0 0"/>
+                <mass value="${mass}"/>
+                <inertia
+                ixx="${mass / 12.0 * (3*radius*radius + size_z*size_z)}" ixy="0.0" ixz="0.0"
+                iyy="${mass / 12.0 * (size_z*size_z + 3*radius*radius)}" iyz="0.0"
+                izz="${mass / 2.0 * (radius*radius)}"/>
+            </inertial>
+        </link>
+        <gazebo reference="${name}">
+            <mu1>0.2</mu1>
+            <mu2>0.2</mu2>
+            <kp>1000000.0</kp>
+            <kd>1.0</kd>
+            <maxVel>0.0</maxVel>
+            <minDepth>0.0001</minDepth>
+            <material>Gazebo/White</material>
+        </gazebo>
+
+    </xacro:macro>
+
+    <!-- Macro for adding a size adapter -->
+    <xacro:macro name="add_size_adapter" params="type name size_z size_in size_out">
+        
+        <xacro:if value="${size_in==3}">
+            <xacro:property name="radius1" value="${size3}" />
+        </xacro:if>
+        <xacro:unless value="${size_in==3}">
+            <xacro:if value="${size_in==2}">
+                <xacro:property name="radius1" value="${size2}" />
+            </xacro:if>
+            <xacro:unless value="${size_in==2}">
+                <!-- ERROR! -->
+            </xacro:unless>  
+        </xacro:unless>
+
+        <xacro:if value="${size_out==3}">
+            <!-- ERROR! -->
+        </xacro:if>
+        <xacro:unless value="${size_out==3}">
+            <xacro:if value="${size_out==2}">
+                <xacro:property name="radius2" value="${size2}" />
+            </xacro:if>
+            <xacro:unless value="${size_out==2}">
+                <xacro:property name="radius2" value="${size1}" />
+            </xacro:unless>  
+        </xacro:unless>
+
+        <link name="${name}">
+            <visual>
+                <origin xyz="0 0 ${size_z/4}" rpy="0 0 0" />
+                <geometry>
+                    <cylinder radius="${radius1}" length="${size_z/2}"/>
+                </geometry>
+                <material name="grey"/>
+            </visual>
+            <visual>
+                <origin xyz="0 0 ${3*size_z/4}" rpy="0 0 0" />
+                <geometry>
+                    <cylinder radius="${radius2}" length="${size_z/2}"/>
+                </geometry>
+                <material name="grey"/>
+            </visual>
+            <collision>
+                <origin xyz="0 0 ${size_z/4}" rpy="0 0 0" />
+                <geometry>
+                    <cylinder radius="${radius1}" length="${size_z/2}"/>
+                </geometry>
+            </collision>
+            <collision>
+                <origin xyz="0 0 ${3*size_z/4}" rpy="0 0 0" />
+                <geometry>
+                    <cylinder radius="${radius2}" length="${size_z/2}"/>
+                </geometry>
+            </collision>
+            <inertial>
+                <origin xyz="0 0 ${size_z/2}" rpy="0 0 0"/>
+                <mass value="${mass}"/>
+                <inertia
+                ixx="${mass / 12.0 * (3*radius1*radius1 + 4*size_z/2*size_z/2) + mass / 12.0 * (3*radius2*radius2 + 4*size_z/2*size_z/2)}" ixy="0.0" ixz="0.0"
+                iyy="${mass / 12.0 * (3*radius1*radius1 + 4*size_z/2*size_z/2) + mass / 12.0 * (3*radius2*radius2 + 4*size_z/2*size_z/2)}" iyz="0.0"
+                izz="${mass / 4.0 * (radius1*radius1) + mass / 4.0 * (radius2*radius2)}"/>
+            </inertial>
+        </link>
+        <gazebo reference="${name}">
+            <mu1>0.2</mu1>
+            <mu2>0.2</mu2>
+            <kp>1000000.0</kp>
+            <kd>1.0</kd>
+            <maxVel>0.0</maxVel>
+            <minDepth>0.0001</minDepth>
+            <material>Gazebo/Grey</material>
+        </gazebo>
+
+    </xacro:macro>
+
+    <!-- Macro for adding an elbow module (90° link) -->
+    <xacro:macro name="add_elbow" params="type name size_y size_z size">
+
+        <xacro:if value="${size==1}">
+            <xacro:property name="radius" value="${size1}" />
+        </xacro:if>
+        <xacro:unless value="${size==1}">
+            <xacro:if value="${size==2}">
+                <xacro:property name="radius" value="${size2}" />
+            </xacro:if>
+            <xacro:unless value="${size==2}">
+                <xacro:property name="radius" value="${size3}" />
+            </xacro:unless>  
+        </xacro:unless>
+
+        <link name="${name}">
+            <visual>
+                <origin xyz="0 0 ${size_z/2}" rpy="0 0 0" />
+                <geometry>
+                    <cylinder radius="${radius}" length="${size_z}"/>
+                </geometry>
+                <material name="blue"/>
+            </visual>
+            <visual>
+                <origin xyz="0 ${size_y/2} ${size_z}" rpy="1.57 0 0" />
+                <geometry>
+                    <cylinder radius="${radius}" length="${size_y}"/>
+                </geometry>
+                <material name="blue"/>
+            </visual>
+            <visual>
+                <origin xyz="0 0 ${size_z}" rpy="0 0 0" />
+                <geometry>
+                    <sphere radius="${radius}" />
+                </geometry>
+                <material name="blue"/>
+            </visual>
+            <collision>
+                <origin xyz="0 0 ${size_z/2}" rpy="0 0 0" />
+                <geometry>
+                    <cylinder radius="${radius}" length="${size_z}"/>
+                </geometry>
+            </collision>
+            <inertial>
+                <origin xyz="0 0 ${size_z/2}" rpy="0 0 0"/>
+                <mass value="${mass}"/>
+                <inertia
+                ixx="${mass / 2 *( 1 / 12.0 * (3*radius*radius + 4*size_y*size_y) + size_z*size_z) + mass / 24.0 * (3*radius*radius + 4*size_z*size_z)}" ixy="0.0" ixz="0.0"
+                iyy="${mass / 24.0 * (3*radius*radius + 4*size_z*size_z) + mass / 2 *( 1 / 2 *radius*radius + size_z*size_z)}" iyz="0.0"
+                izz="${mass / 4.0 * (radius*radius) + mass / 24.0 * (3*radius*radius + 4*size_y*size_y)}"/>
+            </inertial>
+            <collision>
+                <origin xyz="0 ${size_y/2} ${size_z}" rpy="1.57 0 0" />
+                <geometry>
+                    <cylinder radius="${radius}" length="${size_y}"/>
+                </geometry>
+            </collision>
+            <collision>
+                <origin xyz="0 0 ${size_z}" rpy="0 0 0" />
+                <geometry>
+                    <sphere radius="${radius}" />
+                </geometry>
+            </collision>
+        </link>
+        <gazebo reference="${name}">
+            <mu1>0.2</mu1>
+            <mu2>0.2</mu2>
+            <kp>1000000.0</kp>
+            <kd>1.0</kd>
+            <maxVel>0.0</maxVel>
+            <minDepth>0.0001</minDepth>
+            <material>Gazebo/White</material>
+        </gazebo>
+
+    </xacro:macro>
+
+    <!-- Macro for adding the joint. A dummy link is also added with no visual tag, but with inertial parameters corresponding to the rotating part -->
+    <xacro:macro name="add_joint" params="type name father child x y z roll pitch yaw upper_lim lower_lim effort velocity">    
+        <joint name="${name}" type="revolute">
+            <axis xyz="0 0 1" rpy="0 0 0" />
+            <parent link="${father}"/>
+            <child link="${child}"/>
+            <origin xyz="${x} ${y} ${z}" rpy="${roll} ${pitch} ${yaw}"/>
+            <limit lower="${lower_lim}" upper="${upper_lim}" effort="${effort}" velocity="${velocity}"/>
+        </joint>
+        <!--<link name="${child}">-->
+            <!--<xacro:if value="${type==joint_mesh}">-->
+                <!--<visual>-->
+                    <!--&lt;!&ndash; Load mesh. Rotate the origin frame (this is because of how the .stl was saved) &ndash;&gt;-->
+                    <!--<origin rpy="${roll} ${pitch} ${yaw}" xyz="${x} ${y} ${z}"/>-->
+                    <!--<geometry>-->
+                        <!--<mesh filename="package://modular/meshes/asm0001.stl" scale="0.001 0.001 0.001"/>-->
+                    <!--</geometry>-->
+                <!--</visual>-->
+                <!--<collision>-->
+                    <!--<origin rpy="${roll} ${pitch} ${yaw}" xyz="${x} ${y} ${z}"/>-->
+                    <!--<geometry>-->
+                        <!--<mesh filename="package://modular/meshes/asm0001.stl" scale="0.001 0.001 0.001"/>-->
+                    <!--</geometry>-->
+                <!--</collision>-->
+            <!--</xacro:if>-->
+            <!--&lt;!&ndash; inertial parameters for avocado rotating part. wrt a point on one end of the rod &ndash;&gt;-->
+            <!--<inertial>-->
+                <!--<origin xyz="0 0 -0.0635" rpy="0 0 0"/>-->
+                <!--<mass value="${mass}"/>-->
+                <!--<inertia-->
+                <!--ixx="${mass / 3.0 * (0.127*0.127)}" ixy="0.0" ixz="0.0"-->
+                <!--iyy="${mass / 3.0 * (0.127*0.127)}" iyz="0.0"-->
+                <!--izz="0.0000148"/>-->
+            <!--</inertial>-->
+        <!--</link>-->
+    </xacro:macro>
+
+    <xacro:macro name="add_rotor_fast" params="type name filename x y z roll pitch yaw">
+
+        <xacro:property name="module" value="${load_yaml(filename)}"/>
+        <xacro:property name="gear_ratio" value="${module['control']['nu']}"/>
+        
+        <link name="${name}">
+            <inertial>
+                <origin 
+                        xyz="${module['dynamics']['body_2_fast']['CoM']['x']} ${module['dynamics']['body_2_fast']['CoM']['y']} ${module['dynamics']['body_2_fast']['CoM']['z']}" 
+                        rpy="0 0 0"/>
+                    <mass value="${module['dynamics']['body_2_fast']['mass']}"/>
+                    <inertia
+                        ixx="${module['dynamics']['body_2_fast']['inertia_tensor']['I_xx']}" 
+                        ixy="${module['dynamics']['body_2_fast']['inertia_tensor']['I_xy']}" 
+                        iyy="${module['dynamics']['body_2_fast']['inertia_tensor']['I_yy']}" 
+                        ixz="${ gear_ratio * module['dynamics']['body_2_fast']['inertia_tensor']['I_xz'] }"
+                        iyz="${ gear_ratio * module['dynamics']['body_2_fast']['inertia_tensor']['I_yz'] }"
+                        izz="${ gear_ratio * gear_ratio * module['dynamics']['body_2_fast']['inertia_tensor']['I_zz'] }"/>
+            </inertial>
+        </link>
+    </xacro:macro>
+
+    <xacro:macro name="add_distal" params="type name filename">
+        
+        <xacro:property name="module" value="${load_yaml(filename)}"/>
+        <!-- <xacro:property name="visual" value="${module['visual']['mesh_body_1']}"/> -->
+        
+        <xacro:property name="mesh_bool" value="false"/>
+        <xacro:unless value="${ module['visual']['mesh_body_1'] == '' }">
+            <xacro:property name="mesh_bool" value="true"/>
+        </xacro:unless>
+
+        <link name="${name}">
+            <xacro:if value="${ mesh_bool }">
+                <visual>
+                    <!-- Load mesh. Rotate the origin frame (this is because of how the .stl was saved) -->
+                    <origin 
+                        rpy="${module['visual']['tf_mesh_2']['roll']} ${module['visual']['tf_mesh_2']['pitch']} ${module['visual']['tf_mesh_2']['yaw']}" 
+                        xyz="${module['visual']['tf_mesh_2']['x']} ${module['visual']['tf_mesh_2']['y']} ${module['visual']['tf_mesh_2']['z']}"/>
+                    <geometry>
+                        <mesh filename="${module['visual']['mesh_body_2']}" scale="0.001 0.001 0.001"/>
+                    </geometry>
+                </visual>
+                <collision>
+                    <origin 
+                        rpy="${module['visual']['tf_mesh_2']['roll']} ${module['visual']['tf_mesh_2']['pitch']} ${module['visual']['tf_mesh_2']['yaw']}" 
+                        xyz="${module['visual']['tf_mesh_2']['x']} ${module['visual']['tf_mesh_2']['y']} ${module['visual']['tf_mesh_2']['z']}"/>
+                    <geometry>
+                        <mesh filename="${module['visual']['mesh_body_2']}" scale="0.001 0.001 0.001"/>
+                    </geometry>
+                </collision>
+            </xacro:if>
+            <!--inertial parameters for avocado rotating part. wrt a point on one end of the rod-->
+            <!-- <inertial>
+                <origin xyz="0 0 -0.002265" rpy="0 0 0"/>
+                <mass value="0.153466"/>
+                <inertia
+                        ixx="0.000034763" ixy="0.0" ixz="0.0"
+                        iyy="0.000034827" iyz="0.0"
+                        izz="0.000031822"/>
+            </inertial> -->
+            <inertial>
+                <origin 
+                    xyz="${module['dynamics']['body_2']['CoM']['x']} ${module['dynamics']['body_2']['CoM']['y']} ${module['dynamics']['body_2']['CoM']['z']}" 
+                    rpy="0 0 0"/>
+                <mass value="${module['dynamics']['body_2']['mass']}"/>
+                <inertia
+                    ixx="${module['dynamics']['body_2']['inertia_tensor']['I_xx']}" 
+                    ixy="${module['dynamics']['body_2']['inertia_tensor']['I_xy']}" 
+                    ixz="${module['dynamics']['body_2']['inertia_tensor']['I_xz']}"
+                    iyy="${module['dynamics']['body_2']['inertia_tensor']['I_yy']}" 
+                    iyz="${module['dynamics']['body_2']['inertia_tensor']['I_yz']}"
+                    izz="${module['dynamics']['body_2']['inertia_tensor']['I_zz']}"/>
+            </inertial>
+        </link>
+    </xacro:macro>
+
+    <!-- Macro for adding the physical module housing the actuator -->
+    <xacro:macro name="add_joint_stator" params="type name filename mesh_bool mesh size_y size_z size x y z roll pitch yaw">
+
+        <xacro:property name="module" value="${load_yaml(filename)}"/>
+
+        <xacro:if value="${size==1}">
+            <xacro:property name="radius" value="${size1}" />
+        </xacro:if>
+        <xacro:unless value="${size==1}">
+            <xacro:if value="${size==2}">
+                <xacro:property name="radius" value="${size2}" />
+            </xacro:if>
+            <xacro:unless value="${size==2}">
+                <xacro:property name="radius" value="${size3}" />
+            </xacro:unless>
+        </xacro:unless>
+        
+        <xacro:if value="${mesh_bool==0}">
+            <link name="${name}">
+                <visual>
+                    <origin xyz="0 0 ${size_z/2}" rpy="0 0 0" />
+                    <geometry>
+                        <cylinder radius="${radius}" length="${size_z}"/>
+                    </geometry>
+                    <material name="blue"/>
+                </visual>
+                <collision>
+                    <origin xyz="0 0 ${size_z/2}" rpy="0 0 0" />
+                    <geometry>
+                        <cylinder radius="${radius}" length="${size_z}"/>
+                    </geometry>
+                </collision>
+                <inertial>
+                    <origin xyz="0 0 ${size_z/2}" rpy="0 0 0"/>
+                    <mass value="${mass}"/>
+                    <inertia
+                            ixx="${mass / 12.0 * (3*radius*radius + size_z*size_z)}" ixy="0.0" ixz="0.0"
+                            iyy="${mass / 12.0 * (size_z*size_z + 3*radius*radius)}" iyz="0.0"
+                            izz="${mass / 2.0 * (radius*radius)}"/>
+                </inertial>
+            </link>
+        </xacro:if> 
+        <xacro:unless value="${mesh_bool == 0}">
+            <link name="${name}">
+                <visual>
+                    <!-- Load mesh. Rotate the origin frame (this is because of how the .stl was saved) -->
+                    <origin rpy="${roll} ${pitch} ${yaw}" xyz="${x} ${y} ${z}"/>
+                    <geometry>
+                        <mesh filename="${mesh}" scale="0.001 0.001 0.001"/>
+                    </geometry>
+                    <material name="grey"/>
+                </visual>
+                <collision>
+                    <origin rpy="${roll} ${pitch} ${yaw}" xyz="${x} ${y} ${z}"/>
+                    <geometry>
+                        <mesh filename="${mesh}" scale="0.001 0.001 0.001"/>
+                    </geometry>
+                </collision>
+                <!-- TODO: change inertial parameters with the one from CAD. This will be the inertia tensor of only the housing/stator part -->
+                <inertial>
+                    <origin 
+                        xyz="${module['dynamics']['body_1']['CoM']['x']} ${module['dynamics']['body_1']['CoM']['y']} ${module['dynamics']['body_1']['CoM']['z']}" 
+                        rpy="0 0 0"/>
+                    <mass value="${module['dynamics']['body_1']['mass']}"/>
+                    <inertia
+                        ixx="${module['dynamics']['body_1']['inertia_tensor']['I_xx']}" 
+                        ixy="${module['dynamics']['body_1']['inertia_tensor']['I_xy']}" 
+                        ixz="${module['dynamics']['body_1']['inertia_tensor']['I_xz']}"
+                        iyy="${module['dynamics']['body_1']['inertia_tensor']['I_yy']}" 
+                        iyz="${module['dynamics']['body_1']['inertia_tensor']['I_yz']}"
+                        izz="${module['dynamics']['body_1']['inertia_tensor']['I_zz']}"/>
+                </inertial>
+
+            </link>
+        </xacro:unless>
+        <gazebo reference="${name}">
+            <mu1>0.2</mu1>
+            <mu2>0.2</mu2>
+            <kp>1000000.0</kp>
+            <kd>1.0</kd>
+            <maxVel>0.0</maxVel>
+            <minDepth>0.0001</minDepth>
+            <material>Gazebo/Blue</material>
+        </gazebo>
+
+    </xacro:macro>
+
+    <!-- Macro for adding a fixed joint (rigid interconnection between links and statoric part of the joint) -->
+    <xacro:macro name="add_fixed_joint" params="type name father child x y z roll pitch yaw">
+        <joint name="${name}" type="fixed">
+            <axis xyz="0 0 1" rpy="0 0 0" />
+            <parent link="${father}"/>
+            <child link="${child}"/>
+            <origin xyz="${x} ${y} ${z}" rpy="${roll} ${pitch} ${yaw}"/>
+        </joint>
+    </xacro:macro>
+
+    <!-- Macro for adding the virtual end-effector -->
+    <xacro:macro name="add_virtual_ee" params="type name father x y z roll pitch yaw">
+        <joint name="virtual_yaw_joint_1" type="revolute">
+            <axis xyz="0 0 1" rpy="0 0 0" />
+            <parent link="${father}"/>
+            <child link="virtual_yaw_link_1"/>
+            <origin xyz="${x} ${y} ${z}" rpy="${roll} ${pitch} ${yaw}"/>
+            <limit effort="1000" lower="-1000" upper="1000" velocity="1000"/>
+        </joint>
+        <link name="virtual_yaw_link_1">
+            <visual>
+                <geometry>
+                    <cylinder radius="0.01" length="0.1"/>
+                </geometry>
+                <material name="blue"/>
+            </visual>
+            <inertial>
+                <origin rpy="0 0 0" xyz="0 0 0.0296308777857"/>
+                <mass value="0.5"/>
+                <inertia ixx="0.0023807995811" ixy="0.0" ixz="0.0" iyy="0.00184565189114" iyz="0.0" izz="0.00143514768996"/>
+            </inertial>
+        </link>
+        <joint name="virtual_pitch_joint_1" type="revolute">
+            <axis xyz="0 1 0" rpy="0 0 0" />
+            <parent link="virtual_yaw_link_1"/>
+            <child link="virtual_pitch_link_1"/>
+            <origin rpy="0.0 -0.0 0.0" xyz="0.0 0.0 0.0"/>
+            <limit effort="1000" lower="-1000" upper="1000" velocity="1000"/>
+        </joint>
+        <link name="virtual_pitch_link_1">
+            <visual>
+                <geometry>
+                    <cylinder radius="0.01" length="0.1"/>
+                </geometry>
+                <material name="white"/>
+            </visual>
+            <inertial>
+                <origin rpy="0 0 0" xyz="0 0 0.0296308777857"/>
+                <mass value="0.5"/>
+                <inertia ixx="0.0023807995811" ixy="0.0" ixz="0.0" iyy="0.00184565189114" iyz="0.0" izz="0.00143514768996"/>
+            </inertial>
+        </link>
+        <joint name="virtual_roll_joint_1" type="revolute">
+            <axis xyz="1 0 0" rpy="0 0 0" />
+            <parent link="virtual_pitch_link_1"/>
+            <child link="virtual_roll_link_1"/>
+            <origin rpy="0.0 -0.0 0.0" xyz="0.0 0.0 0.0"/>
+            <limit effort="1000" lower="-1000" upper="1000" velocity="1000"/>
+        </joint>
+        <link name="virtual_roll_link_1">
+            <visual>
+                <geometry>
+                    <cylinder radius="0.01" length="0.1"/>
+                </geometry>
+                <material name="black"/>
+            </visual>
+            <inertial>
+                <origin rpy="0 0 0" xyz="0 0 0.0296308777857"/>
+                <mass value="0.5"/>
+                <inertia ixx="0.0023807995811" ixy="0.0" ixz="0.0" iyy="0.00184565189114" iyz="0.0" izz="0.00143514768996"/>
+            </inertial>
+        </link>
+        <joint name="virtual_prismatic_joint" type="prismatic">
+            <axis xyz="0 0 1" rpy="0 0 0" />
+            <parent link="virtual_roll_link_1"/>
+            <child link="virtual_prismatic_link"/>
+            <origin rpy="0.0 -0.0 0.0" xyz="0.0 0.0 0.0"/>
+            <limit effort="1000" lower="-1000" upper="1000" velocity="1000"/>
+        </joint>
+        <link name="virtual_prismatic_link">
+            <visual>
+                <geometry>
+                    <cylinder radius="0.01" length="0.1"/>
+                </geometry>
+                <material name="red"/>
+            </visual>
+            <inertial>
+                <origin rpy="0 0 0" xyz="0 0 0.0296308777857"/>
+                <mass value="0.5"/>
+                <inertia ixx="0.0023807995811" ixy="0.0" ixz="0.0" iyy="0.00184565189114" iyz="0.0" izz="0.00143514768996"/>
+            </inertial>
+        </link>
+        <joint name="virtual_yaw_joint_2" type="revolute">
+            <axis xyz="0 0 1" rpy="0 0 0" />
+            <parent link="virtual_prismatic_link"/>
+            <child link="virtual_yaw_link_2"/>
+            <origin rpy="0.0 -0.0 0.0" xyz="0.0 0.0 0.0"/>
+            <limit effort="1000" lower="-1000" upper="1000" velocity="1000"/>
+        </joint>
+        <link name="virtual_yaw_link_2">
+            <visual>
+                <geometry>
+                    <cylinder radius="0.01" length="0.1"/>
+                </geometry>
+                <material name="gray"/>
+            </visual>
+            <inertial>
+                <origin rpy="0 0 0" xyz="0 0 0.0296308777857"/>
+                <mass value="0.5"/>
+                <inertia ixx="0.0023807995811" ixy="0.0" ixz="0.0" iyy="0.00184565189114" iyz="0.0" izz="0.00143514768996"/>
+            </inertial>
+        </link>
+        <joint name="virtual_pitch_joint_2" type="revolute">
+            <axis xyz="0 1 0" rpy="0 0 0" />
+            <parent link="virtual_yaw_link_2"/>
+            <child link="virtual_pitch_link_2"/>
+            <origin rpy="0.0 -0.0 0.0" xyz="0.0 0.0 0.0"/>
+            <limit effort="1000" lower="-1000" upper="1000" velocity="1000"/>
+        </joint>
+        <link name="virtual_pitch_link_2">
+            <visual>
+                <geometry>
+                    <cylinder radius="0.01" length="0.1"/>
+                </geometry>
+                <material name="green"/>
+            </visual>
+            <inertial>
+                <origin rpy="0 0 0" xyz="0 0 0.0296308777857"/>
+                <mass value="0.5"/>
+                <inertia ixx="0.0023807995811" ixy="0.0" ixz="0.0" iyy="0.00184565189114" iyz="0.0" izz="0.00143514768996"/>
+            </inertial>
+        </link>
+        <joint name="virtual_roll_joint_2" type="revolute">
+            <axis xyz="1 0 0" rpy="0 0 0" />
+            <parent link="virtual_pitch_link_2"/>
+            <child link="virtual_roll_link_2"/>
+            <origin rpy="0.0 -0.0 0.0" xyz="0.0 0.0 0.0"/>
+            <limit effort="1000" lower="-1000" upper="1000" velocity="1000"/>
+        </joint>
+        <link name="virtual_roll_link_2">
+            <visual>
+                <geometry>
+                    <cylinder radius="0.01" length="0.1"/>
+                </geometry>
+                <material name="yellow"/>
+            </visual>
+            <inertial>
+                <origin rpy="0 0 0" xyz="0 0 0.0296308777857"/>
+                <mass value="0.5"/>
+                <inertia ixx="0.0023807995811" ixy="0.0" ixz="0.0" iyy="0.00184565189114" iyz="0.0" izz="0.00143514768996"/>
+            </inertial>
+        </link>
+    </xacro:macro>
+
+</robot>
