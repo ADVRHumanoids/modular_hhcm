@@ -1626,7 +1626,7 @@ class UrdfWriter:
         """Creates the joint map needed by XBotCore """
 
         # global path_name
-        jointmap_filename = path_name + '/joint_map/ModularBot_joint_map.yaml'
+        jointmap_filename = path_name + '/ModularBot/joint_map/ModularBot_joint_map.yaml'
         # jointmap_filename = path_superbuild + '/configs/ADVR_shared/ModularBot/joint_map/ModularBot_joint_map.yaml'
         i = 0
         joint_map = {'joint_map': {}}
@@ -1643,9 +1643,9 @@ class UrdfWriter:
     def write_srdf(self):
         """Generates a basic srdf so that the model can be used right away with XBotCore"""
         global path_name
-        srdf_filename = path_name + '/srdf/ModularBot.srdf'
+        srdf_filename = path_name + '/ModularBot/srdf/ModularBot.srdf'
         # srdf_filename = path_superbuild + '/configs/ADVR_shared/ModularBot/srdf/ModularBot.srdf'
-        cartesio_filename = path_name + '/cartesio/ModularBot.yaml'
+        cartesio_filename = path_name + '/ModularBot/cartesio/ModularBot.yaml'
 
         # cartesio_stack = {}
 
@@ -1721,12 +1721,12 @@ class UrdfWriter:
     def write_urdf(self):
         """Returns the string with the URDF, after writing it to file"""
         global path_name, path_superbuild
-        urdf_filename = path_name + '/urdf/ModularBot.urdf'
+        urdf_filename = path_name + '/ModularBot/urdf/ModularBot.urdf'
         # urdf_filename = path_superbuild + '/configs/ADVR_shared/ModularBot/urdf/ModularBot.urdf'
 
         out = xacro.open_output(urdf_filename)
 
-        urdf_xacro_filename = path_name + '/urdf/ModularBot.urdf.xacro'
+        urdf_xacro_filename = path_name + '/ModularBot/urdf/ModularBot.urdf.xacro'
 
         # writing .xacro file
         # tree.write(urdf_xacro_filename, xml_declaration=True, encoding='utf-8')
