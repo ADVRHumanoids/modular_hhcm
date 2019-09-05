@@ -21,6 +21,7 @@ import anytree
 
 from shutil import copyfile
 import os
+import errno
 import sys
 currDir = os.path.dirname(os.path.realpath(__file__))
 rootDir = os.path.abspath(os.path.join(currDir, '../..'))
@@ -1636,7 +1637,16 @@ class UrdfWriter:
                 joint_map['joint_map'][i] = joint_module.name
             # print(str(i), joint_module.name)
             # print(joint_map)
-        with open(jointmap_filename, 'w') as outfile:
+
+        # Create folder if doesen't exist
+        if not os.path.exists(os.path.dirname(jointmap_filename)):
+            try:
+                os.makedirs(os.path.dirname(jointmap_filename))
+            except OSError as exc: # Guard against race condition
+                if exc.errno != errno.EEXIST:
+                    raise
+
+        with open(jointmap_filename, 'w+') as outfile:
             yaml.dump(joint_map, outfile, default_flow_style=False)
         return joint_map
 
@@ -1645,17 +1655,15 @@ class UrdfWriter:
         global path_name
         srdf_filename = path_name + '/ModularBot/srdf/ModularBot.srdf'
         # srdf_filename = path_superbuild + '/configs/ADVR_shared/ModularBot/srdf/ModularBot.srdf'
-        cartesio_filename = path_name + '/ModularBot/cartesio/ModularBot.yaml'
+        # cartesio_filename = path_name + '/ModularBot/cartesio/ModularBot.yaml'
 
-        # cartesio_stack = {}
-
-        with open(cartesio_filename, 'r') as stream:
-            try:
-                cartesio_stack = ordered_load(stream, yaml.SafeLoader)
-                # cartesio_stack['EE']['base_link'] = self.listofchains[0]
-                print(cartesio_stack.items()[0])
-            except yaml.YAMLError as exc:
-                print(exc)
+        # with open(cartesio_filename, 'r') as stream:
+        #     try:
+        #         cartesio_stack = ordered_load(stream, yaml.SafeLoader)
+        #         # cartesio_stack['EE']['base_link'] = self.listofchains[0]
+        #         print(cartesio_stack.items()[0])
+        #     except yaml.YAMLError as exc:
+        #         print(exc)
 
         root = ET.Element('robot', name="ModularBot")
 
@@ -1682,13 +1690,13 @@ class UrdfWriter:
             else:
                 tip_link = 'L_' + str(joints_chain[-1].i) + joints_chain[-1].tag
             chain.append(ET.SubElement(group[i], 'chain', base_link=base_link, tip_link=tip_link))
-            # TODO: update this!! it's only ok for single chain robots
-            cartesio_stack['EE']['base_link'] = base_link
-            cartesio_stack['EE_XYZ']['base_link'] = base_link
-            cartesio_stack['EE_RPY']['base_link'] = base_link
-            cartesio_stack['EE']['distal_link'] = tip_link
-            cartesio_stack['EE_XYZ']['distal_link'] = tip_link
-            cartesio_stack['EE_RPY']['distal_link'] = tip_link
+            # TODO: update this cartesio stack write!! it's only ok for single chain robots
+            # cartesio_stack['EE']['base_link'] = base_link
+            # cartesio_stack['EE_XYZ']['base_link'] = base_link
+            # cartesio_stack['EE_RPY']['base_link'] = base_link
+            # cartesio_stack['EE']['distal_link'] = tip_link
+            # cartesio_stack['EE_XYZ']['distal_link'] = tip_link
+            # cartesio_stack['EE_RPY']['distal_link'] = tip_link
             i += 1
         i = 0
         arms_group = ET.SubElement(root, 'group', name="arms")
@@ -1702,12 +1710,20 @@ class UrdfWriter:
                 joint.append(ET.SubElement(group_state, 'joint', name=joint_module.name, value="1.57"))
             i += 1
 
+        # Create folder if doesen't exist
+        if not os.path.exists(os.path.dirname(srdf_filename)):
+            try:
+                os.makedirs(os.path.dirname(srdf_filename))
+            except OSError as exc: # Guard against race condition
+                if exc.errno != errno.EEXIST:
+                    raise
+
         xmlstr = xml.dom.minidom.parseString(ET.tostring(root)).toprettyxml(indent="   ")
-        with open(srdf_filename, "w") as f:
+        with open(srdf_filename, 'w+') as f:
             f.write(xmlstr)
 
-        with open(cartesio_filename, 'w') as outfile:
-            ordered_dump(cartesio_stack, stream=outfile, Dumper=yaml.SafeDumper,  default_flow_style=False, line_break='\n\n', indent=4)
+        # with open(cartesio_filename, 'w') as outfile:
+        #     ordered_dump(cartesio_stack, stream=outfile, Dumper=yaml.SafeDumper,  default_flow_style=False, line_break='\n\n', indent=4)
 
         # print("\nList of chains\n")
         # print(self.listofchains)
@@ -1715,7 +1731,7 @@ class UrdfWriter:
         # print("\nCartesIO stack\n")
         # print(cartesio_stack)
 
-        return xmlstr, cartesio_stack
+        return xmlstr
 
     # Function writin the urdf file after converting from .xacro (See xacro/__init__.py for reference)
     def write_urdf(self):
@@ -1728,10 +1744,18 @@ class UrdfWriter:
 
         urdf_xacro_filename = path_name + '/ModularBot/urdf/ModularBot.urdf.xacro'
 
+        # Create folder if doesen't exist
+        if not os.path.exists(os.path.dirname(urdf_xacro_filename)):
+            try:
+                os.makedirs(os.path.dirname(urdf_xacro_filename))
+            except OSError as exc: # Guard against race condition
+                if exc.errno != errno.EEXIST:
+                    raise
+
         # writing .xacro file
         # tree.write(urdf_xacro_filename, xml_declaration=True, encoding='utf-8')
         xmlstr = xml.dom.minidom.parseString(ET.tostring(self.urdf_tree.getroot())).toprettyxml(indent="   ")
-        with open(urdf_xacro_filename, "w") as f:
+        with open(urdf_xacro_filename, 'w+') as f:
             f.write(xmlstr)
 
         # parse the document into a xml.dom tree
