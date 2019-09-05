@@ -75,6 +75,7 @@ dynamics:
 
 visual:
   mesh_body_1: 'package://modular/meshes/elbow_base.stl'
+  mesh_collision_1: 'package://modular/meshes/simple/elbow_base.stl'
   tf_mesh_1:
     x: 0.0
     y: 0.0
@@ -83,6 +84,7 @@ visual:
     pitch: 0.0
     yaw: 0.0
   mesh_body_2: 'package://modular/meshes/elbow_link.stl'
+  mesh_collision_2: 'package://modular/meshes/simple/elbow_link.stl'
   tf_mesh_2:
     x: 0.0
     y: 0.0
