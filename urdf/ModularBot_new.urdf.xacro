@@ -774,7 +774,7 @@
                         rpy="${module['visual']['tf_mesh_2']['roll']} ${module['visual']['tf_mesh_2']['pitch']} ${module['visual']['tf_mesh_2']['yaw']}" 
                         xyz="${module['visual']['tf_mesh_2']['x']} ${module['visual']['tf_mesh_2']['y']} ${module['visual']['tf_mesh_2']['z']}"/>
                     <geometry>
-                        <mesh filename="${module['visual']['mesh_body_2']}" scale="0.001 0.001 0.001"/>
+                        <mesh filename="${module['visual']['mesh_collision_2']}" scale="0.001 0.001 0.001"/>
                     </geometry>
                 </collision>
             </xacro:if>
@@ -804,7 +804,7 @@
     </xacro:macro>
 
     <!-- Macro for adding the physical module housing the actuator -->
-    <xacro:macro name="add_joint_stator" params="type name filename mesh_bool mesh size_y size_z size x y z roll pitch yaw">
+    <xacro:macro name="add_joint_stator" params="type name filename mesh_bool mesh_visual mesh_collision size_y size_z size x y z roll pitch yaw">
 
         <xacro:property name="module" value="${load_yaml(filename)}"/>
 
@@ -851,14 +851,14 @@
                     <!-- Load mesh. Rotate the origin frame (this is because of how the .stl was saved) -->
                     <origin rpy="${roll} ${pitch} ${yaw}" xyz="${x} ${y} ${z}"/>
                     <geometry>
-                        <mesh filename="${mesh}" scale="0.001 0.001 0.001"/>
+                        <mesh filename="${mesh_visual}" scale="0.001 0.001 0.001"/>
                     </geometry>
                     <material name="grey"/>
                 </visual>
                 <collision>
                     <origin rpy="${roll} ${pitch} ${yaw}" xyz="${x} ${y} ${z}"/>
                     <geometry>
-                        <mesh filename="${mesh}" scale="0.001 0.001 0.001"/>
+                        <mesh filename="${mesh_collision}" scale="0.001 0.001 0.001"/>
                     </geometry>
                 </collision>
                 <!-- TODO: change inertial parameters with the one from CAD. This will be the inertia tensor of only the housing/stator part -->

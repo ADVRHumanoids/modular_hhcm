@@ -1298,8 +1298,8 @@ class UrdfWriter:
         # set a bool to specify if the distal part has a mesh or not, by looking at the module type
         if hasattr(new_Joint, 'visual'):
             mesh_bool = str('1')
-            mesh_1=new_Joint.visual.mesh_body_1
-            mesh_2=new_Joint.visual.mesh_body_2
+            mesh_visual_1=new_Joint.visual.mesh_body_1
+            mesh_collision_1=new_Joint.visual.mesh_collision_1
         else:
             mesh_bool = str('0')
             mesh_1=''
@@ -1311,7 +1311,8 @@ class UrdfWriter:
                       name=stator_name,
                       filename=new_Joint.filename,
                       mesh_bool=mesh_bool,
-                      mesh=mesh_1,
+                      mesh_visual=mesh_visual_1,
+                      mesh_collision=mesh_collision_1,
                       size_y=new_Joint.joint_size_y,
                       size_z=new_Joint.joint_size_z,
                       size=str(new_Joint.size),
@@ -1443,8 +1444,8 @@ class UrdfWriter:
         # set a bool to specify if the distal part has a mesh or not, by looking at the module type
         if hasattr(new_Joint, 'visual'):
             mesh_bool = str('1')
-            mesh_1=new_Joint.visual.mesh_body_1
-            mesh_2=new_Joint.visual.mesh_body_2
+            mesh_visual_1=new_Joint.visual.mesh_body_1
+            mesh_collision_1=new_Joint.visual.mesh_collision_1
         else:
             mesh_bool = str('0')
             mesh_1=''
@@ -1456,7 +1457,8 @@ class UrdfWriter:
                       name=stator_name,
                       filename=new_Joint.filename,
                       mesh_bool=mesh_bool,
-                      mesh=mesh_1,
+                      mesh_visual=mesh_visual_1,
+		      mesh_collision=mesh_collision_1,
                       size_y=new_Joint.joint_size_y,
                       size_z=new_Joint.joint_size_z,
                       size=str(new_Joint.size),
