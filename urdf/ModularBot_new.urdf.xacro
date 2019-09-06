@@ -51,8 +51,8 @@
 
     <xacro:macro name="default_inertial" params="mass">
         <inertial>
-        <mass value="${mass}" />
-        <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0" />
+            <mass value="${mass}" />
+            <inertia ixx="1.0e-03" ixy="0.0" ixz="0.0" iyy="1.0e-03" iyz="0.0" izz="1.0e-03" />
         </inertial>
     </xacro:macro>
 
@@ -64,155 +64,6 @@
     </joint>
 
     <link name="base_link"/>
-
-    <!-- <link name="L_0">
-        <visual>
-            <origin xyz="0 0 ${len1/2}" rpy="0 0 0" />
-            <geometry>
-                <cylinder radius="${size1}" length="${len1}"/>
-            </geometry>
-            <material name="black"/>
-        </visual>
-        <collision>
-            <origin xyz="0 0 ${len1/2}" rpy="0 0 0" />
-            <geometry>
-                <cylinder radius="${size1}" length="${len1}"/>
-            </geometry>
-        </collision>
-        <xacro:default_inertial mass="1"/>
-    </link> -->
-
-
-    <!-- L_0a first link -->
-    <!-- <joint name="fixed" type="fixed">
-        <parent link="base_link"/>
-        <child link="L_0a"/>
-        <axis rpy="0 0 0" xyz="0 0 1"/>
-        <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
-    </joint>
-
-    <link name="L_0a">
-        <visual>
-            <origin rpy="0 0 0" xyz="0 0 0.2"/>
-            <geometry>
-                <box size="0.4 0.4 0.4"/>
-            </geometry>
-            <material name="black"/>
-        </visual>
-        <collision>
-            <geometry>
-                <box size="0.4 0.4 0.4"/>
-            </geometry>
-        </collision>
-        <inertial>
-            <mass value="2"/>
-            <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
-        </inertial>
-    </link>
-
-    <link name="L_0a_con1">
-        <visual>
-            <origin rpy="0 0 0" xyz="0 0 0.05"/>
-            <geometry>
-                <cylinder length="0.1" radius="0.06"/>
-            </geometry>
-            <material name="black"/>
-        </visual>
-        <collision>
-            <geometry>
-                <cylinder length="0.1" radius="0.06"/>
-            </geometry>
-        </collision>
-        <inertial>
-            <mass value="0.5"/>
-            <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
-        </inertial>
-    </link>
-
-    <link name="L_0a_con2">
-        <visual>
-            <origin rpy="0 0 0" xyz="0 0 0.05"/>
-            <geometry>
-                <cylinder length="0.1" radius="0.06"/>
-            </geometry>
-            <material name="black"/>
-        </visual>
-        <collision>
-            <geometry>
-                <cylinder length="0.1" radius="0.06"/>
-            </geometry>
-        </collision>
-        <inertial>
-            <mass value="0.5"/>
-            <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
-        </inertial>
-    </link>
-    
-    <link name="L_0a_con3">
-        <visual>
-            <origin rpy="0 0 0" xyz="0 0 0.05"/>
-            <geometry>
-                <cylinder length="0.1" radius="0.06"/>
-            </geometry>
-            <material name="black"/>
-        </visual>
-        <collision>
-            <geometry>
-                <cylinder length="0.1" radius="0.06"/>
-            </geometry>
-        </collision>
-        <inertial>
-            <mass value="0.5"/>
-            <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
-        </inertial>
-    </link>
-
-    <link name="L_0a_con4">
-        <visual>
-            <origin rpy="0 0 0" xyz="0 0 0.05"/>
-            <geometry>
-                <cylinder length="0.1" radius="0.06"/>
-            </geometry>
-            <material name="black"/>
-        </visual>
-        <collision>
-            <geometry>
-                <cylinder length="0.1" radius="0.06"/>
-            </geometry>
-        </collision>
-        <inertial>
-            <mass value="0.5"/>
-            <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
-        </inertial>
-    </link>
-
-    <joint name="L_0a_fixed_1" type="fixed">
-        <parent link="L_0a"/>
-        <child link="L_0a_con1"/>
-        <axis rpy="0 0 0" xyz="0 0 1"/>
-        <origin rpy="3.14 0 0" xyz="0 0 0"/>
-    </joint>
-
-    <joint name="L_0a_fixed_2" type="fixed">
-        <parent link="L_0a"/>
-        <child link="L_0a_con2"/>
-        <axis rpy="0 0 0" xyz="0 0 1"/>
-        <origin rpy="1.57 0 0" xyz="0 -0.2 0.2"/>
-    </joint>
-
-    <joint name="L_0a_fixed_3" type="fixed">
-        <parent link="L_0a"/>
-        <child link="L_0a_con3"/>
-        <axis rpy="0 0 0" xyz="0 0 1"/>
-        <origin rpy="0 0 0" xyz="0 0 0.4"/>
-    </joint>
-
-    <joint name="L_0a_fixed_4" type="fixed">
-        <parent link="L_0a"/>
-        <child link="L_0a_con4"/>
-        <axis rpy="0 0 0" xyz="0 0 1"/>
-        <origin rpy="-1.57 0 0" xyz="0 0.2 0.2"/>
-    </joint> -->
 
     <!-- Macro for adding a fixed joint (rigid interconnection between links) -->
     <xacro:macro name="add_fixed_joint" params="type name father child x y z roll pitch yaw">    
@@ -248,10 +99,7 @@
                     <box size="0.4 0.4 0.4"/>
                 </geometry>
             </collision>
-            <inertial>
-                <mass value="2"/>
-                <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
-            </inertial>
+            <xacro:default_inertial mass="2"/>
         </link>
 
         <link name="${name}_con1">
@@ -267,10 +115,7 @@
                     <cylinder length="0.1" radius="0.06"/>
                 </geometry>
             </collision>
-            <inertial>
-                <mass value="0.5"/>
-                <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
-            </inertial>
+            <xacro:default_inertial mass="0.1"/>
         </link>
 
         <link name="${name}_con2">
@@ -286,10 +131,7 @@
                     <cylinder length="0.1" radius="0.06"/>
                 </geometry>
             </collision>
-            <inertial>
-                <mass value="0.5"/>
-                <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
-            </inertial>
+            <xacro:default_inertial mass="0.1"/>
         </link>
         
         <link name="${name}_con3">
@@ -305,10 +147,7 @@
                     <cylinder length="0.1" radius="0.06"/>
                 </geometry>
             </collision>
-            <inertial>
-                <mass value="0.5"/>
-                <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
-            </inertial>
+            <xacro:default_inertial mass="0.1"/>
         </link>
 
         <link name="${name}_con4">
@@ -324,10 +163,7 @@
                     <cylinder length="0.1" radius="0.06"/>
                 </geometry>
             </collision>
-            <inertial>
-                <mass value="0.5"/>
-                <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
-            </inertial>
+            <xacro:default_inertial mass="0.1"/>
         </link>
 
         <joint name="${name}_fixed_1" type="fixed">
@@ -376,10 +212,7 @@
                     <box size="0.4 0.4 0.4"/>
                 </geometry>
             </collision>
-            <inertial>
-                <mass value="2"/>
-                <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
-            </inertial>
+            <xacro:default_inertial mass="2.0"/>
         </link>
 
         <link name="${name}_con1">
@@ -395,10 +228,7 @@
                     <cylinder length="0.1" radius="0.06"/>
                 </geometry>
             </collision>
-            <inertial>
-                <mass value="0.5"/>
-                <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
-            </inertial>
+            <xacro:default_inertial mass="0.1"/>
         </link>
 
         <link name="${name}_con2">
@@ -414,10 +244,7 @@
                     <cylinder length="0.1" radius="0.06"/>
                 </geometry>
             </collision>
-            <inertial>
-                <mass value="0.5"/>
-                <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
-            </inertial>
+            <xacro:default_inertial mass="0.1"/>
         </link>
         
         <link name="${name}_con3">
@@ -433,10 +260,7 @@
                     <cylinder length="0.1" radius="0.06"/>
                 </geometry>
             </collision>
-            <inertial>
-                <mass value="0.5"/>
-                <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
-            </inertial>
+            <xacro:default_inertial mass="0.1"/>
         </link>
 
         <link name="${name}_con4">
@@ -452,10 +276,7 @@
                     <cylinder length="0.1" radius="0.06"/>
                 </geometry>
             </collision>
-            <inertial>
-                <mass value="0.5"/>
-                <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
-            </inertial>
+            <xacro:default_inertial mass="0.1"/>
         </link>
 
         <joint name="${name}_fixed_1" type="fixed">
