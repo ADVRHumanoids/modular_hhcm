@@ -1295,33 +1295,14 @@ class UrdfWriter:
 
         x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(mesh_transform)
 
-        # set a bool to specify if the distal part has a mesh or not, by looking at the module type
-        if hasattr(new_Joint, 'visual'):
-            mesh_bool = str('1')
-            mesh_visual_1=new_Joint.visual.mesh_body_1
-            mesh_collision_1=new_Joint.visual.mesh_collision_1
-        else:
-            mesh_bool = str('0')
-            mesh_1=''
-            mesh_2=''
-
         ET.SubElement(self.root,
                       "xacro:add_joint_stator",
                       type="joint_stator",
                       name=stator_name,
                       filename=new_Joint.filename,
-                      mesh_bool=mesh_bool,
-                      mesh_visual=mesh_visual_1,
-                      mesh_collision=mesh_collision_1,
                       size_y=new_Joint.joint_size_y,
                       size_z=new_Joint.joint_size_z,
-                      size=str(new_Joint.size),
-                      x=x,
-                      y=y,
-                      z=z,
-                      roll=roll,
-                      pitch=pitch,
-                      yaw=yaw)
+                      size=str(new_Joint.size))
 
         transform = ModuleNode.get_rototranslation(tf.transformations.identity_matrix(),
                                                    new_Joint.Proximal_tf)
@@ -1441,33 +1422,14 @@ class UrdfWriter:
             prox_mesh_transform = mesh_transform
         x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(prox_mesh_transform)
 
-        # set a bool to specify if the distal part has a mesh or not, by looking at the module type
-        if hasattr(new_Joint, 'visual'):
-            mesh_bool = str('1')
-            mesh_visual_1=new_Joint.visual.mesh_body_1
-            mesh_collision_1=new_Joint.visual.mesh_collision_1
-        else:
-            mesh_bool = str('0')
-            mesh_1=''
-            mesh_2=''
-
         ET.SubElement(self.root,
                       "xacro:add_joint_stator",
                       type="joint_stator",
                       name=stator_name,
                       filename=new_Joint.filename,
-                      mesh_bool=mesh_bool,
-                      mesh_visual=mesh_visual_1,
-		      mesh_collision=mesh_collision_1,
                       size_y=new_Joint.joint_size_y,
                       size_z=new_Joint.joint_size_z,
-                      size=str(new_Joint.size),
-                      x=x,
-                      y=y,
-                      z=z,
-                      roll=roll,
-                      pitch=pitch,
-                      yaw=yaw)
+                      size=str(new_Joint.size))
 
         joint_transform = ModuleNode.get_rototranslation(tf.transformations.identity_matrix(),
                                                          new_Joint.Proximal_tf)

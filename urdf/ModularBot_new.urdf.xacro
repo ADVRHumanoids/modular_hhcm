@@ -625,9 +625,14 @@
     </xacro:macro>
 
     <!-- Macro for adding the physical module housing the actuator -->
-    <xacro:macro name="add_joint_stator" params="type name filename mesh_bool mesh_visual mesh_collision size_y size_z size x y z roll pitch yaw">
+    <xacro:macro name="add_joint_stator" params="type name filename size_y size_z size">
 
         <xacro:property name="module" value="${load_yaml(filename)}"/>
+
+        <xacro:property name="mesh_bool" value="false"/>
+        <xacro:unless value="${ module['visual']['mesh_body_1'] == '' }">
+            <xacro:property name="mesh_bool" value="true"/>
+        </xacro:unless>
 
         <xacro:if value="${size==1}">
             <xacro:property name="radius" value="${size1}" />
@@ -670,16 +675,20 @@
             <link name="${name}">
                 <visual>
                     <!-- Load mesh. Rotate the origin frame (this is because of how the .stl was saved) -->
-                    <origin rpy="${roll} ${pitch} ${yaw}" xyz="${x} ${y} ${z}"/>
+                    <origin
+                        rpy="${module['visual']['tf_mesh_1']['roll']} ${module['visual']['tf_mesh_1']['pitch']} ${module['visual']['tf_mesh_1']['yaw']}" 
+                        xyz="${module['visual']['tf_mesh_1']['x']} ${module['visual']['tf_mesh_1']['y']} ${module['visual']['tf_mesh_1']['z']}"/>
                     <geometry>
-                        <mesh filename="${mesh_visual}" scale="0.001 0.001 0.001"/>
+                        <mesh filename="${module['visual']['mesh_body_1']}" scale="0.001 0.001 0.001"/>
                     </geometry>
                     <material name="grey"/>
                 </visual>
                 <collision>
-                    <origin rpy="${roll} ${pitch} ${yaw}" xyz="${x} ${y} ${z}"/>
+                    <origin 
+                        rpy="${module['visual']['tf_mesh_1']['roll']} ${module['visual']['tf_mesh_1']['pitch']} ${module['visual']['tf_mesh_1']['yaw']}" 
+                        xyz="${module['visual']['tf_mesh_1']['x']} ${module['visual']['tf_mesh_1']['y']} ${module['visual']['tf_mesh_1']['z']}"/>
                     <geometry>
-                        <mesh filename="${mesh_collision}" scale="0.001 0.001 0.001"/>
+                        <mesh filename="${module['visual']['mesh_collision_1']}" scale="0.001 0.001 0.001"/>
                     </geometry>
                 </collision>
                 <!-- TODO: change inertial parameters with the one from CAD. This will be the inertia tensor of only the housing/stator part -->
