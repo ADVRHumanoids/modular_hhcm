@@ -1,109 +1,100 @@
 kinematics:
-  joint:
-    proximal:
-      a_pl: 0
-      alpha_pl: -1.57
-      p_pl: 0.0591857
-      n_pl: 0.095508
-      delta_pl: 0
-
-    distal:
-      a_dl: 0
-      alpha_dl: 0
-      p_dl: 0
-      n_dl: 0
-      delta_dl: 0
-
     joint:
-      delta_j: 0
-      type: 'revolute'
-      lower_limit: -3.14
-      upper_limit: 3.14
-      effort: 55 
-      velocity: 11.7
-      
-  link:
-    a_l: 0
-    alpha_l: 0
-    p_l: 0
-    n_l: 0
-    delta_l_in: 0
-    delta_l_out: 0
-
+        proximal:
+            a_pl: 0
+            alpha_pl: -1.57
+            p_pl: 0.0591857
+            n_pl: 0.095508
+            delta_pl: 0
+        distal:
+            a_dl: 0
+            alpha_dl: 0
+            p_dl: 0
+            n_dl: 0
+            delta_dl: 0
+        joint:
+            delta_j: 0
+            type: revolute
+            lower_limit: -3.14
+            upper_limit: 3.14
+            effort: 55
+            velocity: 11.7
+    link:
+        a_l: 0
+        alpha_l: 0
+        p_l: 0
+        n_l: 0
+        delta_l_in: 0
+        delta_l_out: 0
 dynamics:
-  body_1:
-    mass: 0.890557
-    inertia_tensor:
-      I_xx: 0.001172126
-      I_yy: 0.000792081
-      I_zz: 0.001115561
-      I_xy: 0.0
-      I_xz: 0.0
-      I_yz: 0.0
-    CoM:
-      x: 0.0
-      y: 0.027416
-      z: 0.055419
-
-  body_2:
-    mass: 0.153466
-    inertia_tensor:
-      I_xx: 0.000034763
-      I_yy: 0.000034827
-      I_zz: 0.000031822
-      I_xy: 0.0
-      I_xz: 0.0
-      I_yz: 0.0
-    CoM:
-      x: 0.0
-      y: 0.0
-      z: -0.002265
-
-  body_2_fast:
-    mass: 0.0
-    inertia_tensor:
-      I_xx: 0.0
-      I_yy: 0.0
-      I_zz: 0.0
-      I_xy: 0.0
-      I_xz: 0.0
-      I_yz: 0.0
-    CoM:
-      x: 0.0      
-      y: 0.0      
-      z: 0.0
-
+    body_1:
+        mass: 0.890557
+        inertia_tensor:
+            I_xx: 0.001172126
+            I_yy: 0.000792081
+            I_zz: 0.001115561
+            I_xy: 0.0
+            I_xz: 0.0
+            I_yz: 0.0
+        CoM:
+            x: 0.0
+            y: 0.027416
+            z: 0.055419
+    body_2:
+        mass: 0.153466
+        inertia_tensor:
+            I_xx: 3.4763e-05
+            I_yy: 3.4827e-05
+            I_zz: 3.1822e-05
+            I_xy: 0.0
+            I_xz: 0.0
+            I_yz: 0.0
+        CoM:
+            x: 0.0
+            y: 0.0
+            z: -0.002265
+    body_2_fast:
+        mass: 0.0
+        inertia_tensor:
+            I_xx: 0.0
+            I_yy: 0.0
+            I_zz: 0.0
+            I_xy: 0.0
+            I_xz: 0.0
+            I_yz: 0.0
+        CoM:
+            x: 0.0
+            y: 0.0
+            z: 0.0
 visual:
-  mesh_body_1: 'package://modular/meshes/fixed_parts.stl'
-  tf_mesh_1:
-    x: 0.0
-    y: 0.0
-    z: 0.0
-    roll: 0.0
-    pitch: 0.0
-    yaw: 0.0
-  mesh_body_2: 'package://modular/meshes/rotating_parts.stl'
-  tf_mesh_2:
-    x: 0.0
-    y: 0.0
-    z: 0.0
-    roll: 0.0
-    pitch: 0.0
-    yaw: 0.0
-
-size: 'big'
-size_in:
-size_out:
-
-type: 'joint'
-
+    mesh_body_1: package://modular/meshes/fixed_parts.stl
+    tf_mesh_1:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        roll: 0.0
+        pitch: 0.0
+        yaw: 0.0
+    mesh_body_2: package://modular/meshes/rotating_parts.stl
+    tf_mesh_2:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        roll: 0.0
+        pitch: 0.0
+        yaw: 0.0
+    mesh_collision_1: ''
+    mesh_collision_2: ''
+size: big
+size_in: null
+size_out: null
+type: joint
 control:
-  K_theta: 500
-  D_theta: 70
-  B: 0.000031
-  K_s: 80000
-  D_s: 2
-  D_m: 0.0000578
-  nu: 100
-
-urdf: "urdf/joint_module.urdf"
+    K_theta: 500
+    D_theta: 70
+    B: 3.1e-05
+    K_s: 80000
+    D_s: 2
+    D_m: 5.78e-05
+    nu: 100
+urdf: urdf/joint_module.urdf
