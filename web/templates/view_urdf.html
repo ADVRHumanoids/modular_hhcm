@@ -14,41 +14,6 @@
         <script type="text/javascript" >
             var CURRENT_PARENT = '';
             
-            function updateShownButtons(lastModule_type, count, lastSize) {
-                console.log(count)
-                switch (lastModule_type) {
-                    case 'joint': 
-                        addJoint.style.display="none";
-                        break;
-                    case 'size_adapter':                      
-                    case 'link':
-                    case 'elbow':
-                        addJoint.style.display="block";
-                        break;
-                }
-
-                if (lastSize==3) {
-                    addSizeAdapter_Big2Medium.style.display="block";
-                    addSizeAdapter_Big2Small.style.display="block";
-                    addSizeAdapter_Medium2Small.style.display="none";
-                }
-                else if (lastSize==2) {
-                    addSizeAdapter_Big2Medium.style.display="none";
-                    addSizeAdapter_Big2Small.style.display="none";
-                    addSizeAdapter_Medium2Small.style.display="block";
-                }
-                else if (lastSize==1){
-                    addSizeAdapter_Big2Medium.style.display="none";
-                    addSizeAdapter_Big2Small.style.display="none";
-                    addSizeAdapter_Medium2Small.style.display="none";
-                } 
-                
-                if (count>0)
-                    removeLast.style.display="block";
-                else
-                    removeLast.style.display="none";
-                
-            }
         </script>
         
         <script type="text/javascript" src="{{ url_for('static', filename='/js/three.js') }}"></script>
@@ -115,83 +80,6 @@
             }
             #header {
                 z-index: 10;
-            }
-            #addJoint {
-                background-image: url(images/joint.png);
-                background-size: 100% 100%;
-                height: 140px; 
-                width: 100%;
-                padding-bottom: 10px;
-                /* text-align: center; */
-                /* text-decoration: none;
-                display: inline-block; */
-                font-size: 16px;
-            }
-            #addElbow {
-                background-image: url(images/elbow.png);
-                background-size: 100% 100%;
-                height: 140px; 
-                width: 100%;
-                padding-bottom: 10px;
-                text-align: center;
-                /* text-decoration: none;
-                display: inline-block; */
-                font-size: 16px;
-            }
-            #addLink {
-                background-image: url(images/link.png);
-                background-size: 100% 100%;
-                height: 140px; 
-                width: 100%;
-                text-align: center;
-                /* text-decoration: none;
-                display: inline-block; */
-                font-size: 16px;
-            }
-            #addLink500mm {
-                background-image: url(images/link.png);
-                background-size: 100% 100%;
-                height: 140px; 
-                width: 100%;
-                text-align: center;
-                /* text-decoration: none;
-                display: inline-block; */
-                font-size: 16px;
-            }
-            #addLink700mm {
-                background-image: url(images/link.png);
-                background-size: 100% 100%;
-                height: 140px; 
-                width: 100%;
-                text-align: center;
-                /* text-decoration: none;
-                display: inline-block; */
-                font-size: 16px;
-            }
-            #addSizeAdapter_Big2Medium {
-                background-image: url(images/size_adapter.png);
-                background-size: 100% 100%;
-                height: 140px; 
-                width: 100%;
-                text-align: center;
-                font-size: 16px;
-            }
-            #addSizeAdapter_Big2Small {
-                background-image: url(images/size_adapter.png);
-                background-size: 100% 100%;
-                height: 140px; 
-                width: 100%;
-                text-align: center;
-                font-size: 16px;
-            }
-            #addSizeAdapter_Medium2Small {
-                background-image: url(images/size_adapter.png);
-                background-size: 100% 100%;
-                height: 140px; 
-                width: 100%;
-                text-align: center;
-                display: none;
-                font-size: 16px;
             }
             #removeLast {
                 background-color: rgb(206, 33, 33);
@@ -383,14 +271,6 @@
             <div id="selector" style="overflow-y:auto;">
                 Select a module to add: 
                 <!-- <input type="file" id="moduleInput"> -->
-                <button type="button" id="addJoint"><div>Joint</div></button> 
-                <button type="button" id="addElbow"><div>Elbow</div></button>
-                <button type="button" id="addLink"><div>Link 0.3m</div></button> 
-                <button type="button" id="addLink500mm"><div>Link 0.5m</div></button>
-                <button type="button" id="addLink700mm"><div>Link 0.7m</div></button>
-                <button type="button" id="addSizeAdapter_Big2Medium"><div>Size Adapter: Big to Medium</div></button>
-                <button type="button" id="addSizeAdapter_Big2Small"><div>Size Adapter: Big to Small</div></button>
-                <button type="button" id="addSizeAdapter_Medium2Small"><div>Size Adapter: Medium to Small</div></button>
                 <button type="button" id="addElbowJoint"><div>Elbow joint</div></button>
                 <button type="button" id="addSlaveCube"><div>Slave cube</div></button>
                 <button type="button" id="addYawJoint"><div>Yaw joint</div></button>
@@ -412,14 +292,6 @@
                 //var fileDisplayArea = document.getElementById('fileDisplayArea');
                 //var moduleInput = document.getElementById('moduleInput');
                 var selector = document.getElementById('selector')
-                var addJoint = document.getElementById('addJoint');
-                var addElbow = document.getElementById('addElbow');
-                var addLink = document.getElementById('addLink');
-                var addLink500 = document.getElementById('addLink500mm');
-                var addLink700 = document.getElementById('addLink700mm');
-                var addSizeAdapter_Big2Medium = document.getElementById('addSizeAdapter_Big2Medium');
-                var addSizeAdapter_Big2Small = document.getElementById('addSizeAdapter_Big2Small');
-                var addSizeAdapter_Medium2Small = document.getElementById('addSizeAdapter_Medium2Small');
                 var addSlaveCube = document.getElementById('addSlaveCube');
                 var removeLast = document.getElementById('removeLast');
                 var syncHardware = document.getElementById('syncHardware');
@@ -517,22 +389,6 @@
                 //     }    
                 //     reader.readAsText(file);      
                 // });
-
-                addJoint.onclick = function() {addModule("module_joint", size)};
-
-                addElbow.onclick = function() {addModule("module_elbow", size)};
-
-                addLink.onclick = function() {addModule("module_link_300mm", size)};
-
-                addLink500.onclick = function() {addModule("module_link_500mm", size)};
-
-                addLink700.onclick = function() {addModule("module_link_700mm", size)};
-
-                addSizeAdapter_Big2Medium.onclick = function() {addModule("module_size_adapter_B2M", size)};
-
-                addSizeAdapter_Big2Small.onclick = function() {addModule("module_size_adapter_B2S", size)};
-
-                addSizeAdapter_Medium2Small.onclick = function() {addModule("module_size_adapter_M2S", size)};
 
                 addSlaveCube.onclick = function() {addCube("mastercube", size)};
 
