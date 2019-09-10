@@ -1569,24 +1569,6 @@ class UrdfWriter:
                       pitch=pitch,
                       yaw=yaw)
 
-    def write_cartesio_stack(self):
-        """Creates the config file needed by CartesIO """
-
-        cartesio_filename = path_name + '/cartesio/ModularBot.yaml'
-        cartesio_stack = {'joint_map': {}}
-
-        with open(cartesio_filename, 'r') as stream:
-            try:
-                cartesio_stack = ordered_load(stream, yaml.SafeLoader)
-                # cartesio_stack['EE']['base_link'] = self.listofchains[0]
-                print(cartesio_stack.items()[0])
-            except yaml.YAMLError as exc:
-                print(exc)
-
-        # with open(cartesio_filename, 'w') as outfile:
-        #     yaml.dump(cartesio_stack, outfile, default_flow_style=False)
-        return cartesio_stack['EE']
-
     def write_joint_map(self):
         """Creates the joint map needed by XBotCore """
 
@@ -1619,15 +1601,6 @@ class UrdfWriter:
         global path_name
         srdf_filename = path_name + '/ModularBot/srdf/ModularBot.srdf'
         # srdf_filename = path_superbuild + '/configs/ADVR_shared/ModularBot/srdf/ModularBot.srdf'
-        # cartesio_filename = path_name + '/ModularBot/cartesio/ModularBot.yaml'
-
-        # with open(cartesio_filename, 'r') as stream:
-        #     try:
-        #         cartesio_stack = ordered_load(stream, yaml.SafeLoader)
-        #         # cartesio_stack['EE']['base_link'] = self.listofchains[0]
-        #         print(cartesio_stack.items()[0])
-        #     except yaml.YAMLError as exc:
-        #         print(exc)
 
         root = ET.Element('robot', name="ModularBot")
 
@@ -1654,13 +1627,6 @@ class UrdfWriter:
             else:
                 tip_link = 'L_' + str(joints_chain[-1].i) + joints_chain[-1].tag
             chain.append(ET.SubElement(group[i], 'chain', base_link=base_link, tip_link=tip_link))
-            # TODO: update this cartesio stack write!! it's only ok for single chain robots
-            # cartesio_stack['EE']['base_link'] = base_link
-            # cartesio_stack['EE_XYZ']['base_link'] = base_link
-            # cartesio_stack['EE_RPY']['base_link'] = base_link
-            # cartesio_stack['EE']['distal_link'] = tip_link
-            # cartesio_stack['EE_XYZ']['distal_link'] = tip_link
-            # cartesio_stack['EE_RPY']['distal_link'] = tip_link
             i += 1
         i = 0
         arms_group = ET.SubElement(root, 'group', name="arms")
@@ -1685,15 +1651,6 @@ class UrdfWriter:
         xmlstr = xml.dom.minidom.parseString(ET.tostring(root)).toprettyxml(indent="   ")
         with open(srdf_filename, 'w+') as f:
             f.write(xmlstr)
-
-        # with open(cartesio_filename, 'w') as outfile:
-        #     ordered_dump(cartesio_stack, stream=outfile, Dumper=yaml.SafeDumper,  default_flow_style=False, line_break='\n\n', indent=4)
-
-        # print("\nList of chains\n")
-        # print(self.listofchains)
-
-        # print("\nCartesIO stack\n")
-        # print(cartesio_stack)
 
         return xmlstr
 
