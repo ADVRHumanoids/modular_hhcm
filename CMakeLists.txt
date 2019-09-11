@@ -9,8 +9,13 @@ if(CATKIN_ENABLE_TESTING)
   roslaunch_add_file_check(launch)
 endif()
 
-install(DIRECTORY launch ModularBot rviz  scripts web/static/models/modular/meshes
+install(DIRECTORY launch rviz  scripts web/static/models/modular/meshes
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+
+if(EXISTS ModularBot)
+	install(DIRECTORY ModularBot
+		DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+endif()
 
 #### NOW YOU CAN EVENTUALLY DIRECTLY COPY ModularBot FOLDER INTO configs ####
 #file(COPY ModularBot/urdf/ModularBot.urdf DESTINATION ../../../configs/ADVR_shared/ModularBot/urdf)
