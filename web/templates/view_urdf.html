@@ -15,34 +15,7 @@
             var CURRENT_PARENT = '';
             
             function updateShownButtons(lastModule_type, count, lastSize) {
-                console.log(count)
-                switch (lastModule_type) {
-                    case 'joint': 
-                        addJoint.style.display="none";
-                        break;
-                    case 'size_adapter':                      
-                    case 'link':
-                    case 'elbow':
-                        addJoint.style.display="block";
-                        break;
-                }
 
-                if (lastSize==3) {
-                    addSizeAdapter_Big2Medium.style.display="block";
-                    addSizeAdapter_Big2Small.style.display="block";
-                    addSizeAdapter_Medium2Small.style.display="none";
-                }
-                else if (lastSize==2) {
-                    addSizeAdapter_Big2Medium.style.display="none";
-                    addSizeAdapter_Big2Small.style.display="none";
-                    addSizeAdapter_Medium2Small.style.display="block";
-                }
-                else if (lastSize==1){
-                    addSizeAdapter_Big2Medium.style.display="none";
-                    addSizeAdapter_Big2Small.style.display="none";
-                    addSizeAdapter_Medium2Small.style.display="none";
-                } 
-                
                 if (count>0)
                     removeLast.style.display="block";
                 else
@@ -482,7 +455,7 @@
                         console.log(data)
                         robots = urdfViewer.updateURDF(data['result'])//, data['lastModule_name'])
                         // size = data['size']
-                        //updateShownButtons(data['lastModule_type'], data['count'], data['size'])
+                        updateShownButtons(data['lastModule_type'], data['count'], data['size'])
                         // console.log(size)
                         CURRENT_PARENT = data['lastModule_name']
                         //write the file
@@ -566,7 +539,7 @@
                         console.log(data)
                         robots = urdfViewer.updateURDF(data['result'])//, data['lastModule_name'])
                         // size = data['size']
-                        //updateShownButtons(data['lastModule_type'], data['count'], data['size'])
+                        updateShownButtons(data['lastModule_type'], data['count'], data['size'])
                         // console.log(size)
                         CURRENT_PARENT = data['lastModule_name']
                         //write the file
@@ -586,7 +559,7 @@
                         console.log(data)
                         robots = urdfViewer.updateURDF(data['result'])
                         //size = data['size']
-                        //updateShownButtons(data['lastModule_type'], data['count'], data['size'])
+                        updateShownButtons(data['lastModule_type'], data['count'], data['size'])
                         //console.log(size)
                         CURRENT_PARENT = data['lastModule_name']
                         //write the file
