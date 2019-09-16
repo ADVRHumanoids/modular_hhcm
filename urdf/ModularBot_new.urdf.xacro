@@ -115,12 +115,6 @@
                 </geometry>
                 <material name="green"/>
             </visual>
-            <collision>
-                <geometry>
-                    <cylinder length="0.1" radius="${size_con}"/>
-                </geometry>
-            </collision>
-            <xacro:default_inertial mass="0.1"/>
         </link>
 
         <link name="${name}_con2">
@@ -131,12 +125,6 @@
                 </geometry>
                 <material name="green"/>
             </visual>
-            <collision>
-                <geometry>
-                    <cylinder length="0.1" radius="${size_con}"/>
-                </geometry>
-            </collision>
-            <xacro:default_inertial mass="0.1"/>
         </link>
         
         <link name="${name}_con3">
@@ -147,12 +135,6 @@
                 </geometry>
                 <material name="green"/>
             </visual>
-            <collision>
-                <geometry>
-                    <cylinder length="0.1" radius="${size_con}"/>
-                </geometry>
-            </collision>
-            <xacro:default_inertial mass="0.1"/>
         </link>
 
         <link name="${name}_con4">
@@ -163,12 +145,6 @@
                 </geometry>
                 <material name="green"/>
             </visual>
-            <collision>
-                <geometry>
-                    <cylinder length="0.1" radius="${size_con}"/>
-                </geometry>
-            </collision>
-            <xacro:default_inertial mass="0.1"/>
         </link>
 
         <joint name="${name}_fixed_1" type="fixed">
@@ -236,12 +212,6 @@
                 </geometry>
                 <material name="green"/>
             </visual>
-            <collision>
-                <geometry>
-                    <cylinder length="0.1" radius="${size_con}"/>
-                </geometry>
-            </collision>
-            <xacro:default_inertial mass="0.1"/>
         </link>
 
         <link name="${name}_con2">
@@ -252,12 +222,6 @@
                 </geometry>
                 <material name="green"/>
             </visual>
-            <collision>
-                <geometry>
-                    <cylinder length="0.1" radius="${size_con}"/>
-                </geometry>
-            </collision>
-            <xacro:default_inertial mass="0.1"/>
         </link>
         
         <link name="${name}_con3">
@@ -268,12 +232,6 @@
                 </geometry>
                 <material name="green"/>
             </visual>
-            <collision>
-                <geometry>
-                    <cylinder length="0.1" radius="${size_con}"/>
-                </geometry>
-            </collision>
-            <xacro:default_inertial mass="0.1"/>
         </link>
 
         <link name="${name}_con4">
@@ -284,12 +242,6 @@
                 </geometry>
                 <material name="green"/>
             </visual>
-            <collision>
-                <geometry>
-                    <cylinder length="0.1" radius="${size_con}"/>
-                </geometry>
-            </collision>
-            <xacro:default_inertial mass="0.1"/>
         </link>
 
         <joint name="${name}_fixed_1" type="fixed">
