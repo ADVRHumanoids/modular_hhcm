@@ -112,6 +112,18 @@
                 vertical-align: bottom;
                 display: none;
             }
+            #deploy {
+                background-color: rgb(66, 206, 31);
+                border: none;
+                position: absolute;
+                bottom: 0;
+                right: 50%;
+                font-size: 19px;
+                color: white;
+                padding: 11px 16px;
+                vertical-align: bottom;
+                display: none;
+            }
             #addJointElbow {
                 background-image: url(images/joint_elbow.png);
                 background-size: 100% 100%;
@@ -276,6 +288,7 @@
             </div>
             <button id=removeLast class="btn"><i class="fa fa-trash"></i> Remove Module</button>
             <button id=syncHardware class="btn"><span style="padding-right: 4px"><i class="material-icons">developer_board</i></span>Sync with hardware</button>
+            <button id=deploy class="btn"><span style="padding-right: 4px"><i class="material-icons">done</i></span>Deploy Robot</button>
             <div id="selector" style="overflow-y:auto;">
                 Select a module to add: 
                 <!-- <input type="file" id="moduleInput"> -->
@@ -311,6 +324,7 @@
                 var addSlaveCube = document.getElementById('addSlaveCube');
                 var removeLast = document.getElementById('removeLast');
                 var syncHardware = document.getElementById('syncHardware');
+                var deploy = document.getElementById('deploy');
                 var addElbowJoint = document.getElementById('addElbowJoint');
                 var modeSwitch = document.getElementById('modeSwitch');
                 var modeSwitchSlider = document.getElementById('modeSwitchSlider');
@@ -412,6 +426,8 @@
 
                 syncHardware.onclick = function() {syncHW()};
 
+                deploy.onclick = function() {deployRobot()};
+
                 addElbowJoint.onclick = function() {addModule("module_joint_elbow_AVOCADO", size)};
                 
                 addYawJoint.onclick = function() {addModule("module_joint_yaw_AVOCADO", size)};
@@ -481,6 +497,7 @@
 
                         selector.style.display = 'block';
                         syncHardware.style.display = 'inline-flex';
+                        deploy.style.display = 'inline-flex';
                     },
                     async: true
                 });
@@ -564,6 +581,21 @@
                         CURRENT_PARENT = data['lastModule_name']
                         //write the file
                         writeRequest(data['result'])
+                    },
+                    async: true
+                });
+            }
+
+            function deployRobot() {
+
+                var name = prompt("Enter the name of the Robot to deploy:", "ModularBot");
+
+                $.ajax({
+                    url: 'http://127.0.0.1:5000/deployRobot/',
+                    data: {'name': name},
+                    method: 'POST',
+                    success: function(data) {
+                        console.log(data)
                     },
                     async: true
                 });
