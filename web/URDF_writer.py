@@ -18,7 +18,7 @@ import tf
 # from anytree import NodeMixin, RenderTree, Node, AsciiStyle
 import anytree
 
-
+import subprocess
 from shutil import copyfile
 import os
 import errno
@@ -449,6 +449,8 @@ class UrdfWriter:
         for chain in self.listofchains:
             if joint in chain:
                 chain.remove(joint)
+        self.listofchains = filter(None, self.listofchains)
+
 
     # noinspection PyPep8Naming
     def add_slave_cube(self, angle_offset):
@@ -1565,3 +1567,12 @@ class UrdfWriter:
         out.write(doc.toprettyxml(indent='  '))
 
         return doc.toprettyxml(indent='  ')
+
+    # Save URDF/SRDF etc. in a directory with the specified robot_name
+    def deploy_robot(self, robot_name):
+        script = path_name + '/scripts/deploy.sh'
+        print(script)
+        print(robot_name)
+        subprocess.check_call([script, robot_name])
+
+        return robot_name

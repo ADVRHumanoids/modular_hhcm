@@ -236,7 +236,13 @@ def changeMode():
     data = jsonify(data)
     return data
 
-
+# deploy the package of the built robot
+@app.route('/deployRobot/', methods=['POST'])
+def deployRobot():
+    name = request.form.get('name', 'ModularBot')
+    print(name)
+    data = urdf_writer.deploy_robot(name)
+    return data
 
 
 if __name__ == '__main__':
