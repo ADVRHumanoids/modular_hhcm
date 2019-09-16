@@ -604,22 +604,22 @@ class UrdfWriter:
 
             # instantate a ModuleNode for branch 1 connector
             name_con1 = name + '_con1'
-            data1 = {'Homogeneous_tf': self.T_con, 'type': "con", 'name': name_con1, 'i': 0, 'p': 0, 'size': 3}
+            data1 = {'Homogeneous_tf': mastercube.Con_1_tf, 'type': "con", 'name': name_con1, 'i': 0, 'p': 0, 'size': 3}
             slavecube_con1 = ModuleNode.ModuleNode(data1, name_con1, parent=mastercube)
 
             # instantate a ModuleNode for branch 2 connector
             name_con2 = name + '_con2'
-            data2 = {'Homogeneous_tf': self.T_con, 'type': "con", 'name': name_con2, 'i': 0, 'p': 0, 'size': 3}
+            data2 = {'Homogeneous_tf': mastercube.Con_2_tf, 'type': "con", 'name': name_con2, 'i': 0, 'p': 0, 'size': 3}
             slavecube_con2 = ModuleNode.ModuleNode(data2, name_con2, parent=mastercube)
 
             # instantate a ModuleNode for branch 3 connector
             name_con3 = name + '_con3'
-            data3 = {'Homogeneous_tf': self.T_con, 'type': "con", 'name': name_con3, 'i': 0, 'p': 0, 'size': 3}
+            data3 = {'Homogeneous_tf': mastercube.Con_3_tf, 'type': "con", 'name': name_con3, 'i': 0, 'p': 0, 'size': 3}
             slavecube_con3 = ModuleNode.ModuleNode(data3, name_con3, parent=mastercube)
 
             # instantate a ModuleNode for branch 4 connector
             name_con4 = name + '_con4'
-            data4 = {'Homogeneous_tf': self.T_con, 'type': "con", 'name': name_con4, 'i': 0, 'p': 0, 'size': 3}
+            data4 = {'Homogeneous_tf': mastercube.Con_4_tf, 'type': "con", 'name': name_con4, 'i': 0, 'p': 0, 'size': 3}
             slavecube_con4 = ModuleNode.ModuleNode(data4, name_con4, parent=mastercube)
 
             # Render tree
@@ -1244,7 +1244,7 @@ class UrdfWriter:
         ET.SubElement(self.root, "xacro:add_fixed_joint",
                       type="fixed_joint_stator",
                       name=joint_stator_name,
-                      father=past_Link.name,
+                      father=past_Link.parent.name,
                       child=stator_name,
                       x=x,
                       y=y,
