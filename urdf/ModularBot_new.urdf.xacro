@@ -13,6 +13,7 @@
     <xacro:property name="size1" value="0.05" />
     <xacro:property name="size2" value="0.055" />
     <xacro:property name="size3" value="0.06" />
+    <xacro:property name="size_con" value="0.045" />
     <!-- <xacro:property name="leglen" value="0.3" /> -->
     <xacro:property name="len1" value="0.4" />
     <xacro:property name="len2" value="0.6" />
@@ -110,13 +111,13 @@
             <visual>
                 <origin rpy="0 0 0" xyz="0 0 0.05"/>
                 <geometry>
-                    <cylinder length="0.1" radius="0.06"/>
+                    <cylinder length="0.1" radius="${size_con}"/>
                 </geometry>
                 <material name="green"/>
             </visual>
             <collision>
                 <geometry>
-                    <cylinder length="0.1" radius="0.06"/>
+                    <cylinder length="0.1" radius="${size_con}"/>
                 </geometry>
             </collision>
             <xacro:default_inertial mass="0.1"/>
@@ -126,13 +127,13 @@
             <visual>
                 <origin rpy="0 0 0" xyz="0 0 0.05"/>
                 <geometry>
-                    <cylinder length="0.1" radius="0.06"/>
+                    <cylinder length="0.1" radius="${size_con}"/>
                 </geometry>
                 <material name="green"/>
             </visual>
             <collision>
                 <geometry>
-                    <cylinder length="0.1" radius="0.06"/>
+                    <cylinder length="0.1" radius="${size_con}"/>
                 </geometry>
             </collision>
             <xacro:default_inertial mass="0.1"/>
@@ -142,13 +143,13 @@
             <visual>
                 <origin rpy="0 0 0" xyz="0 0 0.05"/>
                 <geometry>
-                    <cylinder length="0.1" radius="0.06"/>
+                    <cylinder length="0.1" radius="${size_con}"/>
                 </geometry>
                 <material name="green"/>
             </visual>
             <collision>
                 <geometry>
-                    <cylinder length="0.1" radius="0.06"/>
+                    <cylinder length="0.1" radius="${size_con}"/>
                 </geometry>
             </collision>
             <xacro:default_inertial mass="0.1"/>
@@ -158,13 +159,13 @@
             <visual>
                 <origin rpy="0 0 0" xyz="0 0 0.05"/>
                 <geometry>
-                    <cylinder length="0.1" radius="0.06"/>
+                    <cylinder length="0.1" radius="${size_con}"/>
                 </geometry>
                 <material name="green"/>
             </visual>
             <collision>
                 <geometry>
-                    <cylinder length="0.1" radius="0.06"/>
+                    <cylinder length="0.1" radius="${size_con}"/>
                 </geometry>
             </collision>
             <xacro:default_inertial mass="0.1"/>
@@ -231,13 +232,13 @@
             <visual>
                 <origin rpy="0 0 0" xyz="0 0 0.05"/>
                 <geometry>
-                    <cylinder length="0.1" radius="0.06"/>
+                    <cylinder length="0.1" radius="${size_con}"/>
                 </geometry>
                 <material name="green"/>
             </visual>
             <collision>
                 <geometry>
-                    <cylinder length="0.1" radius="0.06"/>
+                    <cylinder length="0.1" radius="${size_con}"/>
                 </geometry>
             </collision>
             <xacro:default_inertial mass="0.1"/>
@@ -247,13 +248,13 @@
             <visual>
                 <origin rpy="0 0 0" xyz="0 0 0.05"/>
                 <geometry>
-                    <cylinder length="0.1" radius="0.06"/>
+                    <cylinder length="0.1" radius="${size_con}"/>
                 </geometry>
                 <material name="green"/>
             </visual>
             <collision>
                 <geometry>
-                    <cylinder length="0.1" radius="0.06"/>
+                    <cylinder length="0.1" radius="${size_con}"/>
                 </geometry>
             </collision>
             <xacro:default_inertial mass="0.1"/>
@@ -263,13 +264,13 @@
             <visual>
                 <origin rpy="0 0 0" xyz="0 0 0.05"/>
                 <geometry>
-                    <cylinder length="0.1" radius="0.06"/>
+                    <cylinder length="0.1" radius="${size_con}"/>
                 </geometry>
                 <material name="green"/>
             </visual>
             <collision>
                 <geometry>
-                    <cylinder length="0.1" radius="0.06"/>
+                    <cylinder length="0.1" radius="${size_con}"/>
                 </geometry>
             </collision>
             <xacro:default_inertial mass="0.1"/>
@@ -279,13 +280,13 @@
             <visual>
                 <origin rpy="0 0 0" xyz="0 0 0.05"/>
                 <geometry>
-                    <cylinder length="0.1" radius="0.06"/>
+                    <cylinder length="0.1" radius="${size_con}"/>
                 </geometry>
                 <material name="green"/>
             </visual>
             <collision>
                 <geometry>
-                    <cylinder length="0.1" radius="0.06"/>
+                    <cylinder length="0.1" radius="${size_con}"/>
                 </geometry>
             </collision>
             <xacro:default_inertial mass="0.1"/>
