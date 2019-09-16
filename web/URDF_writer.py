@@ -438,6 +438,18 @@ class UrdfWriter:
         else:
             self.listofchains[tag_index - 1].append(new_joint)
 
+    def remove_from_chain(self, joint):
+        """Remove joint from the list of the robot kinematic chains
+
+        Parameters
+        ----------
+        joint: ModuleNode.ModuleNode
+            ModuleNode object representing a joint to be removed to a kinematic chain"""
+
+        for chain in self.listofchains:
+            if joint in chain:
+                chain.remove(joint)
+
     # noinspection PyPep8Naming
     def add_slave_cube(self, angle_offset):
         """Method adding slave/master cube to the tree.
@@ -818,6 +830,9 @@ class UrdfWriter:
 
         # switch depending on module type
         if selected_module.type == 'joint':
+            #remove the joints from the list of chains
+            self.remove_from_chain(selected_module)
+            
             # save parent of the module to remove. This will be the last element of the chain after removal,
             # and it'll be returned by the function
             father = selected_module.parent
@@ -1459,6 +1474,8 @@ class UrdfWriter:
         # base_link = ""
         # tip_link = ""
         i = 0
+
+        print(self.listofchains)
         for joints_chain in self.listofchains:
             group_name = "chain_"+str(i+1)
             group.append(ET.SubElement(root, 'group', name=group_name))

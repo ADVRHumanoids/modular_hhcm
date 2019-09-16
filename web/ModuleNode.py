@@ -198,8 +198,6 @@ class Module(object):
         """Computes the homogeneous transformation matrices for the 4 cube connections"""
         origin, xaxis, yaxis, zaxis = (0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1)
 
-        print('pippo')
-
         con_1 = self.kinematics.connector_1
         con_2 = self.kinematics.connector_2
         con_3 = self.kinematics.connector_3
