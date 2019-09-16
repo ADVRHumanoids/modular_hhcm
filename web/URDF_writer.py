@@ -145,7 +145,7 @@ class UrdfWriter:
         self.origin, self.xaxis, self.yaxis, self.zaxis = (0, 0, 0.4), (1, 0, 0), (0, 1, 0), (0, 0, 1)
 
         # add attribute corresponding to the connector transform
-        self.T_con = tf.transformations.translation_matrix((0, 0, 0.1))  # self.slavecube.geometry.connector_length))
+        self.T_con = tf.transformations.translation_matrix((0, 0, 0.0))  # self.slavecube.geometry.connector_length))
 
         # # T = tf.transformations.translation_matrix(origin)
         # # R = tf.transformations.identity_matrix()
@@ -672,7 +672,7 @@ class UrdfWriter:
             setattr(slavecube, 'p', 0)
 
             # add the slave cube to the xml tree
-            ET.SubElement(self.root, "xacro:add_slave_cube", name=name)
+            ET.SubElement(self.root, "xacro:add_slave_cube", name=name, filename=filename)
 
             # instantate a ModuleNode for branch 2 connector
             name_con2 = name + '_con2'
@@ -753,7 +753,7 @@ class UrdfWriter:
             setattr(mastercube, 'p', 0)
 
             # add the master cube to the xml tree
-            ET.SubElement(self.root, "xacro:add_master_cube", name=name)
+            ET.SubElement(self.root, "xacro:add_master_cube", name=name, filename=filename)
 
             # instantate a ModuleNode for branch 1 connector
             name_con1 = name + '_con1'
