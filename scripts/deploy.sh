@@ -62,7 +62,7 @@ if(CATKIN_ENABLE_TESTING)
   roslaunch_add_file_check(cartesio)
 endif()
 
-install(DIRECTORY urdf srdf 
+install(DIRECTORY urdf srdf launch
   DESTINATION 
 EOF
 
@@ -115,6 +115,36 @@ cat >> cartesio.launch << 'EOF'
     </node>
 
 
+
+</launch>
+EOF
+cd ..
+
+mkdir launch
+cd launch
+
+cat >> ${package_name}_sliders.launch << EOF
+<launch>
+    <arg name="gui" default="true" />
+    <arg name="pkg_name"  default="$package_name"/>
+EOF
+
+cat >> ${package_name}_sliders.launch << 'EOF'
+    <param name="robot_description" textfile="$(eval find(pkg_name) + '/urdf/ModularBot.urdf')"/>
+    <param name="robot_description_semantic" textfile="$(eval find(pkg_name) + '/srdf/ModularBot.srdf')"/>
+    
+    <param name="use_gui" value="$(arg gui)"/>
+    <param name="rate" value="50.0"/>
+     
+        
+    <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
+    <param name="publish_default_efforts" value="True"/>
+    </node>
+
+    <!-- start robot state publisher -->
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen" >
+        <param name="publish_frequency" type="double" value="250.0" />
+    </node> 
 
 </launch>
 EOF
