@@ -193,17 +193,63 @@ class Module(object):
         setattr(self, 'link_size_z', str(size_z))
 
     # 
+    # noinspection PyPep8Naming
+    def get_cube_connections_tf(self, reverse):
+        """Computes the homogeneous transformation matrices for the 4 cube connections"""
+        origin, xaxis, yaxis, zaxis = (0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1)
+
+        print('pippo')
+
+        con_1 = self.kinematics.connector_1
+        con_2 = self.kinematics.connector_2
+        con_3 = self.kinematics.connector_3
+        con_4 = self.kinematics.connector_4
+
+        if not reverse:
+            # TO BE CHECKED!!!
+
+            trasl_1 = tf.transformations.translation_matrix((con_1.x, con_1.y, con_1.z))
+            rot_1 = tf.transformations.euler_matrix(con_1.roll, con_1.pitch, con_1.yaw, 'rxyz')
+            tf_con_1 = tf.transformations.concatenate_matrices(trasl_1, rot_1)
+            # Add the transformation matrix for the Proximal part as attribute of the class
+            setattr(self, 'Con_1_tf', tf_con_1)
+            
+            trasl_2 = tf.transformations.translation_matrix((con_2.x, con_2.y, con_2.z))
+            rot_2 = tf.transformations.euler_matrix(con_2.roll, con_2.pitch, con_2.yaw, 'rxyz')
+            tf_con_2 = tf.transformations.concatenate_matrices(trasl_2, rot_2)
+            # Add the transformation matrix for the Proximal part as attribute of the class
+            setattr(self, 'Con_2_tf', tf_con_2)
+
+            trasl_3 = tf.transformations.translation_matrix((con_3.x, con_3.y, con_3.z))
+            rot_3 = tf.transformations.euler_matrix(con_3.roll, con_3.pitch, con_3.yaw, 'rxyz')
+            tf_con_3 = tf.transformations.concatenate_matrices(trasl_3, rot_3)
+            # Add the transformation matrix for the Proximal part as attribute of the class
+            setattr(self, 'Con_3_tf', tf_con_3)
+
+            trasl_4 = tf.transformations.translation_matrix((con_4.x, con_4.y, con_4.z))
+            rot_4 = tf.transformations.euler_matrix(con_4.roll, con_4.pitch, con_4.yaw, 'rxyz')
+            tf_con_4 = tf.transformations.concatenate_matrices(trasl_4, rot_4)
+            # Add the transformation matrix for the Proximal part as attribute of the class
+            setattr(self, 'Con_4_tf', tf_con_4)
+
+        else:
+            # TBD!!!
+            pass
+
+    # 
     def get_transform(self, reverse):
         """Computes the correct transformation depending on the module type"""
         x = self.type
-        print(self.type)
-        return {
-            'joint': self.get_proximal_distal_matrices(reverse),
-            'joint_mesh': self.get_proximal_distal_matrices(reverse),
-            'link': self.get_homogeneous_matrix(reverse),
-            'elbow': self.get_homogeneous_matrix(reverse),
-            'size_adapter': self.get_homogeneous_matrix(reverse)
-        }.get(x, 'Invalid type')
+        print('module_type', x)
+        switcher = {
+            'joint_mesh': self.get_proximal_distal_matrices,
+            'joint': self.get_proximal_distal_matrices,
+            'link': self.get_homogeneous_matrix,
+            'elbow': self.get_homogeneous_matrix,
+            'size_adapter': self.get_homogeneous_matrix,
+            'cube': self.get_cube_connections_tf
+        }
+        return switcher.get(x, 'Invalid type')(reverse)
 
     # def get_connector_tf(self, connector):
     #     origin, xaxis, yaxis, zaxis = (0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1)
@@ -284,7 +330,7 @@ def module_from_yaml(filename, father, reverse):
 
 
 #
-def mastercube_from_yaml(filename, father=None):
+def mastercube_from_yaml(filename, father=None, reverse=False):
     """Function parsing YAML file describing a mastercube and returning an instance of a Module class"""
     with open(filename, 'r') as stream:
         try:
@@ -293,6 +339,7 @@ def mastercube_from_yaml(filename, father=None):
             print(exc)
 
     mastercube = ModuleNode(data, filename, parent=father)
+    mastercube.get_transform(reverse)
     # con1 = MasterCube.kinematics.connector_1
     # MasterCube.get_connector_tf(con1)
     # con2 = MasterCube.kinematics.connector_2
