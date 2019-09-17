@@ -13,7 +13,7 @@
     <xacro:property name="size1" value="0.05" />
     <xacro:property name="size2" value="0.055" />
     <xacro:property name="size3" value="0.06" />
-    <xacro:property name="size_con" value="0.045" />
+    <xacro:property name="size_interface" value="0.045" />
     <!-- <xacro:property name="leglen" value="0.3" /> -->
     <xacro:property name="len1" value="0.4" />
     <xacro:property name="len2" value="0.6" />
@@ -77,7 +77,7 @@
     </xacro:macro>
 
     <!-- Macro for adding a master cube -->
-    <xacro:macro name="add_master_cube" params="name filename">
+    <xacro:macro name="add_master_cube" params="name filename type">
         
         <xacro:property name="module" value="${load_yaml(filename)}"/>
 
@@ -107,11 +107,17 @@
             <xacro:default_inertial mass="2"/>
         </link>
 
+    </xacro:macro>
+
+    <xacro:macro name="add_connectors" params="name filename type">
+        
+        <xacro:property name="module" value="${load_yaml(filename)}"/>
+        
         <link name="${name}_con1">
             <visual>
                 <origin rpy="0 0 0" xyz="0 0 0.05"/>
                 <geometry>
-                    <cylinder length="0.1" radius="${size_con}"/>
+                    <cylinder length="0.1" radius="${size_interface}"/>
                 </geometry>
                 <material name="green"/>
             </visual>
@@ -121,7 +127,7 @@
             <visual>
                 <origin rpy="0 0 0" xyz="0 0 0.05"/>
                 <geometry>
-                    <cylinder length="0.1" radius="${size_con}"/>
+                    <cylinder length="0.1" radius="${size_interface}"/>
                 </geometry>
                 <material name="green"/>
             </visual>
@@ -131,7 +137,7 @@
             <visual>
                 <origin rpy="0 0 0" xyz="0 0 0.05"/>
                 <geometry>
-                    <cylinder length="0.1" radius="${size_con}"/>
+                    <cylinder length="0.1" radius="${size_interface}"/>
                 </geometry>
                 <material name="green"/>
             </visual>
@@ -141,7 +147,7 @@
             <visual>
                 <origin rpy="0 0 0" xyz="0 0 0.05"/>
                 <geometry>
-                    <cylinder length="0.1" radius="${size_con}"/>
+                    <cylinder length="0.1" radius="${size_interface}"/>
                 </geometry>
                 <material name="green"/>
             </visual>
@@ -182,7 +188,7 @@
     </xacro:macro>
 
     <!-- Macro for adding a slave cube -->
-    <xacro:macro name="add_slave_cube" params="name filename">
+    <xacro:macro name="add_slave_cube" params="name filename type">
 
         <xacro:property name="module" value="${load_yaml(filename)}"/>
         
@@ -208,7 +214,7 @@
             <visual>
                 <origin rpy="0 0 0" xyz="0 0 0.05"/>
                 <geometry>
-                    <cylinder length="0.1" radius="${size_con}"/>
+                    <cylinder length="0.1" radius="${size_interface}"/>
                 </geometry>
                 <material name="green"/>
             </visual>
@@ -218,7 +224,7 @@
             <visual>
                 <origin rpy="0 0 0" xyz="0 0 0.05"/>
                 <geometry>
-                    <cylinder length="0.1" radius="${size_con}"/>
+                    <cylinder length="0.1" radius="${size_interface}"/>
                 </geometry>
                 <material name="green"/>
             </visual>
@@ -228,7 +234,7 @@
             <visual>
                 <origin rpy="0 0 0" xyz="0 0 0.05"/>
                 <geometry>
-                    <cylinder length="0.1" radius="${size_con}"/>
+                    <cylinder length="0.1" radius="${size_interface}"/>
                 </geometry>
                 <material name="green"/>
             </visual>
@@ -238,7 +244,7 @@
             <visual>
                 <origin rpy="0 0 0" xyz="0 0 0.05"/>
                 <geometry>
-                    <cylinder length="0.1" radius="${size_con}"/>
+                    <cylinder length="0.1" radius="${size_interface}"/>
                 </geometry>
                 <material name="green"/>
             </visual>
