@@ -61,7 +61,7 @@ def changeURDF():
 
 @app.route('/writeURDF/', methods=['POST'])
 def writeURDF():
-    string = request.form.get('string', 0)
+    #string = request.form.get('string', 0)
     # print(string)
     # print (building_mode_ON)
     # print (discovery_mode_ON)
@@ -242,6 +242,11 @@ def deployRobot():
     name = request.form.get('name', 'ModularBot')
     print(name)
     data = urdf_writer.deploy_robot(name)
+    return data
+
+@app.route('/removeConnectors/', methods=['POST'])
+def removeConnectors():
+    data = urdf_writer.remove_connectors()
     return data
 
 

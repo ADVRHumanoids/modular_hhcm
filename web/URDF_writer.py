@@ -533,7 +533,7 @@ class UrdfWriter:
             setattr(slavecube, 'p', 0)
 
             # add the slave cube to the xml tree
-            ET.SubElement(self.root, "xacro:add_slave_cube", name=name, filename=filename)
+            ET.SubElement(self.root, "xacro:add_slave_cube", type='cube', name=name, filename=filename)
 
             # instantate a ModuleNode for branch 2 connector
             name_con2 = name + '_con2'
@@ -614,7 +614,8 @@ class UrdfWriter:
             setattr(mastercube, 'p', 0)
 
             # add the master cube to the xml tree
-            ET.SubElement(self.root, "xacro:add_master_cube", name=name, filename=filename)
+            ET.SubElement(self.root, "xacro:add_master_cube", type='cube', name=name, filename=filename)
+            ET.SubElement(self.root, "xacro:add_connectors", type='connectors', name=name, filename=filename)
 
             # instantate a ModuleNode for branch 1 connector
             name_con1 = name + '_con1'
@@ -1575,4 +1576,57 @@ class UrdfWriter:
         print(robot_name)
         subprocess.check_call([script, robot_name])
 
+        self.add_connectors()
+
         return robot_name
+
+    # Remove connectors when deploying the robot
+    def remove_connectors(self):
+
+        # Generator expression for list of urdf elements without the gazebo tag.
+        # This is needed because of the change in the xacro file, as gazebo simulation tags
+        # are now added from the start and this creates problems with the search
+        gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
+
+        # Remove the fixed joints that join the connectors to the boxes (by checking if 'con' is in the name of the child)
+        # Catch KeyError when the node has no child element and continue with the loop.
+        for node in gen:
+            try:
+                node_type = node.attrib['type']
+                if node_type == 'connectors':
+                    print('removing node:', node.attrib)
+                    self.root.remove(node)
+            except KeyError:
+                #print('missing type', node.attrib['name'])
+                continue
+
+        # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string
+        # Update the urdf file, removing the module
+        string = self.process_urdf()
+
+        # Render tree
+        for pre, _, node in anytree.render.RenderTree(self.base_link):
+            print("%s%s" % (pre, node.name))
+
+        return string
+
+    def add_connectors(self):
+
+        # Generator expression for list of urdf elements without the gazebo tag.
+        # This is needed because of the change in the xacro file, as gazebo simulation tags
+        # are now added from the start and this creates problems with the search
+        gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
+
+        for node in gen:
+            try:
+                node_type = node.attrib['type']
+                if node_type == 'cube':
+                    name = node.attrib['name']
+                    filename = path_name + '/web/static/yaml/master_cube.yaml'
+
+                    ET.SubElement(self.root, "xacro:add_connectors", type='connectors', name=name, filename=filename)
+            except KeyError:
+                #print('missing type', node.attrib['name'])
+                continue
+        
+        
