@@ -589,13 +589,30 @@
             function deployRobot() {
 
                 var name = prompt("Enter the name of the Robot to deploy:", "ModularBot");
-
                 $.ajax({
-                    url: 'http://127.0.0.1:5000/deployRobot/',
+                    url: 'http://127.0.0.1:5000/removeConnectors/',
                     data: {'name': name},
                     method: 'POST',
                     success: function(data) {
                         console.log(data)
+                        $.ajax({
+                            url: 'http://127.0.0.1:5000/writeURDF/',
+                            method: 'POST',
+                            success: function(data) {
+                                console.log(data)  
+                                $.ajax({
+                                    url: 'http://127.0.0.1:5000/deployRobot/',
+                                    data: {'name': name},
+                                    method: 'POST',
+                                    success: function(data) {
+                                        console.log(data)
+                                    },
+                                    async: true
+                                });  
+                            },
+                            async: true
+                        });
+                        
                     },
                     async: true
                 });
