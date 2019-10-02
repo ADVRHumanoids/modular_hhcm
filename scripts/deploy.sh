@@ -17,7 +17,7 @@ fi
 
 
 package_name="$1"
-printf "Deploying package ${GREEN}${package_name}${NC}"
+printf "Deploying package ${GREEN}${package_name}${NC} into ${RED}$ROBOTOLOGY_ROOT/robots${NC}"
 echo
 
 # this way the script can be called from any directory
@@ -25,9 +25,9 @@ SCRIPT_ROOT=$(dirname $(readlink --canonicalize --no-newline $BASH_SOURCE))
 
 cd $SCRIPT_ROOT/..
 
-cp -R ModularBot ${package_name}
+cp -R ModularBot $ROBOTOLOGY_ROOT/robots/${package_name}
 
-cd ${package_name}
+cd $ROBOTOLOGY_ROOT/robots/${package_name}
 
 cat > package.xml << EOF
 <package>
@@ -68,6 +68,45 @@ EOF
 
 cat >> CMakeLists.txt << 'EOF' 
 ${CATKIN_PACKAGE_SHARE_DESTINATION})
+EOF
+
+cat > ${package_name}_basic.yaml << EOF
+XBotCore:
+  config_path: "robots/${package_name}/configs/ModularBot.yaml"
+
+XBotInterface:
+  urdf_path: "robots/${package_name}/urdf/ModularBot.urdf"
+  srdf_path: "robots/${package_name}/srdf/ModularBot.srdf"
+  joint_map_path: "robots/${package_name}/joint_map/ModularBot_joint_map.yaml"
+
+RobotInterface:
+  framework_name: "ROS"
+
+ModelInterface:
+  model_type: "RBDL"
+  is_model_floating_base: "false"
+
+RobotInterfaceROS:
+  publish_tf: true
+  
+MasterCommunicationInterface:
+  framework_name: "ROS"
+
+XBotRTPlugins:
+  plugins: ["HomingExample", "CartesianImpedancePlugin"]
+  io_plugins: ["CartesianImpedanceIO"]
+  
+NRTPlugins:
+  plugins: []
+ 
+#WebServer:
+  #enable: "true"
+  #address: "10.24.7.100"
+  #port: "8081"
+
+SimulationOptions:
+  verbose_mode: "false"
+
 EOF
 
 mkdir cartesio
@@ -149,6 +188,3 @@ cat >> ${package_name}_sliders.launch << 'EOF'
 </launch>
 EOF
 cd ..
-
-
-

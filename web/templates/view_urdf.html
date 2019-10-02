@@ -39,6 +39,10 @@
 
         <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
 
+        <script type=text/javascript>
+            $SCRIPT_ROOT = "{{ url_for('index', _external=True) }}";
+        </script>
+
         <style type="text/css">
             html, body {
                 height: 100%;
@@ -357,7 +361,7 @@
 
                         //console.log(reader.result)
                         $.ajax({
-                            url: 'http://127.0.0.1:5000/openFile/',
+                            url: $SCRIPT_ROOT + 'openFile/',
                             data: {'file': reader.result},
                             method: 'POST',
                             // contentType: false,
@@ -378,7 +382,7 @@
 
                 modeInput.addEventListener('change', function(e) {
                     $.ajax({
-                        url: 'http://127.0.0.1:5000/changeMode/',
+                        url: $SCRIPT_ROOT + 'changeMode/',
                         data: {'state': modeInput.checked},
                         method: 'POST',
                         // contentType: false,
@@ -441,7 +445,7 @@
                 var reverse = confirm("Do you want to connect it backwards?");
                 
                 //opening YAML file containing kin. and dyn. parameters and URDF path
-                //var url = 'http://127.0.0.1:5000/yaml/' + filename;
+                //var url = $SCRIPT_ROOT + 'yaml/' + filename;
                 //openfile(url, callBack_YAML)  
                 switch (size_value) {
                     case 3:
@@ -464,7 +468,7 @@
                 console.log()
                 //making an ajax request to the server to proceed to write the modified URDF
                 $.ajax({
-                    url: 'http://127.0.0.1:5000/changeURDF/',
+                    url: $SCRIPT_ROOT + 'changeURDF/',
                     data: {'module_name': filename, 'parent': CURRENT_PARENT, 'angle_offset': offset, 'reverse': reverse},
                     method: 'POST',
                     success: function(data) {
@@ -484,7 +488,7 @@
 
             function requestURDF(){
                 $.ajax({
-                    url: 'http://127.0.0.1:5000/requestURDF/',
+                    url: $SCRIPT_ROOT + 'requestURDF/',
                     data: {'mode': buildingModeON},
                     method: 'POST',
                     // contentType: false,
@@ -505,7 +509,7 @@
 
             function writeRequest(URDF_string){
                 $.ajax({
-                    url: 'http://127.0.0.1:5000/writeURDF/',
+                    url: $SCRIPT_ROOT + 'writeURDF/',
                     data: {'string': URDF_string},
                     method: 'POST',
                     success: function(data) {
@@ -517,7 +521,7 @@
 
             function syncHW() {
                 $.ajax({
-                    url: 'http://127.0.0.1:5000/syncHW/',
+                    url: $SCRIPT_ROOT + 'syncHW/',
                     method: 'POST',
                     success: function(data) {
                         console.log(buildingModeON)
@@ -549,7 +553,7 @@
                 
                 filename = modulename + '.yaml'
                 $.ajax({
-                    url: 'http://127.0.0.1:5000/addMasterCube/',
+                    url: $SCRIPT_ROOT + 'addMasterCube/',
                     data: {'module_name': filename, 'parent': CURRENT_PARENT, 'angle_offset': offset},
                     method: 'POST',
                     success: function(data) {
@@ -569,7 +573,7 @@
 
             function removeModule() {
                 $.ajax({
-                    url: 'http://127.0.0.1:5000/removeModule/',
+                    url: $SCRIPT_ROOT + 'removeModule/',
                     data: {'parent': CURRENT_PARENT},
                     method: 'POST',
                     success: function(data) {
@@ -590,18 +594,18 @@
 
                 var name = prompt("Enter the name of the Robot to deploy:", "ModularBot");
                 $.ajax({
-                    url: 'http://127.0.0.1:5000/removeConnectors/',
+                    url: $SCRIPT_ROOT + 'removeConnectors/',
                     data: {'name': name},
                     method: 'POST',
                     success: function(data) {
                         console.log(data)
                         $.ajax({
-                            url: 'http://127.0.0.1:5000/writeURDF/',
+                            url: $SCRIPT_ROOT + 'writeURDF/',
                             method: 'POST',
                             success: function(data) {
                                 console.log(data)  
                                 $.ajax({
-                                    url: 'http://127.0.0.1:5000/deployRobot/',
+                                    url: $SCRIPT_ROOT + 'deployRobot/',
                                     data: {'name': name},
                                     method: 'POST',
                                     success: function(data) {
@@ -657,7 +661,7 @@
             //     //console.log(yaml_url)
             //     doc = jsyaml.load(xhr.responseText);
             //     //console.log(doc.urdf)
-            //     var urdf_url = 'http://127.0.0.1:5000/' + doc.urdf;
+            //     var urdf_url = $SCRIPT_ROOT + doc.urdf;
             //     //console.log(urdf_url)
                 
             //     //opening URDF file

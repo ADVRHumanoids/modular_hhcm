@@ -796,7 +796,7 @@ class URDF_viewer extends HTMLElement {
         this.previous_parent = this.current_parent
 
         $.ajax({
-            url: 'http://127.0.0.1:5000/updateLastModule/',
+            url: $SCRIPT_ROOT + 'updateLastModule/',
             data: {'parent': CURRENT_PARENT},
             method: 'POST',
             success: function(data) {
