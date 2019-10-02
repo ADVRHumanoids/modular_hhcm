@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from flask import Flask, render_template, request, jsonify, send_from_directory
+from flask import Flask, render_template, request, jsonify, send_from_directory, url_for
 # import flask
 # print(flask.__file__, flask.__version__)
 
@@ -70,11 +70,13 @@ def writeURDF():
         data = urdf_writer.write_urdf()
         srdf = urdf_writer.write_srdf()
         joint_map = urdf_writer.write_joint_map()
+        lowlevel_config = urdf_writer.write_lowlevel_config()
         # cartesio_stack = urdf_writer.write_cartesio_stack()
     else:
         data = urdf_writer_fromHW.write_urdf()
         srdf = urdf_writer_fromHW.write_srdf()
         joint_map = urdf_writer_fromHW.write_joint_map()
+        lowlevel_config = urdf_writer.write_lowlevel_config()
         # cartesio_stack = urdf_writer_fromHW.write_cartesio_stack()
     # print("\nSRDF\n")
     # print(srdf)
@@ -239,9 +241,13 @@ def changeMode():
 # deploy the package of the built robot
 @app.route('/deployRobot/', methods=['POST'])
 def deployRobot():
-    name = request.form.get('name', 'ModularBot')
-    print(name)
-    data = urdf_writer.deploy_robot(name)
+    if building_mode_ON and (not discovery_mode_ON):
+        name = request.form.get('name', 'ModularBot')
+        print(name)
+        data = urdf_writer.deploy_robot(name)
+    else:
+        data = urdf_writer.deploy_robot('ModularBot')
+    
     return data
 
 @app.route('/removeConnectors/', methods=['POST'])
@@ -253,8 +259,8 @@ def removeConnectors():
 if __name__ == '__main__':
 
     # Start Flask web-server
-    app.run(debug=True, threaded=True)
-
+    app.run(host='10.24.8.100', port=5000, debug=False, threaded=True)
+    
     #main()
 
     # from gevent.pywsgi import WSGIServer

@@ -74,6 +74,11 @@ def ordered_dump(data, stream=None, Dumper=MyDumper, **kwds):
 
     OrderedDumper.add_representer(OrderedDict, _dict_representer)
 
+    # to avoid printing tags. TODO: Find a better way to do this. This changes the global yaml emitter
+    def noop(self, *args, **kw):
+            pass
+    yaml.emitter.Emitter.process_tag = noop
+
     return yaml.dump(data, stream, OrderedDumper, **kwds)
 
 
@@ -1433,6 +1438,48 @@ class UrdfWriter:
                       roll=roll,
                       pitch=pitch,
                       yaw=yaw)
+
+    def write_lowlevel_config(self):
+        """Creates the low level config file needed by XBotCore """
+
+        basic_config_filename = path_name + '/configs/ModularBot.yaml'
+        lowlevel_config_filename = path_name + '/ModularBot/configs/ModularBot.yaml'
+        lowlevel_config = OrderedDict([])
+
+        with open(basic_config_filename, 'r') as stream:
+            try:
+                lowlevel_config = ordered_load(stream, yaml.SafeLoader)
+                # cartesio_stack['EE']['base_link'] = self.listofchains[0]
+                print(lowlevel_config.items()[0])
+            except yaml.YAMLError as exc:
+                print(exc)
+
+        print(lowlevel_config.items())
+        print(lowlevel_config['GazeboXBotPlugin'])
+        lowlevel_config['GazeboXBotPlugin']['gains'] = OrderedDict([])
+        i=0
+        for joints_chain in self.listofchains:
+            for joint_module in joints_chain:
+                i += 1
+                lowlevel_config['GazeboXBotPlugin']['gains'][joint_module.name] = OrderedDict([('p', 300), ('d', 20)])
+                key = 'CentAcESC_' + str(i)
+                lowlevel_config[key] = joint_module.CentAcESC
+                print(joint_module.kinematics.__dict__.items())
+                print(lowlevel_config[key])
+                print(yaml.dump(joint_module.CentAcESC))
+        
+        # Create folder if doesen't exist
+        if not os.path.exists(os.path.dirname(lowlevel_config_filename)):
+            try:
+                os.makedirs(os.path.dirname(lowlevel_config_filename))
+            except OSError as exc: # Guard against race condition
+                if exc.errno != errno.EEXIST:
+                    raise
+
+        with open(lowlevel_config_filename, 'w') as outfile:
+            #ordered_dump(lowlevel_config, stream=outfile, Dumper=yaml.SafeDumper,  default_flow_style=False, line_break='\n\n', indent=4)
+            ordered_dump(lowlevel_config, stream=outfile, default_flow_style=False, line_break='\n\n', indent=4, canonical = False)
+        return lowlevel_config
 
     def write_joint_map(self):
         """Creates the joint map needed by XBotCore """
