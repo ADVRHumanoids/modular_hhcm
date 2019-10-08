@@ -1,0 +1,86 @@
+RobotName: "ModularBot"
+
+GazeboXBotPlugin:
+  control_rate: 0.001
+  gains: 
+
+HALInterface:
+  lib_file: "libXBotEcat"
+  lib_name: "ETHERCAT"
+  IJoint: "libXBotEcat_Joint"
+  ISensors: 
+  #- [[81] , "libXBotEcat_FT"]
+  #- [[104] , "libXBotEcat_IMU"]
+  #IEndEffectors: 
+  # - [[110, 111], "libXBotEcat_HeriHand"]
+
+SCPLog:
+  remote_username: "ModularBot"
+  remote_ip_address: "10.24.4.77"
+  remote_log_folder_path: "/home/ModularBot/MODULARBOT_LOG"
+
+x_bot_ecat:
+  name: XBotCore
+  sdo_xddp_prefix : 
+  # periodic - priority if needed here
+
+
+#
+#ec_board_ctrl:
+#  eth_iface: rteth0
+#  #eth_iface: eth1
+#  #sync_cycle_time_ns: 500000
+#  sync_cycle_time_ns: 1000000
+#  #sync_cycle_time_ns: 2000000
+#  #sync_cycle_time_ns: 5000000
+#  #sync_cycle_time_ns: 10000000
+#  #sync_cycle_time_ns: 0
+#  sync_cycle_offset_ns: 1000000000
+#  power_off_boards: false
+#  #use_pipes: false
+
+ec_board_ctrl:
+  eth_iface: rteth0
+  sync_cycle_time_ns: 1000000
+  sync_cycle_offset_ns: 1000000000
+  power_off_boards: false
+  use_pipes: false
+
+ec_boards_base:
+  use_pipes: false
+  #fault_power_off: true
+  log_level: 1
+
+ec_board_base:
+  use_pipes: false
+
+#firmware_update:
+#  #
+#  fw_path: ../examples/fw_update/fw_test/
+#  #slave_pos_list: [7]
+#  #slave_rId_list: [7]
+#  # all esc
+#  #slave_pos_list: [0]
+#  # all BigMotor
+#  #slave_pos_list: [-1]
+#  # all MedMotor
+#  #slave_pos_list: [-2]
+#  # all LowPower motor
+#  #slave_pos_list: [-3]
+#  # all CentAC motor
+#  slave_pos_list: [-4]
+#  #slave_pos_list: [1]
+#
+#  cent_AC:
+#    m3:
+#      bin_file: cent_AC_m3.bin
+#      passwd: 0xA550
+#    c28:
+#      bin_file: cent_AC_c28.bin
+#      passwd: 0xDAD0
+
+#############################
+# GENERIC ESC config
+#############################
+
+
