@@ -1034,13 +1034,13 @@ class URDF_viewer extends HTMLElement {
     }
 
     static _removeSliders() {
-        const sliderList = document.querySelector('#controls ul')
+        const sliderList = document.querySelector('#sliders ul')
         while(sliderList.firstChild)
             sliderList.removeChild(sliderList.firstChild)
     }
 
     static _createSlider(joint) {
-        const sliderList = document.querySelector('#controls ul')
+        const sliderList = document.querySelector('#sliders ul')
 
         const li = document.createElement('li')
         li.innerHTML =
@@ -1051,7 +1051,7 @@ class URDF_viewer extends HTMLElement {
         `
         //li.setAttribute('joint-type', joint.urdf.type)
 
-        //sliderList = document.querySelector('#controls ul')
+        //sliderList = document.querySelector('#sliders ul')
         sliderList.appendChild(li)
 
         const slider = li.querySelector('input[type="range"]')
