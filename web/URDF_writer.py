@@ -163,12 +163,34 @@ class UrdfWriter:
         """Given the module id find the corresponding dictionary entry and return it"""
         found_module = None
         for module in modules:
-            if module['id'] == module_id:
+            if module_id in module.keys():
                 found_module = module
                 break
             else:
                 continue
         return found_module
+
+    @staticmethod
+    def find_next_module_in_chain(module_id, modules):
+        """Given the module id find the corresponding dictionary entry and return it"""
+        found_module = None
+        found_module_id = 0
+        next_position = 1
+        for module in modules:
+            if module_id in module.keys():
+                position = module[module_id]['poistion']
+                next_position = int(position) + 1
+                break
+        print('next position:', next_position)
+        for next_module in modules:
+            next_id = (next_module.keys())[0]
+            if next_module[next_id]['poistion'] == next_position:
+                found_module = next_module
+                found_module_id = next_id
+                break
+            else:
+                continue
+        return found_module, found_module_id
 
     # This method will be used when branches in the robot will be supported.
     def read_from_json(self, json_data):
@@ -253,46 +275,41 @@ class UrdfWriter:
 
         # Process the modules described in the json to create the tree
         modules = json.loads(json_data)
-        for module in modules:
-            print(329, module)
-
-            # This loop has only one iteration over the first element of each chain in the module list from the json msg
-            # The others modules in the chain are processed by process_connections_alt
-            # TODO: The "IDs" actually are now the "positions" in the ECAT network (from get_ec_positions()).
-            #       Need to change when branches are implemented
-            for module_id in module.keys():
-
-                # Find the name of the yaml describing the module to be added, searching the dictionary by the esc_type
-                module_filename = d.get(module[module_id]['robot_id'])
-                data = self.add_module(module_filename, 0)
-
-                module_name = data['lastModule_name']
-                module_type = data['lastModule_type']
-
-                # generate the list of connections.
-                # Right now only unbranched chains are supported so the only connection is the next module on the list
-                # TODO: get the connections list when branches will be present in the robot
-                connections = []
-                if module[module_id]['topology'] == 2:
-                    connections.append(str(int(module_id)+1))
-                # if topology is not 2, the only other option is 1 right now so the connections list is empty
-                print(connections)
-
-                # Process the connections of the module and add the modules as child of the current one
-                self.process_connections_alt(connections, modules, module_name, module_type, d)
-                
-            break
-            # if module['connections'][0] == 0:
-            #     print('\n Module: \n')
-            #     print(module['id'], module['type'])
-            #     if module['type'] == 'master_cube':
-            #         data = self.add_slave_cube(0)
-            #     else:
-            #         data = self.add_module(module['type'], 0)
-            #     module_name = data['lastModule_name']
-            #     module_type = data['lastModule_type']
-            #     self.process_connections_alt(connections, modules, module_name, module_type)
+        print("modules:", modules, type(modules))
         
+        # # This loop has only one iteration over the first element of each chain in the module list from the json msg
+        # # The others modules in the chain are processed by process_connections_alt
+        # for module in modules:
+        #     print("module:", module)
+        module, module_id = self.find_next_module_in_chain(0, modules)
+        print("module:",module, type(module))
+        # TODO: The "IDs" actually are now the "positions" in the ECAT network (from get_ec_positions()).
+        #       Need to change when branches are implemented
+        # for module_id in module.keys():
+        print("module id:",module_id)
+        # Find the name of the yaml describing the module to be added, searching the dictionary by the esc_type
+        #TODO: handle exception if the id is not found in the dict
+        module_filename = d.get(module[module_id]['robot_id'])
+        data = self.add_module(module_filename, 0)
+
+        module_name = data['lastModule_name']
+        module_type = data['lastModule_type']
+
+        # generate the list of connections.
+        # Right now only unbranched chains are supported so the only connection is the next module on the list
+        # TODO: get the connections list when branches will be present in the robot
+        connections = []
+        if module[module_id]['topology'] == 2:
+            next_module, next_module_id = self.find_next_module_in_chain(module_id, modules)
+            connections.append(str(next_module_id))
+        # if topology is not 2, the only other option is 1 right now so the connections list is empty
+        print(connections)
+
+        # Process the connections of the module and add the modules as child of the current one
+        self.process_connections_alt(connections, modules, module_name, module_type, d)
+            
+            # break
+            
         # doc = xacro.parse(string)
         # xacro.process_doc(doc, in_order=True)
         # string = doc.toprettyxml(indent='  ')
@@ -356,7 +373,8 @@ class UrdfWriter:
             print(self.parent_module.name)
             if child_id != -1:
                 # Find child module to process searching by id in the modules_list
-                child = modules_list[int(child_id) - 1]  # self.find_module_from_id(child_id, modules_list)
+                #child = modules_list[int(child_id) - 1]  # self.find_module_from_id(child_id, modules_list)
+                child = self.find_module_from_id(child_id, modules_list)       
                 print(child[child_id])
                 # TODO: Uncomment below when switching to branched robot
                 # # If the processed module is a mastercube we need first to select the connector to which attach to
@@ -380,7 +398,8 @@ class UrdfWriter:
                 # Check topology to determine the num of connections and put them in the list.
                 # TODO: add cases for different topologies when switching to branched robots
                 if child[child_id]['topology'] == 2:
-                    connections.append(str(int(child_id)+1))
+                    next_module, next_module_id = self.find_next_module_in_chain(child_id, modules_list)
+                    connections.append(str(next_module_id))
                 print('connections:', connections)
 
                 # Recursively call the function.
