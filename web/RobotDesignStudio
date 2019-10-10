@@ -15,7 +15,7 @@ import zmq_requester
 app = Flask(__name__, static_folder='static', static_url_path='')
 
 # Instance of ZMQ Poller class (create sockets, etc.)
-zmq_poller = zmq_poller.ZmqPoller()
+#zmq_poller = zmq_poller.ZmqPoller()
 
 # Instance of UrdfWriter class
 urdf_writer = URDF_writer.UrdfWriter()
@@ -28,10 +28,10 @@ urdf_writer_fromHW = URDF_writer.UrdfWriter()
 # Prepare our context and sockets
 context = zmq.Context()#.instance()
 
-# Socket to talk to poller
-requester = context.socket(zmq.REQ)
-requester.connect('tcp://localhost:5555')
-#requester.connect('tcp://10.255.36.12:5555')
+# Socket to talk to DEMO SM
+publisher = context.socket(zmq.PUB)
+publisher.connect('tcp://localhost:5563')
+#publisher.connect('tcp://10.255.36.12:5555')
 
 # Flags defining which mode are in
 building_mode_ON = True
@@ -146,6 +146,15 @@ def requestURDF():
 def send_file(path):
     return send_from_directory(app.static_folder, path)
 
+# publish through ZMQ socket to signal user inputs to DEMO GUI
+@app.route('/pub_cmd/', methods=['POST'])
+def pub_cmd():
+    key = 'Builder'
+    cmd = request.form.get('cmd', 0)
+    print('cmd:', cmd.encode())
+    publisher.send_multipart([key, cmd.encode()])
+
+    return cmd
 
 # send a request to the poller thread to get ECat topology and synchronize with hardware
 @app.route('/syncHW/', methods=['POST'])
