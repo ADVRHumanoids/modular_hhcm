@@ -810,7 +810,12 @@
 
             function deployRobot() {
 
-                var name = prompt("Enter the name of the Robot to deploy:", "ModularBot");
+                if(buildingModeON){
+                    var name = prompt("Enter the name of the Robot to deploy:", "ModularBot");
+                }
+                else {
+                    var name = "ModularBot"
+                }
                 $.ajax({
                     url: $SCRIPT_ROOT + 'removeConnectors/',
                     data: {'name': name},
