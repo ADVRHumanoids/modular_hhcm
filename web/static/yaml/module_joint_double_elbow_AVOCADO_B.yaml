@@ -115,9 +115,9 @@ CentAcESC:
   sign: 1
   pos_offset: 0
   max_current_A: 30.0
-  ram_cmd: [38]
+  #ram_cmd: [38]
   pid :
     position:   [1000.0 , 0.0 , 30.0]
     # pos_Kp pos_Kd tor_Kp tor_Kd tor_Ki
     #  .... tor_K divided by 10000 to respect the int range [0..65536]
-    impedance:  [300.0, 20.0, 6.0, 0.000, 0.95]
+    impedance:   [500.0, 5.0, 1.0, 0.005, 0.95]
