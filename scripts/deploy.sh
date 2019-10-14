@@ -25,7 +25,7 @@ SCRIPT_ROOT=$(dirname $(readlink --canonicalize --no-newline $BASH_SOURCE))
 
 cd $SCRIPT_ROOT/..
 
-cp -R ModularBot $ROBOTOLOGY_ROOT/robots/${package_name}
+cp -TRfv ModularBot $ROBOTOLOGY_ROOT/robots/${package_name}
 
 cd $ROBOTOLOGY_ROOT/robots/${package_name}
 
