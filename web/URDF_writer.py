@@ -290,7 +290,7 @@ class UrdfWriter:
         # Find the name of the yaml describing the module to be added, searching the dictionary by the esc_type
         #TODO: handle exception if the id is not found in the dict
         module_filename = d.get(module[module_id]['robot_id'])
-        data = self.add_module(module_filename, 0)
+        data = self.add_module(module_filename, 0, robot_id=module_id)
 
         module_name = data['lastModule_name']
         module_type = data['lastModule_type']
@@ -386,9 +386,9 @@ class UrdfWriter:
                 # child is an element of the JSON. child_id is the key to access its value.
                 # esc_type is a number specifying the type of module
                 # esc_type = esc_dict.get(child[child_id]['esc_type'])
-                robot_id = esc_dict.get(child[child_id]['robot_id'])
+                child_filename = esc_dict.get(child[child_id]['robot_id'])
                 # Add the module with an angle offset of 0. as default always zero relative orientation is assumed
-                data = self.add_module(robot_id, 0)
+                data = self.add_module(child_filename, 0, robot_id=child_id)
 
                 # Update variables and process its connections
                 module_name = data['lastModule_name']
@@ -710,7 +710,7 @@ class UrdfWriter:
     def get_parent_module(self):
         return self.parent_module
 
-    def add_module(self, filename, angle_offset, reverse=False):
+    def add_module(self, filename, angle_offset, reverse=False, robot_id=0):
         """Add a module specified by filename as child of the currently selected module.
 
         Parameters
@@ -731,7 +731,8 @@ class UrdfWriter:
 
         """
         # global tag, parent_module
-
+        print(path_name)
+        print(filename)
         # Generate the path to the required YAML file
         module_name = path_name + '/web/static/yaml/' + filename
 
@@ -758,6 +759,7 @@ class UrdfWriter:
 
         setattr(new_module, 'angle_offset', angle_offset)
         setattr(new_module, 'reverse', reverse)
+        setattr(new_module, 'robot_id', robot_id)
 
         # print("parent module:")
         # print(self.parent_module.type)
@@ -1458,7 +1460,7 @@ class UrdfWriter:
                       pitch=pitch,
                       yaw=yaw)
 
-    def write_lowlevel_config(self):
+    def write_lowlevel_config(self, use_robot_id=False):
         """Creates the low level config file needed by XBotCore """
 
         basic_config_filename = path_name + '/configs/ModularBot.yaml'
@@ -1481,7 +1483,10 @@ class UrdfWriter:
             for joint_module in joints_chain:
                 i += 1
                 lowlevel_config['GazeboXBotPlugin']['gains'][joint_module.name] = OrderedDict([('p', 300), ('d', 20)])
-                key = 'CentAcESC_' + str(i)
+                if use_robot_id:
+                    key = 'CentAcESC_' + str(joint_module.robot_id)
+                else:
+                    key = 'CentAcESC_' + str(i)
                 lowlevel_config[key] = joint_module.CentAcESC
                 print(joint_module.kinematics.__dict__.items())
                 print(lowlevel_config[key])
@@ -1500,7 +1505,7 @@ class UrdfWriter:
             ordered_dump(lowlevel_config, stream=outfile, default_flow_style=False, line_break='\n\n', indent=4, canonical = False)
         return lowlevel_config
 
-    def write_joint_map(self):
+    def write_joint_map(self, use_robot_id=False):
         """Creates the joint map needed by XBotCore """
 
         # global path_name
@@ -1511,7 +1516,10 @@ class UrdfWriter:
         for joints_chain in self.listofchains:
             for joint_module in joints_chain:
                 i += 1
-                joint_map['joint_map'][i] = joint_module.name
+                if use_robot_id:
+                    joint_map['joint_map'][int(joint_module.robot_id)] = joint_module.name
+                else:
+                    joint_map['joint_map'][i] = joint_module.name
             # print(str(i), joint_module.name)
             # print(joint_map)
 
