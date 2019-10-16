@@ -1581,6 +1581,7 @@ class UrdfWriter:
                 homing_value = builder_joint_map[joint_module.name]['angle']
                 print(homing_value)
                 joint.append(ET.SubElement(group_state, 'joint', name=joint_module.name, value=homing_value))
+
             i += 1
 
         # Create folder if doesen't exist

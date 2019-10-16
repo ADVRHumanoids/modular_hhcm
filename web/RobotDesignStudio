@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+import time
 from flask import Flask, render_template, request, jsonify, send_from_directory, url_for
 # import flask
 # print(flask.__file__, flask.__version__)
@@ -164,7 +164,7 @@ def pub_cmd():
     print('cmd:', cmd.encode())
     publisher.send_multipart([key, cmd.encode()])
 
-    return cmd
+    return jsonify(cmd)
 
 # send a request to the poller thread to get ECat topology and synchronize with hardware
 @app.route('/syncHW/', methods=['POST'])
@@ -266,7 +266,7 @@ def deployRobot():
         data = urdf_writer.deploy_robot(name)
     else:
         data = urdf_writer_fromHW.deploy_robot('ModularBot')
-    
+    time.sleep(10)
     return data
 
 @app.route('/removeConnectors/', methods=['POST'])

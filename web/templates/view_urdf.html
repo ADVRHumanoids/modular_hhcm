@@ -132,6 +132,32 @@
                 display: none;
             }
 
+            /* #start_stop_text {
+                content: "Start XBotCore";
+            } */
+
+            #start_stop {
+                background-color: rgb(66, 206, 31);
+                border: none;
+                position: absolute;
+                bottom: 0;
+                right: 55%;
+                font-size: 19px;
+                /* font-family: Ubuntu; */
+                color: white;
+                padding: 11px 16px;
+                vertical-align: bottom;
+                display: none;
+            }
+
+            /* #start_stop_checkbox {
+                display: none;
+            } */
+            /* #start_stop_checkbox:checked + #start_stop:after {
+                content: "Stop XBotCore";
+                background-color: rgb(206, 31, 31);
+            } */
+
             #start_master {
                 background-color: rgb(206, 101, 31);
                 border: none;
@@ -338,6 +364,9 @@
             <button id=removeLast class="btn"><i class="fa fa-trash"></i> Remove Module</button>
             <button id=syncHardware class="btn"><span style="padding-right: 4px"><i class="material-icons">developer_board</i></span>Sync with hardware</button>
             <button id=deploy class="btn"><span style="padding-right: 4px"><i class="material-icons">done</i></span>Deploy Robot</button>
+            <button id=start_stop class="btn" data-text-swap="Stop XBotCore" data-text-original="Start XBotCore"><span style="padding-right: 4px"><i class="material-icons">power_settings_new</i></span><p id="start_stop_text">Start XBotCore</p></button>
+            <!-- <input type="checkbox" id="start_stop_checkbox">
+            <label id="start_stop" for="start_stop_checkbox"><span id="start_stop_text"style="padding-right: 4px"><i class="material-icons">power_settings_new</i></span>Start XBotCore</label> -->
             <button id=start_master class="btn"><span style="padding-right: 4px"><i class="material-icons">power_settings_new</i></span>Start EtherCat</button>
             <div id="selector" style="overflow-y:auto;">
                 Select a module to add: 
@@ -543,6 +572,9 @@
                 var removeLast = document.getElementById('removeLast');
                 var syncHardware = document.getElementById('syncHardware');
                 var deploy = document.getElementById('deploy');
+                var start_stop = document.getElementById('start_stop');
+                // var start_stop_checkbox = document.getElementById('start_stop_checkbox');
+                // var start_stop_text = document.getElementById('start_stop_text');
                 var start_master = document.getElementById('start_master');
                 var addElbowJoint = document.getElementById('addElbowJoint');
                 var modeSwitch = document.getElementById('modeSwitch');
@@ -619,6 +651,8 @@
                             }
                             else {
                                 buildingModeON = false;
+                                deploy.style.display = 'none';
+                                start_stop.style.display = 'inline-flex';
                             }
                             console.log(buildingModeON);
                         },
@@ -646,6 +680,71 @@
                 syncHardware.onclick = function() {syncHW()};
 
                 deploy.onclick = function() {deployRobot()};
+
+                $("#start_stop").on("click", function() {
+                    var el = $(this);
+                    console.log(el.html())
+                    var el_text = $("#start_stop_text");
+                    console.log(el_text.html());
+                    // el_text.text() == el.data("text-swap") 
+                    //     ? el_text.text(el.data("text-original")) 
+                    //     : el_text.text(el.data("text-swap"));
+                    
+                    if(el_text.text() == el.data("text-original")){
+                        el_text.text(el.data("text-swap"));
+                        $.ajax({
+                            url: $SCRIPT_ROOT + 'removeConnectors/',
+                            data: {'name': name},
+                            method: 'POST',
+                            success: function(data) {
+                                console.log(data)
+                                $.ajax({
+                                    url: $SCRIPT_ROOT + 'writeURDF/',
+                                    method: 'POST',
+                                    success: function(data) {
+                                        console.log(data)  
+                                        $.ajax({
+                                            url: $SCRIPT_ROOT + 'deployRobot/',
+                                            data: {'name': name},
+                                            method: 'POST',
+                                            success: function(data) {
+                                                console.log(data)
+                                                $.ajax({
+                                                    url: $SCRIPT_ROOT + 'pub_cmd/',
+                                                    data: {'cmd': 'START_XBOT'},
+                                                    method: 'POST',
+                                                    success: function(data) {
+                                                        console.log(data)
+                                                    },
+                                                    async: false
+                                                });       
+                                                                            
+                                            },
+                                            async: false
+                                        });  
+                                    },
+                                    async: false
+                                });
+                                
+                            },
+                            async: false
+                        });
+                               
+                    }
+                    else{
+                        // start_stop.style.content="Start XBotCore";
+                        el_text.text(el.data("text-original"));
+                        $.ajax({
+                            url: $SCRIPT_ROOT + 'pub_cmd/',
+                            data: {'cmd': 'STOP_XBOT'},
+                            method: 'POST',
+                            success: function(data) {
+                                console.log(data)
+                            },
+                            async: false
+                        });      
+                    }
+                });
 
                 start_master.onclick = function() {startMaster()};
 
@@ -719,6 +818,7 @@
                         selector.style.display = 'block';
                         syncHardware.style.display = 'inline-flex';
                         deploy.style.display = 'inline-flex';
+                        start_stop.style.display = 'none';
                         start_master.style.display = 'inline-flex';
                     },
                     async: true
@@ -844,30 +944,59 @@
                                     method: 'POST',
                                     success: function(data) {
                                         console.log(data)
-                                        $.ajax({
-                                            url: 'http://127.0.0.1:5000/pub_cmd/',
-                                            data: {'cmd': 'START_XBOT'},
-                                            method: 'POST',
-                                            success: function(data) {
-                                                console.log(data)
-                                            },
-                                            async: true
-                                        });                                          
+                                        return true
+                                                                    
                                     },
-                                    async: true
+                                    async: false
                                 });  
                             },
-                            async: true
+                            async: false
                         });
                         
                     },
-                    async: true
+                    async: false
                 });
             }
 
+            // function startStop() {
+            //     var el = $(this);
+            //     // el.text() == el.data("text-swap") 
+            //     // ? el.text(el.data("text-original")) 
+            //     // : el.text(el.data("text-swap"));
+            //     console.log(el.text())
+            //     // start_stop.style.content="Stop XBotCore";
+            //     if(el.text() == el.data("text-swap")){
+            //         el.text(el.data("text-original"));
+            //         deployRobot();
+            //         $.ajax({
+            //             url: 'http://127.0.0.1:5000/pub_cmd/',
+            //             data: {'cmd': 'START_XBOT'},
+            //             method: 'POST',
+            //             success: function(data) {
+            //                 console.log(data)
+            //             },
+            //             async: true
+            //         });              
+            //     }
+            //     else{
+            //         // start_stop.style.content="Start XBotCore";
+            //         el.text(el.data("text-swap"));
+            //         $.ajax({
+            //             url: 'http://127.0.0.1:5000/pub_cmd/',
+            //             data: {'cmd': 'STOP_XBOT'},
+            //             method: 'POST',
+            //             success: function(data) {
+            //                 console.log(data)
+            //             },
+            //             async: true
+            //         });      
+            //     }
+            // }
+
+
             function startMaster() {
                 $.ajax({
-                    url: 'http://127.0.0.1:5000/pub_cmd/',
+                    url: $SCRIPT_ROOT + 'pub_cmd/',
                     data: {'cmd': 'START_ECAT'},
                     method: 'POST',
                     success: function(data) {
