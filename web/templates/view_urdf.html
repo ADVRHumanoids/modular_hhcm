@@ -679,7 +679,7 @@
 
                 syncHardware.onclick = function() {syncHW()};
 
-                deploy.onclick = function() {deployRobot()};
+                deploy.onclick = function() {writeDeploy()};
 
                 $("#start_stop").on("click", function() {
                     var el = $(this);
@@ -705,25 +705,9 @@
                                     method: 'POST',
                                     success: function(data) {
                                         console.log(data)  
-                                        $.ajax({
-                                            url: $SCRIPT_ROOT + 'deployRobot/',
-                                            data: {'name': name},
-                                            method: 'POST',
-                                            success: function(data) {
-                                                console.log(data)
-                                                $.ajax({
-                                                    url: $SCRIPT_ROOT + 'pub_cmd/',
-                                                    data: {'cmd': 'START_XBOT'},
-                                                    method: 'POST',
-                                                    success: function(data) {
-                                                        console.log(data)
-                                                    },
-                                                    async: false
-                                                });       
-                                                                            
-                                            },
-                                            async: false
-                                        });  
+                                        deployRobot(name, async,function(){
+                                            startXBot(function(){})
+                                        });
                                     },
                                     async: false
                                 });
@@ -842,14 +826,15 @@
                 return json_jointMap
             }
 
-            function writeRequest(URDF_string){
+            function writeRequest(URDF_string, callback){
                 var json_jointMap = getSimpleJointMap()
                 $.ajax({
                     url: $SCRIPT_ROOT + 'writeURDF/',
                     data: {'string': URDF_string, 'jointMap': json_jointMap},
                     method: 'POST',
                     success: function(data) {
-                    console.log(data)    
+                        console.log(data)
+                        callback()    
                     },
                     async: true
                 });
@@ -926,14 +911,7 @@
                 });
             }
 
-            function deployRobot() {
-
-                if(buildingModeON){
-                    var name = prompt("Enter the name of the Robot to deploy:", "ModularBot");
-                }
-                else {
-                    var name = "ModularBot"
-                }
+            function removeConnectors(callback) {
                 $.ajax({
                     url: $SCRIPT_ROOT + 'removeConnectors/',
                     data: {'name': name},
@@ -941,32 +919,50 @@
                     success: function(data) {
                         console.log(data)
                         var json_jointMap = getSimpleJointMap()
-                        $.ajax({
-                            url: $SCRIPT_ROOT + 'writeURDF/',
-                            data: {'string': "", 'jointMap': json_jointMap},
-                            method: 'POST',
-                            success: function(data) {
-                                console.log(data)  
-                                $.ajax({
-                                    url: $SCRIPT_ROOT + 'deployRobot/',
-                                    data: {'name': name},
-                                    method: 'POST',
-                                    success: function(data) {
-                                        console.log(data)
-                                        return true
-                                                                    
-                                    },
-                                    async: false
-                                });  
-                            },
-                            async: false
-                        });
-                        
+                        callback()
                     },
                     async: false
                 });
             }
 
+            function writeDeploy() {
+                if(buildingModeON){
+                    var name = prompt("Enter the name of the Robot to deploy:", "ModularBot");
+                }
+                else {
+                    var name = "ModularBot"
+                }
+                removeConnectors(function(){
+                    writeRequest("", function(){
+                        deployRobot(name, function(){})
+                    });
+                });
+            }
+
+            function removeConnectors(callback){
+                $.ajax({
+                    url: $SCRIPT_ROOT + 'removeConnectors/',
+                    method: 'POST',
+                    success: function(data) {
+                        console.log(data)
+                        callback()                        
+                    },
+                    async: false
+                });
+            }
+
+            function deployRobot(name, callback){
+                $.ajax({
+                    url: $SCRIPT_ROOT + 'deployRobot/',
+                    data: {'name': name},
+                    method: 'POST',
+                    success: function(data) {
+                        console.log(data)
+                        callback()           
+                    },
+                    async: false
+                });  
+            }
             // function startStop() {
             //     var el = $(this);
             //     // el.text() == el.data("text-swap") 
@@ -1003,16 +999,30 @@
             // }
 
 
-            function startMaster() {
+            function startMaster(callback) {
                 $.ajax({
                     url: $SCRIPT_ROOT + 'pub_cmd/',
                     data: {'cmd': 'START_ECAT'},
                     method: 'POST',
                     success: function(data) {
-                        console.log(data)    
+                        console.log(data)
+                        callback();    
                     },
                     async: true
                 });
+            }
+
+            function startXBot(callback) {
+                $.ajax({
+                    url: $SCRIPT_ROOT + 'pub_cmd/',
+                    data: {'cmd': 'START_XBOT'},
+                    method: 'POST',
+                    success: function(data) {
+                        console.log(data)
+                        callback();
+                    },
+                    async: false
+                });  
             }
 
 
