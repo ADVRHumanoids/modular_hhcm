@@ -1535,7 +1535,7 @@ class UrdfWriter:
             yaml.dump(joint_map, outfile, default_flow_style=False)
         return joint_map
 
-    def write_srdf(self):
+    def write_srdf(self, builder_joint_map):
         """Generates a basic srdf so that the model can be used right away with XBotCore"""
         global path_name
         srdf_filename = path_name + '/ModularBot/srdf/ModularBot.srdf'
@@ -1578,7 +1578,9 @@ class UrdfWriter:
             group_in_chains_group.append(ET.SubElement(chains_group, 'group', name=group_name))
             group_in_arms_group.append(ET.SubElement(arms_group, 'group', name=group_name))
             for joint_module in joints_chain:
-                joint.append(ET.SubElement(group_state, 'joint', name=joint_module.name, value="1.57"))
+                homing_value = builder_joint_map[joint_module.name]['angle']
+                print(homing_value)
+                joint.append(ET.SubElement(group_state, 'joint', name=joint_module.name, value=homing_value))
             i += 1
 
         # Create folder if doesen't exist

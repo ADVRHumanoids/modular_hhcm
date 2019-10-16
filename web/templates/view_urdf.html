@@ -726,9 +726,20 @@
             }
 
             function writeRequest(URDF_string){
+                var jointMap = urdfViewer.robots[0].urdf.joints
+                var simplified_jointMap = {}
+                Object.keys(jointMap).forEach(j =>{
+                    console.log(jointMap[j])
+                    simplified_jointMap[jointMap[j].name] = jointMap[j].urdf
+                })
+                console.log(urdfViewer.robots[0].urdf.joints)
+                console.log(simplified_jointMap)
+                json_jointMap = JSON.stringify(simplified_jointMap)
+                console.log("AAAAAAAAAAAAAAAAAAAAAAA")
+                console.log(json_jointMap)
                 $.ajax({
                     url: $SCRIPT_ROOT + 'writeURDF/',
-                    data: {'string': URDF_string},
+                    data: {'string': URDF_string, 'builder_jointMap': json_jointMap},
                     method: 'POST',
                     success: function(data) {
                     console.log(data)    
