@@ -71,7 +71,8 @@ def writeURDF():
     # print (building_mode_ON)
     # print (discovery_mode_ON)
     # print (building_mode_ON and (not discovery_mode_ON))
-    json_jm = request.form.get('builder_jointMap', 0)
+    print('jointMap')
+    json_jm = request.form.get('jointMap', 0)
     print(json_jm)
     builder_jm = json.loads(json_jm)
     if building_mode_ON and (not discovery_mode_ON):

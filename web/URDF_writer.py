@@ -1580,7 +1580,7 @@ class UrdfWriter:
             for joint_module in joints_chain:
                 homing_value = builder_joint_map[joint_module.name]['angle']
                 print(homing_value)
-                joint.append(ET.SubElement(group_state, 'joint', name=joint_module.name, value=homing_value))
+                joint.append(ET.SubElement(group_state, 'joint', name=joint_module.name, value=str(homing_value)))
 
             i += 1
 

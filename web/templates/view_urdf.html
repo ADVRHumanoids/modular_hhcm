@@ -698,8 +698,10 @@
                             method: 'POST',
                             success: function(data) {
                                 console.log(data)
+                                var json_jointMap = getSimpleJointMap()
                                 $.ajax({
                                     url: $SCRIPT_ROOT + 'writeURDF/',
+                                    data: {'string': "", 'jointMap': json_jointMap},
                                     method: 'POST',
                                     success: function(data) {
                                         console.log(data)  
@@ -825,7 +827,7 @@
                 });
             }
 
-            function writeRequest(URDF_string){
+            function getSimpleJointMap(){
                 var jointMap = urdfViewer.robots[0].urdf.joints
                 var simplified_jointMap = {}
                 Object.keys(jointMap).forEach(j =>{
@@ -837,9 +839,14 @@
                 json_jointMap = JSON.stringify(simplified_jointMap)
                 console.log("AAAAAAAAAAAAAAAAAAAAAAA")
                 console.log(json_jointMap)
+                return json_jointMap
+            }
+
+            function writeRequest(URDF_string){
+                var json_jointMap = getSimpleJointMap()
                 $.ajax({
                     url: $SCRIPT_ROOT + 'writeURDF/',
-                    data: {'string': URDF_string, 'builder_jointMap': json_jointMap},
+                    data: {'string': URDF_string, 'jointMap': json_jointMap},
                     method: 'POST',
                     success: function(data) {
                     console.log(data)    
@@ -933,8 +940,10 @@
                     method: 'POST',
                     success: function(data) {
                         console.log(data)
+                        var json_jointMap = getSimpleJointMap()
                         $.ajax({
                             url: $SCRIPT_ROOT + 'writeURDF/',
+                            data: {'string': "", 'jointMap': json_jointMap},
                             method: 'POST',
                             success: function(data) {
                                 console.log(data)  
