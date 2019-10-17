@@ -574,7 +574,7 @@
                 var deploy = document.getElementById('deploy');
                 var start_stop = document.getElementById('start_stop');
                 // var start_stop_checkbox = document.getElementById('start_stop_checkbox');
-                // var start_stop_text = document.getElementById('start_stop_text');
+                var start_stop_text = document.getElementById('start_stop_text');
                 var start_master = document.getElementById('start_master');
                 var addElbowJoint = document.getElementById('addElbowJoint');
                 var modeSwitch = document.getElementById('modeSwitch');
@@ -681,58 +681,9 @@
 
                 deploy.onclick = function() {writeDeploy()};
 
-                $("#start_stop").on("click", function() {
-                    var el = $(this);
-                    console.log(el.html())
-                    var el_text = $("#start_stop_text");
-                    console.log(el_text.html());
-                    // el_text.text() == el.data("text-swap") 
-                    //     ? el_text.text(el.data("text-original")) 
-                    //     : el_text.text(el.data("text-swap"));
-                    
-                    if(el_text.text() == el.data("text-original")){
-                        el_text.text(el.data("text-swap"));
-                        $.ajax({
-                            url: $SCRIPT_ROOT + 'removeConnectors/',
-                            data: {'name': name},
-                            method: 'POST',
-                            success: function(data) {
-                                console.log(data)
-                                var json_jointMap = getSimpleJointMap()
-                                $.ajax({
-                                    url: $SCRIPT_ROOT + 'writeURDF/',
-                                    data: {'string': "", 'jointMap': json_jointMap},
-                                    method: 'POST',
-                                    success: function(data) {
-                                        console.log(data)  
-                                        deployRobot(name, async,function(){
-                                            startXBot(function(){})
-                                        });
-                                    },
-                                    async: false
-                                });
-                                
-                            },
-                            async: false
-                        });
-                               
-                    }
-                    else{
-                        // start_stop.style.content="Start XBotCore";
-                        el_text.text(el.data("text-original"));
-                        $.ajax({
-                            url: $SCRIPT_ROOT + 'pub_cmd/',
-                            data: {'cmd': 'STOP_XBOT'},
-                            method: 'POST',
-                            success: function(data) {
-                                console.log(data)
-                            },
-                            async: false
-                        });      
-                    }
-                });
+                start_stop.onclick = function() {startStop()};
 
-                start_master.onclick = function() {startMaster()};
+                start_master.onclick = function() {startMaster(false, function(){})};
 
                 addElbowJoint.onclick = function() {addModule("module_joint_elbow_AVOCADO", size)};
                 
@@ -815,18 +766,13 @@
                 var jointMap = urdfViewer.robots[0].urdf.joints
                 var simplified_jointMap = {}
                 Object.keys(jointMap).forEach(j =>{
-                    console.log(jointMap[j])
                     simplified_jointMap[jointMap[j].name] = jointMap[j].urdf
                 })
-                console.log(urdfViewer.robots[0].urdf.joints)
-                console.log(simplified_jointMap)
                 json_jointMap = JSON.stringify(simplified_jointMap)
-                console.log("AAAAAAAAAAAAAAAAAAAAAAA")
-                console.log(json_jointMap)
                 return json_jointMap
             }
 
-            function writeRequest(URDF_string, callback){
+            function writeRequest(URDF_string, async_bool, callback){
                 var json_jointMap = getSimpleJointMap()
                 $.ajax({
                     url: $SCRIPT_ROOT + 'writeURDF/',
@@ -836,7 +782,7 @@
                         console.log(data)
                         callback()    
                     },
-                    async: true
+                    async: async_bool //true
                 });
             }
 
@@ -854,14 +800,14 @@
                             console.log(data['string'])
                             robots = urdfViewer.addURDF(data['string'])//, data['lastModule_name'])
                             erasePrevious = true;
-                            // writeRequest(data['result'])
+                            // writeRequest(data['result'], true, function(){})
                         }
                         else {
                             urdfViewer.removeLastURDF()
                             console.log(data['string'])
                             robots = urdfViewer.showURDF(data['string']);
                             //write the file
-                            writeRequest(data['string'])
+                            writeRequest(data['string'], true, function(){})
                         }
                     },
                     async: true
@@ -885,7 +831,7 @@
                         // console.log(size)
                         CURRENT_PARENT = data['lastModule_name']
                         //write the file
-                        writeRequest(data['result'])
+                        writeRequest(data['result'], true, function(){})
                     },
                     async: true
                 });
@@ -905,23 +851,9 @@
                         //console.log(size)
                         CURRENT_PARENT = data['lastModule_name']
                         //write the file
-                        writeRequest(data['result'])
+                        writeRequest(data['result'], true, function(){})
                     },
                     async: true
-                });
-            }
-
-            function removeConnectors(callback) {
-                $.ajax({
-                    url: $SCRIPT_ROOT + 'removeConnectors/',
-                    data: {'name': name},
-                    method: 'POST',
-                    success: function(data) {
-                        console.log(data)
-                        var json_jointMap = getSimpleJointMap()
-                        callback()
-                    },
-                    async: false
                 });
             }
 
@@ -932,14 +864,14 @@
                 else {
                     var name = "ModularBot"
                 }
-                removeConnectors(function(){
-                    writeRequest("", function(){
-                        deployRobot(name, function(){})
+                removeConnectors(false, function(){
+                    writeRequest("", true, function(){
+                        deployRobot("name", true, function(){})
                     });
                 });
             }
 
-            function removeConnectors(callback){
+            function removeConnectors(async_bool, callback){
                 $.ajax({
                     url: $SCRIPT_ROOT + 'removeConnectors/',
                     method: 'POST',
@@ -947,11 +879,11 @@
                         console.log(data)
                         callback()                        
                     },
-                    async: false
+                    async: async_bool //false
                 });
             }
 
-            function deployRobot(name, callback){
+            function deployRobot(name, async_bool, callback){
                 $.ajax({
                     url: $SCRIPT_ROOT + 'deployRobot/',
                     data: {'name': name},
@@ -960,46 +892,33 @@
                         console.log(data)
                         callback()           
                     },
-                    async: false
+                    async: async_bool
                 });  
             }
-            // function startStop() {
-            //     var el = $(this);
-            //     // el.text() == el.data("text-swap") 
-            //     // ? el.text(el.data("text-original")) 
-            //     // : el.text(el.data("text-swap"));
-            //     console.log(el.text())
-            //     // start_stop.style.content="Stop XBotCore";
-            //     if(el.text() == el.data("text-swap")){
-            //         el.text(el.data("text-original"));
-            //         deployRobot();
-            //         $.ajax({
-            //             url: 'http://127.0.0.1:5000/pub_cmd/',
-            //             data: {'cmd': 'START_XBOT'},
-            //             method: 'POST',
-            //             success: function(data) {
-            //                 console.log(data)
-            //             },
-            //             async: true
-            //         });              
-            //     }
-            //     else{
-            //         // start_stop.style.content="Start XBotCore";
-            //         el.text(el.data("text-swap"));
-            //         $.ajax({
-            //             url: 'http://127.0.0.1:5000/pub_cmd/',
-            //             data: {'cmd': 'STOP_XBOT'},
-            //             method: 'POST',
-            //             success: function(data) {
-            //                 console.log(data)
-            //             },
-            //             async: true
-            //         });      
-            //     }
-            // }
 
+            function startStop(){
+                var el = $(start_stop);
+                console.log(el.html())
+                var el_text = $(start_stop_text);
+                console.log(el_text.html());
+                
+                if(el_text.text() == el.data("text-original")){
+                    el_text.text(el.data("text-swap"));
+                    removeConnectors(false, function(){
+                        writeRequest("", false, function(){
+                            deployRobot("", false, function(){
+                                startXBot(false, function(){})
+                            });
+                        });
+                    });           
+                }
+                else{
+                    el_text.text(el.data("text-original"));
+                    stopXBot(false, function() {});
+                }   
+            } 
 
-            function startMaster(callback) {
+            function startMaster(async_bool, callback) {
                 $.ajax({
                     url: $SCRIPT_ROOT + 'pub_cmd/',
                     data: {'cmd': 'START_ECAT'},
@@ -1008,11 +927,11 @@
                         console.log(data)
                         callback();    
                     },
-                    async: true
+                    async: async_bool //true
                 });
             }
 
-            function startXBot(callback) {
+            function startXBot(async_bool, callback) {
                 $.ajax({
                     url: $SCRIPT_ROOT + 'pub_cmd/',
                     data: {'cmd': 'START_XBOT'},
@@ -1021,8 +940,21 @@
                         console.log(data)
                         callback();
                     },
-                    async: false
+                    async: async_bool //false
                 });  
+            }
+
+            function stopXBot(async_bool, callback) {
+                $.ajax({
+                    url: $SCRIPT_ROOT + 'pub_cmd/',
+                    data: {'cmd': 'STOP_XBOT'},
+                    method: 'POST',
+                    success: function(data) {
+                        console.log(data)
+                        callback()
+                    },
+                    async: async_bool //false
+                });      
             }
 
 

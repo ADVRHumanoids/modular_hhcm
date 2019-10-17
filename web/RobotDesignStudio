@@ -267,7 +267,7 @@ def deployRobot():
         data = urdf_writer.deploy_robot(name)
     else:
         data = urdf_writer_fromHW.deploy_robot('ModularBot')
-    time.sleep(10)
+    #time.sleep(10)
     return data
 
 @app.route('/removeConnectors/', methods=['POST'])
