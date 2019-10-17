@@ -557,6 +557,8 @@
             window.onload = function() {
                 var fileInput = document.getElementById('fileInput');
                 var modeInput = document.getElementById('modeInput');
+                buildingModeON = !modeInput.checked;
+                console.log(buildingModeON);
                 //var fileDisplayArea = document.getElementById('fileDisplayArea');
                 //var moduleInput = document.getElementById('moduleInput');
                 var selector = document.getElementById('selector')
@@ -582,8 +584,22 @@
                 var addYawJoint = document.getElementById('addYawJoint');
                 var addDoubleElbowJoint = document.getElementById('addDoubleElbowJoint');
 
+                // Initialize the urdfViewer class: create a scene, renderer, etc.
                 urdfViewer._init();
+                console.log("AOOOOOO")
                 requestURDF();
+                selector.style.display = 'block';
+                syncHardware.style.display = 'inline-flex';
+                start_master.style.display = 'inline-flex';
+            
+                if(buildingModeON){
+                    deploy.style.display = 'inline-flex';
+                    start_stop.style.display = 'none';                    
+                }
+                else {
+                    deploy.style.display = 'none';
+                    start_stop.style.display = 'inline-flex';                    
+                }
 
                 fileInput.addEventListener('change', function(e) {
                     var file = fileInput.files[0];
@@ -598,13 +614,6 @@
                         // modeSwitch.style.display = 'inline-block';
                         // modeSwitchSlider.style.display = 'block';
                         syncHardware.style.display = 'inline-flex';
-
-                        if(modeInput.checked) {
-                            console.log("Discovery mode on")
-                        }
-                        else {
-                            console.log("Building mode on")
-                        }
 
                         //console.log(reader.result)
                         $.ajax({
@@ -632,28 +641,35 @@
                         url: $SCRIPT_ROOT + 'changeMode/',
                         data: {'state': modeInput.checked},
                         method: 'POST',
-                        // contentType: false,
-                        // processData: false,
                         success: function(data) {
                             console.log(modeInput.checked)
                             if(urdfViewer.robots[1]) {
                                 urdfViewer.removeLastURDF()
                             }
                             urdfViewer.removeLastURDF();
-                            //urdfViewer.removeLastURDF()
                             console.log(data['building mode'])
                             console.log(data['discovery mode'])
                             //robots = urdfViewer.showURDF(data['string']);
-                            if((data['building mode'] == true) && (data['discovery mode'] == false)){
-                                buildingModeON = true;
-                                erasePrevious = false;
-                                requestURDF();
-                            }
-                            else {
-                                buildingModeON = false;
+                            var buildingModeON = !modeInput.checked;
+                            if(modeInput.checked) {
+                                console.log("Discovery mode on")
+                                // buildingModeON = false;
+
                                 deploy.style.display = 'none';
                                 start_stop.style.display = 'inline-flex';
                             }
+                            else {
+                                console.log("Building mode on")
+                                // use modeInput.checked instead
+                                // buildingModeON = true;
+                                erasePrevious = false;
+                                requestURDF();
+
+                                deploy.style.display = 'inline-flex';
+                                start_stop.style.display = 'none';
+                            }
+                        
+
                             console.log(buildingModeON);
                         },
                         async: true
@@ -691,6 +707,10 @@
 
                 addDoubleElbowJoint.onclick = function() {addModule("module_joint_double_elbow_AVOCADO", size)};
             }
+
+            // window.onbeforeunload = function() {
+            //     return "leaving";
+            // }
 
             //Function to add a new module. Called at the click of the linked button
             function addModule(modulename, size_value) {
@@ -744,19 +764,12 @@
                     url: $SCRIPT_ROOT + 'requestURDF/',
                     data: {'mode': buildingModeON},
                     method: 'POST',
-                    // contentType: false,
-                    // processData: false,
                     success: function(data) {
-                        // Initialize the urdfViewer class: create a scene, renderer, etc.
+                        
                         //urdfViewer._init();
                         console.log(data['string'])
                         robots = urdfViewer.showURDF(data['string']);
-
-                        selector.style.display = 'block';
-                        syncHardware.style.display = 'inline-flex';
-                        deploy.style.display = 'inline-flex';
-                        start_stop.style.display = 'none';
-                        start_master.style.display = 'inline-flex';
+                        
                     },
                     async: true
                 });
