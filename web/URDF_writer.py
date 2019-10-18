@@ -175,7 +175,7 @@ class UrdfWriter:
         """Given the module id find the corresponding dictionary entry and return it"""
         found_module = None
         found_module_id = 0
-        next_position = 1
+        next_position = 2 #TODO: remove this hack for not cosidering pwrboard
         for module in modules:
             if module_id in module.keys():
                 position = module[module_id]['poistion']
