@@ -637,9 +637,10 @@
                 });
 
                 modeInput.addEventListener('change', function(e) {
+                    buildingModeON = !modeInput.checked;
                     $.ajax({
                         url: $SCRIPT_ROOT + 'changeMode/',
-                        data: {'state': modeInput.checked},
+                        data: {'buildingModeON': buildingModeON},
                         method: 'POST',
                         success: function(data) {
                             console.log(modeInput.checked)
@@ -648,9 +649,8 @@
                             }
                             urdfViewer.removeLastURDF();
                             console.log(data['building mode'])
-                            console.log(data['discovery mode'])
                             //robots = urdfViewer.showURDF(data['string']);
-                            var buildingModeON = !modeInput.checked;
+                            //var buildingModeON = !modeInput.checked;
                             if(modeInput.checked) {
                                 console.log("Discovery mode on")
                                 // buildingModeON = false;
@@ -789,7 +789,7 @@
                 var json_jointMap = getSimpleJointMap()
                 $.ajax({
                     url: $SCRIPT_ROOT + 'writeURDF/',
-                    data: {'string': URDF_string, 'jointMap': json_jointMap},
+                    data: {'string': URDF_string, 'jointMap': json_jointMap, 'buildingModeON': buildingModeON},
                     method: 'POST',
                     success: function(data) {
                         console.log(data)
@@ -887,6 +887,7 @@
             function removeConnectors(async_bool, callback){
                 $.ajax({
                     url: $SCRIPT_ROOT + 'removeConnectors/',
+                    data: {'buildingModeON': buildingModeON},
                     method: 'POST',
                     success: function(data) {
                         console.log(data)
@@ -899,7 +900,7 @@
             function deployRobot(name, async_bool, callback){
                 $.ajax({
                     url: $SCRIPT_ROOT + 'deployRobot/',
-                    data: {'name': name},
+                    data: {'name': name, 'buildingModeON': buildingModeON},
                     method: 'POST',
                     success: function(data) {
                         console.log(data)

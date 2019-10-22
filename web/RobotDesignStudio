@@ -31,12 +31,11 @@ context = zmq.Context()#.instance()
 
 # Socket to talk to DEMO SM
 publisher = context.socket(zmq.PUB)
-publisher.connect('tcp://10.24.8.101:5563')
+publisher.connect('tcp://10.24.8.100:5563')
 #publisher.connect('tcp://10.255.36.12:5555')
 
 # Flags defining which mode are in
 building_mode_ON = True
-discovery_mode_ON = False
 
 # load view_urdf.html
 @app.route('/')
@@ -66,16 +65,16 @@ def changeURDF():
 
 @app.route('/writeURDF/', methods=['POST'])
 def writeURDF():
+    global building_mode_ON
     #string = request.form.get('string', 0)
     # print(string)
     # print (building_mode_ON)
-    # print (discovery_mode_ON)
-    # print (building_mode_ON and (not discovery_mode_ON))
     print('jointMap')
     json_jm = request.form.get('jointMap', 0)
     print(json_jm)
     builder_jm = json.loads(json_jm)
-    if building_mode_ON and (not discovery_mode_ON):
+    building_mode_ON = True if request.form.get('buildingModeOn', 0) == 'true' else False
+    if building_mode_ON :
         data = urdf_writer.write_urdf()
         srdf = urdf_writer.write_srdf(builder_jm)
         print(srdf)
@@ -232,28 +231,19 @@ def syncHW():
 # Change mode and reset
 @app.route('/changeMode/', methods=['POST'])
 def changeMode():
-    global building_mode_ON, discovery_mode_ON
+    global building_mode_ON
     
     # Get the state of the toggle switch. Convert the boolean from Javascript to Python
-    state = True if request.form.get('state', 0) == 'true' else False
-
-    # Change Mode flag
-    if state:
-        building_mode_ON = False
-        discovery_mode_ON = True
-    else:
-        building_mode_ON = True
-        discovery_mode_ON = False
+    building_mode_ON = True if request.form.get('buildingModeON', 0) == 'true' else False
 
     print(building_mode_ON)
-    print(discovery_mode_ON)
 
     # Re-initialize the two object instances
     urdf_writer.__init__()
     urdf_writer_fromHW.__init__()
 
     #data = urdf_writer_fromHW.read_file(file_str)
-    data = {'building mode': building_mode_ON, 'discovery mode': discovery_mode_ON}
+    data = {'building mode': building_mode_ON}
 
     data = jsonify(data)
     return data
@@ -261,7 +251,11 @@ def changeMode():
 # deploy the package of the built robot
 @app.route('/deployRobot/', methods=['POST'])
 def deployRobot():
-    if building_mode_ON and (not discovery_mode_ON):
+    global building_mode_ON
+
+    building_mode_ON = True if request.form.get('buildingModeON', 0) == 'true' else False
+    
+    if building_mode_ON :
         name = request.form.get('name', 'ModularBot')
         print(name)
         data = urdf_writer.deploy_robot(name)
@@ -272,7 +266,11 @@ def deployRobot():
 
 @app.route('/removeConnectors/', methods=['POST'])
 def removeConnectors():
-    if building_mode_ON and (not discovery_mode_ON):
+    global building_mode_ON
+
+    building_mode_ON = True if request.form.get('buildingModeON', 0) == 'true' else False
+    
+    if building_mode_ON :
         data = urdf_writer.remove_connectors()
     else:
         data = urdf_writer_fromHW.remove_connectors()    
