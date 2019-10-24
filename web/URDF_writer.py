@@ -1105,6 +1105,14 @@ class UrdfWriter:
                           size_y=new_Link.link_size_y,
                           size_z=new_Link.link_size_z,
                           size=str(new_Link.size))
+        elif new_Link.type == 'tool_exchanger':
+            setattr(new_Link, 'name', 'tool_exchanger'+new_Link.tag)
+            ET.SubElement(self.root,
+                          "xacro:add_tool_exchanger",
+                          type="tool_exchanger",
+                          name=new_Link.name,
+                          filename=new_Link.filename)
+            self.add_to_chain(new_Link)
         else:
             if new_Link.size > 1:
                 setattr(new_Link, 'name', 'L_'+str(new_Link.i)+'_size_adapter_'+str(new_Link.p)+new_Link.tag)
@@ -1125,7 +1133,11 @@ class UrdfWriter:
                                                                                       self.zaxis))
         x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(transform)
 
-        fixed_joint_name = 'L_'+str(new_Link.i)+'_fixed_joint_'+str(new_Link.p)+new_Link.tag
+        if new_Link.type == 'tool_exchanger':
+            fixed_joint_name = new_Link.name+'_fixed_joint'
+        else:    
+            fixed_joint_name = 'L_'+str(new_Link.i)+'_fixed_joint_'+str(new_Link.p)+new_Link.tag
+
         ET.SubElement(self.root,
                       "xacro:add_fixed_joint",
                       type="fixed_joint",
@@ -1426,6 +1438,15 @@ class UrdfWriter:
                           size_y=new_Link.link_size_y,
                           size_z=new_Link.link_size_z,
                           size=str(new_Link.size))
+        elif new_Link.type == 'tool_exchanger':
+            setattr(new_Link, 'name', 'tool_exchanger'+new_Link.tag)
+            ET.SubElement(self.root,
+                          "xacro:add_tool_exchanger",
+                          type="tool_exchanger",
+                          name=new_Link.name,
+                          filename=new_Link.filename)
+            # the end-effector gets added to the chain although it's not a joint. it's needed in the joint map and in the config!
+            self.add_to_chain(new_Link)
         else:
             if new_Link.size > 1:
                 setattr(new_Link, 'name', 'L_'+str(new_Link.i)+'_size_adapter_'+str(new_Link.p)+new_Link.tag)
@@ -1481,17 +1502,29 @@ class UrdfWriter:
         i=0
         for joints_chain in self.listofchains:
             for joint_module in joints_chain:
-                i += 1
-                lowlevel_config['GazeboXBotPlugin']['gains'][joint_module.name] = OrderedDict([('p', 300), ('d', 20)])
-                if use_robot_id:
-                    key = 'CentAcESC_' + str(joint_module.robot_id)
-                else:
-                    key = 'CentAcESC_' + str(i)
-                lowlevel_config[key] = joint_module.CentAcESC
+                if joint_module.type == 'joint':
+                    i += 1
+                    lowlevel_config['GazeboXBotPlugin']['gains'][joint_module.name] = OrderedDict([('p', 300), ('d', 20)])
+                    if use_robot_id:
+                        key = 'CentAcESC_' + str(joint_module.robot_id)
+                    else:
+                        key = 'CentAcESC_' + str(i)
+                    value = joint_module.CentAcESC
+                    print(yaml.dump(joint_module.CentAcESC))
+                elif joint_module.type == 'tool_exchanger':
+                    if use_robot_id:
+                        key = 'AinMsp432ESC_' + str(joint_module.robot_id)
+                        xbot_ecat_interface = [[int(joint_module.robot_id)], "libXBotEcat_ToolExchanger"]
+                    else:
+                        key = 'AinMsp432ESC_' + str(i)
+                        xbot_ecat_interface = [[int(i)], "libXBotEcat_ToolExchanger"]
+                    value = joint_module.AinMsp432ESC
+                    print(yaml.dump(joint_module.AinMsp432ESC))
+                    lowlevel_config['HALInterface']['IEndEffectors'].append(xbot_ecat_interface)
+                lowlevel_config[key] = value
                 print(joint_module.kinematics.__dict__.items())
                 print(lowlevel_config[key])
-                print(yaml.dump(joint_module.CentAcESC))
-        
+                
         # Create folder if doesen't exist
         if not os.path.exists(os.path.dirname(lowlevel_config_filename)):
             try:
@@ -1516,10 +1549,14 @@ class UrdfWriter:
         for joints_chain in self.listofchains:
             for joint_module in joints_chain:
                 i += 1
+                if joint_module.type == 'tool_exchanger':
+                    name = joint_module.name+'_fixed_joint'
+                else: 
+                    name = joint_module.name
                 if use_robot_id:
-                    joint_map['joint_map'][int(joint_module.robot_id)] = joint_module.name
+                    joint_map['joint_map'][int(joint_module.robot_id)] = name
                 else:
-                    joint_map['joint_map'][i] = joint_module.name
+                    joint_map['joint_map'][i] = name
             # print(str(i), joint_module.name)
             # print(joint_map)
 
@@ -1543,11 +1580,12 @@ class UrdfWriter:
 
         root = ET.Element('robot', name="ModularBot")
 
-        group = []
-        chain = []
-        joint = []
-        group_in_chains_group = []
-        group_in_arms_group = []
+        groups = []
+        chains = []
+        joints = []
+        end_effectors = []
+        groups_in_chains_group = []
+        groups_in_arms_group = []
         # base_link = ""
         # tip_link = ""
         i = 0
@@ -1555,7 +1593,7 @@ class UrdfWriter:
         print(self.listofchains)
         for joints_chain in self.listofchains:
             group_name = "chain_"+str(i+1)
-            group.append(ET.SubElement(root, 'group', name=group_name))
+            groups.append(ET.SubElement(root, 'group', name=group_name))
             if "con" in joints_chain[0].parent.name:
                 base_link = joints_chain[0].parent.parent.name
             else:
@@ -1567,20 +1605,26 @@ class UrdfWriter:
                     tip_link = joints_chain[-1].children[0].name
             else:
                 tip_link = 'L_' + str(joints_chain[-1].i) + joints_chain[-1].tag
-            chain.append(ET.SubElement(group[i], 'chain', base_link=base_link, tip_link=tip_link))
+                if joints_chain[-1].type == 'tool_exchanger':
+                    tip_link = joints_chain[-1].name
+            chains.append(ET.SubElement(groups[i], 'chain', base_link=base_link, tip_link=tip_link))
             i += 1
         i = 0
         arms_group = ET.SubElement(root, 'group', name="arms")
         chains_group = ET.SubElement(root, 'group', name="chains")
         group_state = ET.SubElement(root, 'group_state', name="home", group="chains")
+        tool_exchanger_group = ET.SubElement(root, 'group', name="ToolExchanger")
         for joints_chain in self.listofchains:
             group_name = "chain_"+str(i+1)
-            group_in_chains_group.append(ET.SubElement(chains_group, 'group', name=group_name))
-            group_in_arms_group.append(ET.SubElement(arms_group, 'group', name=group_name))
+            groups_in_chains_group.append(ET.SubElement(chains_group, 'group', name=group_name))
+            groups_in_arms_group.append(ET.SubElement(arms_group, 'group', name=group_name))
             for joint_module in joints_chain:
-                homing_value = float(builder_joint_map[joint_module.name]['angle'])
-                print(homing_value)
-                joint.append(ET.SubElement(group_state, 'joint', name=joint_module.name, value=str(homing_value)))
+                if joint_module.type == 'joint':
+                    homing_value = float(builder_joint_map[joint_module.name]['angle'])
+                    print(homing_value)
+                    joints.append(ET.SubElement(group_state, 'joint', name=joint_module.name, value=str(homing_value)))
+                elif joint_module.type == 'tool_exchanger':
+                    end_effectors.append(ET.SubElement(tool_exchanger_group, 'joint', name=joint_module.name+'_fixed_joint'))
 
             i += 1
 

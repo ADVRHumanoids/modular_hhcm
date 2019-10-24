@@ -11,7 +11,7 @@ HALInterface:
   ISensors: 
   #- [[81] , "libXBotEcat_FT"]
   #- [[104] , "libXBotEcat_IMU"]
-  #IEndEffectors: 
+  IEndEffectors: [] 
   # - [[110, 111], "libXBotEcat_HeriHand"]
 
 SCPLog:
