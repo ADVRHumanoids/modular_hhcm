@@ -1242,30 +1242,31 @@ class UrdfWriter:
                       name='L_' + str(new_Joint.i) + new_Joint.tag,
                       filename=new_Joint.filename)
 
-        # # add the fast rotor part to the inertia of the link/rotor part as a new link
-        # ET.SubElement(self.root,
-        #               "xacro:add_fixed_joint",
-        #               type="fixed_joint",
-        #               name="fixed_" + 'L_' + str(new_Joint.i) + new_Joint.tag + '_rotor_fast',
-        #               father='L_' + str(new_Joint.i) + new_Joint.tag,
-        #               child='L_' + str(new_Joint.i) + new_Joint.tag + '_rotor_fast',
-        #               x=x,
-        #               y=y,
-        #               z=z,
-        #               roll=roll,
-        #               pitch=pitch,
-        #               yaw=yaw)
-        # ET.SubElement(self.root,
-        #               "xacro:add_rotor_fast",
-        #               type="add_rotor_fast",
-        #               name='L_' + str(new_Joint.i) + new_Joint.tag + '_rotor_fast',
-        #               filename=new_Joint.filename,
-        #               x=x,
-        #               y=y,
-        #               z=z,
-        #               roll=roll,
-        #               pitch=pitch,
-        #               yaw=yaw)
+        # add the fast rotor part to the inertia of the link/rotor part as a new link
+        #NOTE: right now this is attached at the rotating part not to the fixed one (change it so to follow Pholus robot approach)
+        ET.SubElement(self.root,
+                      "xacro:add_fixed_joint",
+                      type="fixed_joint",
+                      name="fixed_" + 'L_' + str(new_Joint.i) + new_Joint.tag + '_rotor_fast',
+                      father='L_' + str(new_Joint.i) + new_Joint.tag, #stator_name
+                      child='L_' + str(new_Joint.i) + new_Joint.tag + '_rotor_fast',
+                      x=x,
+                      y=y,
+                      z=z,
+                      roll=roll,
+                      pitch=pitch,
+                      yaw=yaw)
+        ET.SubElement(self.root,
+                      "xacro:add_rotor_fast",
+                      type="add_rotor_fast",
+                      name='L_' + str(new_Joint.i) + new_Joint.tag + '_rotor_fast',
+                      filename=new_Joint.filename,
+                      x=x,
+                      y=y,
+                      z=z,
+                      roll=roll,
+                      pitch=pitch,
+                      yaw=yaw)
 
     # noinspection PyPep8Naming
     def joint_after_link(self, new_Joint, past_Link, offset, reverse):
@@ -1378,30 +1379,31 @@ class UrdfWriter:
             new_Joint.Distal_tf = ModuleNode.get_rototranslation(new_Joint.Distal_tf,
                                                                  tf.transformations.rotation_matrix(3.14, self.yaxis))
 
-        # # add the fast rotor part to the inertia of the link/rotor part as a new link
-        # ET.SubElement(self.root,
-        #               "xacro:add_fixed_joint",
-        #               type="fixed_joint",
-        #               name="fixed_" + 'L_' + str(new_Joint.i) + new_Joint.tag + '_rotor_fast',
-        #               father='L_' + str(new_Joint.i) + new_Joint.tag,
-        #               child='L_' + str(new_Joint.i) + new_Joint.tag + '_rotor_fast',
-        #               x=x,
-        #               y=y,
-        #               z=z,
-        #               roll=roll,
-        #               pitch=pitch,
-        #               yaw=yaw)
-        # ET.SubElement(self.root,
-        #               "xacro:add_rotor_fast",
-        #               type="add_rotor_fast",
-        #               name='L_' + str(new_Joint.i) + new_Joint.tag + '_rotor_fast',
-        #               filename=new_Joint.filename,
-        #               x=x,
-        #               y=y,
-        #               z=z,
-        #               roll=roll,
-        #               pitch=pitch,
-        #               yaw=yaw)
+        # add the fast rotor part to the inertia of the link/rotor part as a new link
+        #NOTE: right now this is attached at the rotating part not to the fixed one (change it so to follow Pholus robot approach)
+        ET.SubElement(self.root,
+                      "xacro:add_fixed_joint",
+                      type="fixed_joint",
+                      name="fixed_" + 'L_' + str(new_Joint.i) + new_Joint.tag + '_rotor_fast',
+                      father='L_' + str(new_Joint.i) + new_Joint.tag, #stator_name, #
+                      child='L_' + str(new_Joint.i) + new_Joint.tag + '_rotor_fast',
+                      x=x,
+                      y=y,
+                      z=z,
+                      roll=roll,
+                      pitch=pitch,
+                      yaw=yaw)
+        ET.SubElement(self.root,
+                      "xacro:add_rotor_fast",
+                      type="add_rotor_fast",
+                      name='L_' + str(new_Joint.i) + new_Joint.tag + '_rotor_fast',
+                      filename=new_Joint.filename,
+                      x=x,
+                      y=y,
+                      z=z,
+                      roll=roll,
+                      pitch=pitch,
+                      yaw=yaw)
 
     # noinspection PyPep8Naming
     def link_after_link(self, new_Link, past_Link, offset, reverse):
