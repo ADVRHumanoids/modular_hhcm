@@ -32,7 +32,7 @@ kinematics:
 
 dynamics:
   body_1:
-    mass: 0.2975
+    mass: 0.771 #+0.84
     inertia_tensor:
       I_xx: 1.1564566e-03
       I_yy: 1.2469918e-03
