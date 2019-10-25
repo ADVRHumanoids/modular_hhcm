@@ -93,7 +93,7 @@ MasterCommunicationInterface:
   framework_name: "ROS"
 
 XBotRTPlugins:
-  plugins: ["HomingExample", "CartesianImpedancePlugin"]
+  plugins: ["HomingExample", "CartesianImpedancePlugin", "ToolExchangerPlugin"]
   io_plugins: ["CartesianImpedanceIO"]
   
 NRTPlugins:
