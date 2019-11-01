@@ -41,6 +41,9 @@
 
         <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
 
+        <script type="text/javascript" src="http://static.robotwebtools.org/EventEmitter2/current/eventemitter2.min.js"></script>
+		<script type="text/javascript" src="http://static.robotwebtools.org/roslibjs/current/roslib.min.js"></script>
+
         <script type=text/javascript>
             $SCRIPT_ROOT = "{{ url_for('index', _external=True) }}";
         </script>
@@ -554,6 +557,11 @@
             var size = 3;
             var buildingModeON = true;
             var erasePrevious = false;
+            var link_positions, joint_names;
+            var i=0;
+
+            
+            
             window.onload = function() {
                 var fileInput = document.getElementById('fileInput');
                 var modeInput = document.getElementById('modeInput');
@@ -706,6 +714,38 @@
                 addYawJoint.onclick = function() {addModule("module_joint_yaw_AVOCADO", size)};
 
                 addDoubleElbowJoint.onclick = function() {addModule("module_joint_double_elbow_AVOCADO", size)};
+
+                var ros = new ROSLIB.Ros({
+                    url : 'ws://10.24.8.100:9090'
+                });
+
+                ros.on('connection', function() {
+                    console.log('Connected to websocket server.');
+                });
+
+                ros.on('error', function(error) {
+                    console.log('Error connecting to websocket server: ', error);
+                });
+
+                ros.on('close', function() {
+                    console.log('Connection to websocket server closed.');
+                });
+
+                var jointstate_listener = new ROSLIB.Topic({
+                    ros : ros,
+                    name : '/xbotcore/joint_states',
+                    messageType : 'xbot_msgs/JointState'
+                });
+
+                jointstate_listener.subscribe(function(m) {
+                    link_positions = m.link_position;
+                    joint_names = m.name;
+                    
+                    joint_names.forEach(function(name, index){
+                        urdfViewer.setAngle(name, link_positions[index]);
+                    });
+
+                });
             }
 
             // window.onbeforeunload = function() {
