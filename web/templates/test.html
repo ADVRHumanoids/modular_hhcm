@@ -1,13 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<title>three.js webgl - interactive - raycasting - points</title>
+		<title>Draw Canvas</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-		<link type="text/css" rel="stylesheet" href="main.css">
+		
+		<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+		<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script> -->
+		
+		<!-- <link rel="styles&heet" type="text/css" href="main.css"> -->
+		
+		<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+		<!-- <link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" /> -->
+		
+		<!-- <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script> -->
+		<script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+		
+		<!-- Latest compiled and minified CSS -->
+		<!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/css/bootstrap-select.min.css"> -->
+
+		<!-- Latest compiled and minified JavaScript -->
+		<!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/js/bootstrap-select.min.js"></script> -->
+
+		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/89/three.js"></script>
+		
+		<script type="text/javascript" src="http://static.robotwebtools.org/EventEmitter2/current/eventemitter2.min.js"></script>
+		<script type="text/javascript" src="http://static.robotwebtools.org/roslibjs/current/roslib.min.js"></script>
 	</head>
 
 	<body>
+		<script>
+			function onChangeSelect() {
+				
+				console.log($("#selectCalibTarget").val());
+				console.log(document.getElementById("selectCalibTarget"))
+				console.log(document.getElementById("selectCalibTarget").value);
+				// if($("select[name='selectCalibTarget']").val()=="plane")
+				// {
+				// 	$('#colorsCalibration').hide();
+				// 	$('#planeCalibration').show();
+				// }
+				// else
+				// {
+				// 	$('#colorsCalibration').show();
+				// 	$('#planeCalibration').hide();
+				// }
+			};
+		</script>
 		<style type="text/css">
 			#container {       
 				width: 85%;
@@ -50,60 +89,86 @@
 				padding: 10px 10px 10px 10px; */
 				display: block;
 			}
-			.dropdown-content {
-				display: none;
-				position: absolute;
-				background-color: #f1f1f1;
-				/* min-width: 160px; */
-				width: 100%;
-				box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-				z-index: 1;
+			#colorsCalibration{
+				display:none;
 			}
-
-			/* Links inside the dropdown */
-			.dropdown-content a {
-				color: black;
-				padding: 12px 16px;
-				text-decoration: none;
-				display: block;
-			}
-
-			a {
-				font-family: Ubuntu;
-			}
-
-			/* Change color of dropdown links on hover */
-			.dropdown-content a:hover {background-color: #ddd;}
-
-			/* Show the dropdown menu on hover */
-			.dropdown:hover .dropdown-content {display: block;}
-
-			/* Change the background color of the dropdown button when the dropdown content is shown */
-			.dropdown:hover .dropdown {background-color: #10b4b9;}
 		</style>
 		<div id="container">
 		  <canvas></canvas>
 		</div>
 		<div id="info"><a href="http://threejs.org" target="_blank" rel="noopener">three.js</a> webgl - interactive - raycasting - points </div>
+		
 		<div id="buttonator" style="overflow-y:auto;">
 			<button type="button" id="addPath" class="button"><div>Add Path</div></button>
 			<button type="button" id="removePath" class="button"><div>Remove Path</div></button>
 			<button type="button" id="removeAll" class="button"><div>Remove All</div></button>
-			<div class="dropdown button">
-				<button type="button" id="calibrate" class="button">Calibrate</button>
-				<div class="dropdown-content">
-					<a href="#">Plane</a>
-					<a href="#">Colors</a>
-					<a href="#">Homing</a>
+			<button type="button" id="calibrate" data-toggle="popover" class="button">Calibrate</button>
+			<div id="calibrationForm" class="hide">
+				<label>What do you want to calibrate?
+				</label>
+				<select id="selectCalibTarget">
+				<!-- </select> onchange="onChangeSelect()"> -->
+					<option value="plane">Plane</option>
+					<option value="colors">Colors</option>
+					<option value="homing">Homing</option>
+				</select>	
+				<div id="planeCalibration" class="form-group">
+					<select name="selectPlaneCalibTarget" id="selectPlaneCalibTarget" class="selectpicker">
+						<option value="origin">origin</option>
+						<option value="xAxis">X axis</option>
+						<option value="yAxis">Y axis</option>
+					</select>
+				</div>
+				<div id="colorsCalibration" class="form-group">
+					<select name="selectColorsCalibTarget" id="selectColorsCalibTarget" class="selectpicker">
+						<option value="origin">origin</option>
+						<option value="xAxis">X axis</option>
+						<option value="yAxis">Y axis</option>
+					</select>
 				</div>
 			</div>
-
+				
+			<button type="button" id="setParameters" data-toggle="popover" class="button"><div>Set Parameters</div></button>
+			<div id="parametersForm" class="hide">
+				<label for="selectBehavior">Behavior to set:</label>
+				<select name="selectBehavior" id="selectBehavior" class="form-control form-control-sm">
+					<option value="movingBehavior">Moving behavior</option>
+					<option value="stationaryBehavior">Stationary behavior</option>
+				</select>	
+				<div class="row">
+					<div class="col-md-6">
+						<label for="Kx">Kx (N/m):</label>
+						<input type="number" name="Kx" id="Kx" value="1200" step="100" class="form-control form-control-sm">
+						<label for="Ky">Ky (N/m):</label>
+						<input type="number" name="Ky" id="Ky" value="1200" step="100" class="form-control form-control-sm">
+						<label for="Kz">Kz (N/m):</label>
+						<input type="number" name="Kz" id="Kz" value="1200" step="100" class="form-control form-control-sm ">
+					</div>
+					<div class="col-xs-6">
+							<label for="Rx">Rx (Nm/rad):</label>
+							<input type="number" name="Rx" id="Rx" value="200" step="10" class="form-control form-control-sm ">
+							<label for="Ry">Ry (Nm/rad):</label>
+							<input type="number" name="Ry" id="Ry" value="200" step="10" class="form-control form-control-sm ">
+							<label for="Rz">Rz (Nm/rad):</label>
+							<input type="number" name="Rz" id="Rz" value="0" step="10" class="form-control form-control-sm">	
+					</div>
+				</div>
+				<label for="Fz">Fz (N):</label>
+				<input type="number" name="Fz" id="Fz" value="-1" step="0.1" class="form-control input-md">
+				<label for="baseLink">base link:</label>
+				<input type="text" name="baseLink" id="baseLink" value="base_link"class="form-control input-md">
+				<label for="distalLink">distal link:</label>
+				<input type="text" name="distalLink" id="distalLink" value="TCP"class="form-control input-md">
+				<label for="desiredVelocity">desired velocity (m/s):</label>
+				<input type="number" name="desiredVelocity" id="desiredVelocity" value="0.05" step="0.01" class="form-control input-md">
+				<button type="button" class="btn btn-primary" data-loading-text="Sending info.."><em class="icon-ok"></em> Set Parameters</button>
+			</div>
+			<!-- <div id="result"></div> -->
 		</div>
 
-    	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/89/three.js"></script>
-		<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
-		<script type="text/javascript" src="http://static.robotwebtools.org/EventEmitter2/current/eventemitter2.min.js"></script>
-		<script type="text/javascript" src="http://static.robotwebtools.org/roslibjs/current/roslib.min.js"></script>
+		<script type=text/javascript>
+			$SCRIPT_ROOT = "{{ url_for('index', _external=True) }}";
+		</script>
 
 		<script type="module">
 			// import * as THREE from '../build/three.module.js';
@@ -161,6 +226,11 @@
 				addPathBtn.onclick = function() {addPath()};
 				removePathBtn.onclick = function() {removePath()};
 				removeAllBtn.onclick = function() {removeAll()};
+
+				$(document).on('change','#selectCalibTarget', function () {
+					$('#result').text($('#selectCalibTarget option:selected').val());
+					console.log($('#selectCalibTarget option:selected').val());
+				})
 			}
 		
 			init();
@@ -214,12 +284,69 @@
 				canvas.addEventListener( 'mousemove', onCanvasMouseMove, false );
 				canvas.addEventListener('mousedown', onCanvasMouseDown, false);
 				canvas.addEventListener('mouseup', onCanvasMouseUp, false)
-
 			};
 
 			
 
+			$(function(){
+				$('#setParameters').popover({
+				
+					placement: 'left',
+					title: 'Set Control Parameters',
+					html:true,
+					container: 'body',
+					//trigger: 'focus',
+					content: $('#parametersForm').html()
+				}).on('click', function(){
+
+					var e = document.getElementById("selectCalibTarget");
+					var strUser = e.options[e.selectedIndex].text;
+					console.log(e);
+					// had to put it within the on click action so it grabs the correct info on submit
+					$('.btn-primary').click(function(){
+						$('#result').after("Parameters for " + $('#selectBehavior').val() + "set!")
+						$.ajax({
+							url: $SCRIPT_ROOT + 'sendCommands/',
+							data: {
+								'behavior': $('#selectBehavior').val(), 
+								'Kx': $('#Kx').val(),
+								'Ky': $('#Ky').val(),
+								'Kz': $('#Kz').val(),
+								'Rx': $('#Rx').val(),
+								'Ry': $('#Ry').val(),
+								'Rz': $('#Rz').val(),
+								'Fz': $('#Fz').val(),
+								'baseLink': $('#baseLink').val(),
+								'distalLink': $('#distalLink').val(),
+								'desiredVelocity': $('#desiredVelocity').val()},
+							method: 'POST',
+							success: function(data) {
+								console.log(data)
+								//$('#setParameters').popover('hide')
+								//callback()           
+							},
+							async: true //async_bool
+						});  
+						
+					})
+				})
+			})
 			
+			$(function(){
+				$('#calibrate').popover({
+				
+					placement: 'left',
+					title: 'Calibrate',
+					html:true,
+					container: 'body',
+					//trigger: 'focus',
+					content: $('#calibrationForm').html()
+				}).on('click', function(){
+					
+				})
+			});
+			
+
 			function onCanvasDoubleClick( event ) {
 				event.preventDefault();
 				dblClick.x = ( event.clientX / canvas.width ) * 2 - 1;
