@@ -26,6 +26,10 @@
 		
 		<script type="text/javascript" src="http://static.robotwebtools.org/EventEmitter2/current/eventemitter2.min.js"></script>
 		<script type="text/javascript" src="http://static.robotwebtools.org/roslibjs/current/roslib.min.js"></script>
+
+		<link rel="stylesheet" type="text/css" href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">
+		
+		
 	</head>
 
 	<body>
@@ -92,42 +96,79 @@
 			#colorsCalibration{
 				display:none;
 			}
+			.settings{
+				display:block;
+				height:50px;
+				width:50px;
+				margin:10px;
+				cursor:pointer;
+			}
+			.calibrate{
+				display:block;
+				height:100px;
+				width:100%;
+				margin:10px;
+				cursor:pointer;
+			}
 		</style>
 		<div id="container">
 		  <canvas></canvas>
 		</div>
 		<div id="info"><a href="http://threejs.org" target="_blank" rel="noopener">three.js</a> webgl - interactive - raycasting - points </div>
-		
 		<div id="buttonator" style="overflow-y:auto;">
+			<div class="settings" data-toggle="popover" data-mysettings="#someid" data-original-title="A Title"> 
+				<i class="fa fa-bars"></i>
+			</div>
+			<div id="someid" style="display: none">
+				<select id='list'>
+					<option value='1'>First</option>
+					<option value='2'>Second</option>
+					<option value='3'>Third</option>
+				</select>
+			</div>
+
+			
+				
+			
+			
+			<span id="result">
+
+			</span> 
 			<button type="button" id="addPath" class="button"><div>Add Path</div></button>
 			<button type="button" id="removePath" class="button"><div>Remove Path</div></button>
 			<button type="button" id="removeAll" class="button"><div>Remove All</div></button>
-			<button type="button" id="calibrate" data-toggle="popover" class="button">Calibrate</button>
-			<div id="calibrationForm" class="hide">
-				<label>What do you want to calibrate?
-				</label>
-				<select id="selectCalibTarget">
-				<!-- </select> onchange="onChangeSelect()"> -->
-					<option value="plane">Plane</option>
-					<option value="colors">Colors</option>
-					<option value="homing">Homing</option>
-				</select>	
-				<div id="planeCalibration" class="form-group">
-					<select name="selectPlaneCalibTarget" id="selectPlaneCalibTarget" class="selectpicker">
-						<option value="origin">origin</option>
-						<option value="xAxis">X axis</option>
-						<option value="yAxis">Y axis</option>
-					</select>
-				</div>
-				<div id="colorsCalibration" class="form-group">
-					<select name="selectColorsCalibTarget" id="selectColorsCalibTarget" class="selectpicker">
-						<option value="origin">origin</option>
-						<option value="xAxis">X axis</option>
-						<option value="yAxis">Y axis</option>
-					</select>
-				</div>
+			<!-- <button type="button" id="calibrate"  data-toggle="popover" class="button">Calibrate</button> -->
+			<!-- id="calibrate" -->
+			<div class="calibrate" data-toggle="popover" data-target="#my-popover-content"> 
+				<i class="fa fa-bars"></i>
 			</div>
-				
+			<script type="text/html" id="my-popover-content">	
+				<div id="calibrationForm"> 
+					<!-- class="hidden"> -->
+					<label>What do you want to calibrate?
+					</label>
+					<select id="selectCalibTarget">
+					<!-- </select> onchange="onChangeSelect()"> -->
+						<option value="plane">Plane</option>
+						<option value="colors">Colors</option>
+						<option value="homing">Homing</option>
+					</select>	
+					<div id="planeCalibration" class="form-group">
+						<select name="selectPlaneCalibTarget" id="selectPlaneCalibTarget" class="selectpicker">
+							<option value="origin">origin</option>
+							<option value="xAxis">X axis</option>
+							<option value="yAxis">Y axis</option>
+						</select>
+					</div>
+					<div id="colorsCalibration" class="form-group">
+						<select name="selectColorsCalibTarget" id="selectColorsCalibTarget" class="selectpicker">
+							<option value="origin">origin</option>
+							<option value="xAxis">X axis</option>
+							<option value="yAxis">Y axis</option>
+						</select>
+					</div>
+				</div>	
+			</script>
 			<button type="button" id="setParameters" data-toggle="popover" class="button"><div>Set Parameters</div></button>
 			<div id="parametersForm" class="hide">
 				<label for="selectBehavior">Behavior to set:</label>
@@ -227,10 +268,70 @@
 				removePathBtn.onclick = function() {removePath()};
 				removeAllBtn.onclick = function() {removeAll()};
 
+				// $(document).on('change','#selectCalibTarget', function () {
+				// 	$('#result').text($('#selectCalibTarget option:selected').val());
+				// 	console.log($('#selectCalibTarget option:selected').val());
+				// })
+
+				// $(function(){
+				// 	$('#calibrate').popover({
+					
+				// 		placement: 'left',
+				// 		title: 'Calibrate',
+				// 		html:true,
+				// 		container: 'body',
+				// 		//trigger: 'focus',
+				// 		content: $('#calibrationForm').html()
+				// 	}).on('click', function(){
+						
+				// 	})
+				// });
+				
+				var $popovercalibrate = $('.calibrate').popover({
+					html: true,
+					placement: 'left',
+					container: 'body',
+					content: function () {
+						var myCalibForm = $(this).data().target;
+						return $(myCalibForm).html();
+					}
+				});
+
+				// var $popoversettings = $('.settings').popover({
+				// 	html: true,
+				// 	placement: 'right',
+				// 	content: function () {
+				// 		var mySettings = $(this).data('mysettings');
+				// 		return $(mySettings).html();
+				// 	}
+				// });
+
+
+				$(':not(#anything)').on('click', function (e) {
+					// $popoversettings.each(function () {
+					// 	if (!$(this).is(e.target) && $(this).has(e.target).length === 0 && $('.popover').has(e.target).length === 0) {
+					// 		$(this).popover('hide');
+					// 		return;
+					// 	}
+					// });
+					$popovercalibrate.each(function () {
+						if (!$(this).is(e.target) && $(this).has(e.target).length === 0 && $('.popover').has(e.target).length === 0) {
+							$(this).popover('hide');
+							return;
+						}
+					});
+					
+				});
+
+
+				// $(document).on('change','#list', function () {
+				// 	$('#result').text($('#list option:selected').val());
+				// });
+
 				$(document).on('change','#selectCalibTarget', function () {
 					$('#result').text($('#selectCalibTarget option:selected').val());
-					console.log($('#selectCalibTarget option:selected').val());
-				})
+					alert($('#selectCalibTarget option:selected').val());
+				});
 			}
 		
 			init();
@@ -299,8 +400,7 @@
 					content: $('#parametersForm').html()
 				}).on('click', function(){
 
-					var e = document.getElementById("selectCalibTarget");
-					var strUser = e.options[e.selectedIndex].text;
+					// s
 					console.log(e);
 					// had to put it within the on click action so it grabs the correct info on submit
 					$('.btn-primary').click(function(){
@@ -332,19 +432,19 @@
 				})
 			})
 			
-			$(function(){
-				$('#calibrate').popover({
+			// $(function(){
+			// 	$('#calibrate').popover({
 				
-					placement: 'left',
-					title: 'Calibrate',
-					html:true,
-					container: 'body',
-					//trigger: 'focus',
-					content: $('#calibrationForm').html()
-				}).on('click', function(){
+			// 		placement: 'left',
+			// 		title: 'Calibrate',
+			// 		html:true,
+			// 		container: 'body',
+			// 		//trigger: 'focus',
+			// 		content: $('#calibrationForm').html()
+			// 	}).on('click', function(){
 					
-				})
-			});
+			// 	})
+			// });
 			
 
 			function onCanvasDoubleClick( event ) {
