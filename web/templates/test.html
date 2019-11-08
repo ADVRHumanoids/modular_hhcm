@@ -33,24 +33,6 @@
 	</head>
 
 	<body>
-		<script>
-			function onChangeSelect() {
-				
-				console.log($("#selectCalibTarget").val());
-				console.log(document.getElementById("selectCalibTarget"))
-				console.log(document.getElementById("selectCalibTarget").value);
-				// if($("select[name='selectCalibTarget']").val()=="plane")
-				// {
-				// 	$('#colorsCalibration').hide();
-				// 	$('#planeCalibration').show();
-				// }
-				// else
-				// {
-				// 	$('#colorsCalibration').show();
-				// 	$('#planeCalibration').hide();
-				// }
-			};
-		</script>
 		<style type="text/css">
 			#container {       
 				width: 85%;
@@ -93,9 +75,6 @@
 				padding: 10px 10px 10px 10px; */
 				display: block;
 			}
-			#colorsCalibration{
-				display:none;
-			}
 			.settings{
 				display:block;
 				height:50px;
@@ -103,12 +82,14 @@
 				margin:10px;
 				cursor:pointer;
 			}
-			.calibrate{
-				display:block;
-				height:100px;
+			#selectTask{
 				width:100%;
-				margin:10px;
-				cursor:pointer;
+			}
+			#selectGeometry{
+				width:100%;
+			}
+			#selectColor{
+				width:100%;
 			}
 		</style>
 		<div id="container">
@@ -116,94 +97,98 @@
 		</div>
 		<div id="info"><a href="http://threejs.org" target="_blank" rel="noopener">three.js</a> webgl - interactive - raycasting - points </div>
 		<div id="buttonator" style="overflow-y:auto;">
-			<div class="settings" data-toggle="popover" data-mysettings="#someid" data-original-title="A Title"> 
-				<i class="fa fa-bars"></i>
-			</div>
-			<div id="someid" style="display: none">
-				<select id='list'>
-					<option value='1'>First</option>
-					<option value='2'>Second</option>
-					<option value='3'>Third</option>
-				</select>
-			</div>
-
-			
-				
-			
-			
 			<span id="result">
 
 			</span> 
+			<!-- <label for="selectTask">What do you want to calibrate?</label> -->
+			<select name="selectTask" id="selectTask" class="selectpicker" title="Please select a task:">
+				<option value=''>Select a task:</option>
+			</select>
+			<select name="selectGeometry" id="selectGeometry" class="selectpicker" title="Please select a task:">
+				<option value=''>Select a geometry:</option>
+			</select>
+			<select name="selectColor" id="selectColor" class="selectpicker" title="Please select a task:">
+				<option value=''>Select a color:</option>
+			</select>
 			<button type="button" id="addPath" class="button"><div>Add Path</div></button>
 			<button type="button" id="removePath" class="button"><div>Remove Path</div></button>
 			<button type="button" id="removeAll" class="button"><div>Remove All</div></button>
 			<!-- <button type="button" id="calibrate"  data-toggle="popover" class="button">Calibrate</button> -->
 			<!-- id="calibrate" -->
-			<div class="calibrate" data-toggle="popover" data-target="#my-popover-content"> 
-				<i class="fa fa-bars"></i>
-			</div>
-			<script type="text/html" id="my-popover-content">	
+			<button type="button" class="button calibrate" data-toggle="popover" data-target="#calibration-popover"><div>Calibration</div></button>
+			<script type="text/html" id="calibration-popover">	
 				<div id="calibrationForm"> 
 					<!-- class="hidden"> -->
-					<label>What do you want to calibrate?
-					</label>
-					<select id="selectCalibTarget">
+					<label for="selectCalibTarget">What do you want to calibrate?</label>
+					<select name="selectCalibTarget" id="selectCalibTarget" class="selectpicker">
 					<!-- </select> onchange="onChangeSelect()"> -->
 						<option value="plane">Plane</option>
 						<option value="colors">Colors</option>
 						<option value="homing">Homing</option>
 					</select>	
+					<label for="geometryID">Choose a name for the geometry to calibrate</label>
+					<input type="text" name="geometryID" id="geometryID" value="plane_1"class="form-control input-md">
 					<div id="planeCalibration" class="form-group">
-						<select name="selectPlaneCalibTarget" id="selectPlaneCalibTarget" class="selectpicker">
+						<label for="selectPlaneCalibPoint">Choose the point to calibrate</label>
+						<select name="selectPlaneCalibPoint" id="selectPlaneCalibPoint" class="selectpicker">
 							<option value="origin">origin</option>
 							<option value="xAxis">X axis</option>
 							<option value="yAxis">Y axis</option>
 						</select>
 					</div>
-					<div id="colorsCalibration" class="form-group">
-						<select name="selectColorsCalibTarget" id="selectColorsCalibTarget" class="selectpicker">
-							<option value="origin">origin</option>
-							<option value="xAxis">X axis</option>
-							<option value="yAxis">Y axis</option>
+					<div id="colorsCalibration" class="form-group" style="display:none">
+						<label for="selectColorsCalibPoint">Choose the point to calibrate</label>
+						<select name="selectColorsCalibPoint" id="selectColorsCalibPoint" class="selectpicker">
+							<option value="color_1">color 1</option>
+							<option value="color_2">color 2</option>
+							<option value="color_3">color 3</option>
+							<option value="color_4">color 4</option>
+							<option value="color_5">color 5</option>
 						</select>
 					</div>
+					<div id="homingCalibration" class="form-group" style="display:none">TO BE IMPLEMENTED</div>
+					<div id="homingCalibration" class="form-group">Place the robot end-effector on the point to calibrate</div>
+					<button type="button" class="btn btn-primary" data-loading-text="Sending info.."><em class="icon-ok"></em> Capture point</button>
 				</div>	
 			</script>
-			<button type="button" id="setParameters" data-toggle="popover" class="button"><div>Set Parameters</div></button>
-			<div id="parametersForm" class="hide">
-				<label for="selectBehavior">Behavior to set:</label>
-				<select name="selectBehavior" id="selectBehavior" class="form-control form-control-sm">
-					<option value="movingBehavior">Moving behavior</option>
-					<option value="stationaryBehavior">Stationary behavior</option>
-				</select>	
-				<div class="row">
-					<div class="col-md-6">
-						<label for="Kx">Kx (N/m):</label>
-						<input type="number" name="Kx" id="Kx" value="1200" step="100" class="form-control form-control-sm">
-						<label for="Ky">Ky (N/m):</label>
-						<input type="number" name="Ky" id="Ky" value="1200" step="100" class="form-control form-control-sm">
-						<label for="Kz">Kz (N/m):</label>
-						<input type="number" name="Kz" id="Kz" value="1200" step="100" class="form-control form-control-sm ">
+			<button type="button" class="button setParameters" data-toggle="popover" data-target="#parameters-popover"><div>Set Parameters</div></button>
+			<script type="text/html" id="parameters-popover">
+				<div id="parametersForm"> 
+				<!-- class="hide"> -->
+					<label for="selectBehavior">Behavior to set:</label>
+					<select name="selectBehavior" id="selectBehavior" class="selectpicker">
+						<option value="movingBehavior">Moving behavior</option>
+						<option value="stationaryBehavior">Stationary behavior</option>
+					</select>	
+					<div class="row">
+						<div class="col-md-6">
+							<label for="Kx">Kx (N/m):</label>
+							<input type="number" name="Kx" id="Kx" value="1200" step="100" class="form-control form-control-sm">
+							<label for="Ky">Ky (N/m):</label>
+							<input type="number" name="Ky" id="Ky" value="1200" step="100" class="form-control form-control-sm">
+							<label for="Kz">Kz (N/m):</label>
+							<input type="number" name="Kz" id="Kz" value="1200" step="100" class="form-control form-control-sm ">
+						</div>
+						<div class="col-xs-6">
+								<label for="Rx">Rx (Nm/rad):</label>
+								<input type="number" name="Rx" id="Rx" value="200" step="10" class="form-control form-control-sm ">
+								<label for="Ry">Ry (Nm/rad):</label>
+								<input type="number" name="Ry" id="Ry" value="200" step="10" class="form-control form-control-sm ">
+								<label for="Rz">Rz (Nm/rad):</label>
+								<input type="number" name="Rz" id="Rz" value="0" step="10" class="form-control form-control-sm">	
+						</div>
 					</div>
-					<div class="col-xs-6">
-							<label for="Rx">Rx (Nm/rad):</label>
-							<input type="number" name="Rx" id="Rx" value="200" step="10" class="form-control form-control-sm ">
-							<label for="Ry">Ry (Nm/rad):</label>
-							<input type="number" name="Ry" id="Ry" value="200" step="10" class="form-control form-control-sm ">
-							<label for="Rz">Rz (Nm/rad):</label>
-							<input type="number" name="Rz" id="Rz" value="0" step="10" class="form-control form-control-sm">	
-					</div>
+					<label for="Fz">Fz (N):</label>
+					<input type="number" name="Fz" id="Fz" value="-1" step="0.1" class="form-control input-md">
+					<label for="baseLink">base link:</label>
+					<input type="text" name="baseLink" id="baseLink" value="base_link"class="form-control input-md">
+					<label for="distalLink">distal link:</label>
+					<input type="text" name="distalLink" id="distalLink" value="TCP"class="form-control input-md">
+					<label for="desiredVelocity">desired velocity (m/s):</label>
+					<input type="number" name="desiredVelocity" id="desiredVelocity" value="0.05" step="0.01" class="form-control input-md">
+					<button type="button" class="btn btn-primary" data-loading-text="Sending info.."><em class="icon-ok"></em> Set Parameters</button>
 				</div>
-				<label for="Fz">Fz (N):</label>
-				<input type="number" name="Fz" id="Fz" value="-1" step="0.1" class="form-control input-md">
-				<label for="baseLink">base link:</label>
-				<input type="text" name="baseLink" id="baseLink" value="base_link"class="form-control input-md">
-				<label for="distalLink">distal link:</label>
-				<input type="text" name="distalLink" id="distalLink" value="TCP"class="form-control input-md">
-				<label for="desiredVelocity">desired velocity (m/s):</label>
-				<input type="number" name="desiredVelocity" id="desiredVelocity" value="0.05" step="0.01" class="form-control input-md">
-				<button type="button" class="btn btn-primary" data-loading-text="Sending info.."><em class="icon-ok"></em> Set Parameters</button>
-			</div>
+			</script>
 			<!-- <div id="result"></div> -->
 		</div>
 
@@ -230,11 +215,13 @@
 			var clock;
 			var raycast_threshold = 0.1;
 			var pointSize = 0.05;
+
+			var taskList=[], geometryList=[], colorList=[], robotPose, robotCanvasPoint;
 			
 			let mouseDown = false;
 
 			var ros = new ROSLIB.Ros({
-				url : 'ws://10.24.8.100:9090'
+				url : 'ws://192.168.9.211:9090'
 			});
 
 			ros.on('connection', function() {
@@ -255,37 +242,40 @@
 				messageType : 'xbot_msgs/JointState'
 			});
 
-			jointstate_listener.subscribe(function(m) {
-				console.log(m.link_position);
+			var server_listener = new ROSLIB.Topic({
+				ros : ros,
+				name : '/conda',
+				messageType : 'conda_msg'
 			});
 			
 			window.onload = function() {
 				var removePathBtn = document.getElementById('removePath');
 				var addPathBtn = document.getElementById('addPath');
 				var removeAllBtn = document.getElementById('removeAll');
-
+				var selectTask = document.getElementById("selectTask");
+				var selectGeometry = document.getElementById("selectGeometry");
+				var selectColor = document.getElementById("selectColor");
+				
 				addPathBtn.onclick = function() {addPath()};
 				removePathBtn.onclick = function() {removePath()};
 				removeAllBtn.onclick = function() {removeAll()};
 
-				// $(document).on('change','#selectCalibTarget', function () {
-				// 	$('#result').text($('#selectCalibTarget option:selected').val());
-				// 	console.log($('#selectCalibTarget option:selected').val());
-				// })
+				jointstate_listener.subscribe(function(m) {
+					// console.log(m)
+				});
 
-				// $(function(){
-				// 	$('#calibrate').popover({
-					
-				// 		placement: 'left',
-				// 		title: 'Calibrate',
-				// 		html:true,
-				// 		container: 'body',
-				// 		//trigger: 'focus',
-				// 		content: $('#calibrationForm').html()
-				// 	}).on('click', function(){
-						
-				// 	})
-				// });
+				server_listener.subscribe(function(m) {
+					robotPose = m.robot_pose;
+					console.log(m.robot_pose)
+					updateSelectChoices(selectTask, m.task_list, taskList)
+					console.log(taskList)
+					updateSelectChoices(selectGeometry, m.geometry_list, geometryList)
+					console.log(geometryList)
+					updateSelectChoices(selectColor, m.color_list, colorList)
+					console.log(colorList)
+					robotCanvasPoint = m.canvas_point
+					console.log(robotCanvasPoint)
+				});
 				
 				var $popovercalibrate = $('.calibrate').popover({
 					html: true,
@@ -295,42 +285,43 @@
 						var myCalibForm = $(this).data().target;
 						return $(myCalibForm).html();
 					}
+				}).on('click', function(){
+					$(document).on('change','#selectCalibTarget', function () {
+						updateCalibMenu();
+					})
+					// send calibration through json/ajax
+					$('.btn-primary').click(function() {
+						var intersection = projectOnPlane(mouse);
+						sendCalibration();
+					})
 				});
 
-				// var $popoversettings = $('.settings').popover({
-				// 	html: true,
-				// 	placement: 'right',
-				// 	content: function () {
-				// 		var mySettings = $(this).data('mysettings');
-				// 		return $(mySettings).html();
-				// 	}
-				// });
-
+				var $popoversetParameters = $('.setParameters').popover({
+					html: true,
+					placement: 'left',
+					container: 'body',
+					title: 'Set Control Parameters',
+					content: function () {
+						var mySetParametersForm = $(this).data().target;
+						return $(mySetParametersForm).html();
+					}
+				}).on('click', function(){
+					$('.btn-primary').click(function() {sendParameters()})
+				});
 
 				$(':not(#anything)').on('click', function (e) {
-					// $popoversettings.each(function () {
-					// 	if (!$(this).is(e.target) && $(this).has(e.target).length === 0 && $('.popover').has(e.target).length === 0) {
-					// 		$(this).popover('hide');
-					// 		return;
-					// 	}
-					// });
-					$popovercalibrate.each(function () {
+					$popoversetParameters.each(function () {
 						if (!$(this).is(e.target) && $(this).has(e.target).length === 0 && $('.popover').has(e.target).length === 0) {
 							$(this).popover('hide');
 							return;
 						}
 					});
-					
-				});
-
-
-				// $(document).on('change','#list', function () {
-				// 	$('#result').text($('#list option:selected').val());
-				// });
-
-				$(document).on('change','#selectCalibTarget', function () {
-					$('#result').text($('#selectCalibTarget option:selected').val());
-					alert($('#selectCalibTarget option:selected').val());
+					$popovercalibrate.each(function () {
+						if (!$(this).is(e.target) && $(this).has(e.target).length === 0 && $('.popover').has(e.target).length === 0) {
+							$(this).popover('hide');
+							return;
+						}
+					});	
 				});
 			}
 		
@@ -387,65 +378,116 @@
 				canvas.addEventListener('mouseup', onCanvasMouseUp, false)
 			};
 
-			
+			function updateCalibMenu(){
+				switch($('#selectCalibTarget option:selected').val()) {
+					case "plane":
+						$('#planeCalibration').show();
+						$('#colorsCalibration').hide();
+						$('#homingCalibration').hide();
+						break;
+					case "colors":
+						$('#planeCalibration').hide();
+						$('#colorsCalibration').show();
+						$('#homingCalibration').hide();
+						break;
+					case "homing":
+						$('#planeCalibration').hide();
+						$('#colorsCalibrationserver').hide();
+						$('#homingCalibrationserver').show();
+						break;
+				}
+			}
 
-			$(function(){
-				$('#setParameters').popover({
-				
-					placement: 'left',
-					title: 'Set Control Parameters',
-					html:true,
-					container: 'body',
-					//trigger: 'focus',
-					content: $('#parametersForm').html()
-				}).on('click', function(){
-
-					// s
-					console.log(e);
-					// had to put it within the on click action so it grabs the correct info on submit
-					$('.btn-primary').click(function(){
-						$('#result').after("Parameters for " + $('#selectBehavior').val() + "set!")
-						$.ajax({
-							url: $SCRIPT_ROOT + 'sendCommands/',
-							data: {
-								'behavior': $('#selectBehavior').val(), 
-								'Kx': $('#Kx').val(),
-								'Ky': $('#Ky').val(),
-								'Kz': $('#Kz').val(),
-								'Rx': $('#Rx').val(),
-								'Ry': $('#Ry').val(),
-								'Rz': $('#Rz').val(),
-								'Fz': $('#Fz').val(),
-								'baseLink': $('#baseLink').val(),
-								'distalLink': $('#distalLink').val(),
-								'desiredVelocity': $('#desiredVelocity').val()},
-							method: 'POST',
-							success: function(data) {
-								console.log(data)
-								//$('#setParameters').popover('hide')
-								//callback()           
-							},
-							async: true //async_bool
-						});  
-						
-					})
+			function updateSelectChoices(selector, arrayRos, arrayJs) {
+				arrayJs.forEach(function(item, index){
+					if(!arrayRos.includes(item)){
+						var elem = getElementById(item);
+						selector.removeChild(elem)
+					}
 				})
-			})
-			
-			// $(function(){
-			// 	$('#calibrate').popover({
+				arrayRos.forEach(function(item, index){
+					if(!arrayJs.includes(item)){
+						var option = document.createElement("option");
+						option.text = item;
+						option.value = item;
+						selectTask.add(option);
+					}
+				})
+				arrayJs = arrayRos;
+				console.log(arrayRos);
+			}
+
+			function sendParameters(){
+				var selectedBehavior = $('#selectBehavior option:selected').val();
+				$('#result').after("Parameters for " + selectedBehavior + "set!")
+				var stiffnesses = [$('#Kx').val(), $('#Ky').val(), $('#Kz').val(), $('#Rx').val(), $('#Ry').val(), $('#Rz').val()];
+				var dampings = ["0", "0", "0", "0", "0", "0"];
+				var forces = ["0", "0", $('#Fz').val(), "0", "0", "0"];
+				var desiredVelocity = [$('#desiredVelocity').val()];
+				var descriptors = stiffnesses.concat(dampings.concat(forces.concat(desiredVelocity)));
+				console.log(descriptors);
+				var commandData = {
+					'type': "set",
+					'action': "upd",
+					'target': "params", 
+					'name': selectedBehavior,
+					'descriptors': descriptors
+				};
+				$.ajax({
+					url: $SCRIPT_ROOT + 'sendCommands/',
+					data: JSON.stringify(commandData),
+					contentType: "application/json; charset=utf-8",
+					dataType : 'json',
+					method: 'POST',
+					success: function(data) {
+						console.log(data)
+						//$('#setParameters').popover('hide')
+						//callback()           
+					},
+					async: true //async_bool
+				}) 
+			};	
+
+			function sendCalibration() {
+				var targetType = [$('#selectCalibTarget').val()];
+				var geometryID = [$('#geometryID').val()];
+				// The dimension of the window is now taken to set the scale during calibration
+				// rembember that if zoom is enabled this will not hold anymore
+				var canvasWidth = canvas.width;
+				var canvasHeight = canvas.height;
+				switch($('#selectPlaneCalibPoint option:selected').val()) {
+					case "origin":
+						descriptors = [0, 0.0, 0.0];
+						break;
+					case "xAxis":
+						descriptors = [1, canvasWidth, 0.0];
+						break;
+					case "yAxis":
+						descriptors = [2, 0.0, canvasHeight];
+						break;
+				};
 				
-			// 		placement: 'left',
-			// 		title: 'Calibrate',
-			// 		html:true,
-			// 		container: 'body',
-			// 		//trigger: 'focus',
-			// 		content: $('#calibrationForm').html()
-			// 	}).on('click', function(){
-					
-			// 	})
-			// });
-			
+				var descriptors = [calibPointID];
+				console.log(descriptors);	
+				var commandData = {
+					'type': "calib",
+					'action': "upd",
+					'target': targetType, 
+					'name': geometryID,
+					'descriptors': descriptors
+				};
+				$.ajax({
+					url: $SCRIPT_ROOT + 'sendCommands/',
+					data: commandData,
+					method: 'POST',
+					success: function(data) {
+						console.alert("Calibration successful")
+						console.log(data)
+						//callback()           
+					},
+					async: true //async_bool
+				});  	
+			};
 
 			function onCanvasDoubleClick( event ) {
 				event.preventDefault();
