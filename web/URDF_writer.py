@@ -1483,6 +1483,48 @@ class UrdfWriter:
                       pitch=pitch,
                       yaw=yaw)
 
+    # temporary solution for single chain robots
+    # useful to run CartesianImpedanceController automatically
+    def write_problem_description(self):
+        basic_probdesc_filename = path_name + '/cartesio/ModularBotcartesio_config.yaml'
+        probdesc_filename = path_name + '/ModularBot/cartesio/ModularBot_cartesio_config.yaml'
+        probdesc = OrderedDict([])
+
+        with open(basic_probdesc_filename, 'r') as stream:
+            try:
+                probdesc = ordered_load(stream, yaml.SafeLoader)
+                # cartesio_stack['EE']['base_link'] = self.listofchains[0]
+                print(probdesc.items()[0])
+            except yaml.YAMLError as exc:
+                print(exc)
+                
+        print(probdesc.items())
+        joints_chain = self.listofchains[0]
+        if joints_chain[-1].children:
+            if "con" in joints_chain[-1].children[0].name:
+                tip_link = joints_chain[-1].children[0].children[0].name
+            else:
+                tip_link = joints_chain[-1].children[0].name
+        else:
+            tip_link = 'L_' + str(joints_chain[-1].i) + joints_chain[-1].tag
+            if joints_chain[-1].type == 'tool_exchanger':
+                tip_link = joints_chain[-1].name
+        probdesc['distal_link'] = tip_link
+
+         # Create folder if doesen't exist
+        if not os.path.exists(os.path.dirname(probdesc_filename)):
+            try:
+                os.makedirs(os.path.dirname(probdesc_filename))
+            except OSError as exc: # Guard against race condition
+                if exc.errno != errno.EEXIST:
+                    raise
+
+        with open(probdesc_filename, 'w') as outfile:
+            #ordered_dump(probdesc, stream=outfile, Dumper=yaml.SafeDumper,  default_flow_style=False, line_break='\n\n', indent=4)
+            ordered_dump(probdesc, stream=outfile, default_flow_style=False, line_break='\n\n', indent=4, canonical = False)
+        return probdesc
+
+
     def write_lowlevel_config(self, use_robot_id=False):
         """Creates the low level config file needed by XBotCore """
 
