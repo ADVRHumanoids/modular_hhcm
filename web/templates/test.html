@@ -340,7 +340,8 @@
 				console.log(scene.position);
 				clock = new THREE.Clock();
 				camera = new THREE.PerspectiveCamera( 70, 1, 1, 1000 );
-				camera.position.set( 0, 6, 0 );
+				// camera.up.set(0,0,1);
+				camera.position.set( 0, 0, 6 );
 				camera.lookAt( scene.position );
 				camera.updateMatrix();
         
@@ -348,15 +349,14 @@
 				scene.add(new THREE.HemisphereLight(0x443333, 0x111122));
 
 				var geometry = new THREE.PlaneBufferGeometry(20, 20);
-				geometry.rotateX(- Math.PI / 2);
+				// geometry.rotateX(- Math.PI / 2);
 				var material = new THREE.ShadowMaterial({ opacity: 0.2 });
 				plane = new THREE.Mesh(geometry, material);
-				plane.position.y = 0;
 				plane.receiveShadow = true;
 				scene.add(plane);
 
 				var helper = new THREE.GridHelper(20, 200);
-				helper.position.y = 0;
+				helper.rotateX(Math.PI / 2);
 				scene.add(helper);
 
 				var worldAxis = new THREE.AxesHelper(1);
@@ -575,6 +575,7 @@
 
 			function projectOnPlane(point){
 				raycaster.setFromCamera( point, camera );
+				
 				var intersections = raycaster.intersectObject( plane );
 				var intersection = ( intersections.length ) > 0 ? intersections[ 0 ] : null;
 				
