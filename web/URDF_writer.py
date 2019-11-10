@@ -1486,7 +1486,7 @@ class UrdfWriter:
     # temporary solution for single chain robots
     # useful to run CartesianImpedanceController automatically
     def write_problem_description(self):
-        basic_probdesc_filename = path_name + '/cartesio/ModularBotcartesio_config.yaml'
+        basic_probdesc_filename = path_name + '/cartesio/ModularBot_cartesio_config.yaml'
         probdesc_filename = path_name + '/ModularBot/cartesio/ModularBot_cartesio_config.yaml'
         probdesc = OrderedDict([])
 
@@ -1509,7 +1509,7 @@ class UrdfWriter:
             tip_link = 'L_' + str(joints_chain[-1].i) + joints_chain[-1].tag
             if joints_chain[-1].type == 'tool_exchanger':
                 tip_link = joints_chain[-1].name
-        probdesc['distal_link'] = tip_link
+        probdesc['EE']['distal_link'] = tip_link
 
          # Create folder if doesen't exist
         if not os.path.exists(os.path.dirname(probdesc_filename)):

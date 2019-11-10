@@ -73,7 +73,7 @@ def writeURDF():
     json_jm = request.form.get('jointMap', 0)
     print(json_jm)
     builder_jm = json.loads(json_jm)
-    building_mode_ON = True if request.form.get('buildingModeOn', 0) == 'true' else False
+    building_mode_ON = True if request.form.get('buildingModeON', 0) == 'true' else False
     if building_mode_ON :
         data = urdf_writer.write_urdf()
         srdf = urdf_writer.write_srdf(builder_jm)

@@ -159,13 +159,18 @@ cat >> cartesio.launch << 'EOF'
 EOF
 
 cat > ${package_name}_cartesio.launch << EOF
+<launch>
+    <arg name="pkg_name"  default="${package_name}"/>
     <arg name="rate" default="100.0"/>
     <arg name="prefix" default=""/>
-    
+EOF    
+
+cat > ${package_name}_cartesio.launch << 'EOF'
     <param name="cartesian/problem_description" 
-        textfile="${package_name}/cartesio/ModularBot_cartesio_config.yaml"/>
+        textfile="$(eval find(pkg_name)/cartesio/ModularBot_cartesio_config.yaml)"/>
    
     <param name="is_model_floating_base" value="false"/>
+</launch>
 EOF
 
 cd ..
