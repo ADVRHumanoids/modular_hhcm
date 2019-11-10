@@ -44,7 +44,7 @@
 				left: 0;
 				float: right;
 			}
-			#buttonator {
+			#leftBar {
 				width: 15%;
 				height: 100%;
 				position: fixed;
@@ -60,7 +60,7 @@
 			}		
 			.button {
 				background-size: 100% 100%;
-				height: 100px;
+				/* height: 100px; */
 				width: 100%;
 				padding-bottom: 10px;
 				/* text-align: center; */
@@ -91,105 +91,111 @@
 			#selectColor{
 				width:100%;
 			}
+			.section{
+				height:12.5%
+			}
 		</style>
 		<div id="container">
 		  <canvas></canvas>
 		</div>
 		<div id="info"><a href="http://threejs.org" target="_blank" rel="noopener">three.js</a> webgl - interactive - raycasting - points </div>
-		<div id="buttonator" style="overflow-y:auto;">
-			<span id="result">
+		<div id="leftBar" style="overflow-y:auto;">
+			<div id ="selector">
+				<!-- <label for="selectTask">What do you want to calibrate?</label> -->
+				<select name="selectTask" id="selectTask" class="selectpicker" title="Please select a task:">
+					<option value=''>Select a task:</option>
+				</select>
+				<select name="selectGeometry" id="selectGeometry" class="selectpicker" title="Please select a task:">
+					<option value=''>Select a geometry:</option>
+				</select>
+				<select name="selectColor" id="selectColor" class="selectpicker" title="Please select a task:">
+					<option value=''>Select a color:</option>
+				</select>
+			</div id ="buttonator">
+				<span id="result" class="section">
 
-			</span> 
-			<!-- <label for="selectTask">What do you want to calibrate?</label> -->
-			<select name="selectTask" id="selectTask" class="selectpicker" title="Please select a task:">
-				<option value=''>Select a task:</option>
-			</select>
-			<select name="selectGeometry" id="selectGeometry" class="selectpicker" title="Please select a task:">
-				<option value=''>Select a geometry:</option>
-			</select>
-			<select name="selectColor" id="selectColor" class="selectpicker" title="Please select a task:">
-				<option value=''>Select a color:</option>
-			</select>
-			<button type="button" id="addPath" class="button"><div>Add Path</div></button>
-			<button type="button" id="removePath" class="button"><div>Remove Path</div></button>
-			<button type="button" id="removeAll" class="button"><div>Remove All</div></button>
-			<!-- <button type="button" id="calibrate"  data-toggle="popover" class="button">Calibrate</button> -->
-			<!-- id="calibrate" -->
-			<button type="button" class="button calibrate" data-toggle="popover" data-target="#calibration-popover"><div>Calibration</div></button>
-			<script type="text/html" id="calibration-popover">	
-				<div id="calibrationForm"> 
-					<!-- class="hidden"> -->
-					<label for="selectCalibTarget">What do you want to calibrate?</label>
-					<select name="selectCalibTarget" id="selectCalibTarget" class="selectpicker">
-					<!-- </select> onchange="onChangeSelect()"> -->
-						<option value="plane">Plane</option>
-						<option value="colors">Colors</option>
-						<option value="homing">Homing</option>
-					</select>	
-					<label for="geometryID">Choose a name for the geometry to calibrate</label>
-					<input type="text" name="geometryID" id="geometryID" value="plane_1"class="form-control input-md">
-					<div id="planeCalibration" class="form-group">
-						<label for="selectPlaneCalibPoint">Choose the point to calibrate</label>
-						<select name="selectPlaneCalibPoint" id="selectPlaneCalibPoint" class="selectpicker">
-							<option value="origin">origin</option>
-							<option value="xAxis">X axis</option>
-							<option value="yAxis">Y axis</option>
-						</select>
-					</div>
-					<div id="colorsCalibration" class="form-group" style="display:none">
-						<label for="selectColorsCalibPoint">Choose the point to calibrate</label>
-						<select name="selectColorsCalibPoint" id="selectColorsCalibPoint" class="selectpicker">
-							<option value="color_1">color 1</option>
-							<option value="color_2">color 2</option>
-							<option value="color_3">color 3</option>
-							<option value="color_4">color 4</option>
-							<option value="color_5">color 5</option>
-						</select>
-					</div>
-					<div id="homingCalibration" class="form-group" style="display:none">TO BE IMPLEMENTED</div>
-					<div id="homingCalibration" class="form-group">Place the robot end-effector on the point to calibrate</div>
-					<button type="button" class="btn btn-primary" data-loading-text="Sending info.."><em class="icon-ok"></em> Capture point</button>
-				</div>	
-			</script>
-			<button type="button" class="button setParameters" data-toggle="popover" data-target="#parameters-popover"><div>Set Parameters</div></button>
-			<script type="text/html" id="parameters-popover">
-				<div id="parametersForm"> 
-				<!-- class="hide"> -->
-					<label for="selectBehavior">Behavior to set:</label>
-					<select name="selectBehavior" id="selectBehavior" class="selectpicker">
-						<option value="movingBehavior">Moving behavior</option>
-						<option value="stationaryBehavior">Stationary behavior</option>
-					</select>	
-					<div class="row">
-						<div class="col-md-6">
-							<label for="Kx">Kx (N/m):</label>
-							<input type="number" name="Kx" id="Kx" value="1200" step="100" class="form-control form-control-sm">
-							<label for="Ky">Ky (N/m):</label>
-							<input type="number" name="Ky" id="Ky" value="1200" step="100" class="form-control form-control-sm">
-							<label for="Kz">Kz (N/m):</label>
-							<input type="number" name="Kz" id="Kz" value="1200" step="100" class="form-control form-control-sm ">
+				</span> 
+				<button type="button" id="addPath" class="button section"><div>Add Path</div></button>
+				<button type="button" id="removePath" class="button section"><div>Remove Path</div></button>
+				<button type="button" id="removeAll" class="button section"><div>Remove All</div></button>
+				<!-- <button type="button" id="calibrate"  data-toggle="popover" class="button">Calibrate</button> -->
+				<!-- id="calibrate" -->
+				<button type="button" class="button calibrate section" data-toggle="popover" data-target="#calibration-popover"><div>Calibration</div></button>
+				<script type="text/html" id="calibration-popover">	
+					<div id="calibrationForm"> 
+						<!-- class="hidden"> -->
+						<label for="selectCalibTarget">What do you want to calibrate?</label>
+						<select name="selectCalibTarget" id="selectCalibTarget" class="selectpicker">
+						<!-- </select> onchange="onChangeSelect()"> -->
+							<option value="plane">Plane</option>
+							<option value="colors">Colors</option>
+							<option value="homing">Homing</option>
+						</select>	
+						<label for="geometryID">Choose a name for the geometry to calibrate</label>
+						<input type="text" name="geometryID" id="geometryID" value="plane_1"class="form-control input-md">
+						<div id="planeCalibration" class="form-group">
+							<label for="selectPlaneCalibPoint">Choose the point to calibrate</label>
+							<select name="selectPlaneCalibPoint" id="selectPlaneCalibPoint" class="selectpicker">
+								<option value="origin">origin</option>
+								<option value="xAxis">X axis</option>
+								<option value="yAxis">Y axis</option>
+							</select>
 						</div>
-						<div class="col-xs-6">
-								<label for="Rx">Rx (Nm/rad):</label>
-								<input type="number" name="Rx" id="Rx" value="200" step="10" class="form-control form-control-sm ">
-								<label for="Ry">Ry (Nm/rad):</label>
-								<input type="number" name="Ry" id="Ry" value="200" step="10" class="form-control form-control-sm ">
-								<label for="Rz">Rz (Nm/rad):</label>
-								<input type="number" name="Rz" id="Rz" value="0" step="10" class="form-control form-control-sm">	
+						<div id="colorsCalibration" class="form-group" style="display:none">
+							<label for="selectColorsCalibPoint">Choose the point to calibrate</label>
+							<select name="selectColorsCalibPoint" id="selectColorsCalibPoint" class="selectpicker">
+								<option value="color_1">color 1</option>
+								<option value="color_2">color 2</option>
+								<option value="color_3">color 3</option>
+								<option value="color_4">color 4</option>
+								<option value="color_5">color 5</option>
+							</select>
 						</div>
+						<div id="homingCalibration" class="form-group" style="display:none">TO BE IMPLEMENTED</div>
+						<div id="homingCalibration" class="form-group">Place the robot end-effector on the point to calibrate</div>
+						<button type="button" class="btn btn-primary" data-loading-text="Sending info.."><em class="icon-ok"></em> Capture point</button>
+					</div>	
+				</script>
+				<button type="button" class="button setParameters section" data-toggle="popover" data-target="#parameters-popover"><div>Set Parameters</div></button>
+				<script type="text/html" id="parameters-popover">
+					<div id="parametersForm"> 
+					<!-- class="hide"> -->
+						<label for="selectBehavior">Behavior to set:</label>
+						<select name="selectBehavior" id="selectBehavior" class="selectpicker">
+							<option value="movingBehavior">Moving behavior</option>
+							<option value="stationaryBehavior">Stationary behavior</option>
+						</select>	
+						<div class="row">
+							<div class="col-md-6">
+								<label for="Kx">Kx (N/m):</label>
+								<input type="number" name="Kx" id="Kx" value="1200" step="100" class="form-control form-control-sm">
+								<label for="Ky">Ky (N/m):</label>
+								<input type="number" name="Ky" id="Ky" value="1200" step="100" class="form-control form-control-sm">
+								<label for="Kz">Kz (N/m):</label>
+								<input type="number" name="Kz" id="Kz" value="1200" step="100" class="form-control form-control-sm ">
+							</div>
+							<div class="col-xs-6">
+									<label for="Rx">Rx (Nm/rad):</label>
+									<input type="number" name="Rx" id="Rx" value="200" step="10" class="form-control form-control-sm ">
+									<label for="Ry">Ry (Nm/rad):</label>
+									<input type="number" name="Ry" id="Ry" value="200" step="10" class="form-control form-control-sm ">
+									<label for="Rz">Rz (Nm/rad):</label>
+									<input type="number" name="Rz" id="Rz" value="0" step="10" class="form-control form-control-sm">	
+							</div>
+						</div>
+						<label for="Fz">Fz (N):</label>
+						<input type="number" name="Fz" id="Fz" value="-1" step="0.1" class="form-control input-md">
+						<label for="baseLink">base link:</label>
+						<input type="text" name="baseLink" id="baseLink" value="base_link"class="form-control input-md">
+						<label for="distalLink">distal link:</label>
+						<input type="text" name="distalLink" id="distalLink" value="TCP"class="form-control input-md">
+						<label for="desiredVelocity">desired velocity (m/s):</label>
+						<input type="number" name="desiredVelocity" id="desiredVelocity" value="0.05" step="0.01" class="form-control input-md">
+						<button type="button" class="btn btn-primary" data-loading-text="Sending info.."><em class="icon-ok"></em> Set Parameters</button>
 					</div>
-					<label for="Fz">Fz (N):</label>
-					<input type="number" name="Fz" id="Fz" value="-1" step="0.1" class="form-control input-md">
-					<label for="baseLink">base link:</label>
-					<input type="text" name="baseLink" id="baseLink" value="base_link"class="form-control input-md">
-					<label for="distalLink">distal link:</label>
-					<input type="text" name="distalLink" id="distalLink" value="TCP"class="form-control input-md">
-					<label for="desiredVelocity">desired velocity (m/s):</label>
-					<input type="number" name="desiredVelocity" id="desiredVelocity" value="0.05" step="0.01" class="form-control input-md">
-					<button type="button" class="btn btn-primary" data-loading-text="Sending info.."><em class="icon-ok"></em> Set Parameters</button>
-				</div>
-			</script>
-			<!-- <div id="result"></div> -->
+				</script>
+				<!-- <div id="result"></div> -->
+			</div>
 		</div>
 
 		<script type=text/javascript>
