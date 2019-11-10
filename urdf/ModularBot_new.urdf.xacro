@@ -49,6 +49,10 @@
         <color rgba="1 1 0 1"/>
     </material>
 
+    <material name="tree_green">
+        <color rgba="0.13 0.54 0.13 1"/>
+    </material>
+
 
     <xacro:macro name="default_inertial" params="mass">
         <inertial>
@@ -563,6 +567,7 @@
                     <geometry>
                         <mesh filename="${module['visual']['mesh_body_2']}" scale="0.001 0.001 0.001"/>
                     </geometry>
+                    <material name="tree_green"/>
                 </visual>
                 <collision>
                     <origin 
@@ -618,7 +623,7 @@
                     <geometry>
                         <mesh filename="${module['visual']['mesh_body_1']}" scale="0.001 0.001 0.001"/>
                     </geometry>
-                    <material name="yellow"/>
+                    <material name="black"/>
                 </visual>
                 <collision>
                     <origin 
@@ -711,7 +716,7 @@
                     <geometry>
                         <mesh filename="${module['visual']['mesh_body_1']}" scale="0.001 0.001 0.001"/>
                     </geometry>
-                    <material name="grey"/>
+                    <material name="tree_green"/>
                 </visual>
                 <collision>
                     <origin 
