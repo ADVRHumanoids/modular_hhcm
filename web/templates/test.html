@@ -1,276 +1,301 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<title>Draw Canvas</title>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-		
-		<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
-		<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script> -->
-		
-		<!-- <link rel="styles&heet" type="text/css" href="main.css"> -->
-		
-		<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
-		<!-- <link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" /> -->
-		
-		<!-- <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script> -->
-		<script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
-		
-		<!-- Latest compiled and minified CSS -->
-		<!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/css/bootstrap-select.min.css"> -->
 
-		<!-- Latest compiled and minified JavaScript -->
-		<!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/js/bootstrap-select.min.js"></script> -->
+<head>
+	<title>Draw Canvas</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 
-		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/89/three.js"></script>
-		
-		<script type="text/javascript" src="http://static.robotwebtools.org/EventEmitter2/current/eventemitter2.min.js"></script>
-		<script type="text/javascript" src="http://static.robotwebtools.org/roslibjs/current/roslib.min.js"></script>
+	<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+	<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script> -->
 
-		<link rel="stylesheet" type="text/css" href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">
-		
-		
-	</head>
+	<!-- <link rel="styles&heet" type="text/css" href="main.css"> -->
 
-	<body>
-		<style type="text/css">
-			#container {       
-				width: 85%;
-				height: 100%;
-				position: fixed;
-				z-index: 1;
-				overflow-x: hidden;
-				top: 0;
-				left: 0;
-				float: right;
-			}
-			#leftBar {
-				width: 15%;
-				height: 100%;
-				position: fixed;
-				z-index: 1;
-				overflow-x: hidden;
-				top: 0;
-				right: 0;
-				float: right;
-				/*display: none;*/
-				/* float:right;
+	<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+	<!-- <link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" /> -->
+
+	<!-- <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script> -->
+	<script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+
+	<!-- Latest compiled and minified CSS -->
+	<!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/css/bootstrap-select.min.css"> -->
+
+	<!-- Latest compiled and minified JavaScript -->
+	<!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/js/bootstrap-select.min.js"></script> -->
+
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/89/three.js"></script>
+
+	<script type="text/javascript"
+		src="http://static.robotwebtools.org/EventEmitter2/current/eventemitter2.min.js"></script>
+	<script type="text/javascript" src="http://static.robotwebtools.org/roslibjs/current/roslib.min.js"></script>
+
+	<link rel="stylesheet" type="text/css"
+		href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">
+
+	<script type="text/javascript" src="{{ url_for('static', filename='/examples/js/controls/OrbitControls.js') }}"></script>
+
+
+</head>
+
+<body>
+	<style type="text/css">
+		#container {
+			width: 85%;
+			height: 100%;
+			position: fixed;
+			z-index: 1;
+			overflow-x: hidden;
+			top: 0;
+			left: 0;
+			float: right;
+		}
+
+		#leftBar {
+			width: 15%;
+			height: 100%;
+			position: fixed;
+			z-index: 1;
+			overflow-x: hidden;
+			top: 0;
+			right: 0;
+			float: right;
+			/*display: none;*/
+			/* float:right;
 				width:50px;
 				height:100px; */
-			}		
-			.button {
-				background-size: 100% 100%;
-				/* height: 100px; */
-				width: 100%;
-				padding-bottom: 10px;
-				/* text-align: center; */
-				/* text-decoration: none;
+		}
+
+		.button {
+			background-size: 100% 100%;
+			/* height: 100px; */
+			width: 100%;
+			padding-bottom: 10px;
+			/* text-align: center; */
+			/* text-decoration: none;
 				display: inline-block; */
-				font-size: 16px;
-			}
-			canvas { 
-				width: 100%;
-        		height: 100%;
-				/*margin: auto;
+			font-size: 16px;
+		}
+
+		canvas {
+			width: 100%;
+			height: 100%;
+			/*margin: auto;
 				padding: 10px 10px 10px 10px; */
-				display: block;
-			}
-			.settings{
-				display:block;
-				height:50px;
-				width:50px;
-				margin:10px;
-				cursor:pointer;
-			}
-			#selectTask{
-				width:100%;
-			}
-			#selectGeometry{
-				width:100%;
-			}
-			#selectColor{
-				width:100%;
-			}
-			.section{
-				height:12.5%
-			}
-		</style>
-		<div id="container">
-		  <canvas></canvas>
-		</div>
-		<div id="info"><a href="http://threejs.org" target="_blank" rel="noopener">three.js</a> webgl - interactive - raycasting - points </div>
-		<div id="leftBar" style="overflow-y:auto;">
-			<div id ="selector">
-				<!-- <label for="selectTask">What do you want to calibrate?</label> -->
-				<select name="selectTask" id="selectTask" class="selectpicker" title="Please select a task:">
-					<option value=''>Select a task:</option>
-				</select>
-				<select name="selectGeometry" id="selectGeometry" class="selectpicker" title="Please select a task:">
-					<option value=''>Select a geometry:</option>
-				</select>
-				<select name="selectColor" id="selectColor" class="selectpicker" title="Please select a task:">
-					<option value=''>Select a color:</option>
-				</select>
-			</div id ="buttonator">
-				<span id="result" class="section">
+			display: block;
+		}
 
-				</span> 
-				<button type="button" id="addPath" class="button section"><div>Add Path</div></button>
-				<button type="button" id="removePath" class="button section"><div>Remove Path</div></button>
-				<button type="button" id="removeAll" class="button section"><div>Remove All</div></button>
-				<!-- <button type="button" id="calibrate"  data-toggle="popover" class="button">Calibrate</button> -->
-				<!-- id="calibrate" -->
-				<button type="button" class="button calibrate section" data-toggle="popover" data-target="#calibration-popover"><div>Calibration</div></button>
-				<script type="text/html" id="calibration-popover">	
-					<div id="calibrationForm"> 
-						<!-- class="hidden"> -->
-						<label for="selectCalibTarget">What do you want to calibrate?</label>
-						<select name="selectCalibTarget" id="selectCalibTarget" class="selectpicker">
-						<!-- </select> onchange="onChangeSelect()"> -->
-							<option value="plane">Plane</option>
-							<option value="colors">Colors</option>
-							<option value="homing">Homing</option>
-						</select>	
-						<label for="geometryID">Choose a name for the geometry to calibrate</label>
-						<input type="text" name="geometryID" id="geometryID" value="plane_1"class="form-control input-md">
-						<div id="planeCalibration" class="form-group">
-							<label for="selectPlaneCalibPoint">Choose the point to calibrate</label>
-							<select name="selectPlaneCalibPoint" id="selectPlaneCalibPoint" class="selectpicker">
-								<option value="origin">origin</option>
-								<option value="xAxis">X axis</option>
-								<option value="yAxis">Y axis</option>
-							</select>
-						</div>
-						<div id="colorsCalibration" class="form-group" style="display:none">
-							<label for="selectColorsCalibPoint">Choose the point to calibrate</label>
-							<select name="selectColorsCalibPoint" id="selectColorsCalibPoint" class="selectpicker">
-								<option value="color_1">color 1</option>
-								<option value="color_2">color 2</option>
-								<option value="color_3">color 3</option>
-								<option value="color_4">color 4</option>
-								<option value="color_5">color 5</option>
-							</select>
-						</div>
-						<div id="homingCalibration" class="form-group" style="display:none">TO BE IMPLEMENTED</div>
-						<div id="homingCalibration" class="form-group">Place the robot end-effector on the point to calibrate</div>
-						<button type="button" class="btn btn-primary" data-loading-text="Sending info.."><em class="icon-ok"></em> Capture point</button>
-					</div>	
-				</script>
-				<button type="button" class="button setParameters section" data-toggle="popover" data-target="#parameters-popover"><div>Set Parameters</div></button>
-				<script type="text/html" id="parameters-popover">
-					<div id="parametersForm"> 
-					<!-- class="hide"> -->
-						<label for="selectBehavior">Behavior to set:</label>
-						<select name="selectBehavior" id="selectBehavior" class="selectpicker">
-							<option value="movingBehavior">Moving behavior</option>
-							<option value="stationaryBehavior">Stationary behavior</option>
-						</select>	
-						<div class="row">
-							<div class="col-md-6">
-								<label for="Kx">Kx (N/m):</label>
-								<input type="number" name="Kx" id="Kx" value="1200" step="100" class="form-control form-control-sm">
-								<label for="Ky">Ky (N/m):</label>
-								<input type="number" name="Ky" id="Ky" value="1200" step="100" class="form-control form-control-sm">
-								<label for="Kz">Kz (N/m):</label>
-								<input type="number" name="Kz" id="Kz" value="1200" step="100" class="form-control form-control-sm ">
-							</div>
-							<div class="col-xs-6">
-									<label for="Rx">Rx (Nm/rad):</label>
-									<input type="number" name="Rx" id="Rx" value="200" step="10" class="form-control form-control-sm ">
-									<label for="Ry">Ry (Nm/rad):</label>
-									<input type="number" name="Ry" id="Ry" value="200" step="10" class="form-control form-control-sm ">
-									<label for="Rz">Rz (Nm/rad):</label>
-									<input type="number" name="Rz" id="Rz" value="0" step="10" class="form-control form-control-sm">	
-							</div>
-						</div>
-						<label for="Fz">Fz (N):</label>
-						<input type="number" name="Fz" id="Fz" value="-1" step="0.1" class="form-control input-md">
-						<label for="baseLink">base link:</label>
-						<input type="text" name="baseLink" id="baseLink" value="base_link"class="form-control input-md">
-						<label for="distalLink">distal link:</label>
-						<input type="text" name="distalLink" id="distalLink" value="TCP"class="form-control input-md">
-						<label for="desiredVelocity">desired velocity (m/s):</label>
-						<input type="number" name="desiredVelocity" id="desiredVelocity" value="0.05" step="0.01" class="form-control input-md">
-						<button type="button" class="btn btn-primary" data-loading-text="Sending info.."><em class="icon-ok"></em> Set Parameters</button>
+		.settings {
+			display: block;
+			height: 50px;
+			width: 50px;
+			margin: 10px;
+			cursor: pointer;
+		}
+
+		#selectTask {
+			width: 100%;
+		}
+
+		#selectGeometry {
+			width: 100%;
+		}
+
+		#selectColor {
+			width: 100%;
+		}
+
+		.section {
+			height: 12.5%
+		}
+	</style>
+	<div id="container">
+		<canvas></canvas>
+	</div>
+	<div id="info"><a href="http://threejs.org" target="_blank" rel="noopener">three.js</a> webgl - interactive -
+		raycasting - points </div>
+	<div id="leftBar" style="overflow-y:auto;">
+		<div id="selector">
+			<!-- <label for="selectTask">What do you want to calibrate?</label> -->
+			<select name="selectTask" id="selectTask" class="selectpicker" title="Please select a task:">
+				<option value=''>Select a task:</option>
+			</select>
+			<select name="selectGeometry" id="selectGeometry" class="selectpicker" title="Please select a task:">
+				<option value=''>Select a geometry:</option>
+			</select>
+			<select name="selectColor" id="selectColor" class="selectpicker" title="Please select a task:">
+				<option value=''>Select a color:</option>
+			</select>
+		</div>
+		<div id="buttonator">
+			<span id="result" class="section">
+				Please Calibrate the plane to draw on
+			</span>
+			<button type="button" id="addPath" class="button section">
+				<div>Add Path</div>
+			</button>
+			<button type="button" id="removePath" class="button section">
+				<div>Remove Path</div>
+			</button>
+			<button type="button" id="removeAll" class="button section">
+				<div>Remove All</div>
+			</button>
+			<!-- <button type="button" id="calibrate"  data-toggle="popover" class="button">Calibrate</button> -->
+			<!-- id="calibrate" -->
+			<button type="button" class="button calibrate section" data-toggle="popover" data-target="#calibration-popover">
+				<div>Calibration</div>
+			</button>
+			<script type="text/html" id="calibration-popover">
+				<div id="calibrationForm"> 
+					<!-- class="hidden"> -->
+					<label for="selectCalibTarget">What do you want to calibrate?</label>
+					<select name="selectCalibTarget" id="selectCalibTarget" class="selectpicker">
+					<!-- </select> onchange="onChangeSelect()"> -->
+						<option value="plane">Plane</option>
+						<option value="colors">Colors</option>
+						<option value="homing">Homing</option>
+					</select>	
+					<label for="geometryID">Choose a name for the geometry to calibrate</label>
+					<input type="text" name="geometryID" id="geometryID" value="plane_1"class="form-control input-md">
+					<div id="planeCalibration" class="form-group">
+						<label for="selectPlaneCalibPoint">Choose the point to calibrate</label>
+						<select name="selectPlaneCalibPoint" id="selectPlaneCalibPoint" class="selectpicker">
+							<option value="origin">origin</option>
+							<option value="xAxis">X axis</option>
+							<option value="yAxis">Y axis</option>
+						</select>
 					</div>
-				</script>
-				<!-- <div id="result"></div> -->
-			</div>
+					<div id="colorsCalibration" class="form-group" style="display:none">
+						<label for="selectColorsCalibPoint">Choose the point to calibrate</label>
+						<select name="selectColorsCalibPoint" id="selectColorsCalibPoint" class="selectpicker">
+							<option value="color_1">color 1</option>
+							<option value="color_2">color 2</option>
+							<option value="color_3">color 3</option>
+							<option value="color_4">color 4</option>
+							<option value="color_5">color 5</option>
+						</select>
+					</div>
+					<div id="homingCalibration" class="form-group" style="display:none">TO BE IMPLEMENTED</div>
+					<div id="homingCalibration" class="form-group">Place the robot end-effector on the point to calibrate</div>
+					<button type="button" class="btn btn-primary" data-loading-text="Sending info.."><em class="icon-ok"></em> Capture point</button>
+				</div>	
+			</script>
+			<button type="button" class="button setParameters section" data-toggle="popover"
+				data-target="#parameters-popover">
+				<div>Set Parameters</div>
+			</button>
+			<script type="text/html" id="parameters-popover">
+				<div id="parametersForm"> 
+				<!-- class="hide"> -->
+					<label for="selectBehavior">Behavior to set:</label>
+					<select name="selectBehavior" id="selectBehavior" class="selectpicker">
+						<option value="movingBehavior">Moving behavior</option>
+						<option value="stationaryBehavior">Stationary behavior</option>
+					</select>	
+					<div class="row">
+						<div class="col-md-6">
+							<label for="Kx">Kx (N/m):</label>
+							<input type="number" name="Kx" id="Kx" value="1200" step="100" class="form-control form-control-sm">
+							<label for="Ky">Ky (N/m):</label>
+							<input type="number" name="Ky" id="Ky" value="1200" step="100" class="form-control form-control-sm">
+							<label for="Kz">Kz (N/m):</label>
+							<input type="number" name="Kz" id="Kz" value="1200" step="100" class="form-control form-control-sm ">
+						</div>
+						<div class="col-xs-6">
+								<label for="Rx">Rx (Nm/rad):</label>
+								<input type="number" name="Rx" id="Rx" value="200" step="10" class="form-control form-control-sm ">
+								<label for="Ry">Ry (Nm/rad):</label>
+								<input type="number" name="Ry" id="Ry" value="200" step="10" class="form-control form-control-sm ">
+								<label for="Rz">Rz (Nm/rad):</label>
+								<input type="number" name="Rz" id="Rz" value="0" step="10" class="form-control form-control-sm">	
+						</div>
+					</div>
+					<label for="Fz">Fz (N):</label>
+					<input type="number" name="Fz" id="Fz" value="-1" step="0.1" class="form-control input-md">
+					<label for="baseLink">base link:</label>
+					<input type="text" name="baseLink" id="baseLink" value="base_link"class="form-control input-md">
+					<label for="distalLink">distal link:</label>
+					<input type="text" name="distalLink" id="distalLink" value="TCP"class="form-control input-md">
+					<label for="desiredVelocity">desired velocity (m/s):</label>
+					<input type="number" name="desiredVelocity" id="desiredVelocity" value="0.05" step="0.01" class="form-control input-md">
+					<button type="button" class="btn btn-primary" data-loading-text="Sending info.."><em class="icon-ok"></em> Set Parameters</button>
+				</div>
+			</script>
+			<!-- <div id="result"></div> -->
 		</div>
+	</div>
 
-		<script type=text/javascript>
-			$SCRIPT_ROOT = "{{ url_for('index', _external=True) }}";
-		</script>
-
-		<script type="module">
+	<script type=text/javascript> $SCRIPT_ROOT="{{ url_for('index', _external=True) }}" ; </script> <script
+		type="module">
 			// import * as THREE from '../build/three.module.js';
 			// import Stats from './jsm/libs/stats.module.js';
 			var canvas;
-      		var renderer, scene, camera, stats;
-      		var plane;
+			var renderer, scene, camera, stats;
+			var cameraTarget = new THREE.Vector3();
+			var plane;
+			var grid;
 			var raycaster;
 			var mouse = new THREE.Vector2();
 			var dblClick = new THREE.Vector2();
-			var previousPoint; 
-			var distanceThreshold = 0.5; 
+			var previousPoint;
+			var distanceThreshold = 0.5;
 			var tailSpheres = [];
-      		var drawPoints = [];
+			var drawPoints = [];
 			var segments = [];
-			var paths = [];  
+			var paths = [];
 			var spheresIndex = 0;
 			var clock;
 			var raycast_threshold = 0.1;
 			var pointSize = 0.05;
 
-			var taskList=[], geometryList=[], colorList=[], robotPose, robotCanvasPoint;
-			
+			var taskList = [], geometryList = [], colorList = [], robotPose, robotCanvasPoint;
+
 			let mouseDown = false;
 
 			var ros = new ROSLIB.Ros({
-				url : 'ws://192.168.9.211:9090'
+				url: 'ws://192.168.9.211:9090'
 			});
 
-			ros.on('connection', function() {
+			ros.on('connection', function () {
 				console.log('Connected to websocket server.');
 			});
 
-			ros.on('error', function(error) {
+			ros.on('error', function (error) {
 				console.log('Error connecting to websocket server: ', error);
 			});
 
-			ros.on('close', function() {
+			ros.on('close', function () {
 				console.log('Connection to websocket server closed.');
 			});
 
 			var jointstate_listener = new ROSLIB.Topic({
-				ros : ros,
-				name : '/xbotcore/joint_states',
-				messageType : 'xbot_msgs/JointState'
+				ros: ros,
+				name: '/xbotcore/joint_states',
+				messageType: 'xbot_msgs/JointState'
 			});
 
 			var server_listener = new ROSLIB.Topic({
-				ros : ros,
-				name : '/conda',
-				messageType : 'conda_msg'
+				ros: ros,
+				name: '/conda',
+				messageType: 'conda_msg'
 			});
-			
-			window.onload = function() {
+
+			window.onload = function () {
 				var removePathBtn = document.getElementById('removePath');
 				var addPathBtn = document.getElementById('addPath');
 				var removeAllBtn = document.getElementById('removeAll');
 				var selectTask = document.getElementById("selectTask");
 				var selectGeometry = document.getElementById("selectGeometry");
 				var selectColor = document.getElementById("selectColor");
-				
-				addPathBtn.onclick = function() {addPath()};
-				removePathBtn.onclick = function() {removePath()};
-				removeAllBtn.onclick = function() {removeAll()};
 
-				jointstate_listener.subscribe(function(m) {
+				addPathBtn.onclick = function () { addPath() };
+				removePathBtn.onclick = function () { removePath() };
+				removeAllBtn.onclick = function () { removeAll() };
+
+				jointstate_listener.subscribe(function (m) {
 					// console.log(m)
 				});
 
-				server_listener.subscribe(function(m) {
+				server_listener.subscribe(function (m) {
 					robotPose = m.robot_pose;
 					console.log(m.robot_pose)
 					updateSelectChoices(selectTask, m.task_list, taskList)
@@ -282,7 +307,7 @@
 					robotCanvasPoint = m.canvas_point
 					console.log(robotCanvasPoint)
 				});
-				
+
 				var $popovercalibrate = $('.calibrate').popover({
 					html: true,
 					placement: 'left',
@@ -291,12 +316,12 @@
 						var myCalibForm = $(this).data().target;
 						return $(myCalibForm).html();
 					}
-				}).on('click', function(){
-					$(document).on('change','#selectCalibTarget', function () {
+				}).on('click', function () {
+					$(document).on('change', '#selectCalibTarget', function () {
 						updateCalibMenu();
 					})
 					// send calibration through json/ajax
-					$('.btn-primary').click(function() {
+					$('.btn-primary').click(function () {
 						var intersection = projectOnPlane(mouse);
 						sendCalibration();
 					})
@@ -311,8 +336,8 @@
 						var mySetParametersForm = $(this).data().target;
 						return $(mySetParametersForm).html();
 					}
-				}).on('click', function(){
-					$('.btn-primary').click(function() {sendParameters()})
+				}).on('click', function () {
+					$('.btn-primary').click(function () { sendParameters() })
 				});
 
 				$(':not(#anything)').on('click', function (e) {
@@ -327,65 +352,63 @@
 							$(this).popover('hide');
 							return;
 						}
-					});	
+					});
 				});
 			}
-		
+
 			init();
 			animate();
 
 			function init() {
-				var container = document.getElementById( 'container' );
+				var PLANE_WIDTH = 20;
+				var PLANE_HEIGHT = 10;
+				var container = document.getElementById('container');
 				scene = new THREE.Scene();
 				console.log(scene.position);
 				clock = new THREE.Clock();
-				camera = new THREE.PerspectiveCamera( 70, 1, 1, 1000 );
+				camera = new THREE.PerspectiveCamera(70, 1, 1, 1000);
 				// camera.up.set(0,0,1);
-				camera.position.set( 0, 0, 6 );
-				camera.lookAt( scene.position );
-				camera.updateMatrix();
-        
+				adjustCamera(PLANE_WIDTH, PLANE_HEIGHT);
+
 				scene.background = new THREE.Color(0xf0f0f0);
 				scene.add(new THREE.HemisphereLight(0x443333, 0x111122));
 
-				var geometry = new THREE.PlaneBufferGeometry(20, 20);
-				// geometry.rotateX(- Math.PI / 2);
-				var material = new THREE.ShadowMaterial({ opacity: 0.2 });
-				plane = new THREE.Mesh(geometry, material);
-				plane.receiveShadow = true;
-				scene.add(plane);
-
-				var helper = new THREE.GridHelper(20, 200);
-				helper.rotateX(Math.PI / 2);
-				scene.add(helper);
+				createPlane(PLANE_WIDTH, PLANE_HEIGHT);
+				// adjustCamera(PLANE_WIDTH, PLANE_HEIGHT);
 
 				var worldAxis = new THREE.AxesHelper(1);
 				scene.add(worldAxis);
-        
-				var sphereGeometry = new THREE.SphereBufferGeometry( 0.1, 32, 32 );
-				var sphereMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
-				for ( var i = 0; i < 40; i ++ ) {
-					var sphere = new THREE.Mesh( sphereGeometry, sphereMaterial );
-					scene.add( sphere );
-					tailSpheres.push( sphere );
+
+				var sphereGeometry = new THREE.SphereBufferGeometry(0.1, 32, 32);
+				var sphereMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+				for (var i = 0; i < 40; i++) {
+					var sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+					scene.add(sphere);
+					tailSpheres.push(sphere);
 				}
-				
-				renderer = new THREE.WebGLRenderer({canvas: document.querySelector("canvas"), antialias: true } );
+
+				renderer = new THREE.WebGLRenderer({ canvas: document.querySelector("canvas"), antialias: true });
 				canvas = renderer.domElement;
+
+				var controls = new THREE.OrbitControls( camera, renderer.domElement );
+				controls.enablePan = false;
+				controls.enableRotate = false;
+				controls.target = cameraTarget;
+				adjustCamera(PLANE_WIDTH, PLANE_HEIGHT);
 
 				raycaster = new THREE.Raycaster();
 				raycaster.params.Points.threshold = raycast_threshold;
 
 				//onWindowResize();
 				//window.addEventListener( 'resize', onWindowResize, false );
-				canvas.addEventListener( 'dblclick', onCanvasDoubleClick, false );
-				canvas.addEventListener( 'mousemove', onCanvasMouseMove, false );
+				canvas.addEventListener('dblclick', onCanvasDoubleClick, false);
+				canvas.addEventListener('mousemove', onCanvasMouseMove, false);
 				canvas.addEventListener('mousedown', onCanvasMouseDown, false);
 				canvas.addEventListener('mouseup', onCanvasMouseUp, false)
 			};
 
-			function updateCalibMenu(){
-				switch($('#selectCalibTarget option:selected').val()) {
+			function updateCalibMenu() {
+				switch ($('#selectCalibTarget option:selected').val()) {
 					case "plane":
 						$('#planeCalibration').show();
 						$('#colorsCalibration').hide();
@@ -405,14 +428,14 @@
 			}
 
 			function updateSelectChoices(selector, arrayRos, arrayJs) {
-				arrayJs.forEach(function(item, index){
-					if(!arrayRos.includes(item)){
+				arrayJs.forEach(function (item, index) {
+					if (!arrayRos.includes(item)) {
 						var elem = getElementById(item);
 						selector.removeChild(elem)
 					}
 				})
-				arrayRos.forEach(function(item, index){
-					if(!arrayJs.includes(item)){
+				arrayRos.forEach(function (item, index) {
+					if (!arrayJs.includes(item)) {
 						var option = document.createElement("option");
 						option.text = item;
 						option.value = item;
@@ -423,7 +446,7 @@
 				console.log(arrayRos);
 			}
 
-			function sendParameters(){
+			function sendParameters() {
 				var selectedBehavior = $('#selectBehavior option:selected').val();
 				$('#result').after("Parameters for " + selectedBehavior + "set!")
 				var stiffnesses = [$('#Kx').val(), $('#Ky').val(), $('#Kz').val(), $('#Rx').val(), $('#Ry').val(), $('#Rz').val()];
@@ -435,7 +458,7 @@
 				var commandData = {
 					'type': "set",
 					'action': "upd",
-					'target': "params", 
+					'target': "params",
 					'name': selectedBehavior,
 					'descriptors': descriptors
 				};
@@ -443,16 +466,16 @@
 					url: $SCRIPT_ROOT + 'sendCommands/',
 					data: JSON.stringify(commandData),
 					contentType: "application/json; charset=utf-8",
-					dataType : 'json',
+					dataType: 'json',
 					method: 'POST',
-					success: function(data) {
+					success: function (data) {
 						console.log(data)
 						//$('#setParameters').popover('hide')
 						//callback()           
 					},
 					async: true //async_bool
-				}) 
-			};	
+				})
+			};
 
 			function sendCalibration() {
 				var targetType = [$('#selectCalibTarget').val()];
@@ -461,7 +484,8 @@
 				// rembember that if zoom is enabled this will not hold anymore
 				var canvasWidth = canvas.width;
 				var canvasHeight = canvas.height;
-				switch($('#selectPlaneCalibPoint option:selected').val()) {
+				var descriptors;
+				switch ($('#selectPlaneCalibPoint option:selected').val()) {
 					case "origin":
 						descriptors = [0, 0.0, 0.0];
 						break;
@@ -472,41 +496,59 @@
 						descriptors = [2, 0.0, canvasHeight];
 						break;
 				};
-				
-				var descriptors = [calibPointID];
-				console.log(descriptors);	
+
+				console.log(descriptors);
 				var commandData = {
 					'type': "calib",
 					'action': "upd",
-					'target': targetType, 
+					'target': targetType,
 					'name': geometryID,
 					'descriptors': descriptors
 				};
+
+				// scene.remove(plane);
+				// scene.remove(grid);
+				// createPlane(10, 10);
+				// adjustCamera(10, 10);
+
 				$.ajax({
 					url: $SCRIPT_ROOT + 'sendCommands/',
 					data: commandData,
 					method: 'POST',
-					success: function(data) {
-						console.alert("Calibration successful")
+					success: function (data) {
 						console.log(data)
-						//callback()           
+						if(completeCalibration(data)){
+							console.alert("Calibration successful")
+							//callback()   
+							scene.remove(plane);
+							scene.remove(grid);
+							createPlane(data.xAxis, data.yAxis);
+							adjustCamera(data.xAxis, data.yAxis);
+						}        
 					},
 					async: true //async_bool
-				});  	
+				});
 			};
 
-			function onCanvasDoubleClick( event ) {
+			function completeCalibration(res){
+				if(res.xAxis != 0 && res.xAxis != 0)
+					return true
+				else
+					return false
+			}
+
+			function onCanvasDoubleClick(event) {
 				event.preventDefault();
-				dblClick.x = ( event.clientX / canvas.width ) * 2 - 1;
-				dblClick.y = - ( event.clientY / canvas.height ) * 2 + 1;
-				addPoint(dblClick);	
+				dblClick.x = (event.clientX / canvas.width) * 2 - 1;
+				dblClick.y = - (event.clientY / canvas.height) * 2 + 1;
+				addPoint(dblClick);
 			};
-			  
-			function onCanvasMouseMove( event ) {
+
+			function onCanvasMouseMove(event) {
 				event.preventDefault();
-				mouse.x = ( event.clientX / canvas.width ) * 2 - 1;
-				mouse.y = - ( event.clientY / canvas.height ) * 2 + 1;
-				if(mouseDown){
+				mouse.x = (event.clientX / canvas.width) * 2 - 1;
+				mouse.y = - (event.clientY / canvas.height) * 2 + 1;
+				if (mouseDown) {
 					continuousDraw();
 				}
 			};
@@ -527,12 +569,12 @@
 				segments.forEach(function (arrayItem) {
 					console.log(arrayItem.geometry.boundingSphere.radius);
 				});
-				var path = {points: drawPoints, segments: segments};
+				var path = { points: drawPoints, segments: segments };
 				paths.push(path);
 				drawPoints = [];
 				segments = [];
 			};
-			
+
 			function removePath() {
 				console.log("remove path");
 				var lastPath = paths.pop();
@@ -544,7 +586,7 @@
 			};
 
 			function removeAll() {
-				for (var i = paths.length; i > 0 ; i--) {
+				for (var i = paths.length; i > 0; i--) {
 					removePath();
 				};
 				console.log(paths)
@@ -553,56 +595,56 @@
 			function removeFromScene(item, index) {
 				scene.remove(item);
 			}
-	  
-			function continuousDraw(){
+
+			function continuousDraw() {
 				var intersection = projectOnPlane(mouse);
 				var mouseOnPlane = intersection.point;
-				
-				if ( mouseOnPlane == null || previousPoint == null) return
-				
+
+				if (mouseOnPlane == null || previousPoint == null) return
+
 				var distance = previousPoint.distanceTo(mouseOnPlane);
 				//console.log(distance)
-				if (drawPoints.length == 0 && distance != 0){
+				if (drawPoints.length == 0 && distance != 0) {
 					addPoint(mouse);
 					//previousPoint = drawPoints[-1].position;
 				}
-				if (distance > distanceThreshold){
+				if (distance > distanceThreshold) {
 					console.log(distance)
 					addPoint(mouse);
 					//previousPoint = drawPoints[-1].position;
 				}
 			}
 
-			function projectOnPlane(point){
-				raycaster.setFromCamera( point, camera );
-				
-				var intersections = raycaster.intersectObject( plane );
-				var intersection = ( intersections.length ) > 0 ? intersections[ 0 ] : null;
-				
+			function projectOnPlane(point) {
+				raycaster.setFromCamera(point, camera);
+
+				var intersections = raycaster.intersectObject(plane);
+				var intersection = (intersections.length) > 0 ? intersections[0] : null;
+
 				return intersection
 			}
 
-			function addPoint(point){
-				var sphereGeometry = new THREE.SphereBufferGeometry( 0.1, 32, 32 );
-				var sphereMaterial = new THREE.MeshBasicMaterial( { color: 0x363cfb } );
-				var sphere = new THREE.Mesh( sphereGeometry, sphereMaterial );
+			function addPoint(point) {
+				var sphereGeometry = new THREE.SphereBufferGeometry(0.1, 32, 32);
+				var sphereMaterial = new THREE.MeshBasicMaterial({ color: 0x363cfb });
+				var sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
 				var intersection = projectOnPlane(point);
-				if ( intersection !== null ) {
-					sphere.position.copy( intersection.point );
-					sphere.scale.set( 1, 1, 1 );
-					scene.add( sphere );
-					drawPoints.push( sphere );
+				if (intersection !== null) {
+					sphere.position.copy(intersection.point);
+					sphere.scale.set(1, 1, 1);
+					scene.add(sphere);
+					drawPoints.push(sphere);
 					previousPoint = intersection.point;
 				}
 
 				var geometry = new THREE.Geometry();
-				if(drawPoints.length>1){
+				if (drawPoints.length > 1) {
 					var last_sphere = drawPoints[drawPoints.length - 2];
 					geometry.vertices.push(last_sphere.position);
 					geometry.vertices.push(sphere.position);
 					console.log(last_sphere.position.distanceTo(sphere.position));
-					var material = new THREE.LineBasicMaterial( { color: 0x000000 } );
-					var line = new THREE.Line( geometry, material );
+					var material = new THREE.LineBasicMaterial({ color: 0x000000 });
+					var line = new THREE.Line(geometry, material);
 					scene.add(line);
 					segments.push(line);
 				}
@@ -611,7 +653,7 @@
 			function onWindowResize() {
 
 			};
-			
+
 			function resizeCanvasToDisplaySize() {
 				// look up the size the canvas is being displayed
 				const width = canvas.clientWidth;
@@ -626,9 +668,72 @@
 					// update any render target sizes here
 				}
 			};
-      
+
+			function createAGrid(opts) {
+				var config = opts || {
+					width: 10,
+					height: 10,
+					linesWidth: 100,
+					linesHeight: 100,
+					color: 0x888888
+				};
+
+				var material = new THREE.LineBasicMaterial({
+					color: 0x888888,
+					// opacity: 0.2
+				});
+
+				var gridObject = new THREE.Object3D(),
+					gridGeo = new THREE.Geometry(),
+					stepw = config.width / config.linesWidth,
+					steph = config.height / config.linesHeight;
+
+				//width
+				for (var i = 0; i <= config.width; i += stepw) {
+					gridGeo.vertices.push(new THREE.Vector3(i, 0, 0));
+					gridGeo.vertices.push(new THREE.Vector3(i, config.height, 0));
+
+				}
+				//height
+				for (var i = 0; i <= config.height; i += steph) {
+					gridGeo.vertices.push(new THREE.Vector3(0, i, 0));
+					gridGeo.vertices.push(new THREE.Vector3(config.width, i, 0));
+				}
+
+				var line = new THREE.LineSegments(gridGeo, material);
+				gridObject.add(line);
+
+				return gridObject;
+			}
+
+			function createPlane(PLANE_WIDTH, PLANE_HEIGHT) {
+				var geometry = new THREE.PlaneBufferGeometry(PLANE_WIDTH, PLANE_HEIGHT);
+				// geometry.rotateX(- Math.PI / 2);
+				geometry.translate(PLANE_WIDTH / 2, PLANE_HEIGHT / 2, 0);
+				var material = new THREE.ShadowMaterial({ opacity: 0.2 });
+				plane = new THREE.Mesh(geometry, material);
+				plane.receiveShadow = true;
+				scene.add(plane);
+
+				// var helper = new THREE.GridHelper(PLANE_SIZE, PLANE_SIZE * 10, 0x888888);
+				// helper.position.x = (PLANE_SIZE / 2);
+				// helper.position.y = (PLANE_SIZE / 2);
+				// helper.rotateX(Math.PI / 2);
+				// scene.add(helper);
+				grid = createAGrid({ width: PLANE_WIDTH, height: PLANE_HEIGHT, linesWidth: PLANE_WIDTH*10, linesHeight: PLANE_HEIGHT*10, color: 0x888888 });
+				console.log(grid)
+				scene.add(grid);
+			}
+
+			function adjustCamera(PLANE_WIDTH, PLANE_HEIGHT){
+				camera.position.set(PLANE_WIDTH / 2, PLANE_HEIGHT / 2, 9.0);
+				cameraTarget.set(PLANE_WIDTH / 2, PLANE_HEIGHT / 2, 0.0)
+				camera.lookAt(cameraTarget);
+				camera.updateMatrix();
+			}
+
 			function animate() {
-				requestAnimationFrame( animate );
+				requestAnimationFrame(animate);
 				render();
 				// stats.update();
 			};
@@ -636,24 +741,24 @@
 			function render() {
 				resizeCanvasToDisplaySize();
 				var intersection = projectOnPlane(mouse);
-				if ( toggle > 0.02 && intersection !== null ) {
-					tailSpheres[ spheresIndex ].position.copy( intersection.point );
-					tailSpheres[ spheresIndex ].scale.set( 1, 1, 1 );
-					spheresIndex = ( spheresIndex + 1 ) % tailSpheres.length;
+				if (toggle > 0.02 && intersection !== null) {
+					tailSpheres[spheresIndex].position.copy(intersection.point);
+					tailSpheres[spheresIndex].scale.set(1, 1, 1);
+					spheresIndex = (spheresIndex + 1) % tailSpheres.length;
 					toggle = 0;
 				}
-				for ( var i = 0; i < tailSpheres.length; i ++ ) {
-					var sphere = tailSpheres[ i ];
-					sphere.scale.multiplyScalar( 0.98 );
-					sphere.scale.clampScalar( 0.01, 1 );
+				for (var i = 0; i < tailSpheres.length; i++) {
+					var sphere = tailSpheres[i];
+					sphere.scale.multiplyScalar(0.98);
+					sphere.scale.clampScalar(0.01, 1);
 				}
-        
+
 				toggle += clock.getDelta();
-				renderer.render( scene, camera );
+				renderer.render(scene, camera);
 			};
-			
+
 		</script>
 
-	</body>
+</body>
 
 </html>
