@@ -6,8 +6,13 @@
         <title>URDF builder</title>
 
         <!-- <link rel="stylesheet" > -->
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        
+        <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"> -->
+        <link rel="stylesheet" href="{{ url_for('static', filename='/libraries/font-awesome-4.7.0/css/font-awesome.min.css') }}">
+
+        <!-- <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"> -->
+        <link href="{{ url_for('static', filename='/material-design-icons-3.0.1/iconfont/material-icons.css') }}" rel="stylesheet">
+
     </head>
 
     <body>
@@ -38,8 +43,9 @@
         <script type="text/javascript" src="{{ url_for('static', filename='/examples/js/loaders/ColladaLoader.js') }}"></script>
 
         <script type="text/javascript" src="{{ url_for('static', filename='/examples/js/renderers/Projector.js') }}"></script>
-
-        <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+        
+        <!-- <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script> -->
+        <script type="text/javascript" src="{{ url_for('static', filename='/js/jquery-3.2.1.min.js') }}"></script>
 
         <script type=text/javascript>
             $SCRIPT_ROOT = "{{ url_for('index', _external=True) }}";
@@ -361,7 +367,7 @@
                 </div>
                 <div id="div-DiscoveryMode">Discovery Mode</div>
             </div>
-            <button id=removeLast class="btn"><i class="fa fa-trash"></i> Remove Module</button>
+            <button id=removeLast class="btn"><span style="padding-right: 4px"><i class="material-icons">delete</i></span> Remove Module</button>
             <button id=syncHardware class="btn"><span style="padding-right: 4px"><i class="material-icons">developer_board</i></span>Sync with hardware</button>
             <button id=deploy class="btn"><span style="padding-right: 4px"><i class="material-icons">done</i></span>Deploy Robot</button>
             <button id=start_stop class="btn" data-text-swap="Stop XBotCore" data-text-original="Start XBotCore"><span style="padding-right: 4px"><i class="material-icons">power_settings_new</i></span><p id="start_stop_text">Start XBotCore</p></button>
