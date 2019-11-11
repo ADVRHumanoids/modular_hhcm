@@ -175,7 +175,7 @@ class UrdfWriter:
         """Given the module id find the corresponding dictionary entry and return it"""
         found_module = None
         found_module_id = 0
-        next_position = 2 #TODO: remove this hack for not cosidering pwrboard
+        next_position = 1 #2 #TODO: remove this hack for not cosidering pwrboard
         for module in modules:
             if module_id in module.keys():
                 position = module[module_id]['poistion']
@@ -1114,7 +1114,7 @@ class UrdfWriter:
                           filename=new_Link.filename)
             self.add_to_chain(new_Link)
             # HACK: add pen after tool_exchanger
-            setattr(new_Link, 'pen_name', 'pen_' + new_Link.tag)
+            setattr(new_Link, 'pen_name', 'pen' + new_Link.tag)
             ET.SubElement(self.root,
                           "xacro:add_pen",
                           type="pen",
@@ -1457,7 +1457,7 @@ class UrdfWriter:
             # the end-effector gets added to the chain although it's not a joint. it's needed in the joint map and in the config!
             self.add_to_chain(new_Link)
             # HACK: add pen after tool_exchanger
-            setattr(new_Link, 'pen_name', 'pen_' + new_Link.tag)
+            setattr(new_Link, 'pen_name', 'pen' + new_Link.tag)
             ET.SubElement(self.root,
                           "xacro:add_pen",
                           type="pen",
