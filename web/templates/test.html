@@ -92,6 +92,10 @@
 			cursor: pointer;
 		}
 
+		.section {
+			height: 12.5%
+		}
+
 		#selectTask {
 			width: 100%;
 		}
@@ -104,11 +108,41 @@
 			width: 100%;
 		}
 
-		.section {
-			height: 12.5%
+		.taskOverlay {
+			position: absolute;
+			top: 0;
+			left: 16px;
+			display: none;
+			font-size: large;
+			font-style: italic;
+			font-weight: bold;
+		}
+
+		.colorOverlay {
+			position: absolute;
+			top: 0;
+			right: 16px;
+			display: none;
+			font-size: large;
+			font-style: italic;
+			font-weight: bold;
+		}
+
+		.geometryOverlay {
+			position: absolute;
+			top: 0;
+			left: 45%;
+			/* transform: translate(10px, -50%); */
+			display: none;
+			font-style: italic;
+			font-size: large;
+			font-weight: bold;
 		}
 	</style>
 	<div id="container">
+		<div class="taskOverlay">Top Left</div>
+		<div class="colorOverlay">Top Right</div>
+		<div class="geometryOverlay">Top Center</div>
 		<canvas></canvas>
 	</div>
 	<div id="info"><a href="http://threejs.org" target="_blank" rel="noopener">three.js</a> webgl - interactive -
@@ -118,33 +152,39 @@
 			<!-- <label for="selectTask">What do you want to calibrate?</label> -->
 			<select name="selectTask" id="selectTask" class="selectpicker" title="Please select a task:">
 				<option value=''>Select a task:</option>
+				<option value='task_1'> Task 1</option>
+				<option value='task_2'> Task 2</option>
 			</select>
 			<select name="selectGeometry" id="selectGeometry" class="selectpicker" title="Please select a task:">
 				<option value=''>Select a geometry:</option>
+				<option value='plane_1'> Plane 1</option>
+				<option value='plane_2'> Plane 2</option>
 			</select>
 			<select name="selectColor" id="selectColor" class="selectpicker" title="Please select a task:">
 				<option value=''>Select a color:</option>
+				<option value='color_1'> Color 1</option>
+				<option value='color_2'> Color 2</option>
 			</select>
 		</div>
-		<div id="buttonator">
-			<span id="result" class="section">
-				Please Calibrate the plane to draw on
-			</span>
-			<button type="button" id="addPath" class="button section">
-				<div>Add Path</div>
-			</button>
-			<button type="button" id="removePath" class="button section">
-				<div>Remove Path</div>
-			</button>
-			<button type="button" id="removeAll" class="button section">
-				<div>Remove All</div>
-			</button>
-			<!-- <button type="button" id="calibrate"  data-toggle="popover" class="button">Calibrate</button> -->
-			<!-- id="calibrate" -->
-			<button type="button" class="button calibrate section" data-toggle="popover" data-target="#calibration-popover">
-				<div>Calibration</div>
-			</button>
-			<script type="text/html" id="calibration-popover">
+		<!-- <div id="buttonator"> -->
+		<span id="result" class="section">
+			<!-- Please Calibrate the plane to draw on -->
+		</span>
+		<button type="button" id="addPath" class="button section">
+			<div>Add Path</div>
+		</button>
+		<button type="button" id="removePath" class="button section">
+			<div>Remove Path</div>
+		</button>
+		<button type="button" id="removeAll" class="button section">
+			<div>Remove All</div>
+		</button>
+		<!-- <button type="button" id="calibrate"  data-toggle="popover" class="button">Calibrate</button> -->
+		<!-- id="calibrate" -->
+		<button type="button" class="button calibrate section" data-toggle="popover" data-target="#calibration-popover">
+			<div>Calibration</div>
+		</button>
+		<script type="text/html" id="calibration-popover">
 				<div id="calibrationForm"> 
 					<!-- class="hidden"> -->
 					<label for="selectCalibTarget">What do you want to calibrate?</label>
@@ -179,11 +219,11 @@
 					<button type="button" class="btn btn-primary" data-loading-text="Sending info.."><em class="icon-ok"></em> Capture point</button>
 				</div>	
 			</script>
-			<button type="button" class="button setParameters section" data-toggle="popover"
-				data-target="#parameters-popover">
-				<div>Set Parameters</div>
-			</button>
-			<script type="text/html" id="parameters-popover">
+		<button type="button" class="button setParameters section" data-toggle="popover"
+			data-target="#parameters-popover">
+			<div>Set Parameters</div>
+		</button>
+		<script type="text/html" id="parameters-popover">
 				<div id="parametersForm"> 
 				<!-- class="hide"> -->
 					<label for="selectBehavior">Behavior to set:</label>
@@ -220,8 +260,8 @@
 					<button type="button" class="btn btn-primary" data-loading-text="Sending info.."><em class="icon-ok"></em> Set Parameters</button>
 				</div>
 			</script>
-			<!-- <div id="result"></div> -->
-		</div>
+		<!-- <div id="result"></div> -->
+		<!-- </div> -->
 	</div>
 
 	<script type=text/javascript> $SCRIPT_ROOT="{{ url_for('index', _external=True) }}" ; </script> <script
@@ -233,6 +273,7 @@
 			var cameraTarget = new THREE.Vector3();
 			var plane;
 			var grid;
+			var taskName, geometryName, colorName;
 			var raycaster;
 			var mouse = new THREE.Vector2();
 			var dblClick = new THREE.Vector2();
@@ -307,6 +348,80 @@
 					robotCanvasPoint = m.canvas_point
 					console.log(robotCanvasPoint)
 				});
+
+				$(document).on('change', '#selectTask', function () {
+					var taskName = $('#selectTask option:selected').val();
+					$('.taskOverlay').show();
+					$('.taskOverlay').html("Task: " + taskName);
+					var commandData = {
+						'type': "set",
+						'action': "upd",
+						'target': "task",
+						'name': taskName,
+						'descriptors': []
+					};
+					$.ajax({
+						url: $SCRIPT_ROOT + 'sendCommands/',
+						data: JSON.stringify(commandData),
+						contentType: "application/json; charset=utf-8",
+						dataType: 'json',
+						method: 'POST',
+						success: function (data) {
+							console.log(data)
+							//callback()           
+						},
+						async: true //async_bool
+					})
+				})
+				$(document).on('change', '#selectGeometry', function () {
+					geometryName = $('#selectGeometry option:selected').val();
+					console.log(geometryName)
+					$('.geometryOverlay').show();
+					$('.geometryOverlay').html("Geometry: " + geometryName);
+					var commandData = {
+						'type': "set",
+						'action': "upd",
+						'target': "geometry",
+						'name': geometryName,
+						'descriptors': []
+					};
+					$.ajax({
+						url: $SCRIPT_ROOT + 'sendCommands/',
+						data: JSON.stringify(commandData),
+						contentType: "application/json; charset=utf-8",
+						dataType: 'json',
+						method: 'POST',
+						success: function (data) {
+							console.log(data)
+							//callback()           
+						},
+						async: true //async_bool
+					})
+				})
+				$(document).on('change', '#selectColor', function () {
+					var colorName = $('#selectColor option:selected').val();
+					$('.colorOverlay').show();
+					$('.colorOverlay').html("Color: " + colorName); var commandData = {
+						'type': "set",
+						'action': "upd",
+						'target': "color",
+						'name': colorName,
+						'descriptors': []
+					};
+					$.ajax({
+						url: $SCRIPT_ROOT + 'sendCommands/',
+						data: JSON.stringify(commandData),
+						contentType: "application/json; charset=utf-8",
+						dataType: 'json',
+						method: 'POST',
+						success: function (data) {
+							console.log(data)
+							//callback()           
+						},
+						async: true //async_bool
+					})
+
+				})
 
 				var $popovercalibrate = $('.calibrate').popover({
 					html: true,
