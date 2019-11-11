@@ -659,6 +659,16 @@
         </link>
     </xacro:macro>
 
+    <xacro:macro name="add_pen" params="type name father">
+        <link name="${name}">
+        <joint name="fixed_${name}" type="fixed">
+            <axis xyz="0 0 1" rpy="0 0 0" />
+            <parent link="${father}"/>
+            <child link="pen"/>
+            <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        </joint>
+    <xacro:macro/>
+
     <!-- Macro for adding the physical module housing the actuator -->
     <xacro:macro name="add_joint_stator" params="type name filename size_y size_z size">
 

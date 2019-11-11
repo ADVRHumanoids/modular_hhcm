@@ -1113,6 +1113,13 @@ class UrdfWriter:
                           name=new_Link.name,
                           filename=new_Link.filename)
             self.add_to_chain(new_Link)
+            # HACK: add pen after tool_exchanger
+            setattr(new_Link, 'pen_name', 'pen_' + new_Link.tag)
+            ET.SubElement(self.root,
+                          "xacro:add_pen",
+                          type="pen",
+                          name=new_Link.pen_name,
+                          father=new_Link.name)
         else:
             if new_Link.size > 1:
                 setattr(new_Link, 'name', 'L_'+str(new_Link.i)+'_size_adapter_'+str(new_Link.p)+new_Link.tag)
@@ -1449,6 +1456,13 @@ class UrdfWriter:
                           filename=new_Link.filename)
             # the end-effector gets added to the chain although it's not a joint. it's needed in the joint map and in the config!
             self.add_to_chain(new_Link)
+            # HACK: add pen after tool_exchanger
+            setattr(new_Link, 'pen_name', 'pen_' + new_Link.tag)
+            ET.SubElement(self.root,
+                          "xacro:add_pen",
+                          type="pen",
+                          name=new_Link.pen_name,
+                          father=new_Link.name)
         else:
             if new_Link.size > 1:
                 setattr(new_Link, 'name', 'L_'+str(new_Link.i)+'_size_adapter_'+str(new_Link.p)+new_Link.tag)
@@ -1469,7 +1483,11 @@ class UrdfWriter:
                                                                                       self.zaxis))
         x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(transform)
 
-        fixed_joint_name = 'L_'+str(new_Link.i)+'_fixed_joint_'+str(new_Link.p)+new_Link.tag
+        if new_Link.type == 'tool_exchanger':
+            fixed_joint_name = new_Link.name+'_fixed_joint'
+        else:    
+            fixed_joint_name = 'L_'+str(new_Link.i)+'_fixed_joint_'+str(new_Link.p)+new_Link.tag
+
         ET.SubElement(self.root,
                       "xacro:add_fixed_joint",
                       name=fixed_joint_name,
@@ -1508,7 +1526,8 @@ class UrdfWriter:
         else:
             tip_link = 'L_' + str(joints_chain[-1].i) + joints_chain[-1].tag
             if joints_chain[-1].type == 'tool_exchanger':
-                tip_link = joints_chain[-1].name
+                # tip_link = joints_chain[-1].name
+                tip_link = joints_chain[-1].pen_name
         probdesc['EE']['distal_link'] = tip_link
 
          # Create folder if doesen't exist
@@ -1650,7 +1669,8 @@ class UrdfWriter:
             else:
                 tip_link = 'L_' + str(joints_chain[-1].i) + joints_chain[-1].tag
                 if joints_chain[-1].type == 'tool_exchanger':
-                    tip_link = joints_chain[-1].name
+                    # tip_link = joints_chain[-1].name
+                    tip_link = joints_chain[-1].pen_name
             chains.append(ET.SubElement(groups[i], 'chain', base_link=base_link, tip_link=tip_link))
             i += 1
         i = 0
