@@ -284,6 +284,7 @@
 			var drawPoints = [];
 			var segments = [];
 			var paths = [];
+			var pathID = 0;
 			var spheresIndex = 0;
 			var clock;
 			var raycast_threshold = 0.1;
@@ -606,10 +607,10 @@
 						descriptors = [0, 0.0, 0.0];
 						break;
 					case "xAxis":
-						descriptors = [1, canvasWidth, 0.0];
+						descriptors = [1, PLANE_WIDTH, 0.0];
 						break;
 					case "yAxis":
-						descriptors = [2, 0.0, canvasHeight];
+						descriptors = [2, 0.0, PLANE_HEIGHT];
 						break;
 				};
 
@@ -633,21 +634,21 @@
 					method: 'POST',
 					success: function (data) {
 						console.log(data)
-						if(completeCalibration(data)){
+						if (completeCalibration(data)) {
 							console.alert("Calibration successful")
 							//callback()   
 							scene.remove(plane);
 							scene.remove(grid);
 							createPlane(data.xAxis, data.yAxis);
 							adjustCamera(data.xAxis, data.yAxis);
-						}        
+						}
 					},
 					async: true //async_bool
 				});
 			};
 
-			function completeCalibration(res){
-				if(res.xAxis != 0 && res.xAxis != 0)
+			function completeCalibration(res) {
+				if (res.xAxis != 0 && res.yAxis != 0)
 					return true
 				else
 					return false
@@ -680,15 +681,49 @@
 				mouseDown = false;
 			}
 
+			function flatten(arr) {
+				return arr.reduce(function (flat, toFlatten) {
+					return flat.concat(Array.isArray(toFlatten) ? flatten(toFlatten) : toFlatten);
+				}, []);
+			}
+
 			function addPath() {
 				console.log("add path");
 				segments.forEach(function (arrayItem) {
 					console.log(arrayItem.geometry.boundingSphere.radius);
 				});
-				var path = { points: drawPoints, segments: segments };
+				pathID = pathID + 1;
+				var path = { id: pathID.toString(), points: drawPoints, segments: segments };
+				var name = path.id;
+				var points2D = drawPoints.map(pnt => [pnt.position.x, pnt.position.y])
+				var descriptors = points2D.flat();
+				console.log(descriptors)
 				paths.push(path);
 				drawPoints = [];
 				segments = [];
+
+				var name = [path.id];
+
+				var commandData = {
+					'type': "set",
+					'action': "upd",
+					'target': "path",
+					'name': name,
+					'descriptors': descriptors
+				};
+				$.ajax({
+					url: $SCRIPT_ROOT + 'sendCommands/',
+					data: JSON.stringify(commandData),
+					contentType: "application/json; charset=utf-8",
+					dataType: 'json',
+					method: 'POST',
+					success: function (data) {
+						console.log(data)
+						//$('#setParameters').popover('hide')
+						//callback()           
+					},
+					async: true //async_bool
+				})
 			};
 
 			function removePath() {
@@ -698,14 +733,55 @@
 				var lastSegments = lastPath.segments;
 				lastPoints.forEach(removeFromScene);
 				lastSegments.forEach(removeFromScene);
-				console.log(paths);
+
+				var name = paths.length.toString();
+
+				var commandData = {
+					'type': "set",
+					'action': "rmv",
+					'target': "path",
+					'name': name,
+					'descriptors': []
+				};
+				$.ajax({
+					url: $SCRIPT_ROOT + 'sendCommands/',
+					data: JSON.stringify(commandData),
+					contentType: "application/json; charset=utf-8",
+					dataType: 'json',
+					method: 'POST',
+					success: function (data) {
+						console.log(data)
+						//$('#setParameters').popover('hide')
+						//callback()           
+					},
+					async: true //async_bool
+				})
 			};
 
 			function removeAll() {
 				for (var i = paths.length; i > 0; i--) {
 					removePath();
 				};
-				console.log(paths)
+				var commandData = {
+					'type': "set",
+					'action': "rmv",
+					'target': "path",
+					'name': pathIndexes,
+					'descriptors': []
+				};
+				$.ajax({
+					url: $SCRIPT_ROOT + 'sendCommands/',
+					data: JSON.stringify(commandData),
+					contentType: "application/json; charset=utf-8",
+					dataType: 'json',
+					method: 'POST',
+					success: function (data) {
+						console.log(data)
+						//$('#setParameters').popover('hide')
+						//callback()           
+					},
+					async: true //async_bool
+				})
 			}
 
 			function removeFromScene(item, index) {
