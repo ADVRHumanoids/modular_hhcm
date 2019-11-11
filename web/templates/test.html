@@ -32,7 +32,8 @@
 	<link rel="stylesheet" type="text/css"
 		href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">
 
-	<script type="text/javascript" src="{{ url_for('static', filename='/examples/js/controls/OrbitControls.js') }}"></script>
+	<script type="text/javascript"
+		src="{{ url_for('static', filename='/examples/js/controls/OrbitControls.js') }}"></script>
 
 
 </head>
@@ -505,7 +506,7 @@
 				renderer = new THREE.WebGLRenderer({ canvas: document.querySelector("canvas"), antialias: true });
 				canvas = renderer.domElement;
 
-				var controls = new THREE.OrbitControls( camera, renderer.domElement );
+				var controls = new THREE.OrbitControls(camera, renderer.domElement);
 				controls.enablePan = false;
 				controls.enableRotate = false;
 				controls.target = cameraTarget;
@@ -835,12 +836,12 @@
 				// helper.position.y = (PLANE_SIZE / 2);
 				// helper.rotateX(Math.PI / 2);
 				// scene.add(helper);
-				grid = createAGrid({ width: PLANE_WIDTH, height: PLANE_HEIGHT, linesWidth: PLANE_WIDTH*10, linesHeight: PLANE_HEIGHT*10, color: 0x888888 });
+				grid = createAGrid({ width: PLANE_WIDTH, height: PLANE_HEIGHT, linesWidth: PLANE_WIDTH * 10, linesHeight: PLANE_HEIGHT * 10, color: 0x888888 });
 				console.log(grid)
 				scene.add(grid);
 			}
 
-			function adjustCamera(PLANE_WIDTH, PLANE_HEIGHT){
+			function adjustCamera(PLANE_WIDTH, PLANE_HEIGHT) {
 				camera.position.set(PLANE_WIDTH / 2, PLANE_HEIGHT / 2, 9.0);
 				cameraTarget.set(PLANE_WIDTH / 2, PLANE_HEIGHT / 2, 0.0)
 				camera.lookAt(cameraTarget);
