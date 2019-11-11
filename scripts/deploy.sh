@@ -158,7 +158,7 @@ cat >> cartesio.launch << 'EOF'
 </launch>
 EOF
 
-cat >> ${package_name}_cartesio.launch << EOF
+cat > ${package_name}_cartesio.launch << EOF
 <launch>
     <arg name="pkg_name"  default="${package_name}"/>
 EOF
