@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import time
 from flask import Flask, render_template, request, jsonify, send_from_directory, url_for
+import hierarchy_server as hp
 # import flask
 # print(flask.__file__, flask.__version__)
 
@@ -23,6 +24,9 @@ urdf_writer = URDF_writer.UrdfWriter()
 
 # 2nd instance of UrdfWriter class for the robot got from HW
 urdf_writer_fromHW = URDF_writer.UrdfWriter()
+
+# Initialize json parser server manager
+manager = hp.MANAGER('ci')
 
 # Prepare context and sockets. When not using Poller class
 
@@ -281,8 +285,10 @@ def sendCommands():
     jsonData = request.get_json()
     print(jsonData)
     print(byteify(jsonData))
-    print jsonData['descriptors']
-    print jsonData['name']
+    res = manager.parse_json(jsonData)
+    print(res)
+    # print jsonData['descriptors']
+    # print jsonData['name']
     # dictData = json.loads(jsonData)
     # print(dictData)
     # print(prova["descriptors"])

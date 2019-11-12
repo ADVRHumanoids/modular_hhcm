@@ -74,7 +74,17 @@
 			/* text-align: center; */
 			/* text-decoration: none;
 				display: inline-block; */
-			font-size: 16px;
+			font-size: 1vws;
+		}
+
+		.half-button {
+			background-size: 100% 100%;
+			height: 12.5%;
+			width: 48%;
+			display:inline-block;
+			font-size: 1vw;
+			padding: 0px;
+			vertical-align: middle;
 		}
 
 		canvas {
@@ -149,19 +159,19 @@
 	<div id="info"><a href="http://threejs.org" target="_blank" rel="noopener">three.js</a> webgl - interactive -
 		raycasting - points </div>
 	<div id="leftBar" style="overflow-y:auto;">
-		<div id="selector">
+		<div id="selector" class="section">
 			<!-- <label for="selectTask">What do you want to calibrate?</label> -->
-			<select name="selectTask" id="selectTask" class="selectpicker" title="Please select a task:">
+			<select name="selectTask" id="selectTask" class="selectpicker" title="Please select a task:" style="height:33%">
 				<option value=''>Select a task:</option>
 				<option value='task_1'> Task 1</option>
 				<option value='task_2'> Task 2</option>
 			</select>
-			<select name="selectGeometry" id="selectGeometry" class="selectpicker" title="Please select a task:">
+			<select name="selectGeometry" id="selectGeometry" class="selectpicker" title="Please select a task:" style="height:33%">
 				<option value=''>Select a geometry:</option>
 				<option value='plane_1'> Plane 1</option>
 				<option value='plane_2'> Plane 2</option>
 			</select>
-			<select name="selectColor" id="selectColor" class="selectpicker" title="Please select a task:">
+			<select name="selectColor" id="selectColor" class="selectpicker" title="Please select a task:" style="height:33%">
 				<option value=''>Select a color:</option>
 				<option value='color_1'> Color 1</option>
 				<option value='color_2'> Color 2</option>
@@ -191,7 +201,7 @@
 					<label for="selectCalibTarget">What do you want to calibrate?</label>
 					<select name="selectCalibTarget" id="selectCalibTarget" class="selectpicker">
 					<!-- </select> onchange="onChangeSelect()"> -->
-						<option value="plane">Plane</option>
+						<option value="geometry">Plane</option>
 						<option value="colors">Colors</option>
 						<option value="homing">Homing</option>
 					</select>	
@@ -225,44 +235,55 @@
 			<div>Set Parameters</div>
 		</button>
 		<script type="text/html" id="parameters-popover">
-				<div id="parametersForm"> 
-				<!-- class="hide"> -->
-					<label for="selectBehavior">Behavior to set:</label>
-					<select name="selectBehavior" id="selectBehavior" class="selectpicker">
-						<option value="movingBehavior">Moving behavior</option>
-						<option value="stationaryBehavior">Stationary behavior</option>
-					</select>	
-					<div class="row">
-						<div class="col-md-6">
-							<label for="Kx">Kx (N/m):</label>
-							<input type="number" name="Kx" id="Kx" value="1200" step="100" class="form-control form-control-sm">
-							<label for="Ky">Ky (N/m):</label>
-							<input type="number" name="Ky" id="Ky" value="1200" step="100" class="form-control form-control-sm">
-							<label for="Kz">Kz (N/m):</label>
-							<input type="number" name="Kz" id="Kz" value="1200" step="100" class="form-control form-control-sm ">
-						</div>
-						<div class="col-xs-6">
-								<label for="Rx">Rx (Nm/rad):</label>
-								<input type="number" name="Rx" id="Rx" value="200" step="10" class="form-control form-control-sm ">
-								<label for="Ry">Ry (Nm/rad):</label>
-								<input type="number" name="Ry" id="Ry" value="200" step="10" class="form-control form-control-sm ">
-								<label for="Rz">Rz (Nm/rad):</label>
-								<input type="number" name="Rz" id="Rz" value="0" step="10" class="form-control form-control-sm">	
-						</div>
+			<div id="parametersForm"> 
+			<!-- class="hide"> -->
+				<label for="selectBehavior">Behavior to set:</label>
+				<select name="selectBehavior" id="selectBehavior" class="selectpicker">
+					<option value="moving">Moving behavior</option>
+					<option value="static">Static behavior</option>
+				</select>	
+				<div class="row">
+					<div class="col-md-6">
+						<label for="Kx">Kx (N/m):</label>
+						<input type="number" name="Kx" id="Kx" value="1200" step="100" class="form-control form-control-sm">
+						<label for="Ky">Ky (N/m):</label>
+						<input type="number" name="Ky" id="Ky" value="1200" step="100" class="form-control form-control-sm">
+						<label for="Kz">Kz (N/m):</label>
+						<input type="number" name="Kz" id="Kz" value="1200" step="100" class="form-control form-control-sm ">
 					</div>
-					<label for="Fz">Fz (N):</label>
-					<input type="number" name="Fz" id="Fz" value="-1" step="0.1" class="form-control input-md">
-					<label for="baseLink">base link:</label>
-					<input type="text" name="baseLink" id="baseLink" value="base_link"class="form-control input-md">
-					<label for="distalLink">distal link:</label>
-					<input type="text" name="distalLink" id="distalLink" value="TCP"class="form-control input-md">
-					<label for="desiredVelocity">desired velocity (m/s):</label>
-					<input type="number" name="desiredVelocity" id="desiredVelocity" value="0.05" step="0.01" class="form-control input-md">
-					<button type="button" class="btn btn-primary" data-loading-text="Sending info.."><em class="icon-ok"></em> Set Parameters</button>
+					<div class="col-xs-6">
+							<label for="Rx">Rx (Nm/rad):</label>
+							<input type="number" name="Rx" id="Rx" value="200" step="10" class="form-control form-control-sm ">
+							<label for="Ry">Ry (Nm/rad):</label>
+							<input type="number" name="Ry" id="Ry" value="200" step="10" class="form-control form-control-sm ">
+							<label for="Rz">Rz (Nm/rad):</label>
+							<input type="number" name="Rz" id="Rz" value="0" step="10" class="form-control form-control-sm">	
+					</div>
 				</div>
-			</script>
+				<label for="Fz">Fz (N):</label>
+				<input type="number" name="Fz" id="Fz" value="-1" step="0.1" class="form-control input-md">
+				<label for="baseLink">base link:</label>
+				<input type="text" name="baseLink" id="baseLink" value="base_link"class="form-control input-md">
+				<label for="distalLink">distal link:</label>
+				<input type="text" name="distalLink" id="distalLink" value="TCP"class="form-control input-md">
+				<label for="desiredVelocity">desired velocity (m/s):</label>
+				<input type="number" name="desiredVelocity" id="desiredVelocity" value="0.05" step="0.01" class="form-control input-md">
+				<button type="button" class="btn btn-primary" data-loading-text="Sending info.."><em class="icon-ok"></em> Set Parameters</button>
+			</div>
+		</script>
+		<!-- <div class="section"> -->
+		<button type="button" id="pause" class="half-button section">
+			<div>Pause</div>
+		</button>
+		<button type="button" id="zeroG" class="half-button section" style="right:0">
+			<div>Zero gravity</div>
+		</button>
+		<!-- </div> -->
 		<!-- <div id="result"></div> -->
 		<!-- </div> -->
+		<button type="button" id="draw" class="button section">
+			<div>Draw</div>
+		</button>
 	</div>
 
 	<script type=text/javascript> $SCRIPT_ROOT="{{ url_for('index', _external=True) }}" ; </script> <script
@@ -356,10 +377,10 @@
 					$('.taskOverlay').show();
 					$('.taskOverlay').html("Task: " + taskName);
 					var commandData = {
-						'type': "set",
+						'type': "SET",
 						'action': "upd",
-						'target': "task",
-						'name': taskName,
+						'target': ["task"],
+						'name': [taskName],
 						'descriptors': []
 					};
 					$.ajax({
@@ -381,7 +402,7 @@
 					$('.geometryOverlay').show();
 					$('.geometryOverlay').html("Geometry: " + geometryName);
 					var commandData = {
-						'type': "set",
+						'type': "SET",
 						'action': "upd",
 						'target': "geometry",
 						'name': geometryName,
@@ -404,7 +425,7 @@
 					var colorName = $('#selectColor option:selected').val();
 					$('.colorOverlay').show();
 					$('.colorOverlay').html("Color: " + colorName); var commandData = {
-						'type': "set",
+						'type': "SET",
 						'action': "upd",
 						'target': "color",
 						'name': colorName,
@@ -570,13 +591,14 @@
 				var dampings = ["0", "0", "0", "0", "0", "0"];
 				var forces = ["0", "0", $('#Fz').val(), "0", "0", "0"];
 				var desiredVelocity = [$('#desiredVelocity').val()];
+				var name = [selectedBehavior];
 				var descriptors = stiffnesses.concat(dampings.concat(forces.concat(desiredVelocity)));
 				console.log(descriptors);
 				var commandData = {
-					'type': "set",
+					'type': "SET",
 					'action': "upd",
-					'target': "params",
-					'name': selectedBehavior,
+					'target': ["params"],
+					'name': name,
 					'descriptors': descriptors
 				};
 				$.ajax({
@@ -607,16 +629,16 @@
 						descriptors = [0, 0.0, 0.0];
 						break;
 					case "xAxis":
-						descriptors = [1, PLANE_WIDTH, 0.0];
+						descriptors = [1, canvasWidth, 0.0];
 						break;
 					case "yAxis":
-						descriptors = [2, 0.0, PLANE_HEIGHT];
+						descriptors = [2, 0.0, canvasHeight];
 						break;
 				};
 
 				console.log(descriptors);
 				var commandData = {
-					'type': "calib",
+					'type': "CALIBRATION",
 					'action': "upd",
 					'target': targetType,
 					'name': geometryID,
@@ -630,7 +652,9 @@
 
 				$.ajax({
 					url: $SCRIPT_ROOT + 'sendCommands/',
-					data: commandData,
+					data: JSON.stringify(commandData),
+					contentType: "application/json; charset=utf-8",
+					dataType: 'json',
 					method: 'POST',
 					success: function (data) {
 						console.log(data)
@@ -681,12 +705,6 @@
 				mouseDown = false;
 			}
 
-			function flatten(arr) {
-				return arr.reduce(function (flat, toFlatten) {
-					return flat.concat(Array.isArray(toFlatten) ? flatten(toFlatten) : toFlatten);
-				}, []);
-			}
-
 			function addPath() {
 				console.log("add path");
 				segments.forEach(function (arrayItem) {
@@ -705,9 +723,9 @@
 				var name = [path.id];
 
 				var commandData = {
-					'type': "set",
+					'type': "SET",
 					'action': "upd",
-					'target': "path",
+					'target': ["path"],
 					'name': name,
 					'descriptors': descriptors
 				};
@@ -728,19 +746,19 @@
 
 			function removePath() {
 				console.log("remove path");
+				var name = paths[paths.length-1].id; //paths.length.toString();
+				pathID = pathID - 1;
 				var lastPath = paths.pop();
 				var lastPoints = lastPath.points;
 				var lastSegments = lastPath.segments;
 				lastPoints.forEach(removeFromScene);
 				lastSegments.forEach(removeFromScene);
 
-				var name = paths.length.toString();
-
 				var commandData = {
-					'type': "set",
+					'type': "SET",
 					'action': "rmv",
-					'target': "path",
-					'name': name,
+					'target': ["path"],
+					'name': [name],
 					'descriptors': []
 				};
 				$.ajax({
@@ -762,26 +780,6 @@
 				for (var i = paths.length; i > 0; i--) {
 					removePath();
 				};
-				var commandData = {
-					'type': "set",
-					'action': "rmv",
-					'target': "path",
-					'name': pathIndexes,
-					'descriptors': []
-				};
-				$.ajax({
-					url: $SCRIPT_ROOT + 'sendCommands/',
-					data: JSON.stringify(commandData),
-					contentType: "application/json; charset=utf-8",
-					dataType: 'json',
-					method: 'POST',
-					success: function (data) {
-						console.log(data)
-						//$('#setParameters').popover('hide')
-						//callback()           
-					},
-					async: true //async_bool
-				})
 			}
 
 			function removeFromScene(item, index) {
