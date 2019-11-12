@@ -74,7 +74,7 @@
 			/* text-align: center; */
 			/* text-decoration: none;
 				display: inline-block; */
-			font-size: 1vws;
+			font-size: 1.2vw;
 		}
 
 		.half-button {
@@ -82,7 +82,7 @@
 			height: 12.5%;
 			width: 48%;
 			display:inline-block;
-			font-size: 1vw;
+			font-size: 1.2vw;
 			padding: 0px;
 			vertical-align: middle;
 		}
@@ -207,9 +207,9 @@
 					</select>	
 					<label for="geometryID">Choose a name for the geometry to calibrate</label>
 					<input type="text" name="geometryID" id="geometryID" value="plane_1"class="form-control input-md">
-					<div id="planeCalibration" class="form-group">
-						<label for="selectPlaneCalibPoint">Choose the point to calibrate</label>
-						<select name="selectPlaneCalibPoint" id="selectPlaneCalibPoint" class="selectpicker">
+					<div id="geometryCalibration" class="form-group">
+						<label for="selectGeometryCalibPoint">Choose the point to calibrate</label>
+						<select name="selectGeometryCalibPoint" id="selectGeometryCalibPoint" class="selectpicker">
 							<option value="origin">origin</option>
 							<option value="xAxis">X axis</option>
 							<option value="yAxis">Y axis</option>
@@ -547,18 +547,18 @@
 
 			function updateCalibMenu() {
 				switch ($('#selectCalibTarget option:selected').val()) {
-					case "plane":
-						$('#planeCalibration').show();
+					case "geometry":
+						$('#geometryCalibration').show();
 						$('#colorsCalibration').hide();
 						$('#homingCalibration').hide();
 						break;
 					case "colors":
-						$('#planeCalibration').hide();
+						$('#geometryCalibration').hide();
 						$('#colorsCalibration').show();
 						$('#homingCalibration').hide();
 						break;
 					case "homing":
-						$('#planeCalibration').hide();
+						$('#geometryCalibration').hide();
 						$('#colorsCalibrationserver').hide();
 						$('#homingCalibrationserver').show();
 						break;
@@ -624,7 +624,7 @@
 				var canvasWidth = canvas.width;
 				var canvasHeight = canvas.height;
 				var descriptors;
-				switch ($('#selectPlaneCalibPoint option:selected').val()) {
+				switch ($('#selectGeometryCalibPoint option:selected').val()) {
 					case "origin":
 						descriptors = [0, 0.0, 0.0];
 						break;
@@ -659,12 +659,14 @@
 					success: function (data) {
 						console.log(data)
 						if (completeCalibration(data)) {
-							console.alert("Calibration successful")
+							alert("Calibration successful")
 							//callback()   
+							console.log(data.lx)
+							console.log(data.ly)
 							scene.remove(plane);
 							scene.remove(grid);
-							createPlane(data.xAxis, data.yAxis);
-							adjustCamera(data.xAxis, data.yAxis);
+							createPlane(data.lx, data.ly);
+							adjustCamera(data.lx, data.ly);
 						}
 					},
 					async: true //async_bool
@@ -672,7 +674,7 @@
 			};
 
 			function completeCalibration(res) {
-				if (res.xAxis != 0 && res.yAxis != 0)
+				if (res.lx != 0 && res.ly != 0)
 					return true
 				else
 					return false
@@ -916,8 +918,8 @@
 			}
 
 			function adjustCamera(PLANE_WIDTH, PLANE_HEIGHT) {
-				camera.position.set(PLANE_WIDTH / 2, PLANE_HEIGHT / 2, 9.0);
-				cameraTarget.set(PLANE_WIDTH / 2, PLANE_HEIGHT / 2, 0.0)
+				camera.position.set(PLANE_WIDTH / 2.0, PLANE_HEIGHT / 2.0, (PLANE_WIDTH + PLANE_HEIGHT) /2.0);
+				cameraTarget.set(PLANE_WIDTH / 2.0, PLANE_HEIGHT / 2.0, 0.0)
 				camera.lookAt(cameraTarget);
 				camera.updateMatrix();
 			}

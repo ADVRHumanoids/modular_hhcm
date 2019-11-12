@@ -294,7 +294,7 @@ def sendCommands():
     # print(prova["descriptors"])
     # data = request.form.to_dict
     # print data
-    return jsonify(data)
+    return res
 
 def byteify(input):
     if isinstance(input, dict):
