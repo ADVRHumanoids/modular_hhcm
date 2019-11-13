@@ -62,11 +62,11 @@
     </xacro:macro>
 
     <!-- adding world link for Gazebo simulation -->
-    <link name="world"/>
+    <!-- <link name="world"/>
     <joint name="world" type="fixed">
         <parent link="world"/>
         <child link="base_link"/>
-    </joint>
+    </joint> -->
 
     <link name="base_link"/>
 
