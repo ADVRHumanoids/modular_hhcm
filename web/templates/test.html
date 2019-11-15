@@ -163,18 +163,18 @@
 			<!-- <label for="selectTask">What do you want to calibrate?</label> -->
 			<select name="selectTask" id="selectTask" class="selectpicker" title="Please select a task:" style="height:33%">
 				<option value=''>Select a task:</option>
-				<option value='task_1'> Task 1</option>
-				<option value='task_2'> Task 2</option>
+				<!-- <option value='task_1'> Task 1</option>
+				<option value='task_2'> Task 2</option> -->
 			</select>
 			<select name="selectGeometry" id="selectGeometry" class="selectpicker" title="Please select a task:" style="height:33%">
 				<option value=''>Select a geometry:</option>
-				<option value='plane_1'> Plane 1</option>
-				<option value='plane_2'> Plane 2</option>
+				<!-- <option value='plane_1'> Plane 1</option>
+				<option value='plane_2'> Plane 2</option> -->
 			</select>
 			<select name="selectColor" id="selectColor" class="selectpicker" title="Please select a task:" style="height:33%">
 				<option value=''>Select a color:</option>
-				<option value='color_1'> Color 1</option>
-				<option value='color_2'> Color 2</option>
+				<!-- <option value='color_1'> Color 1</option>
+				<option value='color_2'> Color 2</option> -->
 			</select>
 		</div>
 		<!-- <div id="buttonator"> -->
@@ -202,14 +202,14 @@
 					<select name="selectCalibTarget" id="selectCalibTarget" class="selectpicker">
 					<!-- </select> onchange="onChangeSelect()"> -->
 						<option value="geometry">Plane</option>
-						<option value="colors">Colors</option>
+						<option value="color">Color</option>
 						<option value="homing">Homing</option>
 					</select>	
 					<label for="geometryID">Choose a name for the geometry to calibrate</label>
 					<input type="text" name="geometryID" id="geometryID" value="plane_1"class="form-control input-md">
-					<div id="geometryCalibration" class="form-group">
-						<label for="selectGeometryCalibPoint">Choose the point to calibrate</label>
-						<select name="selectGeometryCalibPoint" id="selectGeometryCalibPoint" class="selectpicker">
+					<div id="planeCalibration" class="form-group">
+						<label for="selectPlaneCalibPoint">Choose the point to calibrate</label>
+						<select name="selectPlaneCalibPoint" id="selectPlaneCalibPoint" class="selectpicker">
 							<option value="origin">origin</option>
 							<option value="xAxis">X axis</option>
 							<option value="yAxis">Y axis</option>
@@ -272,11 +272,13 @@
 			</div>
 		</script>
 		<!-- <div class="section"> -->
-		<button type="button" id="pause" class="half-button section">
-			<div>Pause</div>
+		<button type="button" id="pause" class="half-button section" data-text-swap="Resume" data-text-original="Pause">
+			<p id="pause_text">Pause</p>
+			<!-- <div>Pause</div> -->
 		</button>
-		<button type="button" id="zeroG" class="half-button section" style="right:0">
-			<div>Zero gravity</div>
+		<button type="button" id="zeroG" class="half-button section" style="right:0" data-text-swap="Resume" data-text-original="Zero gravity">
+			<p id="zeroG_text">Zero gravity</p>
+			<!-- <div>Zero gravity</div> -->
 		</button>
 		<!-- </div> -->
 		<!-- <div id="result"></div> -->
@@ -294,6 +296,9 @@
 			var renderer, scene, camera, stats;
 			var cameraTarget = new THREE.Vector3();
 			var plane;
+			var geometry;
+			var geometryMap = new Map();
+			var gridMap = new Map();
 			var grid;
 			var taskName, geometryName, colorName;
 			var raycaster;
@@ -316,7 +321,8 @@
 			let mouseDown = false;
 
 			var ros = new ROSLIB.Ros({
-				url: 'ws://192.168.9.211:9090'
+				url: 'ws://192.168.9.42:9090'
+				// url: 'ws://localhost:9090'
 			});
 
 			ros.on('connection', function () {
@@ -339,8 +345,8 @@
 
 			var server_listener = new ROSLIB.Topic({
 				ros: ros,
-				name: '/conda',
-				messageType: 'conda_msg'
+				name: '/to_frontend',
+				messageType: 'json_parser/ToFrontend'
 			});
 
 			window.onload = function () {
@@ -350,26 +356,27 @@
 				var selectTask = document.getElementById("selectTask");
 				var selectGeometry = document.getElementById("selectGeometry");
 				var selectColor = document.getElementById("selectColor");
+				var drawBtn = document.getElementById("draw");
+				var pauseBtn = document.getElementById("pause");
+				var zeroGBtn = document.getElementById("zeroG");
 
 				addPathBtn.onclick = function () { addPath() };
 				removePathBtn.onclick = function () { removePath() };
 				removeAllBtn.onclick = function () { removeAll() };
+				drawBtn.onclick = function () {draw()};
+				pauseBtn.onclick = function () {pauseResume()};
+				zeroGBtn.onclick = function () {zeroGResume()};
 
 				jointstate_listener.subscribe(function (m) {
 					// console.log(m)
 				});
 
 				server_listener.subscribe(function (m) {
-					robotPose = m.robot_pose;
-					console.log(m.robot_pose)
+					robotPose = m.pose;
 					updateSelectChoices(selectTask, m.task_list, taskList)
-					console.log(taskList)
-					updateSelectChoices(selectGeometry, m.geometry_list, geometryList)
-					console.log(geometryList)
-					updateSelectChoices(selectColor, m.color_list, colorList)
-					console.log(colorList)
+					updateSelectChoices(selectGeometry, m.geometry_id_list, geometryList)
+					updateSelectChoices(selectColor, m.colors_id_list, colorList)
 					robotCanvasPoint = m.canvas_point
-					console.log(robotCanvasPoint)
 				});
 
 				$(document).on('change', '#selectTask', function () {
@@ -404,8 +411,8 @@
 					var commandData = {
 						'type': "SET",
 						'action': "upd",
-						'target': "geometry",
-						'name': geometryName,
+						'target': ["geometry"],
+						'name': [geometryName],
 						'descriptors': []
 					};
 					$.ajax({
@@ -427,8 +434,8 @@
 					$('.colorOverlay').html("Color: " + colorName); var commandData = {
 						'type': "SET",
 						'action': "upd",
-						'target': "color",
-						'name': colorName,
+						'target': ["color"],
+						'name': [colorName],
 						'descriptors': []
 					};
 					$.ajax({
@@ -511,7 +518,10 @@
 				scene.background = new THREE.Color(0xf0f0f0);
 				scene.add(new THREE.HemisphereLight(0x443333, 0x111122));
 
-				createPlane(PLANE_WIDTH, PLANE_HEIGHT);
+				plane = createPlane(PLANE_WIDTH, PLANE_HEIGHT);
+				scene.add(plane);
+				grid = createAGrid({ width: PLANE_WIDTH, height: PLANE_HEIGHT, linesWidth: PLANE_WIDTH * 10, linesHeight: PLANE_HEIGHT * 10, color: 0x888888 });
+				scene.add(grid);
 				// adjustCamera(PLANE_WIDTH, PLANE_HEIGHT);
 
 				var worldAxis = new THREE.AxesHelper(1);
@@ -548,17 +558,17 @@
 			function updateCalibMenu() {
 				switch ($('#selectCalibTarget option:selected').val()) {
 					case "geometry":
-						$('#geometryCalibration').show();
+						$('#planeCalibration').show();
 						$('#colorsCalibration').hide();
 						$('#homingCalibration').hide();
 						break;
-					case "colors":
-						$('#geometryCalibration').hide();
+					case "color":
+						$('#planeCalibration').hide();
 						$('#colorsCalibration').show();
 						$('#homingCalibration').hide();
 						break;
 					case "homing":
-						$('#geometryCalibration').hide();
+						$('#planeCalibration').hide();
 						$('#colorsCalibrationserver').hide();
 						$('#homingCalibrationserver').show();
 						break;
@@ -570,6 +580,7 @@
 					if (!arrayRos.includes(item)) {
 						var elem = getElementById(item);
 						selector.removeChild(elem)
+						arrayJs.splice(index, 1);
 					}
 				})
 				arrayRos.forEach(function (item, index) {
@@ -577,11 +588,11 @@
 						var option = document.createElement("option");
 						option.text = item;
 						option.value = item;
-						selectTask.add(option);
+						selector.add(option);
+						arrayJs.push(item)
 					}
 				})
-				arrayJs = arrayRos;
-				console.log(arrayRos);
+				// arrayJs = arrayRos.slice();
 			}
 
 			function sendParameters() {
@@ -624,7 +635,7 @@
 				var canvasWidth = canvas.width;
 				var canvasHeight = canvas.height;
 				var descriptors;
-				switch ($('#selectGeometryCalibPoint option:selected').val()) {
+				switch ($('#selectPlaneCalibPoint option:selected').val()) {
 					case "origin":
 						descriptors = [0, 0.0, 0.0];
 						break;
@@ -645,11 +656,6 @@
 					'descriptors': descriptors
 				};
 
-				// scene.remove(plane);
-				// scene.remove(grid);
-				// createPlane(10, 10);
-				// adjustCamera(10, 10);
-
 				$.ajax({
 					url: $SCRIPT_ROOT + 'sendCommands/',
 					data: JSON.stringify(commandData),
@@ -658,22 +664,40 @@
 					method: 'POST',
 					success: function (data) {
 						console.log(data)
-						if (completeCalibration(data)) {
-							alert("Calibration successful")
-							//callback()   
-							console.log(data.lx)
-							console.log(data.ly)
-							scene.remove(plane);
-							scene.remove(grid);
-							createPlane(data.lx, data.ly);
-							adjustCamera(data.lx, data.ly);
+						switch(data.target){
+							case "geometry":
+								console.log(data.target)
+								if (completePlaneCalibration(data)) {
+									alert("Plane calibration successful")
+									//callback()   
+									console.log(data.lx)
+									console.log(data.ly)
+									scene.remove(plane);
+									scene.remove(grid);
+									plane = createPlane(data.lx, data.ly);
+									scene.add(plane);
+									grid = createAGrid({ width: data.lx, height: data.ly, linesWidth: data.lx * 10, linesHeight: data.ly * 10, color: 0x888888 });
+									scene.add(grid);
+									adjustCamera(data.lx, data.ly);
+
+									geometryMap.set(data.name, plane);
+									gridMap.set(data.name, grid);
+								}
+								break;
+
+							case "color":
+								console.log(data.target)
+								if (data.status =="ACK")
+									alert("Color calibration successful")
+								// else if (data.status =="NACK")
+								break;
 						}
 					},
 					async: true //async_bool
 				});
 			};
 
-			function completeCalibration(res) {
+			function completePlaneCalibration(res) {
 				if (res.lx != 0 && res.ly != 0)
 					return true
 				else
@@ -705,6 +729,154 @@
 			function onCanvasMouseUp() {
 				event.preventDefault();
 				mouseDown = false;
+			}
+
+			function draw() {
+				var commandData = {
+					'type': "CMD",
+					'action': "draw",
+					'target': [],
+					'name': [],
+					'descriptors': []
+				};
+				$.ajax({
+					url: $SCRIPT_ROOT + 'sendCommands/',
+					data: JSON.stringify(commandData),
+					contentType: "application/json; charset=utf-8",
+					dataType: 'json',
+					method: 'POST',
+					success: function (data) {
+						console.log(data)
+						//$('#setParameters').popover('hide')
+						//callback()           
+					},
+					async: true //async_bool
+				})
+			}
+
+
+			function pauseResume() {
+				var el = $(pause);
+                console.log(el.html())
+                var el_text = $(pause_text);
+                console.log(el_text.html());
+
+				var other_el = $(zeroG);
+                console.log(other_el.html())
+                var other_el_text = $(zeroG_text);
+                console.log(other_el_text.html());
+                
+                if(el_text.text() == el.data("text-original")){
+                    el_text.text(el.data("text-swap"));
+					other_el_text.text(other_el.data("text-original"));
+					var commandData = {
+						'type': "CMD",
+						'action': "pause",
+						'target': [],
+						'name': [],
+						'descriptors': []
+					};
+					$.ajax({
+						url: $SCRIPT_ROOT + 'sendCommands/',
+						data: JSON.stringify(commandData),
+						contentType: "application/json; charset=utf-8",
+						dataType: 'json',
+						method: 'POST',
+						success: function (data) {
+							console.log(data)
+							//$('#setParameters').popover('hide')
+							//callback()           
+						},
+						async: true //async_bool
+					})
+                               
+                }
+                else{
+                    el_text.text(el.data("text-original"));
+					
+					var commandData = {
+						'type': "CMD",
+						'action': "resume",
+						'target': [],
+						'name': [],
+						'descriptors': []
+					};
+					$.ajax({
+						url: $SCRIPT_ROOT + 'sendCommands/',
+						data: JSON.stringify(commandData),
+						contentType: "application/json; charset=utf-8",
+						dataType: 'json',
+						method: 'POST',
+						success: function (data) {
+							console.log(data)
+							//$('#setParameters').popover('hide')
+							//callback()           
+						},
+						async: true //async_bool
+					})
+                }   
+				
+			}
+
+			function zeroGResume() {
+				var el = $(zeroG);
+                console.log(el.html())
+                var el_text = $(zeroG_text);
+                console.log(el_text.html());
+
+				var other_el = $(pause);
+                console.log(other_el.html())
+                var other_el_text = $(pause_text);
+                console.log(other_el_text.html());
+                
+                if(el_text.text() == el.data("text-original")){
+                    el_text.text(el.data("text-swap"));
+					other_el_text.text(other_el.data("text-original"));
+					var commandData = {
+						'type': "CMD",
+						'action': "stop",
+						'target': [],
+						'name': [],
+						'descriptors': []
+					};
+					$.ajax({
+						url: $SCRIPT_ROOT + 'sendCommands/',
+						data: JSON.stringify(commandData),
+						contentType: "application/json; charset=utf-8",
+						dataType: 'json',
+						method: 'POST',
+						success: function (data) {
+							console.log(data)
+							//$('#setParameters').popover('hide')
+							//callback()           
+						},
+						async: true //async_bool
+					})
+				}
+                else{
+                    el_text.text(el.data("text-original"));
+					
+					var commandData = {
+						'type': "CMD",
+						'action': "resume",
+						'target': [],
+						'name': [],
+						'descriptors': []
+					};
+					$.ajax({
+						url: $SCRIPT_ROOT + 'sendCommands/',
+						data: JSON.stringify(commandData),
+						contentType: "application/json; charset=utf-8",
+						dataType: 'json',
+						method: 'POST',
+						success: function (data) {
+							console.log(data)
+							//$('#setParameters').popover('hide')
+							//callback()           
+						},
+						async: true //async_bool
+					})
+                }   
 			}
 
 			function addPath() {
@@ -903,18 +1075,10 @@
 				// geometry.rotateX(- Math.PI / 2);
 				geometry.translate(PLANE_WIDTH / 2, PLANE_HEIGHT / 2, 0);
 				var material = new THREE.ShadowMaterial({ opacity: 0.2 });
-				plane = new THREE.Mesh(geometry, material);
+				var plane = new THREE.Mesh(geometry, material);
 				plane.receiveShadow = true;
-				scene.add(plane);
 
-				// var helper = new THREE.GridHelper(PLANE_SIZE, PLANE_SIZE * 10, 0x888888);
-				// helper.position.x = (PLANE_SIZE / 2);
-				// helper.position.y = (PLANE_SIZE / 2);
-				// helper.rotateX(Math.PI / 2);
-				// scene.add(helper);
-				grid = createAGrid({ width: PLANE_WIDTH, height: PLANE_HEIGHT, linesWidth: PLANE_WIDTH * 10, linesHeight: PLANE_HEIGHT * 10, color: 0x888888 });
-				console.log(grid)
-				scene.add(grid);
+				return plane
 			}
 
 			function adjustCamera(PLANE_WIDTH, PLANE_HEIGHT) {

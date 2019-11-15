@@ -28,6 +28,7 @@ urdf_writer_fromHW = URDF_writer.UrdfWriter()
 # Initialize json parser server manager
 manager = hp.MANAGER('ci')
 
+manager.publish_to_frontend()
 # Prepare context and sockets. When not using Poller class
 
 # Prepare our context and sockets
@@ -312,7 +313,7 @@ def byteify(input):
 if __name__ == '__main__':
 
     # Start Flask web-server
-    app.run(threaded=True)
+    app.run(debug=True, threaded=True)
     #host='10.24.8.110', port=5000, debug=False, 
     #main()
 
