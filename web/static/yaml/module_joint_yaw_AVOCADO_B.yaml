@@ -41,9 +41,9 @@ dynamics:
       I_xz: 0.00000271689
       I_yz: 0.0000876312
     CoM:
-      x: -0.0012685117
-      y: 0.0004160307
-      z: 0.11614489 #0.13614489
+      x: 0.0 #-0.0012685117
+      y: 0.0 #0.0004160307
+      z: 0.13114489 #0.13614489
 
   body_2:
     mass: 0.42322395
@@ -71,7 +71,7 @@ dynamics:
     CoM:
       x: 0.00081402
       y: -0.00053746
-      z: -0.00978986
+      z: -0.0978986
 
 visual:
   mesh_body_1: 'package://modular/meshes/yaw_base.stl'
@@ -120,4 +120,4 @@ CentAcESC:
     position:   [1000.0 , 0.0 , 30.0]
     # pos_Kp pos_Kd tor_Kp tor_Kd tor_Ki
     #  .... tor_K divided by 10000 to respect the int range [0..65536]
-    impedance:   [500.0, 5.0, 1.0, 0.005, 0.85]
+    impedance:   [500.0, 5.0, 1.0, 0.005, 0.90]

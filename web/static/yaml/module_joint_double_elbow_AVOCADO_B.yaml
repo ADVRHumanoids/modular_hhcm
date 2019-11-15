@@ -43,7 +43,7 @@ dynamics:
     CoM:
       x: -0.0010051857
       y: -0.013666345
-      z: 0.095904755
+      z: 0.105904755
 
   body_2:
     mass: 1.1036463
@@ -56,7 +56,7 @@ dynamics:
       I_yz: -1.0484708e-03
     CoM:
       x: -0.00036007
-      y: -0.040608854
+      y: -0.060608854
       z: -0.038467625
 
   body_2_fast:
@@ -71,7 +71,7 @@ dynamics:
     CoM:
       x: 0.00081402
       y: -0.00053746
-      z: -0.00978986
+      z: -0.132 #0.0978986
 
 visual:
   mesh_body_1: 'package://modular/meshes/elbow_base.stl'
@@ -120,4 +120,4 @@ CentAcESC:
     position:   [1000.0 , 0.0 , 30.0]
     # pos_Kp pos_Kd tor_Kp tor_Kd tor_Ki
     #  .... tor_K divided by 10000 to respect the int range [0..65536]
-    impedance:   [500.0, 5.0, 1.0, 0.005, 0.85]
+    impedance:   [500.0, 5.0, 1.0, 0.005, 0.90]
