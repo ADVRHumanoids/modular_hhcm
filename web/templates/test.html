@@ -190,10 +190,9 @@
 		<button type="button" id="removeAll" class="button section">
 			<div>Remove All</div>
 		</button>
-		<!-- <button type="button" id="calibrate"  data-toggle="popover" class="button">Calibrate</button> -->
-		<!-- id="calibrate" -->
-		<button type="button" class="button calibrate section" data-toggle="popover" data-target="#calibration-popover">
-			<div>Calibration</div>
+		<button type="button" id="calibrateBtn" class="button calibrate section" data-toggle="popover" data-target="#calibration-popover" data-text-swap="Close calibration" data-text-original="Calibration">
+			<p id="calibrate_text">Calibrate</p>
+			<!-- <div>Calibration</div> -->
 		</button>
 		<script type="text/html" id="calibration-popover">
 				<div id="calibrationForm"> 
@@ -472,6 +471,22 @@
 					})
 				});
 
+				$popovercalibrate.on('shown.bs.popover', function(){
+					console.log('popover shown')
+					zeroGResume();
+					var el = $(calibrateBtn);
+					var el_text = $(calibrate_text);
+					el_text.text(el.data("text-swap"));
+				})
+
+				$popovercalibrate.on('hidden.bs.popover', function(){
+					console.log('popover hidden')
+					zeroGResume();
+					var el = $(calibrateBtn);
+					var el_text = $(calibrate_text);
+					el_text.text(el.data("text-original"));
+				})
+
 				var $popoversetParameters = $('.setParameters').popover({
 					html: true,
 					placement: 'left',
@@ -485,20 +500,22 @@
 					$('.btn-primary').click(function () { sendParameters() })
 				});
 
-				$(':not(#anything)').on('click', function (e) {
-					$popoversetParameters.each(function () {
-						if (!$(this).is(e.target) && $(this).has(e.target).length === 0 && $('.popover').has(e.target).length === 0) {
-							$(this).popover('hide');
-							return;
-						}
-					});
-					$popovercalibrate.each(function () {
-						if (!$(this).is(e.target) && $(this).has(e.target).length === 0 && $('.popover').has(e.target).length === 0) {
-							$(this).popover('hide');
-							return;
-						}
-					});
-				});
+				// This is to dismiss the popover when not clicking on it. Unfortunately it fires 4 times for some reason. 
+				// Cannot be used when the popover is used to send the zero gravity command!
+				// $(':not(#anything)').on('click', function (e) {
+				// 	$popoversetParameters.each(function () {
+				// 		if (!$(this).is(e.target) && $(this).has(e.target).length === 0 && $('.popover').has(e.target).length === 0) {
+				// 			$(this).popover('hide');
+				// 			return;
+				// 		}
+				// 	});
+				// 	$popovercalibrate.each(function () {
+				// 		if (!$(this).is(e.target) && $(this).has(e.target).length === 0 && $('.popover').has(e.target).length === 0) {
+				// 			$(this).popover('hide');
+				// 			return;
+				// 		}
+				// 	});
+				// });
 			}
 
 			init();
@@ -820,14 +837,14 @@
 
 			function zeroGResume() {
 				var el = $(zeroG);
-                console.log(el.html())
+                // console.log(el.html())
                 var el_text = $(zeroG_text);
-                console.log(el_text.html());
+                // console.log(el_text.html());
 
 				var other_el = $(pause);
-                console.log(other_el.html())
+                // console.log(other_el.html())
                 var other_el_text = $(pause_text);
-                console.log(other_el_text.html());
+                // console.log(other_el_text.html());
                 
                 if(el_text.text() == el.data("text-original")){
                     el_text.text(el.data("text-swap"));
