@@ -72,6 +72,12 @@
 			vertical-align: middle;
 		}
 
+		.active {
+			background-color:green !important;
+			color: rgb(189, 214, 197);
+		}
+		
+
 		canvas {
 			width: 100%;
 			height: 100%;
@@ -166,18 +172,17 @@
 		<span id="result" class="section">
 			<!-- Please Calibrate the plane to draw on -->
 		</span>
-		<button type="button" id="addPath" class="button section">
+		<button type="button" id="addPath" class="button section btn btn-dark">
 			<div>Add Path</div>
 		</button>
-		<button type="button" id="removePath" class="button section">
+		<button type="button" id="removePath" class="button section btn btn-dark">
 			<div>Remove Path</div>
 		</button>
-		<button type="button" id="removeAll" class="button section">
+		<button type="button" id="removeAll" class="button section btn btn-dark">
 			<div>Remove All</div>
 		</button>
-		<button type="button" id="calibrateBtn" class="button calibrate section" data-toggle="popover" data-target="#calibration-popover" data-text-swap="Close calibration" data-text-original="Calibration">
-			<p id="calibrate_text">Calibrate</p>
-			<!-- <div>Calibration</div> -->
+		<button type="button" id="calibrateBtn" class="button calibrate section btn btn-dark" data-toggle="popover" data-target="#calibration-popover" data-text-swap="Close Calibration Panel" data-text-original="Calibration">
+			<p id="calibrateText">Calibrate</p>
 		</button>
 		<script type="text/html" id="calibration-popover">
 				<div id="calibrationForm"> 
@@ -214,9 +219,9 @@
 					<button type="button" class="btn btn-primary" data-loading-text="Sending info.."><em class="icon-ok"></em> Capture point</button>
 				</div>	
 			</script>
-		<button type="button" class="button setParameters section" data-toggle="popover"
-			data-target="#parameters-popover">
-			<div>Set Parameters</div>
+		<button type="button" id="setParametersBtn" class="button setParameters section btn btn-dark" data-toggle="popover"
+			data-target="#parameters-popover" data-text-swap="Close Parameter Panel" data-text-original="Set Parameters">
+			<p id="setParametersText">Set Parameters</p>
 		</button>
 		<script type="text/html" id="parameters-popover">
 			<div id="parametersForm"> 
@@ -256,18 +261,18 @@
 			</div>
 		</script>
 		<!-- <div class="section"> -->
-		<button type="button" id="pause" class="half-button section" data-text-swap="Resume" data-text-original="Pause">
+		<button type="button" id="pause" class="half-button section btn btn-dark" data-text-swap="Resume" data-text-original="Pause">
 			<p id="pause_text">Pause</p>
 			<!-- <div>Pause</div> -->
 		</button>
-		<button type="button" id="zeroG" class="half-button section" style="right:0" data-text-swap="Resume" data-text-original="Zero gravity">
+		<button type="button" id="zeroG" class="half-button section btn btn-dark" style="right:0" data-text-swap="Resume" data-text-original="Zero gravity">
 			<p id="zeroG_text">Zero gravity</p>
 			<!-- <div>Zero gravity</div> -->
 		</button>
 		<!-- </div> -->
 		<!-- <div id="result"></div> -->
 		<!-- </div> -->
-		<button type="button" id="draw" class="button section">
+		<button type="button" id="draw" class="button section btn btn-dark">
 			<div>Draw</div>
 		</button>
 	</div>
@@ -457,22 +462,24 @@
 				});
 
 				$popovercalibrate.on('shown.bs.popover', function(){
-					console.log('popover shown')
 					zeroGResume();
 					var el = $(calibrateBtn);
-					var el_text = $(calibrate_text);
+					var el_text = $(calibrateText);
 					el_text.text(el.data("text-swap"));
+					el.addClass("active");
+					console.log('popover shown')
 				})
 
 				$popovercalibrate.on('hidden.bs.popover', function(){
-					console.log('popover hidden')
 					zeroGResume();
 					var el = $(calibrateBtn);
-					var el_text = $(calibrate_text);
+					var el_text = $(calibrateText);
 					el_text.text(el.data("text-original"));
+					el.removeClass("active");
+					console.log('popover hidden')
 				})
 
-				var $popoversetParameters = $('.setParameters').popover({
+				var $popoverSetParameters = $('.setParameters').popover({
 					html: true,
 					placement: 'left',
 					container: 'body',
@@ -484,11 +491,29 @@
 				}).on('click', function () {
 					$('.btn-primary').click(function () { sendParameters() })
 				});
+				 
+				$popoverSetParameters.on('shown.bs.popover', function(){
+					zeroGResume();
+					var el = $(setParametersBtn);
+					var el_text = $(setParametersText);
+					el_text.text(el.data("text-swap"));
+					el.addClass("active");
+					console.log('popover shown')
+				})
 
-				// This is to dismiss the popover when not clicking on it. Unfortunately it fires 4 times for some reason. 
+				$popoverSetParameters.on('hidden.bs.popover', function(){
+					zeroGResume();
+					var el = $(setParametersBtn);
+					var el_text = $(setParametersText);
+					el_text.text(el.data("text-original"));
+					el.removeClass("active");
+					console.log('popover hidden')
+				})
+
+				//This is to dismiss the popover when not clicking on it. Unfortunately it fires 4 times for some reason. 
 				// Cannot be used when the popover is used to send the zero gravity command!
 				// $(':not(#anything)').on('click', function (e) {
-				// 	$popoversetParameters.each(function () {
+				// 	$popoverSetParameters.each(function () {
 				// 		if (!$(this).is(e.target) && $(this).has(e.target).length === 0 && $('.popover').has(e.target).length === 0) {
 				// 			$(this).popover('hide');
 				// 			return;
