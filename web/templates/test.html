@@ -150,28 +150,49 @@
 	<div id="info"><a href="http://threejs.org" target="_blank" rel="noopener">three.js</a> webgl - interactive -
 		raycasting - points </div>
 	<div id="leftBar" class="btn-group-vertical">
-		<div id="selector" class="section">
-			<!-- <label for="selectTask">What do you want to calibrate?</label> -->
-			<select name="selectTask" id="selectTask" class="selectpicker" title="Please select a task:" style="height:33%">
+		
+		<!-- <div id="selector" class="section btn-group-vertical"> -->
+			<div id="selectTask" class="btn-group dropleft">
+			<button id="selectTaskBtn" type="button" class="btn btn-dark dropdown-toggle" data-toggle="dropdown" data-prefix="Selected task: " aria-haspopup="true" aria-expanded="false">
+				Select a task:
+			</button>
+			<ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+				<li><a href="#" class="dropdown-item" data-value="action">Task 1</a></li>
+				<li><a href="#" class="dropdown-item" data-value="another action">Task 2</a></li>
+			</ul>
+			</div>
+			<!-- <select name="selectTask" id="selectTask" class="selectpicker" title="Please select a task:" style="height:33%">
 				<option value=''>Select a task:</option>
-				<!-- <option value='task_1'> Task 1</option>
-				<option value='task_2'> Task 2</option> -->
-			</select>
-			<select name="selectGeometry" id="selectGeometry" class="selectpicker" title="Please select a task:" style="height:33%">
+			</select> -->
+			<div id="selectGeometry" class="btn-group dropleft">
+			<button id="selectGeometryBtn" type="button" class="btn btn-dark dropdown-toggle" data-toggle="dropdown" data-prefix="Selected geometry: " aria-haspopup="true" aria-expanded="false">
+				Select a geometry:
+			</button>
+			<ul class="dropdown-menu" aria-labelledby="dropdownMenu2">
+				<li><a href="#" class="dropdown-item" data-value="plane 1">Plane 1</a></li>
+				<li><a href="#" class="dropdown-item" data-value="plane 2">Plane 2</a></li>
+			</ul>
+			</div>
+			<!-- <select name="selectGeometry" id="selectGeometry" class="selectpicker" title="Please select a task:" style="height:33%">
 				<option value=''>Select a geometry:</option>
-				<!-- <option value='plane_1'> Plane 1</option>
-				<option value='plane_2'> Plane 2</option> -->
-			</select>
-			<select name="selectColor" id="selectColor" class="selectpicker" title="Please select a task:" style="height:33%">
+			</select> -->
+			<div id="selectColor" class="btn-group dropleft">
+			<button id="selectColorBtn" type="button" class="btn btn-dark dropdown-toggle" data-toggle="dropdown" data-prefix="Selected color: " aria-haspopup="true" aria-expanded="false">
+				Select a color:
+			</button>
+			<ul class="dropdown-menu" aria-labelledby="dropdownMenu3">
+				<li><a href="#" class="dropdown-item" data-value="color 1">Color 1</a></li>
+				<li><a href="#" class="dropdown-item" data-value="color 2">Color 2</a></li>
+			</ul>
+			</div>
+			<!-- <select name="selectColor" id="selectColor" class="selectpicker" title="Please select a task:" style="height:33%">
 				<option value=''>Select a color:</option>
-				<!-- <option value='color_1'> Color 1</option>
-				<option value='color_2'> Color 2</option> -->
-			</select>
-		</div>
+			</select> -->
+		<!-- </div> -->
 		<!-- <div id="buttonator"> -->
-		<span id="result" class="section">
-			<!-- Please Calibrate the plane to draw on -->
-		</span>
+		<!-- <span id="result" class="section">
+			Please Calibrate the plane to draw on
+		</span> -->
 		<button type="button" id="addPath" class="button section btn btn-dark">
 			<div>Add Path</div>
 		</button>
@@ -260,21 +281,17 @@
 				<button type="button" class="btn btn-primary" data-loading-text="Sending info.."><em class="icon-ok"></em> Set Parameters</button>
 			</div>
 		</script>
-		<!-- <div class="section"> -->
 		<button type="button" id="pause" class="half-button section btn btn-dark" data-text-swap="Resume" data-text-original="Pause">
 			<p id="pause_text">Pause</p>
-			<!-- <div>Pause</div> -->
 		</button>
 		<button type="button" id="zeroG" class="half-button section btn btn-dark" style="right:0" data-text-swap="Resume" data-text-original="Zero gravity">
 			<p id="zeroG_text">Zero gravity</p>
-			<!-- <div>Zero gravity</div> -->
 		</button>
-		<!-- </div> -->
-		<!-- <div id="result"></div> -->
-		<!-- </div> -->
+	
 		<button type="button" id="draw" class="button section btn btn-dark">
 			<div>Draw</div>
 		</button>
+		
 	</div>
 
 	<script type=text/javascript> $SCRIPT_ROOT="{{ url_for('index', _external=True) }}" ; </script> <script
@@ -289,7 +306,6 @@
 			var geometryMap = new Map();
 			var gridMap = new Map();
 			var grid;
-			var taskName, geometryName, colorName;
 			var raycaster;
 			var mouse = new THREE.Vector2();
 			var dblClick = new THREE.Vector2();
@@ -342,12 +358,16 @@
 				var removePathBtn = document.getElementById('removePath');
 				var addPathBtn = document.getElementById('addPath');
 				var removeAllBtn = document.getElementById('removeAll');
-				var selectTask = document.getElementById("selectTask");
-				var selectGeometry = document.getElementById("selectGeometry");
-				var selectColor = document.getElementById("selectColor");
 				var drawBtn = document.getElementById("draw");
 				var pauseBtn = document.getElementById("pause");
 				var zeroGBtn = document.getElementById("zeroG");
+
+				var selectTask = document.getElementById("selectTask");
+				var taskDropdownMenu = selectTask.querySelector('.dropdown-menu');
+				var selectGeometry = document.getElementById("selectGeometry");
+				var geometryDropdownMenu = selectGeometry.querySelector('.dropdown-menu');
+				var selectColor = document.getElementById("selectColor");
+				var colorDropdownMenu = selectColor.querySelector('.dropdown-menu');
 
 				addPathBtn.onclick = function () { addPath() };
 				removePathBtn.onclick = function () { removePath() };
@@ -362,14 +382,29 @@
 
 				server_listener.subscribe(function (m) {
 					robotPose = m.pose;
-					updateSelectChoices(selectTask, m.task_list, taskList)
-					updateSelectChoices(selectGeometry, m.geometry_id_list, geometryList)
-					updateSelectChoices(selectColor, m.colors_id_list, colorList)
+					updateSelectList(taskDropdownMenu, m.task_list, taskList)
+					updateSelectList(geometryDropdownMenu, m.geometry_id_list, geometryList)
+					updateSelectList(colorDropdownMenu, m.colors_id_list, colorList)
 					robotCanvasPoint = m.canvas_point
 				});
 
-				$(document).on('change', '#selectTask', function () {
-					var taskName = $('#selectTask option:selected').val();
+				// Attach a delegated event handler
+				// Ref: https://learn.jquery.com/events/event-delegation/
+				$( ".dropdown-menu" ).on( "click", "a", function( event ) {
+					event.preventDefault();  //do not follow link of anchor element
+					console.log('Selection')
+					var selText = $(this).text();
+					console.log( $(this).text())
+					console.log($(this).parents('.btn-group'))
+  					var dropdownToggle = $(this).parents('.btn-group').find('.dropdown-toggle')
+					dropdownToggle.html(dropdownToggle.data('prefix')+selText+'  <span class="caret"></span>');
+					dropdownToggle.val($(this).data('value'));
+					dropdownToggle.change();
+				});
+
+				$(document).on('change', '#selectTaskBtn', function () {
+					// var taskName = $('#selectTask option:selected').val();
+					var taskName = $('#selectTaskBtn').val();
 					$('.taskOverlay').show();
 					$('.taskOverlay').html("Task: " + taskName);
 					var commandData = {
@@ -392,9 +427,9 @@
 						async: true //async_bool
 					})
 				})
-				$(document).on('change', '#selectGeometry', function () {
-					geometryName = $('#selectGeometry option:selected').val();
-					console.log(geometryName)
+				$(document).on('change', '#selectGeometryBtn', function () {
+					// var geometryName = $('#selectGeometry option:selected').val();
+					var geometryName = $('#selectGeometryBtn').val();
 					$('.geometryOverlay').show();
 					$('.geometryOverlay').html("Geometry: " + geometryName);
 					var commandData = {
@@ -417,8 +452,9 @@
 						async: true //async_bool
 					})
 				})
-				$(document).on('change', '#selectColor', function () {
-					var colorName = $('#selectColor option:selected').val();
+				$(document).on('change', '#selectColorBtn', function () {
+					// var colorName = $('#selectColor option:selected').val();
+					var colorName = $('#selectColorBtn').val();
 					$('.colorOverlay').show();
 					$('.colorOverlay').html("Color: " + colorName); var commandData = {
 						'type': "SET",
@@ -439,7 +475,6 @@
 						},
 						async: true //async_bool
 					})
-
 				})
 
 				var $popovercalibrate = $('.calibrate').popover({
@@ -603,7 +638,7 @@
 				}
 			}
 
-			function updateSelectChoices(selector, arrayRos, arrayJs) {
+			function updateSelectOptions(selector, arrayRos, arrayJs) {
 				arrayJs.forEach(function (item, index) {
 					if (!arrayRos.includes(item)) {
 						var elem = getElementById(item);
@@ -617,6 +652,31 @@
 						option.text = item;
 						option.value = item;
 						selector.add(option);
+						arrayJs.push(item)
+					}
+				})
+				// arrayJs = arrayRos.slice();
+			}
+
+			function updateSelectList(selector, arrayRos, arrayJs) {
+				arrayJs.forEach(function (item, index) {
+					if (!arrayRos.includes(item)) {
+						var elem = getElementById(item);
+						selector.removeChild(elem)
+						arrayJs.splice(index, 1);
+					}
+				})
+				arrayRos.forEach(function (item, index) {
+					if (!arrayJs.includes(item)) {
+						var listElement = document.createElement("LI");
+						var newLink = document.createElement('a');
+						newLink.setAttribute('class', 'dropdown-item');
+						newLink.setAttribute('href', '#');
+						newLink.setAttribute('data-value', item);
+						newLink.text = item;
+						newLink.value = item;
+						listElement.appendChild(newLink);
+						selector.appendChild(listElement);
 						arrayJs.push(item)
 					}
 				})
