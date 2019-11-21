@@ -461,8 +461,10 @@
 					})
 				});
 
-				$popovercalibrate.on('shown.bs.popover', function(){
-					zeroGResume();
+				$popovercalibrate.on('shown.bs.popover', function(){	
+					if ($(zeroG_text).text() == $(zeroG).data("text-original")) {  // if the zeroG buttoin
+						zeroGResume();
+					}
 					var el = $(calibrateBtn);
 					var el_text = $(calibrateText);
 					el_text.text(el.data("text-swap"));
@@ -471,7 +473,10 @@
 				})
 
 				$popovercalibrate.on('hidden.bs.popover', function(){
-					zeroGResume();
+					// if left button text not resume
+					if ($(pause_text).text() == $(pause_text).data("text-swap")) {
+						zeroGResume();
+					}
 					var el = $(calibrateBtn);
 					var el_text = $(calibrateText);
 					el_text.text(el.data("text-original"));
@@ -492,8 +497,7 @@
 					$('.btn-primary').click(function () { sendParameters() })
 				});
 				 
-				$popoverSetParameters.on('shown.bs.popover', function(){
-					zeroGResume();
+				$popoverSetParameters.on('show.bs.popover', function(){
 					var el = $(setParametersBtn);
 					var el_text = $(setParametersText);
 					el_text.text(el.data("text-swap"));
@@ -502,7 +506,6 @@
 				})
 
 				$popoverSetParameters.on('hidden.bs.popover', function(){
-					zeroGResume();
 					var el = $(setParametersBtn);
 					var el_text = $(setParametersText);
 					el_text.text(el.data("text-original"));
@@ -510,22 +513,24 @@
 					console.log('popover hidden')
 				})
 
-				//This is to dismiss the popover when not clicking on it. Unfortunately it fires 4 times for some reason. 
-				// Cannot be used when the popover is used to send the zero gravity command!
-				// $(':not(#anything)').on('click', function (e) {
-				// 	$popoverSetParameters.each(function () {
-				// 		if (!$(this).is(e.target) && $(this).has(e.target).length === 0 && $('.popover').has(e.target).length === 0) {
-				// 			$(this).popover('hide');
-				// 			return;
-				// 		}
-				// 	});
-				// 	$popovercalibrate.each(function () {
-				// 		if (!$(this).is(e.target) && $(this).has(e.target).length === 0 && $('.popover').has(e.target).length === 0) {
-				// 			$(this).popover('hide');
-				// 			return;
-				// 		}
-				// 	});
-				// });
+				// This is to dismiss the popover when not clicking on it.
+				$('body').on('click', function (e) {
+					if ( $('#calibrationForm').is(':visible') ) {
+						$('.calibrate').each(function () {
+							if (!$(this).is(e.target) && $(this).has(e.target).length === 0 && $('.popover').has(e.target).length === 0 ) {								
+								$(this).popover('hide');
+							}
+						});
+					}
+
+					if ( $('#parametersForm').is(':visible') ) {
+						$('.setParameters').each(function () {
+							if (!$(this).is(e.target) && $(this).has(e.target).length === 0 && $('.popover').has(e.target).length === 0 ) {								
+								$(this).popover('hide');
+							}
+						});
+					}
+				});
 			}
 
 			init();
