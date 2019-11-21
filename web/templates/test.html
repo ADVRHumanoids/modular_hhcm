@@ -282,10 +282,10 @@
 			</div>
 		</script>
 		<button type="button" id="pause" class="half-button section btn btn-dark" data-text-swap="Resume" data-text-original="Pause">
-			<p id="pause_text">Pause</p>
+			<p id="pauseText">Pause</p>
 		</button>
 		<button type="button" id="zeroG" class="half-button section btn btn-dark" style="right:0" data-text-swap="Resume" data-text-original="Zero gravity">
-			<p id="zeroG_text">Zero gravity</p>
+			<p id="zeroGText">Zero gravity</p>
 		</button>
 	
 		<button type="button" id="draw" class="button section btn btn-dark">
@@ -497,7 +497,7 @@
 				});
 
 				$popovercalibrate.on('shown.bs.popover', function(){	
-					if ($(zeroG_text).text() == $(zeroG).data("text-original")) {  // if the zeroG buttoin
+					if ($(zeroGText).text() == $(zeroG).data("text-original")) {  // if the zeroG buttoin
 						zeroGResume();
 					}
 					var el = $(calibrateBtn);
@@ -509,7 +509,7 @@
 
 				$popovercalibrate.on('hidden.bs.popover', function(){
 					// if left button text not resume
-					if ($(pause_text).text() == $(pause_text).data("text-swap")) {
+					if ($(pauseText).text() == $(pause).data("text-original")) {
 						zeroGResume();
 					}
 					var el = $(calibrateBtn);
@@ -851,12 +851,12 @@
 			function pauseResume() {
 				var el = $(pause);
                 console.log(el.html())
-                var el_text = $(pause_text);
+                var el_text = $(pauseText);
                 console.log(el_text.html());
 
 				var other_el = $(zeroG);
                 console.log(other_el.html())
-                var other_el_text = $(zeroG_text);
+                var other_el_text = $(zeroGText);
                 console.log(other_el_text.html());
                 
                 if(el_text.text() == el.data("text-original")){
@@ -914,12 +914,12 @@
 			function zeroGResume() {
 				var el = $(zeroG);
                 // console.log(el.html())
-                var el_text = $(zeroG_text);
+                var el_text = $(zeroGText);
                 // console.log(el_text.html());
 
 				var other_el = $(pause);
                 // console.log(other_el.html())
-                var other_el_text = $(pause_text);
+                var other_el_text = $(pauseText);
                 // console.log(other_el_text.html());
                 
                 if(el_text.text() == el.data("text-original")){
