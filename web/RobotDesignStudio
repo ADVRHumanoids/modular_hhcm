@@ -26,7 +26,7 @@ urdf_writer = URDF_writer.UrdfWriter()
 urdf_writer_fromHW = URDF_writer.UrdfWriter()
 
 # Initialize json parser server manager
-manager = hp.MANAGER('ci')
+manager = hp.MANAGER(config_namespace='/state_machine')
 
 manager.publish_to_frontend()
 # Prepare context and sockets. When not using Poller class
