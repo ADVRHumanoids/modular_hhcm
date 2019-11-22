@@ -211,8 +211,8 @@
 						Select a task:
 					</button>
 					<ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
-						<li><a href="#" class="dropdown-item" data-value="action">Task 1</a></li>
-						<li><a href="#" class="dropdown-item" data-value="another action">Task 2</a></li>
+						<li><a href="#" class="dropdown-item" data-value="task 1">Task 1</a></li>
+						<li><a href="#" class="dropdown-item" data-value="task 2">Task 2</a></li>
 					</ul>
 				</div>
 				<!-- <select name="selectTask" id="selectTask" class="selectpicker" title="Please select a task:" style="height:33%">
@@ -400,12 +400,12 @@
 			var raycast_threshold = 0.1;
 			var pointSize = 0.05;
 
-			var taskList = [], geometryList = [], colorList = [], robotPose, robotCanvasPoint;
+			var taskList = ['task 1', 'task 2'], geometryList = ['plane 1', 'plane 2'], colorList = ['color 1', 'color 2'], robotPose, robotCanvasPoint;
 
 			let mouseDown = false;
 
 			var ros = new ROSLIB.Ros({
-				//url: 'ws://192.168.9.42:9090'
+				// url: 'ws://192.168.9.42:9090'
 				url: 'ws://localhost:9090'
 			});
 
