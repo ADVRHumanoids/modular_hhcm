@@ -165,8 +165,8 @@
 				Select a task:
 			</button>
 			<ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
-				<li><a href="#" class="dropdown-item" data-value="action">Task 1</a></li>
-				<li><a href="#" class="dropdown-item" data-value="another action">Task 2</a></li>
+				<li><a href="#" class="dropdown-item" data-value="task 1">Task 1</a></li>
+				<li><a href="#" class="dropdown-item" data-value="task 2">Task 2</a></li>
 			</ul>
 			</div>
 			<!-- <select name="selectTask" id="selectTask" class="selectpicker" title="Please select a task:" style="height:33%">
@@ -674,8 +674,9 @@
 			function updateSelectList(selector, arrayRos, arrayJs) {
 				arrayJs.forEach(function (item, index) {
 					if (!arrayRos.includes(item)) {
-						var elem = getElementById(item);
-						selector.removeChild(elem)
+						var dropdownItem = selector.querySelector("li > a[data-value='"+item+"']");
+						var listElement = dropdownItem.parentNode;
+						selector.removeChild(listElement);
 						arrayJs.splice(index, 1);
 					}
 				})
@@ -690,7 +691,7 @@
 						newLink.value = item;
 						listElement.appendChild(newLink);
 						selector.appendChild(listElement);
-						arrayJs.push(item)
+						arrayJs.push(item);
 					}
 				})
 				// arrayJs = arrayRos.slice();
