@@ -30,11 +30,35 @@
 
 <body>
 	<style type="text/css">
+
+		.btn_dark {
+			border-radius:6px;
+		}
+
 		.btn-dark:hover {
 			color: #19cf9b;
 			background-color:#23272b;
 			border-color:#19cf9b;
 		}
+
+		.btn-subgroup {
+			width:100%;
+			height:20%;
+			padding:3px 0 3px 0;
+		}
+
+		.btn-1-in-subgroup {
+			height:100%
+		}
+
+		.btn-2-in-subgroup {
+			height:50%
+		}
+
+		.btn-3-in-subgroup {
+			height:33%
+		}
+
 		
 		#container {
 			width: 85%;
@@ -47,7 +71,7 @@
 			float: right;
 		}
 
-		#leftBar {
+		.button-bar-container {
 			width: 15%;
 			height: 100%;
 			position: fixed;
@@ -55,17 +79,29 @@
 			top: 0;
 			right: 0;
 			float: right;
+			background-color:#495057;
+		}
+
+		#leftBar {
+			width: 100%;
+			height: 100%;
+			padding: 10px 10px 10px 
+			/*position: fixed;
+			z-index: 1;
+			top: 0;
+			right: 0;
+			float: right; */
 		}
 
 		.button {
-			background-size: 100% 100%;
+			/* background-size: 100% 100%; */
 			/* height: 100px; */
-			width: 100%;
-			padding-bottom: 10px;
+			/* width: 100%; */
+			/* padding-bottom: 10px; */
 			/* text-align: center; */
 			/* text-decoration: none;
 				display: inline-block; */
-			font-size: 1.2vw;
+			font-size: 1vw;
 		}
 
 		.half-button {
@@ -157,150 +193,162 @@
 	</div>
 	<div id="info"><a href="http://threejs.org" target="_blank" rel="noopener">three.js</a> webgl - interactive -
 		raycasting - points </div>
-	<div id="leftBar" class="btn-group-vertical">
-		
-		<!-- <div id="selector" class="section btn-group-vertical"> -->
-			<div id="selectTask" class="btn-group dropleft">
-			<button id="selectTaskBtn" type="button" class="btn btn-dark dropdown-toggle" data-toggle="dropdown" data-prefix="Selected task: " aria-haspopup="true" aria-expanded="false">
-				Select a task:
-			</button>
-			<ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
-				<li><a href="#" class="dropdown-item" data-value="action">Task 1</a></li>
-				<li><a href="#" class="dropdown-item" data-value="another action">Task 2</a></li>
-			</ul>
-			</div>
-			<!-- <select name="selectTask" id="selectTask" class="selectpicker" title="Please select a task:" style="height:33%">
-				<option value=''>Select a task:</option>
-			</select> -->
-			<div id="selectGeometry" class="btn-group dropleft">
-			<button id="selectGeometryBtn" type="button" class="btn btn-dark dropdown-toggle" data-toggle="dropdown" data-prefix="Selected geometry: " aria-haspopup="true" aria-expanded="false">
-				Select a geometry:
-			</button>
-			<ul class="dropdown-menu" aria-labelledby="dropdownMenu2">
-				<li><a href="#" class="dropdown-item" data-value="plane 1">Plane 1</a></li>
-				<li><a href="#" class="dropdown-item" data-value="plane 2">Plane 2</a></li>
-			</ul>
-			</div>
-			<!-- <select name="selectGeometry" id="selectGeometry" class="selectpicker" title="Please select a task:" style="height:33%">
-				<option value=''>Select a geometry:</option>
-			</select> -->
-			<div id="selectColor" class="btn-group dropleft">
-			<button id="selectColorBtn" type="button" class="btn btn-dark dropdown-toggle" data-toggle="dropdown" data-prefix="Selected color: " aria-haspopup="true" aria-expanded="false">
-				Select a color:
-			</button>
-			<ul class="dropdown-menu" aria-labelledby="dropdownMenu3">
-				<li><a href="#" class="dropdown-item" data-value="color 1">Color 1</a></li>
-				<li><a href="#" class="dropdown-item" data-value="color 2">Color 2</a></li>
-			</ul>
-			</div>
-			<!-- <select name="selectColor" id="selectColor" class="selectpicker" title="Please select a task:" style="height:33%">
-				<option value=''>Select a color:</option>
-			</select> -->
-		<!-- </div> -->
-		<!-- <div id="buttonator"> -->
-		<!-- <span id="result" class="section">
-			Please Calibrate the plane to draw on
-		</span> -->
-		<button type="button" id="addPath" class="button section btn btn-dark">
-			<div>Add Path</div>
-		</button>
-		<button type="button" id="removePath" class="button section btn btn-dark">
-			<div>Remove Path</div>
-		</button>
-		<button type="button" id="removeAll" class="button section btn btn-dark">
-			<div>Remove All</div>
-		</button>
-		<button type="button" id="calibrateBtn" class="button calibrate section btn btn-dark" data-toggle="popover" data-target="#calibration-popover" data-text-swap="Close Calibration Panel" data-text-original="Calibration">
-			<p id="calibrateText">Calibrate</p>
-		</button>
-		<script type="text/html" id="calibration-popover">
-				<div id="calibrationForm"> 
-					<!-- class="hidden"> -->
-					<label for="selectCalibTarget">What do you want to calibrate?</label>
-					<select name="selectCalibTarget" id="selectCalibTarget" class="selectpicker">
-					<!-- </select> onchange="onChangeSelect()"> -->
-						<option value="geometry">Plane</option>
-						<option value="color">Color</option>
-						<option value="homing">Homing</option>
-					</select>	
-					<label for="geometryID">Choose a name for the geometry to calibrate</label>
-					<input type="text" name="geometryID" id="geometryID" value="plane_1"class="form-control input-md">
-					<div id="planeCalibration" class="form-group">
-						<label for="selectPlaneCalibPoint">Choose the point to calibrate</label>
-						<select name="selectPlaneCalibPoint" id="selectPlaneCalibPoint" class="selectpicker">
-							<option value="origin">origin</option>
-							<option value="xAxis">X axis</option>
-							<option value="yAxis">Y axis</option>
-						</select>
-					</div>
-					<div id="colorsCalibration" class="form-group" style="display:none">
-						<label for="selectColorsCalibPoint">Choose the point to calibrate</label>
-						<select name="selectColorsCalibPoint" id="selectColorsCalibPoint" class="selectpicker">
-							<option value="color_1">color 1</option>
-							<option value="color_2">color 2</option>
-							<option value="color_3">color 3</option>
-							<option value="color_4">color 4</option>
-							<option value="color_5">color 5</option>
-						</select>
-					</div>
-					<div id="homingCalibration" class="form-group" style="display:none">TO BE IMPLEMENTED</div>
-					<div id="homingCalibration" class="form-group">Place the robot end-effector on the point to calibrate</div>
-					<button type="button" class="btn btn-primary" data-loading-text="Sending info.."><em class="icon-ok"></em> Capture point</button>
-				</div>	
-			</script>
-		<button type="button" id="setParametersBtn" class="button setParameters section btn btn-dark" data-toggle="popover"
-			data-target="#parameters-popover" data-text-swap="Close Parameter Panel" data-text-original="Set Parameters">
-			<p id="setParametersText">Set Parameters</p>
-		</button>
-		<script type="text/html" id="parameters-popover">
-			<div id="parametersForm"> 
-			<!-- class="hide"> -->
-				<label for="selectBehavior">Behavior to set:</label>
-				<select name="selectBehavior" id="selectBehavior" class="selectpicker">
-					<option value="moving">Moving behavior</option>
-					<option value="static">Static behavior</option>
-				</select>	
-				<div class="row">
-					<div class="col-md-6">
-						<label for="Kx">Kx (N/m):</label>
-						<input type="number" name="Kx" id="Kx" value="1200" step="100" class="form-control form-control-sm">
-						<label for="Ky">Ky (N/m):</label>
-						<input type="number" name="Ky" id="Ky" value="1200" step="100" class="form-control form-control-sm">
-						<label for="Kz">Kz (N/m):</label>
-						<input type="number" name="Kz" id="Kz" value="1200" step="100" class="form-control form-control-sm ">
-					</div>
-					<div class="col-md-6">
-							<label for="Rx">Rx (Nm/rad):</label>
-							<input type="number" name="Rx" id="Rx" value="200" step="10" class="form-control form-control-sm ">
-							<label for="Ry">Ry (Nm/rad):</label>
-							<input type="number" name="Ry" id="Ry" value="200" step="10" class="form-control form-control-sm ">
-							<label for="Rz">Rz (Nm/rad):</label>
-							<input type="number" name="Rz" id="Rz" value="0" step="10" class="form-control form-control-sm">	
-					</div>
+	<div id=BarContainer class="button-bar-container">
+		<div id="leftBar" class="btn-group-vertical">			
+			<div id="selectButtons" class="btn-group-vertical btn-subgroup">
+				<div id="selectTask" class="btn-group dropleft btn-3-in-subgroup">
+					<button id="selectTaskBtn" type="button" class="btn btn-dark dropdown-toggle" data-toggle="dropdown" data-prefix="Selected task: " aria-haspopup="true" aria-expanded="false">
+						Select a task:
+					</button>
+					<ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+						<li><a href="#" class="dropdown-item" data-value="action">Task 1</a></li>
+						<li><a href="#" class="dropdown-item" data-value="another action">Task 2</a></li>
+					</ul>
 				</div>
-				<label for="Fz">Fz (N):</label>
-				<input type="number" name="Fz" id="Fz" value="-1" step="0.1" class="form-control input-md">
-				<label for="baseLink">base link:</label>
-				<input type="text" name="baseLink" id="baseLink" value="base_link"class="form-control input-md">
-				<label for="distalLink">distal link:</label>
-				<input type="text" name="distalLink" id="distalLink" value="TCP"class="form-control input-md">
-				<label for="desiredVelocity">desired velocity (m/s):</label>
-				<input type="number" name="desiredVelocity" id="desiredVelocity" value="0.05" step="0.01" class="form-control input-md">
-				<button type="button" class="btn btn-primary" data-loading-text="Sending info.."><em class="icon-ok"></em> Set Parameters</button>
+				<!-- <select name="selectTask" id="selectTask" class="selectpicker" title="Please select a task:" style="height:33%">
+					<option value=''>Select a task:</option>
+				</select> -->
+				<div id="selectGeometry" class="btn-group dropleft btn-3-in-subgroup">
+					<button id="selectGeometryBtn" type="button" class="btn btn-dark dropdown-toggle" data-toggle="dropdown" data-prefix="Selected geometry: " aria-haspopup="true" aria-expanded="false">
+						Select a geometry:
+					</button>
+					<ul class="dropdown-menu" aria-labelledby="dropdownMenu2">
+						<li><a href="#" class="dropdown-item" data-value="plane 1">Plane 1</a></li>
+						<li><a href="#" class="dropdown-item" data-value="plane 2">Plane 2</a></li>
+					</ul>
+				</div>
+				<!-- <select name="selectGeometry" id="selectGeometry" class="selectpicker" title="Please select a task:" style="height:33%">
+					<option value=''>Select a geometry:</option>
+				</select> -->
+				<div id="selectColor" class="btn-group dropleft btn-3-in-subgroup">
+					<button id="selectColorBtn" type="button" class="btn btn-dark dropdown-toggle" data-toggle="dropdown" data-prefix="Selected color: " aria-haspopup="true" aria-expanded="false">
+						Select a color:
+					</button>
+					<ul class="dropdown-menu" aria-labelledby="dropdownMenu3">
+						<li><a href="#" class="dropdown-item" data-value="color 1">Color 1</a></li>
+						<li><a href="#" class="dropdown-item" data-value="color 2">Color 2</a></li>
+					</ul>
+				</div>
+			
+				<!-- <select name="selectColor" id="selectColor" class="selectpicker" title="Please select a task:" style="height:33%">
+					<option value=''>Select a color:</option>
+				</select> -->
 			</div>
-		</script>
-		<button type="button" id="pause" class="half-button section btn btn-dark" data-text-swap="Resume" data-text-original="Pause">
-			<p id="pauseText">Pause</p>
-		</button>
-		<button type="button" id="zeroG" class="half-button section btn btn-dark" style="right:0" data-text-swap="Resume" data-text-original="Zero gravity">
-			<p id="zeroGText">Zero gravity</p>
-		</button>
-	
-		<button type="button" id="draw" class="button section btn btn-dark">
-			<div>Draw</div>
-		</button>
-		
+			<div id="pathButtons" class="btn-group-vertical btn-subgroup">
+			<!-- <span id="result" class="section">
+				Please Calibrate the plane to draw on
+			</span> -->
+				<button type="button" id="addPath" class="button btn btn-dark btn-3-in-subgroup">
+					<div>Add Path</div>
+				</button>
+				<button type="button" id="removePath" class="button btn btn-dark btn-3-in-subgroup">
+					<div>Remove Path</div>
+				</button>
+				<button type="button" id="removeAll" class="button btn btn-dark btn-3-in-subgroup">
+					<div>Remove All</div>
+				</button>
+			</div>
+			<div id="popoverButtons" class="btn-group-vertical btn-subgroup">
+				<button type="button" id="calibrateBtn" class="button calibrate btn btn-dark btn-2-in-subgroup" data-toggle="popover" data-target="#calibration-popover" data-text-swap="Close Calibration Panel" data-text-original="Calibration">
+					<p id="calibrateText">Calibrate</p>
+				</button>
+				
+				<button type="button" id="setParametersBtn" class="button setParameters btn btn-dark btn-2-in-subgroup" data-toggle="popover"
+					data-target="#parameters-popover" data-text-swap="Close Parameter Panel" data-text-original="Set Parameters">
+					<p id="setParametersText">Set Parameters</p>
+				</button>				
+			</div>
+			<div id="actionButtons" class="btn-group-vertical btn-subgroup">
+				<button type="button" id="pause" class="button btn btn-dark btn-2-in-subgroup" data-text-swap="Resume" data-text-original="Pause">
+					<p id="pauseText">Pause</p>
+				</button>
+				<button type="button" id="zeroG" class="button btn btn-dark btn-2-in-subgroup data-text-swap="Resume" data-text-original="Zero gravity">
+					<p id="zeroGText">Zero gravity</p>
+				</button>	
+			</div>	
+			<div id="drawButtons" class="btn-group-vertical btn-subgroup">
+				<button type="button" id="draw" class="button btn btn-dark btn-1-in-subgroup">
+					<div>Draw</div>
+				</button>
+				<!-- <button type="button" id="zeroG1" class="button btn btn-dark" data-text-swap="Resume" data-text-original="Zero gravity">
+					<p id="zeroGText">Zero gravity</p>
+				</button> -->
+			</div>				
+		</div>
 	</div>
+	
+	<script type="text/html" id="calibration-popover">
+		<div id="calibrationForm"> 
+			<!-- class="hidden"> -->
+			<label for="selectCalibTarget">What do you want to calibrate?</label>
+			<select name="selectCalibTarget" id="selectCalibTarget" class="selectpicker">
+			<!-- </select> onchange="onChangeSelect()"> -->
+				<option value="geometry">Plane</option>
+				<option value="color">Color</option>
+				<option value="homing">Homing</option>
+			</select>	
+			<label for="geometryID">Choose a name for the geometry to calibrate</label>
+			<input type="text" name="geometryID" id="geometryID" value="plane_1"class="form-control input-md">
+			<div id="planeCalibration" class="form-group">
+				<label for="selectPlaneCalibPoint">Choose the point to calibrate</label>
+				<select name="selectPlaneCalibPoint" id="selectPlaneCalibPoint" class="selectpicker">
+					<option value="origin">origin</option>
+					<option value="xAxis">X axis</option>
+					<option value="yAxis">Y axis</option>
+				</select>
+			</div>
+			<div id="colorsCalibration" class="form-group" style="display:none">
+				<label for="selectColorsCalibPoint">Choose the point to calibrate</label>
+				<select name="selectColorsCalibPoint" id="selectColorsCalibPoint" class="selectpicker">
+					<option value="color_1">color 1</option>
+					<option value="color_2">color 2</option>
+					<option value="color_3">color 3</option>
+					<option value="color_4">color 4</option>
+					<option value="color_5">color 5</option>
+				</select>
+			</div>
+			<div id="homingCalibration" class="form-group" style="display:none">TO BE IMPLEMENTED</div>
+			<div id="homingCalibration" class="form-group">Place the robot end-effector on the point to calibrate</div>
+			<button type="button" class="btn btn-primary" data-loading-text="Sending info.."><em class="icon-ok"></em> Capture point</button>
+		</div>	
+	</script>
+	<script type="text/html" id="parameters-popover">
+		<div id="parametersForm"> 
+		<!-- class="hide"> -->
+			<label for="selectBehavior">Behavior to set:</label>
+			<select name="selectBehavior" id="selectBehavior" class="selectpicker">
+				<option value="moving">Moving behavior</option>
+				<option value="static">Static behavior</option>
+			</select>	
+			<div class="row">
+				<div class="col-md-6">
+					<label for="Kx">Kx (N/m):</label>
+					<input type="number" name="Kx" id="Kx" value="1200" step="100" class="form-control form-control-sm">
+					<label for="Ky">Ky (N/m):</label>
+					<input type="number" name="Ky" id="Ky" value="1200" step="100" class="form-control form-control-sm">
+					<label for="Kz">Kz (N/m):</label>
+					<input type="number" name="Kz" id="Kz" value="1200" step="100" class="form-control form-control-sm ">
+				</div>
+				<div class="col-md-6">
+						<label for="Rx">Rx (Nm/rad):</label>
+						<input type="number" name="Rx" id="Rx" value="200" step="10" class="form-control form-control-sm ">
+						<label for="Ry">Ry (Nm/rad):</label>
+						<input type="number" name="Ry" id="Ry" value="200" step="10" class="form-control form-control-sm ">
+						<label for="Rz">Rz (Nm/rad):</label>
+						<input type="number" name="Rz" id="Rz" value="0" step="10" class="form-control form-control-sm">	
+				</div>
+			</div>
+			<label for="Fz">Fz (N):</label>
+			<input type="number" name="Fz" id="Fz" value="-1" step="0.1" class="form-control input-md">
+			<label for="baseLink">base link:</label>
+			<input type="text" name="baseLink" id="baseLink" value="base_link"class="form-control input-md">
+			<label for="distalLink">distal link:</label>
+			<input type="text" name="distalLink" id="distalLink" value="TCP"class="form-control input-md">
+			<label for="desiredVelocity">desired velocity (m/s):</label>
+			<input type="number" name="desiredVelocity" id="desiredVelocity" value="0.05" step="0.01" class="form-control input-md">
+			<button type="button" class="btn btn-primary" data-loading-text="Sending info.."><em class="icon-ok"></em> Set Parameters</button>
+		</div>
+	</script>
 
 	<script type=text/javascript> $SCRIPT_ROOT="{{ url_for('index', _external=True) }}" ; </script> <script
 		type="module">
@@ -334,8 +382,8 @@
 			let mouseDown = false;
 
 			var ros = new ROSLIB.Ros({
-				url: 'ws://192.168.9.42:9090'
-				// url: 'ws://localhost:9090'
+				//url: 'ws://192.168.9.42:9090'
+				url: 'ws://localhost:9090'
 			});
 
 			ros.on('connection', function () {
