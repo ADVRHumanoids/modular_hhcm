@@ -588,7 +588,7 @@
 
 				$popovercalibrate.on('hidden.bs.popover', function(){
 					// if left button text not resume
-					if ($(pauseText).text() == $(pause).data("text-original")) {
+					if ($(zeroGText).text() != $(zeroG).data("text-original")) {
 						zeroGResume();
 					}
 					var el = $(calibrateBtn);
@@ -630,7 +630,6 @@
 				// This is to dismiss the popover when not clicking on it.
 
 				$('body, .dropdown-toggle').on('click', function (e) {
-					console.log('body click')
 					if ( $('#calibrationForm').is(':visible') ) {
 						$('.calibrate').each(function () {
 							if (!$(this).is(e.target) && $(this).has(e.target).length === 0 && $('.popover').has(e.target).length === 0 ) {								
