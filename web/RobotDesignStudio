@@ -31,7 +31,7 @@ context = zmq.Context()#.instance()
 
 # Socket to talk to DEMO SM
 publisher = context.socket(zmq.PUB)
-publisher.connect('tcp://10.24.8.100:5563')
+publisher.connect('tcp://192.168.9.211:5563')
 #publisher.connect('tcp://10.255.36.12:5555')
 
 # Flags defining which mode are in
@@ -282,8 +282,8 @@ def removeConnectors():
 if __name__ == '__main__':
 
     # Start Flask web-server
-    app.run(threaded=True)
-    #host='10.24.8.110', port=5000, debug=False, 
+    app.run(host='192.168.9.211', port=5000, debug=False, threaded=True)
+    #host='10.24.8.100', port=5000, debug=False, 
     #main()
 
     # from gevent.pywsgi import WSGIServer

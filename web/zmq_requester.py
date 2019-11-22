@@ -8,7 +8,7 @@ from protobuf_to_dict import protobuf_to_dict, dict_to_protobuf
 
 def repl_option():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-f", "--file_yaml", dest="repl_yaml", action="store", default="repl.yaml")
+    parser.add_argument("-f", "--file_yaml", dest="repl_yaml", action="store", default="/home/embedded/MultiDoF-superbuild/external/modular/web/repl.yaml")
     parser.add_argument("-c", dest="cmd_exec_cnt", action="store", type=int, default=1)
     args = parser.parse_args()
     dict_opt = vars(args)

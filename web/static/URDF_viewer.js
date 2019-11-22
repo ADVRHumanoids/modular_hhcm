@@ -968,6 +968,7 @@ class URDF_viewer extends HTMLElement {
         }
 
         this.orbitControls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+        this.orbitControls.enableKeys = true;
 
         this.transformControls = new THREE.TransformControls(this.camera, this.renderer.domElement);
         this.transformControls.addEventListener( 'change', this.renderer.render(this.scene, this.camera) );

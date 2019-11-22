@@ -85,7 +85,7 @@ def ordered_dump(data, stream=None, Dumper=MyDumper, **kwds):
 def repl_option():
     parser = argparse.ArgumentParser()
     # parser.add_argument("-f", "--file_yaml", dest="esc_type_yaml", action="store", default="esc_type.yaml")
-    parser.add_argument("-f", "--file_yaml", dest="robot_id_yaml", action="store", default="robot_id.yaml")
+    parser.add_argument("-f", "--file_yaml", dest="robot_id_yaml", action="store", default="/home/embedded/MultiDoF-superbuild/external/modular/web/robot_id.yaml")
     parser.add_argument("-c", dest="cmd_exec_cnt", action="store", type=int, default=1)
     args = parser.parse_args()
     dict_opt = vars(args)
@@ -175,7 +175,7 @@ class UrdfWriter:
         """Given the module id find the corresponding dictionary entry and return it"""
         found_module = None
         found_module_id = 0
-        next_position = 1 #2 #TODO: remove this hack for not cosidering pwrboard
+        next_position = 2 #1 #TODO: remove this hack for not cosidering pwrboard
         for module in modules:
             if module_id in module.keys():
                 position = module[module_id]['poistion']
