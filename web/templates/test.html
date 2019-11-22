@@ -605,7 +605,9 @@
 				})
 
 				// This is to dismiss the popover when not clicking on it.
-				$('body').on('click', function (e) {
+
+				$('body, .dropdown-toggle').on('click', function (e) {
+					console.log('body click')
 					if ( $('#calibrationForm').is(':visible') ) {
 						$('.calibrate').each(function () {
 							if (!$(this).is(e.target) && $(this).has(e.target).length === 0 && $('.popover').has(e.target).length === 0 ) {								
