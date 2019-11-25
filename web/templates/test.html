@@ -194,11 +194,23 @@
 			font-size: large;
 			font-weight: bold;
 		}
+
+		.smStateOverlay {
+			position: absolute;
+			bottom: 0;
+			left: 45%;
+			/* transform: translate(10px, -50%); */
+			display: none;
+			font-style: italic;
+			font-size: large;
+			font-weight: bold;
+		}
 	</style>
 	<div id="container">
 		<div class="taskOverlay">Top Left</div>
 		<div class="colorOverlay">Top Right</div>
 		<div class="geometryOverlay">Top Center</div>
+		<div class="smStateOverlay">Bottom Center</div>
 		<canvas></canvas>
 	</div>
 	<div id="info"><a href="http://threejs.org" target="_blank" rel="noopener">three.js</a> webgl - interactive -
@@ -266,12 +278,12 @@
 			</div>
 			<div id="popoverButtons" class="btn-group-vertical btn-subgroup">
 				<div id="calibrateDiv" class="btn-group btn-2-in-subgroup">
-					<button type="button" id="calibrateBtn" class="button calibrate btn btn-dark" data-toggle="popover" data-target="#calibration-popover" data-text-swap="Close Calibration" data-text-original="Calibration">
+					<button type="button" id="calibrateBtn" class="button calibrate btn btn-dark popover" data-toggle="popover" data-target="#calibration-popover" data-text-swap="Close Calibration" data-text-original="Calibration">
 						<div id="calibrateText">Calibrate</div>
 					</button>
 				</div>
 				<div id="setParametersDiv" class="btn-group btn-2-in-subgroup">				
-					<button type="button" id="setParametersBtn" class="button setParameters btn btn-dark" data-toggle="popover"
+					<button type="button" id="setParametersBtn" class="button setParameters btn btn-dark popover" data-toggle="popover"
 						data-target="#parameters-popover" data-text-swap="Close Parameters" data-text-original="Set Parameters">
 						<div id="setParametersText">Set Parameters</div>
 					</button>	
@@ -410,6 +422,8 @@
 
 			let mouseDown = false;
 
+			var SM_STATE = "OFFLINE";
+
 			var ros = new ROSLIB.Ros({
 				// url: 'ws://192.168.9.42:9090'
 				url: 'ws://localhost:9090'
@@ -474,9 +488,40 @@
 					updateSelectList(geometryDropdownMenu, m.geometry_id_list, geometryList)
 					updateSelectList(colorDropdownMenu, m.colors_id_list, colorList)
 					robotCanvasPoint = m.canvas_point
+					changeSMState(m.sm_state);
 				});
 
-				// Attach a delegated event handler
+				function changeSMState(sm_state){
+					if (sm_state != SM_STATE){
+						SM_STATE = sm_state;
+						$('.smStateOverlay').show();
+						$('.smStateOverlay').html("State: " + SM_STATE);
+						switch(SM_STATE){
+							case "WAIT":
+							case "RUN":
+								$(pauseText).text($(pause).data("text-original"));
+								$(zeroGText).text($(zeroG).data("text-original"));
+								$('.popover').hide();
+								break;
+							case "PAUSE":
+								$(pauseText).text($(pause).data("text-swap"));
+								$(zeroGText).text($(zeroG).data("text-original"));
+								$('.popover').hide();
+								break;
+							case "STOP":
+								$(pauseText).text($(pause).data("text-original"));
+								$(zeroGText).text($(zeroG).data("text-swap"));
+								break;
+							case "OFFLINE":
+								$(pauseText).text($(pause).data("text-original"));
+								$(zeroGText).text($(zeroG).data("text-original"));
+								$('.popover').hide();
+								break;
+						}
+					}
+				}
+
+				// Attach a delegated event handler so every item of the dropdown menu is listening to that event, even generated ones.
 				// Ref: https://learn.jquery.com/events/event-delegation/
 				$( ".dropdown-menu" ).on( "click", "a", function( event ) {
 					event.preventDefault();  //do not follow link of anchor element
@@ -585,7 +630,8 @@
 				});
 
 				$popovercalibrate.on('shown.bs.popover', function(){	
-					if ($(zeroGText).text() == $(zeroG).data("text-original")) {  // if the zeroG buttoin
+					// send a stop command (zero g) unless already in that state
+					if (SM_STATE!="STOP") {
 						zeroGResume();
 					}
 					var el = $(calibrateBtn);
@@ -596,8 +642,8 @@
 				})
 
 				$popovercalibrate.on('hidden.bs.popover', function(){
-					// if left button text not resume
-					if ($(zeroGText).text() != $(zeroG).data("text-original")) {
+					// send a resume command unless in RUN or WAIT state
+					if (SM_STATE!="WAIT"||SM_STATE!="RUN") {
 						zeroGResume();
 					}
 					var el = $(calibrateBtn);
@@ -637,7 +683,6 @@
 				})
 
 				// This is to dismiss the popover when not clicking on it.
-
 				$('body, .dropdown-toggle').on('click', function (e) {
 					if ( $('#calibrationForm').is(':visible') ) {
 						$('.calibrate').each(function () {
@@ -929,13 +974,12 @@
 					method: 'POST',
 					success: function (data) {
 						console.log(data)
-						//$('#setParameters').popover('hide')
+						// changeSMState(data.sm_state)
 						//callback()           
 					},
 					async: true //async_bool
 				})
 			}
-
 
 			function pauseResume() {
 				var el = $(pause);
@@ -948,9 +992,29 @@
                 var other_el_text = $(zeroGText);
                 console.log(other_el_text.html());
                 
-                if(el_text.text() == el.data("text-original")){
-                    el_text.text(el.data("text-swap"));
-					other_el_text.text(other_el.data("text-original"));
+                if(SM_STATE=="PAUSE"){                    
+					var commandData = {
+						'type': "CMD",
+						'action': "resume",
+						'target': [],
+						'name': [],
+						'descriptors': []
+					};
+					$.ajax({
+						url: $SCRIPT_ROOT + 'sendCommands/',
+						data: JSON.stringify(commandData),
+						contentType: "application/json; charset=utf-8",
+						dataType: 'json',
+						method: 'POST',
+						success: function (data) {
+							console.log(data)
+							// changeSMState(data.sm_state)
+							//callback()           
+						},
+						async: true //async_bool
+					})            
+                }
+                else{			
 					var commandData = {
 						'type': "CMD",
 						'action': "pause",
@@ -966,16 +1030,17 @@
 						method: 'POST',
 						success: function (data) {
 							console.log(data)
-							//$('#setParameters').popover('hide')
+							// changeSMState(data.sm_state)
 							//callback()           
 						},
 						async: true //async_bool
 					})
-                               
-                }
-                else{
-                    el_text.text(el.data("text-original"));
-					
+                }   
+				
+			}
+
+			function zeroGResume() {
+                if(SM_STATE=="STOP"){
 					var commandData = {
 						'type': "CMD",
 						'action': "resume",
@@ -991,30 +1056,14 @@
 						method: 'POST',
 						success: function (data) {
 							console.log(data)
-							//$('#setParameters').popover('hide')
+							// changeSMState(data.sm_state)
 							//callback()           
 						},
 						async: true //async_bool
 					})
-                }   
-				
-			}
-
-			function zeroGResume() {
-				var el = $(zeroG);
-                // console.log(el.html())
-                var el_text = $(zeroGText);
-                // console.log(el_text.html());
-
-				var other_el = $(pause);
-                // console.log(other_el.html())
-                var other_el_text = $(pauseText);
-                // console.log(other_el_text.html());
-                
-                if(el_text.text() == el.data("text-original")){
-                    el_text.text(el.data("text-swap"));
-					other_el_text.text(other_el.data("text-original"));
-					var commandData = {
+				}
+                else{
+                    var commandData = {
 						'type': "CMD",
 						'action': "stop",
 						'target': [],
@@ -1029,31 +1078,7 @@
 						method: 'POST',
 						success: function (data) {
 							console.log(data)
-							//$('#setParameters').popover('hide')
-							//callback()           
-						},
-						async: true //async_bool
-					})
-				}
-                else{
-                    el_text.text(el.data("text-original"));
-					
-					var commandData = {
-						'type': "CMD",
-						'action': "resume",
-						'target': [],
-						'name': [],
-						'descriptors': []
-					};
-					$.ajax({
-						url: $SCRIPT_ROOT + 'sendCommands/',
-						data: JSON.stringify(commandData),
-						contentType: "application/json; charset=utf-8",
-						dataType: 'json',
-						method: 'POST',
-						success: function (data) {
-							console.log(data)
-							//$('#setParameters').popover('hide')
+							// changeSMState(data.sm_state)
 							//callback()           
 						},
 						async: true //async_bool
