@@ -675,7 +675,7 @@
 
 				plane = createPlane(PLANE_WIDTH, PLANE_HEIGHT);
 				scene.add(plane);
-				grid = createAGrid({ width: PLANE_WIDTH, height: PLANE_HEIGHT, linesWidth: PLANE_WIDTH * 100, linesHeight: PLANE_HEIGHT * 100, color: 0x1dc092 });
+				grid = createAGrid({ width: PLANE_WIDTH, height: PLANE_HEIGHT, linesWidth: 0.01, linesHeight: 0.01, color: 0x1dc092 });
 				scene.add(grid);
 				// adjustCamera(PLANE_WIDTH, PLANE_HEIGHT);
 
@@ -857,7 +857,7 @@
 									scene.remove(grid);
 									plane = createPlane(data.lx, data.ly);
 									scene.add(plane);
-									grid = createAGrid({ width: data.lx, height: data.ly, linesWidth: data.lx * 100, linesHeight: data.ly * 100, color: 0x1dc092 });
+									grid = createAGrid({ width: data.lx, height: data.ly, linesWidth: 0.01, linesHeight: 0.01, color: 0x1dc092 });
 									scene.add(grid);
 									adjustCamera(data.lx, data.ly);
 									distanceThreshold = (PLANE_WIDTH>PLANE_HEIGHT) ? PLANE_HEIGHT*0.1 : PLANE_WIDTH*0.1;
@@ -1219,8 +1219,8 @@
 				var config = opts || {
 					width: 10,
 					height: 10,
-					linesWidth: 100,
-					linesHeight: 100,
+					linesWidth: 0.01,
+					linesHeight: 0.01,
 					color: 0x888888
 				};
 
@@ -1232,8 +1232,8 @@
 
 				var gridObject = new THREE.Object3D(),
 					gridGeo = new THREE.Geometry(),
-					stepw = config.width / config.linesWidth,
-					steph = config.height / config.linesHeight;
+					stepw = config.linesWidth,
+					steph = config.linesHeight;
 
 				//width
 				for (var i = 0; i <= config.width; i += stepw) {
@@ -1287,10 +1287,8 @@
 				toggle += clock.getDelta();
 			}
 
-			function PoseTo2DPoint(pose, point) {
-				// TODO: transform for not horizontal planes
-				// TODO: get normal of plane from backend (ROS?)
-				point.set(pose.position.x, pose.position.y, 0.0);
+			function canvasTo3DPoint(canvas_point, point) {
+				point.set(canvas_point[0], canvas_point[1], 0.0);
 			}
 
 			function animate() {
@@ -1302,7 +1300,7 @@
 			function render() {
 				resizeCanvasToDisplaySize();
 				if(ROS_OK){
-					PoseTo2DPoint(robotPose, robotPosition);
+					canvasTo3DPoint(robotCanvasPoint, robotPosition);
 					// var intersection = projectOnPlane(mouse);
 					var intersection = {};
 					intersection.point = robotPosition;
