@@ -403,7 +403,10 @@
 			var toggle = 0;
 			var raycast_threshold = 0.001;
 
-			var taskList = ['task 1', 'task 2'], geometryList = ['plane 1', 'plane 2'], colorList = ['color 1', 'color 2'], robotPose, robotCanvasPoint;
+			var ROS_OK;
+			var taskList = ['task 1', 'task 2'], geometryList = ['plane 1', 'plane 2'], colorList = ['color 1', 'color 2'];
+			var robotPose, robotCanvasPoint;
+			var robotPosition = new THREE.Vector3();
 
 			let mouseDown = false;
 
@@ -414,14 +417,17 @@
 
 			ros.on('connection', function () {
 				console.log('Connected to websocket server.');
+				ROS_OK = true;
 			});
 
 			ros.on('error', function (error) {
 				console.log('Error connecting to websocket server: ', error);
+				ROS_OK = false;
 			});
 
 			ros.on('close', function () {
 				console.log('Connection to websocket server closed.');
+				ROS_OK = false;
 			});
 
 			var jointstate_listener = new ROSLIB.Topic({
@@ -1265,28 +1271,43 @@
 				camera.updateMatrix();
 			}
 
+			function renderPointsTrace(intersection) {
+				if (toggle > 0.02 && intersection !== null) {
+					tailSpheres[spheresIndex].position.copy(intersection.point);
+					tailSpheres[spheresIndex].scale.set(1, 1, 1);
+					spheresIndex = (spheresIndex + 1) % tailSpheres.length;
+					toggle = 0;
+				}
+				for (var i = 0; i < tailSpheres.length; i++) {
+					var sphere = tailSpheres[i];
+					sphere.scale.multiplyScalar(0.98);
+					sphere.scale.clampScalar(0.01, 1);
+				}
+
+				toggle += clock.getDelta();
+			}
+
+			function PoseTo2DPoint(pose, point) {
+				// TODO: transform for not horizontal planes
+				// TODO: get normal of plane from backend (ROS?)
+				point.set(pose.position.x, pose.position.y, 0.0);
+			}
+
 			function animate() {
 				requestAnimationFrame(animate);
 				render();
 				// stats.update();
 			};
-			var toggle = 0;
+			
 			function render() {
 				resizeCanvasToDisplaySize();
-				// var intersection = projectOnPlane(mouse);
-				// if (toggle > 0.02 && intersection !== null) {
-				// 	tailSpheres[spheresIndex].position.copy(intersection.point);
-				// 	tailSpheres[spheresIndex].scale.set(1, 1, 1);
-				// 	spheresIndex = (spheresIndex + 1) % tailSpheres.length;
-				// 	toggle = 0;
-				// }
-				// for (var i = 0; i < tailSpheres.length; i++) {
-				// 	var sphere = tailSpheres[i];
-				// 	sphere.scale.multiplyScalar(0.98);
-				// 	sphere.scale.clampScalar(0.01, 1);
-				// }
-
-				toggle += clock.getDelta();
+				if(ROS_OK){
+					PoseTo2DPoint(robotPose, robotPosition);
+					// var intersection = projectOnPlane(mouse);
+					var intersection = {};
+					intersection.point = robotPosition;
+					renderPointsTrace(intersection);
+				}
 				renderer.render(scene, camera);
 			};
 
