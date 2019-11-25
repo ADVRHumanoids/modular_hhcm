@@ -278,12 +278,12 @@
 			</div>
 			<div id="popoverButtons" class="btn-group-vertical btn-subgroup">
 				<div id="calibrateDiv" class="btn-group btn-2-in-subgroup">
-					<button type="button" id="calibrateBtn" class="button calibrate btn btn-dark popover" data-toggle="popover" data-target="#calibration-popover" data-text-swap="Close Calibration" data-text-original="Calibration">
+					<button type="button" id="calibrateBtn" class="button calibrate btn btn-dark" data-toggle="popover" data-target="#calibration-popover" data-text-swap="Close Calibration" data-text-original="Calibration">
 						<div id="calibrateText">Calibrate</div>
 					</button>
 				</div>
 				<div id="setParametersDiv" class="btn-group btn-2-in-subgroup">				
-					<button type="button" id="setParametersBtn" class="button setParameters btn btn-dark popover" data-toggle="popover"
+					<button type="button" id="setParametersBtn" class="button setParameters btn btn-dark" data-toggle="popover"
 						data-target="#parameters-popover" data-text-swap="Close Parameters" data-text-original="Set Parameters">
 						<div id="setParametersText">Set Parameters</div>
 					</button>	
@@ -488,7 +488,7 @@
 					updateSelectList(geometryDropdownMenu, m.geometry_id_list, geometryList)
 					updateSelectList(colorDropdownMenu, m.colors_id_list, colorList)
 					robotCanvasPoint = m.canvas_point
-					changeSMState(m.sm_state);
+					changeSMState(m.current_state);
 				});
 
 				function changeSMState(sm_state){
@@ -501,12 +501,14 @@
 							case "RUN":
 								$(pauseText).text($(pause).data("text-original"));
 								$(zeroGText).text($(zeroG).data("text-original"));
-								$('.popover').hide();
+								$popovercalibrate.hide();
+								$popoverSetParameters.hide();
 								break;
 							case "PAUSE":
 								$(pauseText).text($(pause).data("text-swap"));
 								$(zeroGText).text($(zeroG).data("text-original"));
-								$('.popover').hide();
+								$popovercalibrate.hide();
+								$popoverSetParameters.hide();
 								break;
 							case "STOP":
 								$(pauseText).text($(pause).data("text-original"));
@@ -515,7 +517,8 @@
 							case "OFFLINE":
 								$(pauseText).text($(pause).data("text-original"));
 								$(zeroGText).text($(zeroG).data("text-original"));
-								$('.popover').hide();
+								$popovercalibrate.hide();
+								$popoverSetParameters.hide();
 								break;
 						}
 					}
