@@ -313,7 +313,7 @@ class URDF_viewer extends HTMLElement {
                             alert(event.message);
 
                             const joint = self.jointMap[newjoint_name]
-                            self._createSlider(joint)
+                            self._createSlider(joint) 
 
                         });
 
@@ -463,13 +463,14 @@ class URDF_viewer extends HTMLElement {
 
             // alert(event.message);
             self._removeSliders()
+            self.sliderMap = {} //.robots[0]
 
             //console.log(self.jointMap)
             for (let key in self.jointMap) {
                 //console.log(self.jointMap[key])
                 const joint = self.jointMap[key]
                 if (joint.urdf.type !== 'fixed')
-                    self._createSlider(joint)
+                    self.sliderMap[joint.name] = self._createSlider(joint); //.robots[0]
             }
 
             // if (self.linkMap[lastModule_name]) {
@@ -526,6 +527,7 @@ class URDF_viewer extends HTMLElement {
         console.log(urdf.children)
         this.forEach(urdf.children, r => {
 
+            this.sliderMap = {}
             const links = []
             const joints = []
             const materials = []
@@ -608,7 +610,7 @@ class URDF_viewer extends HTMLElement {
                 //console.log(self.jointMap[key])
                 const joint = self.jointMap[key]
                 if (joint.urdf.type !== 'fixed')
-                    self._createSlider(joint)
+                    self.sliderMap[joint.name] = self._createSlider(joint) //.robots[0]
             }
 
         });
@@ -816,7 +818,7 @@ class URDF_viewer extends HTMLElement {
         const r = this.robots[0]
         const joint = r.urdf.joints[jointname]
         if (joint) joint.urdf.setAngle(angle)
-        
+        this.sliderMap[joint.name].update();
         //this._dirty = true
     }
 
@@ -1094,15 +1096,17 @@ class URDF_viewer extends HTMLElement {
 
         slider.addEventListener('input', () => {
             this.setAngle(joint.name, slider.value)
-            li.update()
+            //li.update()
         })
 
         input.addEventListener('change', () => {
             this.setAngle(joint.name, input.value)
-            li.update()
+            //li.update()
         })
 
         li.update()
+
+        return li
 
     }
 

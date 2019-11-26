@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<title>Draw Canvas</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js" ></script>
+  <!-- integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous" -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+  
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/89/three.js"></script>
+
+	<script type="text/javascript"
+		src="http://static.robotwebtools.org/EventEmitter2/current/eventemitter2.min.js"></script>
+	<script type="text/javascript" src="http://static.robotwebtools.org/roslibjs/current/roslib.min.js"></script>
+
+	<link rel="stylesheet" type="text/css"
+		href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">
+
+	<script type="text/javascript"
+		src="{{ url_for('static', filename='/examples/js/controls/OrbitControls.js') }}"></script>
+
+
+</head>
+
+<body>
+	<style type="text/css">
+
+		.btn_dark {
+			border-radius:6px;
+		}
+
+		.btn-dark:hover {
+			color: #19cf9b;
+			background-color:#23272b;
+			border-color:#19cf9b;
+		}
+
+		.btn-subgroup {
+			width:100%;
+			height:20%;
+			padding:3px 0 3px 0;
+		}
+
+		.btn-1-in-subgroup {
+			height:100%;
+		}
+
+		.btn-2-in-subgroup {
+			height:50%;
+			padding:1px 0 1px 0;
+		}
+
+		.btn-3-in-subgroup {
+			height:33%;
+			padding:1px 0 1px 0;
+		}
+
+		
+		#container {
+			width: 85%;
+			height: 100%;
+			position: fixed;
+			z-index: 1;
+			overflow-x: hidden;
+			top: 0;
+			left: 0;
+			float: right;
+		}
+
+		.button-bar-container {
+			width: 15%;
+			height: 100%;
+			position: fixed;
+			z-index: 1;
+			top: 0;
+			right: 0;
+			float: right;
+			background-color:#495057;
+		}
+
+		#leftBar {
+			width: 100%;
+			height: 100%;
+			padding: 10px 10px 10px 
+			/*position: fixed;
+			z-index: 1;
+			top: 0;
+			right: 0;
+			float: right; */
+		}
+
+		.button {
+			/* background-size: 100% 100%; */
+			/* height: 100px; */
+			/* width: 100%; */
+			/* padding-bottom: 10px; */
+			/* text-align: center; */
+			/* text-decoration: none;
+				display: inline-block; */
+			font-size: 1vw;
+		}
+
+		.half-button {
+			background-size: 100% 100%;
+			height: 12.5%;
+			width: 48%;
+			display:inline-block;
+			font-size: 1.2vw;
+			padding: 0px;
+			vertical-align: middle;
+		}
+
+		.active {
+			background-color:#1dc092 !important;
+			
+		}
+		.active div{
+			color: #343a40;
+			font-weight: 700;
+		}	
+		
+
+		.show>.btn-dark.dropdown-toggle {
+			background-color:#1dc092 !important;
+			color: #343a40;
+			font-weight: 700;
+		}	
+
+		canvas {
+			width: 100%;
+			height: 100%;
+			/*margin: auto;
+				padding: 10px 10px 10px 10px; */
+			display: block;
+		}
+
+		.settings {
+			display: block;
+			height: 50px;
+			width: 50px;
+			margin: 10px;
+			cursor: pointer;
+		}
+
+		.section {
+			height: 12.5%
+		}
+
+		#selectTask {
+			width: 100%;
+		}
+
+		#selectGeometry {
+			width: 100%;
+		}
+
+		#selectColor {
+			width: 100%;
+		}
+
+		.taskOverlay {
+			position: absolute;
+			top: 0;
+			left: 16px;
+			display: none;
+			font-size: large;
+			font-style: italic;
+			font-weight: bold;
+		}
+
+		.colorOverlay {
+			position: absolute;
+			top: 0;
+			right: 16px;
+			display: none;
+			font-size: large;
+			font-style: italic;
+			font-weight: bold;
+		}
+
+		.geometryOverlay {
+			position: absolute;
+			top: 0;
+			left: 45%;
+			/* transform: translate(10px, -50%); */
+			display: none;
+			font-style: italic;
+			font-size: large;
+			font-weight: bold;
+		}
+
+		.smStateOverlay {
+			position: absolute;
+			bottom: 0;
+			left: 45%;
+			/* transform: translate(10px, -50%); */
+			display: none;
+			font-style: italic;
+			font-size: large;
+			font-weight: bold;
+		}
+	</style>
+	<div id="container">
+		<div class="taskOverlay">Top Left</div>
+		<div class="colorOverlay">Top Right</div>
+		<div class="geometryOverlay">Top Center</div>
+		<div class="smStateOverlay">Bottom Center</div>
+		<canvas></canvas>
+	</div>
+	<div id="info"><a href="http://threejs.org" target="_blank" rel="noopener">three.js</a> webgl - interactive -
+		raycasting - points </div>
+	<div id=BarContainer class="button-bar-container">
+		<div id="leftBar" class="btn-group-vertical">			
+			<div id="selectButtons" class="btn-group-vertical btn-subgroup">
+				<div id="selectTask" class="btn-group dropleft btn-3-in-subgroup">
+					<button id="selectTaskBtn" type="button" class="btn btn-dark dropdown-toggle" data-toggle="dropdown" data-prefix="Selected task: " aria-haspopup="true" aria-expanded="false">
+						Select a task:
+					</button>
+					<ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+						<li><a href="#" class="dropdown-item" data-value="task 1">Task 1</a></li>
+						<li><a href="#" class="dropdown-item" data-value="task 2">Task 2</a></li>
+					</ul>
+				</div>
+				<!-- <select name="selectTask" id="selectTask" class="selectpicker" title="Please select a task:" style="height:33%">
+					<option value=''>Select a task:</option>
+				</select> -->
+				<div id="selectGeometry" class="btn-group dropleft btn-3-in-subgroup">
+					<button id="selectGeometryBtn" type="button" class="btn btn-dark dropdown-toggle" data-toggle="dropdown" data-prefix="Selected geometry: " aria-haspopup="true" aria-expanded="false">
+						Select a geometry:
+					</button>
+					<ul class="dropdown-menu" aria-labelledby="dropdownMenu2">
+						<li><a href="#" class="dropdown-item" data-value="plane 1">Plane 1</a></li>
+						<li><a href="#" class="dropdown-item" data-value="plane 2">Plane 2</a></li>
+					</ul>
+				</div>
+				<!-- <select name="selectGeometry" id="selectGeometry" class="selectpicker" title="Please select a task:" style="height:33%">
+					<option value=''>Select a geometry:</option>
+				</select> -->
+				<div id="selectColor" class="btn-group dropleft btn-3-in-subgroup">
+					<button id="selectColorBtn" type="button" class="btn btn-dark dropdown-toggle" data-toggle="dropdown" data-prefix="Selected color: " aria-haspopup="true" aria-expanded="false">
+						Select a color:
+					</button>
+					<ul class="dropdown-menu" aria-labelledby="dropdownMenu3">
+						<li><a href="#" class="dropdown-item" data-value="color 1">Color 1</a></li>
+						<li><a href="#" class="dropdown-item" data-value="color 2">Color 2</a></li>
+					</ul>
+				</div>
+			
+				<!-- <select name="selectColor" id="selectColor" class="selectpicker" title="Please select a task:" style="height:33%">
+					<option value=''>Select a color:</option>
+				</select> -->
+			</div>
+			<div id="pathButtons" class="btn-group-vertical btn-subgroup">
+			<!-- <span id="result" class="section">
+				Please Calibrate the plane to draw on
+			</span> -->
+				<div id="addPathDiv" class="btn-group btn-3-in-subgroup">
+					<button type="button" id="addPath" class="button btn btn-dark">
+						<div>Add Path</div>
+					</button>
+				</div>
+				<div id="removePathDiv" class="btn-group btn-3-in-subgroup">
+					<button type="button" id="removePath" class="button btn btn-dark">
+					<div>Remove Path</div>
+					</button>
+				</div>
+				<div id="removeAllDiv" class="btn-group btn-3-in-subgroup">
+					<button type="button" id="removeAll" class="button btn btn-dark">
+						<div>Remove All</div>
+					</button>
+				</div>
+			</div>
+			<div id="popoverButtons" class="btn-group-vertical btn-subgroup">
+				<div id="calibrateDiv" class="btn-group btn-2-in-subgroup">
+					<button type="button" id="calibrateBtn" class="button calibrate btn btn-dark" data-toggle="popover" data-target="#calibration-popover" data-text-swap="Close Calibration" data-text-original="Calibration">
+						<div id="calibrateText">Calibrate</div>
+					</button>
+				</div>
+				<div id="setParametersDiv" class="btn-group btn-2-in-subgroup">				
+					<button type="button" id="setParametersBtn" class="button setParameters btn btn-dark" data-toggle="popover"
+						data-target="#parameters-popover" data-text-swap="Close Parameters" data-text-original="Set Parameters">
+						<div id="setParametersText">Set Parameters</div>
+					</button>	
+				</div>			
+			</div>
+			<div id="actionButtons" class="btn-group-vertical btn-subgroup">
+				<div id="pauseDiv" class="btn-group btn-2-in-subgroup">
+					<button type="button" id="pause" class="button btn btn-dark" data-text-swap="Resume" data-text-original="Pause">
+						<p id="pauseText">Pause</p>
+					</button>
+				</div>
+				<div id="zeroGDiv" class="btn-group btn-2-in-subgroup">
+					<button type="button" id="zeroG" class="button btn btn-dark" data-text-swap="Resume" data-text-original="Zero gravity">
+						<p id="zeroGText">Zero gravity</p>
+					</button>	
+				</div>
+			</div>	
+			<div id="drawButtons" class="btn-group-vertical btn-subgroup">
+				<button type="button" id="draw" class="button btn btn-dark btn-1-in-subgroup">
+					<div>Draw</div>
+				</button>
+				<!-- <button type="button" id="zeroG1" class="button btn btn-dark" data-text-swap="Resume" data-text-original="Zero gravity">
+					<p id="zeroGText">Zero gravity</p>
+				</button> -->
+			</div>				
+		</div>
+	</div>
+	
+	<script type="text/html" id="calibration-popover">
+		<div id="calibrationForm"> 
+			<!-- class="hidden"> -->
+			<label for="selectCalibTarget">What do you want to calibrate?</label>
+			<select name="selectCalibTarget" id="selectCalibTarget" class="selectpicker">
+			<!-- </select> onchange="onChangeSelect()"> -->
+				<option value="geometry">Plane</option>
+				<option value="color">Color</option>
+				<option value="homing">Homing</option>
+			</select>	
+			<label for="geometryID">Choose a name for the geometry to calibrate</label>
+			<input type="text" name="geometryID" id="geometryID" value="plane_1"class="form-control input-md">
+			<div id="planeCalibration" class="form-group">
+				<label for="selectPlaneCalibPoint">Choose the point to calibrate</label>
+				<select name="selectPlaneCalibPoint" id="selectPlaneCalibPoint" class="selectpicker">
+					<option value="origin">origin</option>
+					<option value="xAxis">X axis</option>
+					<option value="yAxis">Y axis</option>
+				</select>
+			</div>
+			<div id="colorsCalibration" class="form-group" style="display:none">
+				<label for="selectColorsCalibPoint">Choose the point to calibrate</label>
+				<select name="selectColorsCalibPoint" id="selectColorsCalibPoint" class="selectpicker">
+					<option value="color_1">color 1</option>
+					<option value="color_2">color 2</option>
+					<option value="color_3">color 3</option>
+					<option value="color_4">color 4</option>
+					<option value="color_5">color 5</option>
+				</select>
+			</div>
+			<div id="homingCalibration" class="form-group" style="display:none">TO BE IMPLEMENTED</div>
+			<div id="homingCalibration" class="form-group">Place the robot end-effector on the point to calibrate</div>
+			<button type="button" class="btn btn-primary" data-loading-text="Sending info.."><em class="icon-ok"></em> Capture point</button>
+		</div>	
+	</script>
+	<script type="text/html" id="parameters-popover">
+		<div id="parametersForm"> 
+		<!-- class="hide"> -->
+			<label for="selectBehavior">Behavior to set:</label>
+			<select name="selectBehavior" id="selectBehavior" class="selectpicker">
+				<option value="moving">Moving behavior</option>
+				<option value="static">Static behavior</option>
+			</select>	
+			<div class="row">
+				<div class="col-md-6">
+					<label for="Kx">Kx (N/m):</label>
+					<input type="number" name="Kx" id="Kx" value="1200" step="100" class="form-control form-control-sm">
+					<label for="Ky">Ky (N/m):</label>
+					<input type="number" name="Ky" id="Ky" value="1200" step="100" class="form-control form-control-sm">
+					<label for="Kz">Kz (N/m):</label>
+					<input type="number" name="Kz" id="Kz" value="1200" step="100" class="form-control form-control-sm ">
+				</div>
+				<div class="col-md-6">
+						<label for="Rx">Rx (Nm/rad):</label>
+						<input type="number" name="Rx" id="Rx" value="200" step="10" class="form-control form-control-sm ">
+						<label for="Ry">Ry (Nm/rad):</label>
+						<input type="number" name="Ry" id="Ry" value="200" step="10" class="form-control form-control-sm ">
+						<label for="Rz">Rz (Nm/rad):</label>
+						<input type="number" name="Rz" id="Rz" value="0" step="10" class="form-control form-control-sm">	
+				</div>
+			</div>
+			<label for="Fz">Fz (N):</label>
+			<input type="number" name="Fz" id="Fz" value="-1" step="0.1" class="form-control input-md">
+			<!-- <label for="baseLink">base link:</label>
+			<input type="text" name="baseLink" id="baseLink" value="base_link"class="form-control input-md">
+			<label for="distalLink">distal link:</label>
+			<input type="text" name="distalLink" id="distalLink" value="TCP"class="form-control input-md"> -->
+			<label for="desiredVelocity">desired velocity (m/s):</label>
+			<input type="number" name="desiredVelocity" id="desiredVelocity" value="0.05" step="0.01" class="form-control input-md">
+			<button type="button" class="btn btn-primary" data-loading-text="Sending info.."><em class="icon-ok"></em> Set Parameters</button>
+		</div>
+	</script>
+
+	<script type=text/javascript> $SCRIPT_ROOT="{{ url_for('index', _external=True) }}" ; </script> <script
+		type="module">
+			// import * as THREE from '../build/three.module.js';
+			// import Stats from './jsm/libs/stats.module.js';
+			var PLANE_WIDTH = 0.20;
+			var PLANE_HEIGHT = 0.10;
+			var distanceThreshold = (PLANE_WIDTH>PLANE_HEIGHT) ? PLANE_HEIGHT*0.1 : PLANE_WIDTH*0.1;
+			
+			var canvas;
+			var renderer, scene, camera, stats;
+			var cameraTarget = new THREE.Vector3();
+			var plane;
+			var geometry;
+			var geometryMap = new Map();
+			var gridMap = new Map();
+			var grid;
+			var raycaster;
+			var mouse = new THREE.Vector2();
+			var dblClick = new THREE.Vector2();
+			var previousPoint;
+			var tailSpheres = [];
+			var drawPoints = [];
+			var segments = [];
+			var paths = [];
+			var pathID = 0;
+			var spheresIndex = 0;
+			var clock;
+			var toggle = 0;
+			var raycast_threshold = 0.001;
+
+			var ROS_OK;
+			var taskList = ['task 1', 'task 2'], geometryList = ['plane 1', 'plane 2'], colorList = ['color 1', 'color 2'];
+			var robotPose, robotCanvasPoint;
+			var robotPosition = new THREE.Vector3();
+
+			let mouseDown = false;
+
+			var SM_STATE = "";
+
+			var ros = new ROSLIB.Ros({
+				url: 'ws://192.168.9.211:9090'
+				// url: 'ws://localhost:9090'
+			});
+
+			ros.on('connection', function () {
+				console.log('Connected to websocket server.');
+				ROS_OK = true;
+			});
+
+			ros.on('error', function (error) {
+				console.log('Error connecting to websocket server: ', error);
+				ROS_OK = false;
+			});
+
+			ros.on('close', function () {
+				console.log('Connection to websocket server closed.');
+				ROS_OK = false;
+			});
+
+			var jointstate_listener = new ROSLIB.Topic({
+				ros: ros,
+				name: '/xbotcore/joint_states',
+				messageType: 'xbot_msgs/JointState'
+			});
+
+			var server_listener = new ROSLIB.Topic({
+				ros: ros,
+				name: '/to_frontend',
+				messageType: 'json_parser/ToFrontend'
+			});
+
+			window.onload = function () {
+				var removePathBtn = document.getElementById('removePath');
+				var addPathBtn = document.getElementById('addPath');
+				var removeAllBtn = document.getElementById('removeAll');
+				var drawBtn = document.getElementById("draw");
+				var pauseBtn = document.getElementById("pause");
+				var zeroGBtn = document.getElementById("zeroG");
+
+				var selectTask = document.getElementById("selectTask");
+				var taskDropdownMenu = selectTask.querySelector('.dropdown-menu');
+				var selectGeometry = document.getElementById("selectGeometry");
+				var geometryDropdownMenu = selectGeometry.querySelector('.dropdown-menu');
+				var selectColor = document.getElementById("selectColor");
+				var colorDropdownMenu = selectColor.querySelector('.dropdown-menu');
+
+				addPathBtn.onclick = function () { addPath() };
+				removePathBtn.onclick = function () { removePath() };
+				removeAllBtn.onclick = function () { removeAll() };
+				drawBtn.onclick = function () {draw()};
+				pauseBtn.onclick = function () {pauseResume()};
+				zeroGBtn.onclick = function () {zeroGResume()};
+
+				jointstate_listener.subscribe(function (m) {
+					// console.log(m)
+				});
+
+				server_listener.subscribe(function (m) {
+					robotPose = m.pose;
+					updateSelectList(taskDropdownMenu, m.task_list, taskList)
+					updateSelectList(geometryDropdownMenu, m.geometry_id_list, geometryList)
+					updateSelectList(colorDropdownMenu, m.colors_id_list, colorList)
+					robotCanvasPoint = m.canvas_point
+					changeSMState(m.current_state);
+				});
+
+				function changeSMState(sm_state){
+					if (sm_state != SM_STATE){
+						SM_STATE = sm_state;
+						$('.smStateOverlay').show();
+						$('.smStateOverlay').html("State: " + SM_STATE);
+						switch(SM_STATE){
+							case "WAIT":
+							case "RUN":
+								$(pauseText).text($(pause).data("text-original"));
+								$(zeroGText).text($(zeroG).data("text-original"));
+								$('.btn-dark').prop("disabled", false);
+								break;
+							case "PAUSE":
+								$(pauseText).text($(pause).data("text-swap"));
+								$(zeroGText).text($(zeroG).data("text-original"));
+								$('.btn-dark').prop("disabled", false);
+								break;
+							case "STOP":
+								$(pauseText).text($(pause).data("text-original"));
+								$(zeroGText).text($(zeroG).data("text-swap"));
+								$('.btn-dark').prop("disabled", false);
+								break;
+							case "OFFLINE":
+								$(pauseText).text($(pause).data("text-original"));
+								$(zeroGText).text($(zeroG).data("text-original"));
+								$('.btn-dark').prop("disabled", true);
+								break;
+						}
+					}
+				}
+
+				// Attach a delegated event handler so every item of the dropdown menu is listening to that event, even generated ones.
+				// Ref: https://learn.jquery.com/events/event-delegation/
+				$( ".dropdown-menu" ).on( "click", "a", function( event ) {
+					event.preventDefault();  //do not follow link of anchor element
+					console.log('Selection')
+					var selText = $(this).text();
+					console.log( $(this).text())
+					console.log($(this).parents('.btn-group'))
+  					var dropdownToggle = $(this).parents('.btn-group').find('.dropdown-toggle')
+					dropdownToggle.html(dropdownToggle.data('prefix')+selText+'  <span class="caret"></span>');
+					dropdownToggle.val($(this).data('value'));
+					dropdownToggle.change();
+				});
+
+				$(document).on('change', '#selectTaskBtn', function () {
+					// var taskName = $('#selectTask option:selected').val();
+					var taskName = $('#selectTaskBtn').val();
+					$('.taskOverlay').show();
+					$('.taskOverlay').html("Task: " + taskName);
+					var commandData = {
+						'type': "SET",
+						'action': "upd",
+						'target': ["task"],
+						'name': [taskName],
+						'descriptors': []
+					};
+					$.ajax({
+						url: $SCRIPT_ROOT + 'sendCommands/',
+						data: JSON.stringify(commandData),
+						contentType: "application/json; charset=utf-8",
+						dataType: 'json',
+						method: 'POST',
+						success: function (data) {
+							console.log(data)
+							//callback()           
+						},
+						async: true //async_bool
+					})
+				})
+				$(document).on('change', '#selectGeometryBtn', function () {
+					// var geometryName = $('#selectGeometry option:selected').val();
+					var geometryName = $('#selectGeometryBtn').val();
+					$('.geometryOverlay').show();
+					$('.geometryOverlay').html("Geometry: " + geometryName);
+					var commandData = {
+						'type': "SET",
+						'action': "upd",
+						'target': ["geometry"],
+						'name': [geometryName],
+						'descriptors': []
+					};
+					$.ajax({
+						url: $SCRIPT_ROOT + 'sendCommands/',
+						data: JSON.stringify(commandData),
+						contentType: "application/json; charset=utf-8",
+						dataType: 'json',
+						method: 'POST',
+						success: function (data) {
+							console.log(data)
+							//callback()           
+						},
+						async: true //async_bool
+					})
+				})
+				$(document).on('change', '#selectColorBtn', function () {
+					// var colorName = $('#selectColor option:selected').val();
+					var colorName = $('#selectColorBtn').val();
+					$('.colorOverlay').show();
+					$('.colorOverlay').html("Color: " + colorName); var commandData = {
+						'type': "SET",
+						'action': "upd",
+						'target': ["color"],
+						'name': [colorName],
+						'descriptors': []
+					};
+					$.ajax({
+						url: $SCRIPT_ROOT + 'sendCommands/',
+						data: JSON.stringify(commandData),
+						contentType: "application/json; charset=utf-8",
+						dataType: 'json',
+						method: 'POST',
+						success: function (data) {
+							console.log(data)
+							//callback()           
+						},
+						async: true //async_bool
+					})
+				})
+
+				var $popovercalibrate = $('.calibrate').popover({
+					html: true,
+					placement: 'left',
+					container: 'body',
+					content: function () {
+						var myCalibForm = $(this).data().target;
+						return $(myCalibForm).html();
+					}
+				}).on('click', function () {
+					$(document).on('change', '#selectCalibTarget', function () {
+						updateCalibMenu();
+					})
+					// send calibration through json/ajax
+					$('.btn-primary').click(function () {
+						var intersection = projectOnPlane(mouse);
+						sendCalibration();
+					})
+				});
+
+				$popovercalibrate.on('shown.bs.popover', function(){	
+					// send a stop command (zero g) unless already in that state
+					if (SM_STATE!="STOP") {
+						zeroGResume();
+					}
+					var el = $(calibrateBtn);
+					var el_text = $(calibrateText);
+					el_text.text(el.data("text-swap"));
+					el.addClass("active");
+					console.log('popover shown')
+				})
+
+				$popovercalibrate.on('hidden.bs.popover', function(){
+					// send a resume command unless in RUN or WAIT state
+					if (SM_STATE!="WAIT"||SM_STATE!="RUN") {
+						zeroGResume();
+					}
+					var el = $(calibrateBtn);
+					var el_text = $(calibrateText);
+					el_text.text(el.data("text-original"));
+					el.removeClass("active");
+					console.log('popover hidden')
+				})
+
+				var $popoverSetParameters = $('.setParameters').popover({
+					html: true,
+					placement: 'left',
+					container: 'body',
+					title: 'Set Control Parameters',
+					content: function () {
+						var mySetParametersForm = $(this).data().target;
+						return $(mySetParametersForm).html();
+					}
+				}).on('click', function () {
+					$('.btn-primary').click(function () { sendParameters() })
+				});
+				 
+				$popoverSetParameters.on('show.bs.popover', function(){
+					var el = $(setParametersBtn);
+					var el_text = $(setParametersText);
+					el_text.text(el.data("text-swap"));
+					el.addClass("active");
+					console.log('popover shown')
+				})
+
+				$popoverSetParameters.on('hidden.bs.popover', function(){
+					var el = $(setParametersBtn);
+					var el_text = $(setParametersText);
+					el_text.text(el.data("text-original"));
+					el.removeClass("active");
+					console.log('popover hidden')
+				})
+
+				// This is to dismiss the popover when not clicking on it.
+				$('body, .dropdown-toggle').on('click', function (e) {
+					if ( $('#calibrationForm').is(':visible') ) {
+						$('.calibrate').each(function () {
+							if (!$(this).is(e.target) && $(this).has(e.target).length === 0 && $('.popover').has(e.target).length === 0 ) {								
+								$(this).popover('hide');
+							}
+						});
+					}
+
+					if ( $('#parametersForm').is(':visible') ) {
+						$('.setParameters').each(function () {
+							if (!$(this).is(e.target) && $(this).has(e.target).length === 0 && $('.popover').has(e.target).length === 0 ) {								
+								$(this).popover('hide');
+							}
+						});
+					}
+				});
+			}
+
+			init();
+			animate();
+
+			function init() {
+				var container = document.getElementById('container');
+				scene = new THREE.Scene();
+				console.log(scene.position);
+				clock = new THREE.Clock();
+				camera = new THREE.PerspectiveCamera(70, 1, 0.0001, 10);
+				// camera.up.set(0,0,1);
+				adjustCamera(PLANE_WIDTH, PLANE_HEIGHT);
+
+				// scene.background = new THREE.Color(0xf0f0f0);
+				scene.background = new THREE.Color( 0x495057); // dark 0x343a40      slightly lighter 0x495057
+				scene.add(new THREE.HemisphereLight(0x443333, 0x111122));
+
+				plane = createPlane(PLANE_WIDTH, PLANE_HEIGHT);
+				scene.add(plane);
+				grid = createAGrid({ width: PLANE_WIDTH, height: PLANE_HEIGHT, linesWidth: 0.01, linesHeight: 0.01, color: 0x1dc092 });
+				scene.add(grid);
+				// adjustCamera(PLANE_WIDTH, PLANE_HEIGHT);
+
+				var worldAxis = new THREE.AxesHelper(0.05);
+				scene.add(worldAxis);
+
+				var sphereGeometry = new THREE.SphereBufferGeometry(0.001, 32, 32);
+				var sphereMaterial = new THREE.MeshBasicMaterial({ color: 0xf1170f });
+				for (var i = 0; i < 40; i++) {
+					var sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+					scene.add(sphere);
+					tailSpheres.push(sphere);
+				}
+
+				renderer = new THREE.WebGLRenderer({ canvas: document.querySelector("canvas"), antialias: true });
+				canvas = renderer.domElement;
+
+				var controls = new THREE.OrbitControls(camera, renderer.domElement);
+				controls.enablePan = false;
+				controls.enableRotate = false;
+				controls.target = cameraTarget;
+				adjustCamera(PLANE_WIDTH, PLANE_HEIGHT);
+
+				raycaster = new THREE.Raycaster();
+				raycaster.params.Points.threshold = raycast_threshold;
+
+				//onWindowResize();
+				//window.addEventListener( 'resize', onWindowResize, false );
+				canvas.addEventListener('dblclick', onCanvasDoubleClick, false);
+				canvas.addEventListener('mousemove', onCanvasMouseMove, false);
+				canvas.addEventListener('mousedown', onCanvasMouseDown, false);
+				canvas.addEventListener('mouseup', onCanvasMouseUp, false)
+			};
+
+			function updateCalibMenu() {
+				switch ($('#selectCalibTarget option:selected').val()) {
+					case "geometry":
+						$('#planeCalibration').show();
+						$('#colorsCalibration').hide();
+						$('#homingCalibration').hide();
+						break;
+					case "color":
+						$('#planeCalibration').hide();
+						$('#colorsCalibration').show();
+						$('#homingCalibration').hide();
+						break;
+					case "homing":
+						$('#planeCalibration').hide();
+						$('#colorsCalibrationserver').hide();
+						$('#homingCalibrationserver').show();
+						break;
+				}
+			}
+
+			function updateSelectOptions(selector, arrayRos, arrayJs) {
+				arrayJs.forEach(function (item, index) {
+					if (!arrayRos.includes(item)) {
+						var elem = getElementById(item);
+						selector.removeChild(elem)
+						arrayJs.splice(index, 1);
+					}
+				})
+				arrayRos.forEach(function (item, index) {
+					if (!arrayJs.includes(item)) {
+						var option = document.createElement("option");
+						option.text = item;
+						option.value = item;
+						selector.add(option);
+						arrayJs.push(item)
+					}
+				})
+				// arrayJs = arrayRos.slice();
+			}
+
+			function updateSelectList(selector, arrayRos, arrayJs) {
+				arrayJs.forEach(function (item, index) {
+					if (!arrayRos.includes(item)) {
+						var dropdownItem = selector.querySelector("li > a[data-value='"+item+"']");
+						var listElement = dropdownItem.parentNode;
+						selector.removeChild(listElement);
+						arrayJs.splice(index, 1);
+					}
+				})
+				arrayRos.forEach(function (item, index) {
+					if (!arrayJs.includes(item)) {
+						var listElement = document.createElement("LI");
+						var newLink = document.createElement('a');
+						newLink.setAttribute('class', 'dropdown-item');
+						newLink.setAttribute('href', '#');
+						newLink.setAttribute('data-value', item);
+						newLink.text = item;
+						newLink.value = item;
+						listElement.appendChild(newLink);
+						selector.appendChild(listElement);
+						arrayJs.push(item);
+					}
+				})
+				// arrayJs = arrayRos.slice();
+			}
+
+			function sendParameters() {
+				var selectedBehavior = $('#selectBehavior option:selected').val();
+				$('#result').after("Parameters for " + selectedBehavior + "set!")
+				var stiffnesses = [$('#Kx').val(), $('#Ky').val(), $('#Kz').val(), $('#Rx').val(), $('#Ry').val(), $('#Rz').val()];
+				var dampings = ["0", "0", "0", "0", "0", "0"];
+				var forces = ["0", "0", $('#Fz').val(), "0", "0", "0"];
+				var desiredVelocity = [$('#desiredVelocity').val()];
+				var name = [selectedBehavior];
+				var descriptors = stiffnesses.concat(dampings.concat(forces.concat(desiredVelocity)));
+				console.log(descriptors);
+				var commandData = {
+					'type': "SET",
+					'action': "upd",
+					'target': ["params"],
+					'name': name,
+					'descriptors': descriptors
+				};
+				$.ajax({
+					url: $SCRIPT_ROOT + 'sendCommands/',
+					data: JSON.stringify(commandData),
+					contentType: "application/json; charset=utf-8",
+					dataType: 'json',
+					method: 'POST',
+					success: function (data) {
+						console.log(data)
+						//$('#setParameters').popover('hide')
+						//callback()           
+					},
+					async: true //async_bool
+				})
+			};
+
+			function sendCalibration() {
+				var targetType = [$('#selectCalibTarget').val()];
+				var geometryID = [$('#geometryID').val()];
+				// The dimension of the window is now taken to set the scale during calibration
+				// rembember that if zoom is enabled this will not hold anymore
+				var canvasWidth = canvas.width;
+				var canvasHeight = canvas.height;
+				var descriptors;
+				switch ($('#selectPlaneCalibPoint option:selected').val()) {
+					case "origin":
+						descriptors = [0, 0.0, 0.0];
+						break;
+					case "xAxis":
+						descriptors = [1, canvasWidth, 0.0];
+						break;
+					case "yAxis":
+						descriptors = [2, 0.0, canvasHeight];
+						break;
+				};
+
+				console.log(descriptors);
+				var commandData = {
+					'type': "CALIBRATION",
+					'action': "upd",
+					'target': targetType,
+					'name': geometryID,
+					'descriptors': descriptors
+				};
+
+				$.ajax({
+					url: $SCRIPT_ROOT + 'sendCommands/',
+					data: JSON.stringify(commandData),
+					contentType: "application/json; charset=utf-8",
+					dataType: 'json',
+					method: 'POST',
+					success: function (data) {
+						console.log(data)
+						switch(data.target){
+							case "geometry":
+								console.log(data.target)
+								if (completePlaneCalibration(data)) {
+									alert("Plane calibration successful")
+									//callback()   
+									console.log(data.lx)
+									console.log(data.ly)
+									scene.remove(plane);
+									scene.remove(grid);
+									plane = createPlane(data.lx, data.ly);
+									scene.add(plane);
+									grid = createAGrid({ width: data.lx, height: data.ly, linesWidth: 0.01, linesHeight: 0.01, color: 0x1dc092 });
+									scene.add(grid);
+									adjustCamera(data.lx, data.ly);
+									distanceThreshold = (PLANE_WIDTH>PLANE_HEIGHT) ? PLANE_HEIGHT*0.1 : PLANE_WIDTH*0.1;
+
+									geometryMap.set(data.name, plane);
+									gridMap.set(data.name, grid);
+								}
+								break;
+
+							case "color":
+								console.log(data.target)
+								if (data.status =="ACK")
+									alert("Color calibration successful")
+								// else if (data.status =="NACK")
+								break;
+						}
+					},
+					async: true //async_bool
+				});
+			};
+
+			function completePlaneCalibration(res) {
+				if (res.lx != 0 && res.ly != 0)
+					return true
+				else
+					return false
+			}
+
+			function onCanvasDoubleClick(event) {
+				event.preventDefault();
+				dblClick.x = (event.clientX / canvas.width) * 2 - 1;
+				dblClick.y = - (event.clientY / canvas.height) * 2 + 1;
+				addPoint(dblClick);
+			};
+
+			function onCanvasMouseMove(event) {
+				event.preventDefault();
+				mouse.x = (event.clientX / canvas.width) * 2 - 1;
+				mouse.y = - (event.clientY / canvas.height) * 2 + 1;
+				if (mouseDown) {
+					continuousDraw();
+				}
+			};
+
+			function onCanvasMouseDown() {
+				event.preventDefault();
+				mouseDown = true;
+				var intersection = projectOnPlane(mouse);
+				previousPoint = intersection.point;
+			}
+			function onCanvasMouseUp() {
+				event.preventDefault();
+				mouseDown = false;
+			}
+
+			function draw() {
+				var commandData = {
+					'type': "CMD",
+					'action': "draw",
+					'target': [],
+					'name': [],
+					'descriptors': []
+				};
+				$.ajax({
+					url: $SCRIPT_ROOT + 'sendCommands/',
+					data: JSON.stringify(commandData),
+					contentType: "application/json; charset=utf-8",
+					dataType: 'json',
+					method: 'POST',
+					success: function (data) {
+						console.log(data)
+						// changeSMState(data.sm_state)
+						//callback()           
+					},
+					async: true //async_bool
+				})
+			}
+
+			function pauseResume() {
+				var el = $(pause);
+                console.log(el.html())
+                var el_text = $(pauseText);
+                console.log(el_text.html());
+
+				var other_el = $(zeroG);
+                console.log(other_el.html())
+                var other_el_text = $(zeroGText);
+                console.log(other_el_text.html());
+                
+                if(SM_STATE=="PAUSE"){                    
+					var commandData = {
+						'type': "CMD",
+						'action': "resume",
+						'target': [],
+						'name': [],
+						'descriptors': []
+					};
+					$.ajax({
+						url: $SCRIPT_ROOT + 'sendCommands/',
+						data: JSON.stringify(commandData),
+						contentType: "application/json; charset=utf-8",
+						dataType: 'json',
+						method: 'POST',
+						success: function (data) {
+							console.log(data)
+							// changeSMState(data.sm_state)
+							//callback()           
+						},
+						async: true //async_bool
+					})            
+                }
+                else{			
+					var commandData = {
+						'type': "CMD",
+						'action': "pause",
+						'target': [],
+						'name': [],
+						'descriptors': []
+					};
+					$.ajax({
+						url: $SCRIPT_ROOT + 'sendCommands/',
+						data: JSON.stringify(commandData),
+						contentType: "application/json; charset=utf-8",
+						dataType: 'json',
+						method: 'POST',
+						success: function (data) {
+							console.log(data)
+							// changeSMState(data.sm_state)
+							//callback()           
+						},
+						async: true //async_bool
+					})
+                }   
+				
+			}
+
+			function zeroGResume() {
+                if(SM_STATE=="STOP"){
+					var commandData = {
+						'type': "CMD",
+						'action': "resume",
+						'target': [],
+						'name': [],
+						'descriptors': []
+					};
+					$.ajax({
+						url: $SCRIPT_ROOT + 'sendCommands/',
+						data: JSON.stringify(commandData),
+						contentType: "application/json; charset=utf-8",
+						dataType: 'json',
+						method: 'POST',
+						success: function (data) {
+							console.log(data)
+							// changeSMState(data.sm_state)
+							//callback()           
+						},
+						async: true //async_bool
+					})
+				}
+                else{
+                    var commandData = {
+						'type': "CMD",
+						'action': "stop",
+						'target': [],
+						'name': [],
+						'descriptors': []
+					};
+					$.ajax({
+						url: $SCRIPT_ROOT + 'sendCommands/',
+						data: JSON.stringify(commandData),
+						contentType: "application/json; charset=utf-8",
+						dataType: 'json',
+						method: 'POST',
+						success: function (data) {
+							console.log(data)
+							// changeSMState(data.sm_state)
+							//callback()           
+						},
+						async: true //async_bool
+					})
+                }   
+			}
+
+			function addPath() {
+				console.log("add path");
+				segments.forEach(function (arrayItem) {
+					console.log(arrayItem.geometry.boundingSphere.radius);
+				});
+				pathID = pathID + 1;
+				var path = { id: pathID.toString(), points: drawPoints, segments: segments };
+				var name = path.id;
+				var points2D = drawPoints.map(pnt => [pnt.position.x, pnt.position.y])
+				var descriptors = points2D.flat();
+				console.log(descriptors)
+				paths.push(path);
+				drawPoints = [];
+				segments = [];
+
+				var name = [path.id];
+
+				var commandData = {
+					'type': "SET",
+					'action': "upd",
+					'target': ["path"],
+					'name': name,
+					'descriptors': descriptors
+				};
+				$.ajax({
+					url: $SCRIPT_ROOT + 'sendCommands/',
+					data: JSON.stringify(commandData),
+					contentType: "application/json; charset=utf-8",
+					dataType: 'json',
+					method: 'POST',
+					success: function (data) {
+						console.log(data)
+						//$('#setParameters').popover('hide')
+						//callback()           
+					},
+					async: true //async_bool
+				})
+			};
+
+			function removePath() {
+				console.log("remove path");
+				var name = paths[paths.length-1].id; //paths.length.toString();
+				pathID = pathID - 1;
+				var lastPath = paths.pop();
+				var lastPoints = lastPath.points;
+				var lastSegments = lastPath.segments;
+				lastPoints.forEach(removeFromScene);
+				lastSegments.forEach(removeFromScene);
+
+				var commandData = {
+					'type': "SET",
+					'action': "rmv",
+					'target': ["path"],
+					'name': [name],
+					'descriptors': []
+				};
+				$.ajax({
+					url: $SCRIPT_ROOT + 'sendCommands/',
+					data: JSON.stringify(commandData),
+					contentType: "application/json; charset=utf-8",
+					dataType: 'json',
+					method: 'POST',
+					success: function (data) {
+						console.log(data)
+						//$('#setParameters').popover('hide')
+						//callback()           
+					},
+					async: true //async_bool
+				})
+			};
+
+			function removeAll() {
+				for (var i = paths.length; i > 0; i--) {
+					removePath();
+				};
+			}
+
+			function removeFromScene(item, index) {
+				scene.remove(item);
+			}
+
+			function continuousDraw() {
+				var intersection = projectOnPlane(mouse);
+				var mouseOnPlane = intersection.point;
+
+				if (mouseOnPlane == null || previousPoint == null) return
+
+				var distance = previousPoint.distanceTo(mouseOnPlane);
+				//console.log(distance)
+				if (drawPoints.length == 0 && distance != 0) {
+					addPoint(mouse);
+					//previousPoint = drawPoints[-1].position;
+				}
+				if (distance > distanceThreshold) {
+					console.log(distance)
+					addPoint(mouse);
+					//previousPoint = drawPoints[-1].position;
+				}
+			}
+
+			function projectOnPlane(point) {
+				raycaster.setFromCamera(point, camera);
+
+				var intersections = raycaster.intersectObject(plane);
+				var intersection = (intersections.length) > 0 ? intersections[0] : null;
+
+				return intersection
+			}
+
+			function addPoint(point) {
+				var sphereGeometry = new THREE.SphereBufferGeometry(0.001, 32, 32);
+				var sphereMaterial = new THREE.MeshBasicMaterial({ color: 0x9fe80e});
+				var sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+				var intersection = projectOnPlane(point);
+				if (intersection !== null) {
+					sphere.position.copy(intersection.point);
+					sphere.scale.set(1, 1, 1);
+					scene.add(sphere);
+					drawPoints.push(sphere);
+					previousPoint = intersection.point;
+				}
+
+				var geometry = new THREE.Geometry();
+				if (drawPoints.length > 1) {
+					var last_sphere = drawPoints[drawPoints.length - 2];
+					geometry.vertices.push(last_sphere.position);
+					geometry.vertices.push(sphere.position);
+					console.log(last_sphere.position.distanceTo(sphere.position));
+					var material = new THREE.LineBasicMaterial({ color: 0x9fe80e });
+					var line = new THREE.Line(geometry, material);
+					scene.add(line);
+					segments.push(line);
+				}
+			};
+
+			function onWindowResize() {
+
+			};
+
+			function resizeCanvasToDisplaySize() {
+				// look up the size the canvas is being displayed
+				const width = canvas.clientWidth;
+				const height = canvas.clientHeight;
+				// adjust displayBuffer size to match
+				if (canvas.width !== width || canvas.height !== height) {
+					// you must pass false here or three.js sadly fights the browser
+					renderer.setSize(width, height, false);
+					camera.aspect = width / height;
+					camera.updateProjectionMatrix();
+
+					// update any render target sizes here
+				}
+			};
+
+			function createAGrid(opts) {
+				var config = opts || {
+					width: 10,
+					height: 10,
+					linesWidth: 0.01,
+					linesHeight: 0.01,
+					color: 0x888888
+				};
+
+				var material = new THREE.LineBasicMaterial({
+					//TODO: fix this shit!
+					color: 0x1dc092,
+					// opacity: 0.2
+				});
+
+				var gridObject = new THREE.Object3D(),
+					gridGeo = new THREE.Geometry(),
+					stepw = config.linesWidth,
+					steph = config.linesHeight;
+
+				//width
+				for (var i = 0; i <= config.width; i += stepw) {
+					gridGeo.vertices.push(new THREE.Vector3(i, 0, 0));
+					gridGeo.vertices.push(new THREE.Vector3(i, config.height, 0));
+
+				}
+				//height
+				for (var i = 0; i <= config.height; i += steph) {
+					gridGeo.vertices.push(new THREE.Vector3(0, i, 0));
+					gridGeo.vertices.push(new THREE.Vector3(config.width, i, 0));
+				}
+
+				var line = new THREE.LineSegments(gridGeo, material);
+				gridObject.add(line);
+
+				return gridObject;
+			}
+
+			function createPlane(PLANE_WIDTH, PLANE_HEIGHT) {
+				var geometry = new THREE.PlaneBufferGeometry(PLANE_WIDTH, PLANE_HEIGHT);
+				// geometry.rotateX(- Math.PI / 2);
+				geometry.translate(PLANE_WIDTH / 2, PLANE_HEIGHT / 2, 0);
+				var material = new THREE.ShadowMaterial({ opacity: 0.2 });
+				var plane = new THREE.Mesh(geometry, material);
+				plane.receiveShadow = true;
+
+				return plane
+			}
+
+			function adjustCamera(PLANE_WIDTH, PLANE_HEIGHT) {
+				camera.position.set(PLANE_WIDTH / 2.0, PLANE_HEIGHT / 2.0, (PLANE_WIDTH + PLANE_HEIGHT) /2.0);
+				cameraTarget.set(PLANE_WIDTH / 2.0, PLANE_HEIGHT / 2.0, 0.0)
+				camera.lookAt(cameraTarget);
+				camera.updateMatrix();
+			}
+
+			function renderPointsTrace(intersection) {
+				if (toggle > 0.02 && intersection !== null) {
+					tailSpheres[spheresIndex].position.copy(intersection.point);
+					tailSpheres[spheresIndex].scale.set(1, 1, 1);
+					spheresIndex = (spheresIndex + 1) % tailSpheres.length;
+					toggle = 0;
+				}
+				for (var i = 0; i < tailSpheres.length; i++) {
+					var sphere = tailSpheres[i];
+					sphere.scale.multiplyScalar(0.98);
+					sphere.scale.clampScalar(0.01, 1);
+				}
+
+				toggle += clock.getDelta();
+			}
+
+			function canvasTo3DPoint(canvas_point, point) {
+				point.set(canvas_point[0], canvas_point[1], 0.0);
+			}
+
+			function animate() {
+				requestAnimationFrame(animate);
+				render();
+				// stats.update();
+			};
+			
+			function render() {
+				resizeCanvasToDisplaySize();
+				if(ROS_OK){
+					canvasTo3DPoint(robotCanvasPoint, robotPosition);
+					// var intersection = projectOnPlane(mouse);
+					var intersection = {};
+					intersection.point = robotPosition;
+					renderPointsTrace(intersection);
+				}
+				renderer.render(scene, camera);
+			};
+
+		</script>
+
+</body>
+
+</html>
