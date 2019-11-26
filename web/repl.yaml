@@ -1,6 +1,6 @@
 
 use_zmq : true
-uri : "10.24.8.100:5555"
+uri : "192.168.9.211:5555"
 # uri : "com-exp.local:5555"
 #uri : "localhost:5555"
 
