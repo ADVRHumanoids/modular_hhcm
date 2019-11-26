@@ -422,11 +422,11 @@
 
 			let mouseDown = false;
 
-			var SM_STATE = "OFFLINE";
+			var SM_STATE = "";
 
 			var ros = new ROSLIB.Ros({
-				// url: 'ws://192.168.9.42:9090'
-				url: 'ws://localhost:9090'
+				url: 'ws://192.168.9.211:9090'
+				// url: 'ws://localhost:9090'
 			});
 
 			ros.on('connection', function () {
@@ -501,14 +501,10 @@
 							case "RUN":
 								$(pauseText).text($(pause).data("text-original"));
 								$(zeroGText).text($(zeroG).data("text-original"));
-								$popovercalibrate.hide();
-								$popoverSetParameters.hide();
 								break;
 							case "PAUSE":
 								$(pauseText).text($(pause).data("text-swap"));
 								$(zeroGText).text($(zeroG).data("text-original"));
-								$popovercalibrate.hide();
-								$popoverSetParameters.hide();
 								break;
 							case "STOP":
 								$(pauseText).text($(pause).data("text-original"));
@@ -517,8 +513,6 @@
 							case "OFFLINE":
 								$(pauseText).text($(pause).data("text-original"));
 								$(zeroGText).text($(zeroG).data("text-original"));
-								$popovercalibrate.hide();
-								$popoverSetParameters.hide();
 								break;
 						}
 					}
