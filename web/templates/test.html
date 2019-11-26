@@ -501,18 +501,22 @@
 							case "RUN":
 								$(pauseText).text($(pause).data("text-original"));
 								$(zeroGText).text($(zeroG).data("text-original"));
+								$('.btn-dark').prop("disabled", false);
 								break;
 							case "PAUSE":
 								$(pauseText).text($(pause).data("text-swap"));
 								$(zeroGText).text($(zeroG).data("text-original"));
+								$('.btn-dark').prop("disabled", false);
 								break;
 							case "STOP":
 								$(pauseText).text($(pause).data("text-original"));
 								$(zeroGText).text($(zeroG).data("text-swap"));
+								$('.btn-dark').prop("disabled", false);
 								break;
 							case "OFFLINE":
 								$(pauseText).text($(pause).data("text-original"));
 								$(zeroGText).text($(zeroG).data("text-original"));
+								$('.btn-dark').prop("disabled", true);
 								break;
 						}
 					}
