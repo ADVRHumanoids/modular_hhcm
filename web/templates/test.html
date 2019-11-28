@@ -7,7 +7,8 @@
 	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-  
+	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
   <script src="https://code.jquery.com/jquery-3.2.1.min.js" ></script>
   <!-- integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous" -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
@@ -205,12 +206,32 @@
 			font-size: large;
 			font-weight: bold;
 		}
+
+		#start_stop {
+			border: none;
+			position: absolute;
+			bottom: 2.5%;
+			left: 2.5%;
+			color: white;
+			
+			width: 70px;
+			height: 70px;
+			padding: 10px 16px;
+			border-radius: 35px;
+			font-size: 30px;
+			line-height: 1.33;
+			}
 	</style>
 	<div id="container">
 		<div class="taskOverlay">Top Left</div>
 		<div class="colorOverlay">Top Right</div>
 		<div class="geometryOverlay">Top Center</div>
 		<div class="smStateOverlay">Bottom Center</div>
+		<!-- <button id=start_stop class="btn" data-text-swap="Stop XBotCore" data-text-original="Start XBotCore"><span style="padding-right: 4px"><i class="material-icons">power_settings_new</i></span><p id="start_stop_text">Start XBotCore</p></button> -->
+		<button id=start_stop type="button" class="btn btn-danger btn-circle btn-xl" data-text-swap="Stop XBotCore" data-text-original="Start XBotCore">
+			<i class="material-icons">power_settings_new</i>
+			<p id="start_stop_text" style="display:none">Start XBotCore</p>
+		</button>
 		<canvas></canvas>
 	</div>
 	<div id="info"><a href="http://threejs.org" target="_blank" rel="noopener">three.js</a> webgl - interactive -
@@ -439,8 +460,8 @@
 			var SM_STATE = "";
 
 			var ros = new ROSLIB.Ros({
-				url: 'ws://192.168.9.211:9090'
-				// url: 'ws://localhost:9090'
+				// url: 'ws://192.168.9.211:9090'
+				url: 'ws://localhost:9090'
 			});
 
 			ros.on('connection', function () {
@@ -478,6 +499,9 @@
 				var pauseBtn = document.getElementById("pause");
 				var zeroGBtn = document.getElementById("zeroG");
 
+				var start_stop = document.getElementById('start_stop');
+                var start_stop_text = document.getElementById('start_stop_text');
+
 				var selectTask = document.getElementById("selectTask");
 				var taskDropdownMenu = selectTask.querySelector('.dropdown-menu');
 				var selectGeometry = document.getElementById("selectGeometry");
@@ -491,6 +515,8 @@
 				drawBtn.onclick = function () {draw()};
 				pauseBtn.onclick = function () {pauseResume()};
 				zeroGBtn.onclick = function () {zeroGResume()};
+
+				start_stop.onclick = function() {startStop()};
 
 				jointstate_listener.subscribe(function (m) {
 					// console.log(m)
@@ -1005,6 +1031,48 @@
 				else
 					return false
 			}
+
+			function startXBot(async_bool, callback) {
+                $.ajax({
+                    url: $SCRIPT_ROOT + 'pub_cmd/',
+                    data: {'cmd': 'START_XBOT'},
+                    method: 'POST',
+                    success: function(data) {
+                        console.log(data)
+                        callback();
+                    },
+                    async: async_bool //false
+                });  
+            }
+
+            function stopXBot(async_bool, callback) {
+                $.ajax({
+                    url: $SCRIPT_ROOT + 'pub_cmd/',
+                    data: {'cmd': 'STOP_XBOT'},
+                    method: 'POST',
+                    success: function(data) {
+                        console.log(data)
+                        callback()
+                    },
+                    async: async_bool //false
+                });      
+			}
+			
+			function startStop(){
+                var el = $(start_stop);
+                // console.log(el.html())
+                var el_text = $(start_stop_text);
+                // console.log(el_text.html());
+                
+                if(el_text.text() == el.data("text-original")){
+                    el_text.text(el.data("text-swap"));
+                    startXBot(false, function(){})    
+                }
+                else{
+                    el_text.text(el.data("text-original"));
+                    stopXBot(false, function() {});
+                }   
+            } 
 
 			function onCanvasDoubleClick(event) {
 				event.preventDefault();
