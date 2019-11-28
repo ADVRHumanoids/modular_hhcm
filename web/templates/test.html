@@ -417,7 +417,7 @@
 
 			var ROS_OK;
 			var taskList = ['task 1', 'task 2'], geometryList = ['plane 1', 'plane 2'], colorList = ['color 1', 'color 2'];
-			var robotPose, robotCanvasPoint;
+			var robotPose, robotCanvasPoint, robotParameters;
 			var robotPosition = new THREE.Vector3();
 
 			let mouseDown = false;
@@ -489,6 +489,7 @@
 					updateSelectList(colorDropdownMenu, m.colors_id_list, colorList)
 					robotCanvasPoint = m.canvas_point
 					changeSMState(m.current_state);
+					robotParameters = m.robot_parameters;
 				});
 
 				function changeSMState(sm_state){
@@ -654,6 +655,29 @@
 					console.log('popover hidden')
 				})
 
+				function updateDefaultParameters() {
+					if($('#selectBehavior option:selected').val() == "moving")
+						var param = robotParameters.moving;
+					else
+						var param = robotParameters.static;
+					var Kx = $(':input[name=Kx]');
+					Kx.val(param.k[0]);
+					var Ky = $(':input[name=Ky]');
+					Ky.val(param.k[1]);
+					var Kz = $(':input[name=Kz]');
+					Kz.val(param.k[2]);
+					var Rx = $(':input[name=Rx]');
+					Rx.val(param.k[3]);
+					var Ry = $(':input[name=Ry]');
+					Ry.val(param.k[4]);
+					var Rz = $(':input[name=Rz]');
+					Rz.val(param.k[5]);
+					var Fz = $(':input[name=Fz]');
+					Fz.val(param.f[2]);
+					var desVel = $(':input[name=desiredVelocity]');
+					desVel.val(param.v);
+				}
+
 				var $popoverSetParameters = $('.setParameters').popover({
 					html: true,
 					placement: 'left',
@@ -664,6 +688,11 @@
 						return $(mySetParametersForm).html();
 					}
 				}).on('click', function () {
+					updateDefaultParameters();
+					$(document).on('change', '#selectBehavior', function () {
+						updateDefaultParameters();
+					})
+					// updateDefaultParameters($('.setParameters').data().target);
 					$('.btn-primary').click(function () { sendParameters() })
 				});
 				 
