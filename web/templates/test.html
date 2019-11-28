@@ -354,34 +354,48 @@
 			<select name="selectBehavior" id="selectBehavior" class="selectpicker">
 				<option value="moving">Moving behavior</option>
 				<option value="static">Static behavior</option>
+				<option value="advanced">Advanced parameters</option>
 			</select>	
-			<div class="row">
-				<div class="col-md-6">
-					<label for="Kx">Kx (N/m):</label>
-					<input type="number" name="Kx" id="Kx" value="1200" step="100" class="form-control form-control-sm">
-					<label for="Ky">Ky (N/m):</label>
-					<input type="number" name="Ky" id="Ky" value="1200" step="100" class="form-control form-control-sm">
-					<label for="Kz">Kz (N/m):</label>
-					<input type="number" name="Kz" id="Kz" value="1200" step="100" class="form-control form-control-sm ">
+			<div id="basicParams">
+				<div class="row">
+					<div class="col-md-6">
+						<label for="Kx">Kx (N/m):</label>
+						<input type="number" name="Kx" id="Kx" value="1200" step="100" class="form-control form-control-sm">
+						<label for="Ky">Ky (N/m):</label>
+						<input type="number" name="Ky" id="Ky" value="1200" step="100" class="form-control form-control-sm">
+						<label for="Kz">Kz (N/m):</label>
+						<input type="number" name="Kz" id="Kz" value="1200" step="100" class="form-control form-control-sm ">
+					</div>
+					<div class="col-md-6">
+							<label for="Rx">Rx (Nm/rad):</label>
+							<input type="number" name="Rx" id="Rx" value="200" step="10" class="form-control form-control-sm ">
+							<label for="Ry">Ry (Nm/rad):</label>
+							<input type="number" name="Ry" id="Ry" value="200" step="10" class="form-control form-control-sm ">
+							<label for="Rz">Rz (Nm/rad):</label>
+							<input type="number" name="Rz" id="Rz" value="0" step="10" class="form-control form-control-sm">	
+					</div>
 				</div>
-				<div class="col-md-6">
-						<label for="Rx">Rx (Nm/rad):</label>
-						<input type="number" name="Rx" id="Rx" value="200" step="10" class="form-control form-control-sm ">
-						<label for="Ry">Ry (Nm/rad):</label>
-						<input type="number" name="Ry" id="Ry" value="200" step="10" class="form-control form-control-sm ">
-						<label for="Rz">Rz (Nm/rad):</label>
-						<input type="number" name="Rz" id="Rz" value="0" step="10" class="form-control form-control-sm">	
-				</div>
+				<label for="Fz">Fz (N):</label>
+				<input type="number" name="Fz" id="Fz" value="-1" step="0.1" class="form-control input-md">
+				<!-- <label for="baseLink">base link:</label>
+				<input type="text" name="baseLink" id="baseLink" value="base_link"class="form-control input-md">
+				<label for="distalLink">distal link:</label>
+				<input type="text" name="distalLink" id="distalLink" value="TCP"class="form-control input-md"> -->
+				<!-- <label for="desiredVelocity">desired velocity (m/s):</label>
+				<input type="number" name="desiredVelocity" id="desiredVelocity" value="0.05" step="0.01" class="form-control input-md"> -->
+				<button type="button" class="btn btn-primary" data-loading-text="Sending info.."><em class="icon-ok"></em> Set Parameters</button>
 			</div>
-			<label for="Fz">Fz (N):</label>
-			<input type="number" name="Fz" id="Fz" value="-1" step="0.1" class="form-control input-md">
-			<!-- <label for="baseLink">base link:</label>
-			<input type="text" name="baseLink" id="baseLink" value="base_link"class="form-control input-md">
-			<label for="distalLink">distal link:</label>
-			<input type="text" name="distalLink" id="distalLink" value="TCP"class="form-control input-md"> -->
-			<label for="desiredVelocity">desired velocity (m/s):</label>
-			<input type="number" name="desiredVelocity" id="desiredVelocity" value="0.05" step="0.01" class="form-control input-md">
-			<button type="button" class="btn btn-primary" data-loading-text="Sending info.."><em class="icon-ok"></em> Set Parameters</button>
+			<div id="advancedParams" style="display:none">
+				<label for="linearVelocity">Desired velocity (m/s):</label>
+				<input type="number" name="linearVelocity" id="linearVelocity" value="0.05" step="0.01" class="form-control input-md">
+				<label for="angularVelocity">Angular velocity (rad/s):</label>
+				<input type="number" name="angularVelocity" id="angularVelocity" value="0.1" step="0.05" class="form-control input-md">
+				<label for="angularVelocity">Penetration (m):</label>
+				<input type="number" name="penPenetration" id="penPenetration" value="0.0" step="0.01" class="form-control input-md">
+				<label for="penRaiseHeight">Raise height (m)):</label>
+				<input type="number" name="penRaiseHeight" id="penRaiseHeight" value="0.05" step="0.01" class="form-control input-md">
+				<button type="button" class="btn btn-primary" data-loading-text="Sending info.."><em class="icon-ok"></em> Set Parameters</button>
+			</div>
 		</div>
 	</script>
 
@@ -655,11 +669,26 @@
 					console.log('popover hidden')
 				})
 
-				function updateDefaultParameters() {
-					if($('#selectBehavior option:selected').val() == "moving")
+				function updateAdvancedParameters() {
+					var param = robotParameters.advanced;
+					var linVel = $(':input[name=linearVelocity]');
+					linVel.val(param.lin_speed);
+					var linVel = $(':input[name=angularVelocity]');
+					linVel.val(param.ang_speed);
+					var linVel = $(':input[name=penRaiseHeight]');
+					linVel.val(param.pen_raise);
+					var linVel = $(':input[name=penPenetration]');
+					linVel.val(param.pen_penetr);
+				}
+
+				function updateBasicParameters() {
+					var param;
+					if($('#selectBehavior option:selected').val() == "moving"){
 						var param = robotParameters.moving;
-					else
+					}
+					else{
 						var param = robotParameters.static;
+					}
 					var Kx = $(':input[name=Kx]');
 					Kx.val(param.k[0]);
 					var Ky = $(':input[name=Ky]');
@@ -674,8 +703,6 @@
 					Rz.val(param.k[5]);
 					var Fz = $(':input[name=Fz]');
 					Fz.val(param.f[2]);
-					var desVel = $(':input[name=desiredVelocity]');
-					desVel.val(param.v);
 				}
 
 				var $popoverSetParameters = $('.setParameters').popover({
@@ -688,9 +715,19 @@
 						return $(mySetParametersForm).html();
 					}
 				}).on('click', function () {
-					updateDefaultParameters();
+					updateBasicParameters();
+					updateAdvancedParameters();
 					$(document).on('change', '#selectBehavior', function () {
-						updateDefaultParameters();
+						if($('#selectBehavior option:selected').val() == "advanced") {
+							$('#advancedParams').show()
+							$('#basicParams').hide()
+							updateAdvancedParameters();
+						}
+						else {
+							$('#advancedParams').hide()
+							$('#basicParams').show()
+							updateBasicParameters();
+						}
 					})
 					// updateDefaultParameters($('.setParameters').data().target);
 					$('.btn-primary').click(function () { sendParameters() })
@@ -852,20 +889,28 @@
 			}
 
 			function sendParameters() {
+				var descriptors = [];
 				var selectedBehavior = $('#selectBehavior option:selected').val();
-				$('#result').after("Parameters for " + selectedBehavior + "set!")
-				var stiffnesses = [$('#Kx').val(), $('#Ky').val(), $('#Kz').val(), $('#Rx').val(), $('#Ry').val(), $('#Rz').val()];
-				var dampings = ["0", "0", "0", "0", "0", "0"];
-				var forces = ["0", "0", $('#Fz').val(), "0", "0", "0"];
-				var desiredVelocity = [$('#desiredVelocity').val()];
-				var name = [selectedBehavior];
-				var descriptors = stiffnesses.concat(dampings.concat(forces.concat(desiredVelocity)));
-				console.log(descriptors);
+				if(selectedBehavior == "advanced"){
+					var linearVelocity = [$('#linearVelocity').val()];
+					var angularVelocity = [$('#angularVelocity').val()];
+					var penRaiseHeight = [$('#penRaiseHeight').val()];
+					var penPenetration = [$('#penPenetration').val()];
+					var descriptors = linearVelocity.concat(angularVelocity.concat(penRaiseHeight.concat(penPenetration)));
+					console.log(descriptors);
+				}
+				else {
+					var stiffnesses = [$('#Kx').val(), $('#Ky').val(), $('#Kz').val(), $('#Rx').val(), $('#Ry').val(), $('#Rz').val()];
+					var dampings = ["0", "0", "0", "0", "0", "0"];
+					var forces = ["0", "0", $('#Fz').val(), "0", "0", "0"];
+					var descriptors = stiffnesses.concat(dampings.concat(forces));
+					console.log(descriptors);
+				}
 				var commandData = {
 					'type': "SET",
 					'action': "upd",
 					'target': ["params"],
-					'name': name,
+					'name': [selectedBehavior],
 					'descriptors': descriptors
 				};
 				$.ajax({
