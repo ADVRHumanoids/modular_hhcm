@@ -194,11 +194,23 @@
 			font-size: large;
 			font-weight: bold;
 		}
+
+		.smStateOverlay {
+			position: absolute;
+			bottom: 0;
+			left: 45%;
+			/* transform: translate(10px, -50%); */
+			display: none;
+			font-style: italic;
+			font-size: large;
+			font-weight: bold;
+		}
 	</style>
 	<div id="container">
 		<div class="taskOverlay">Top Left</div>
 		<div class="colorOverlay">Top Right</div>
 		<div class="geometryOverlay">Top Center</div>
+		<div class="smStateOverlay">Bottom Center</div>
 		<canvas></canvas>
 	</div>
 	<div id="info"><a href="http://threejs.org" target="_blank" rel="noopener">three.js</a> webgl - interactive -
@@ -211,8 +223,8 @@
 						Select a task:
 					</button>
 					<ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
-						<li><a href="#" class="dropdown-item" data-value="action">Task 1</a></li>
-						<li><a href="#" class="dropdown-item" data-value="another action">Task 2</a></li>
+						<li><a href="#" class="dropdown-item" data-value="task 1">Task 1</a></li>
+						<li><a href="#" class="dropdown-item" data-value="task 2">Task 2</a></li>
 					</ul>
 				</div>
 				<!-- <select name="selectTask" id="selectTask" class="selectpicker" title="Please select a task:" style="height:33%">
@@ -342,34 +354,48 @@
 			<select name="selectBehavior" id="selectBehavior" class="selectpicker">
 				<option value="moving">Moving behavior</option>
 				<option value="static">Static behavior</option>
+				<option value="advanced">Advanced parameters</option>
 			</select>	
-			<div class="row">
-				<div class="col-md-6">
-					<label for="Kx">Kx (N/m):</label>
-					<input type="number" name="Kx" id="Kx" value="1200" step="100" class="form-control form-control-sm">
-					<label for="Ky">Ky (N/m):</label>
-					<input type="number" name="Ky" id="Ky" value="1200" step="100" class="form-control form-control-sm">
-					<label for="Kz">Kz (N/m):</label>
-					<input type="number" name="Kz" id="Kz" value="1200" step="100" class="form-control form-control-sm ">
+			<div id="basicParams">
+				<div class="row">
+					<div class="col-md-6">
+						<label for="Kx">Kx (N/m):</label>
+						<input type="number" name="Kx" id="Kx" value="1200" step="100" class="form-control form-control-sm">
+						<label for="Ky">Ky (N/m):</label>
+						<input type="number" name="Ky" id="Ky" value="1200" step="100" class="form-control form-control-sm">
+						<label for="Kz">Kz (N/m):</label>
+						<input type="number" name="Kz" id="Kz" value="1200" step="100" class="form-control form-control-sm ">
+					</div>
+					<div class="col-md-6">
+							<label for="Rx">Rx (Nm/rad):</label>
+							<input type="number" name="Rx" id="Rx" value="200" step="10" class="form-control form-control-sm ">
+							<label for="Ry">Ry (Nm/rad):</label>
+							<input type="number" name="Ry" id="Ry" value="200" step="10" class="form-control form-control-sm ">
+							<label for="Rz">Rz (Nm/rad):</label>
+							<input type="number" name="Rz" id="Rz" value="0" step="10" class="form-control form-control-sm">	
+					</div>
 				</div>
-				<div class="col-md-6">
-						<label for="Rx">Rx (Nm/rad):</label>
-						<input type="number" name="Rx" id="Rx" value="200" step="10" class="form-control form-control-sm ">
-						<label for="Ry">Ry (Nm/rad):</label>
-						<input type="number" name="Ry" id="Ry" value="200" step="10" class="form-control form-control-sm ">
-						<label for="Rz">Rz (Nm/rad):</label>
-						<input type="number" name="Rz" id="Rz" value="0" step="10" class="form-control form-control-sm">	
-				</div>
+				<label for="Fz">Fz (N):</label>
+				<input type="number" name="Fz" id="Fz" value="-1" step="0.1" class="form-control input-md">
+				<!-- <label for="baseLink">base link:</label>
+				<input type="text" name="baseLink" id="baseLink" value="base_link"class="form-control input-md">
+				<label for="distalLink">distal link:</label>
+				<input type="text" name="distalLink" id="distalLink" value="TCP"class="form-control input-md"> -->
+				<!-- <label for="desiredVelocity">desired velocity (m/s):</label>
+				<input type="number" name="desiredVelocity" id="desiredVelocity" value="0.05" step="0.01" class="form-control input-md"> -->
+				<button type="button" class="btn btn-primary" data-loading-text="Sending info.."><em class="icon-ok"></em> Set Parameters</button>
 			</div>
-			<label for="Fz">Fz (N):</label>
-			<input type="number" name="Fz" id="Fz" value="-1" step="0.1" class="form-control input-md">
-			<label for="baseLink">base link:</label>
-			<input type="text" name="baseLink" id="baseLink" value="base_link"class="form-control input-md">
-			<label for="distalLink">distal link:</label>
-			<input type="text" name="distalLink" id="distalLink" value="TCP"class="form-control input-md">
-			<label for="desiredVelocity">desired velocity (m/s):</label>
-			<input type="number" name="desiredVelocity" id="desiredVelocity" value="0.05" step="0.01" class="form-control input-md">
-			<button type="button" class="btn btn-primary" data-loading-text="Sending info.."><em class="icon-ok"></em> Set Parameters</button>
+			<div id="advancedParams" style="display:none">
+				<label for="linearVelocity">Desired velocity (m/s):</label>
+				<input type="number" name="linearVelocity" id="linearVelocity" value="0.05" step="0.01" class="form-control input-md">
+				<label for="angularVelocity">Angular velocity (rad/s):</label>
+				<input type="number" name="angularVelocity" id="angularVelocity" value="0.1" step="0.05" class="form-control input-md">
+				<label for="angularVelocity">Penetration (m):</label>
+				<input type="number" name="penPenetration" id="penPenetration" value="0.0" step="0.01" class="form-control input-md">
+				<label for="penRaiseHeight">Raise height (m)):</label>
+				<input type="number" name="penRaiseHeight" id="penRaiseHeight" value="0.05" step="0.01" class="form-control input-md">
+				<button type="button" class="btn btn-primary" data-loading-text="Sending info.."><em class="icon-ok"></em> Set Parameters</button>
+			</div>
 		</div>
 	</script>
 
@@ -377,6 +403,10 @@
 		type="module">
 			// import * as THREE from '../build/three.module.js';
 			// import Stats from './jsm/libs/stats.module.js';
+			var PLANE_WIDTH = 0.20;
+			var PLANE_HEIGHT = 0.10;
+			var distanceThreshold = (PLANE_WIDTH>PLANE_HEIGHT) ? PLANE_HEIGHT*0.1 : PLANE_WIDTH*0.1;
+			
 			var canvas;
 			var renderer, scene, camera, stats;
 			var cameraTarget = new THREE.Vector3();
@@ -389,7 +419,6 @@
 			var mouse = new THREE.Vector2();
 			var dblClick = new THREE.Vector2();
 			var previousPoint;
-			var distanceThreshold = 0.25;
 			var tailSpheres = [];
 			var drawPoints = [];
 			var segments = [];
@@ -397,28 +426,36 @@
 			var pathID = 0;
 			var spheresIndex = 0;
 			var clock;
-			var raycast_threshold = 0.1;
-			var pointSize = 0.05;
+			var toggle = 0;
+			var raycast_threshold = 0.001;
 
-			var taskList = [], geometryList = [], colorList = [], robotPose, robotCanvasPoint;
+			var ROS_OK;
+			var taskList = ['task 1', 'task 2'], geometryList = ['plane 1', 'plane 2'], colorList = ['color 1', 'color 2'];
+			var robotPose, robotCanvasPoint, robotParameters;
+			var robotPosition = new THREE.Vector3();
 
 			let mouseDown = false;
 
+			var SM_STATE = "";
+
 			var ros = new ROSLIB.Ros({
-				//url: 'ws://192.168.9.42:9090'
-				url: 'ws://localhost:9090'
+				url: 'ws://192.168.9.211:9090'
+				// url: 'ws://localhost:9090'
 			});
 
 			ros.on('connection', function () {
 				console.log('Connected to websocket server.');
+				ROS_OK = true;
 			});
 
 			ros.on('error', function (error) {
 				console.log('Error connecting to websocket server: ', error);
+				ROS_OK = false;
 			});
 
 			ros.on('close', function () {
 				console.log('Connection to websocket server closed.');
+				ROS_OK = false;
 			});
 
 			var jointstate_listener = new ROSLIB.Topic({
@@ -465,9 +502,42 @@
 					updateSelectList(geometryDropdownMenu, m.geometry_id_list, geometryList)
 					updateSelectList(colorDropdownMenu, m.colors_id_list, colorList)
 					robotCanvasPoint = m.canvas_point
+					changeSMState(m.current_state);
+					robotParameters = m.robot_parameters;
 				});
 
-				// Attach a delegated event handler
+				function changeSMState(sm_state){
+					if (sm_state != SM_STATE){
+						SM_STATE = sm_state;
+						$('.smStateOverlay').show();
+						$('.smStateOverlay').html("State: " + SM_STATE);
+						switch(SM_STATE){
+							case "WAIT":
+							case "RUN":
+								$(pauseText).text($(pause).data("text-original"));
+								$(zeroGText).text($(zeroG).data("text-original"));
+								$('.btn-dark').prop("disabled", false);
+								break;
+							case "PAUSE":
+								$(pauseText).text($(pause).data("text-swap"));
+								$(zeroGText).text($(zeroG).data("text-original"));
+								$('.btn-dark').prop("disabled", false);
+								break;
+							case "STOP":
+								$(pauseText).text($(pause).data("text-original"));
+								$(zeroGText).text($(zeroG).data("text-swap"));
+								$('.btn-dark').prop("disabled", false);
+								break;
+							case "OFFLINE":
+								$(pauseText).text($(pause).data("text-original"));
+								$(zeroGText).text($(zeroG).data("text-original"));
+								$('.btn-dark').prop("disabled", true);
+								break;
+						}
+					}
+				}
+
+				// Attach a delegated event handler so every item of the dropdown menu is listening to that event, even generated ones.
 				// Ref: https://learn.jquery.com/events/event-delegation/
 				$( ".dropdown-menu" ).on( "click", "a", function( event ) {
 					event.preventDefault();  //do not follow link of anchor element
@@ -576,7 +646,8 @@
 				});
 
 				$popovercalibrate.on('shown.bs.popover', function(){	
-					if ($(zeroGText).text() == $(zeroG).data("text-original")) {  // if the zeroG buttoin
+					// send a stop command (zero g) unless already in that state
+					if (SM_STATE!="STOP") {
 						zeroGResume();
 					}
 					var el = $(calibrateBtn);
@@ -587,8 +658,8 @@
 				})
 
 				$popovercalibrate.on('hidden.bs.popover', function(){
-					// if left button text not resume
-					if ($(zeroGText).text() != $(zeroG).data("text-original")) {
+					// send a resume command unless in RUN or WAIT state
+					if (SM_STATE!="WAIT"||SM_STATE!="RUN") {
 						zeroGResume();
 					}
 					var el = $(calibrateBtn);
@@ -597,6 +668,42 @@
 					el.removeClass("active");
 					console.log('popover hidden')
 				})
+
+				function updateAdvancedParameters() {
+					var param = robotParameters.advanced;
+					var linVel = $(':input[name=linearVelocity]');
+					linVel.val(param.lin_speed);
+					var linVel = $(':input[name=angularVelocity]');
+					linVel.val(param.ang_speed);
+					var linVel = $(':input[name=penRaiseHeight]');
+					linVel.val(param.pen_raise);
+					var linVel = $(':input[name=penPenetration]');
+					linVel.val(param.pen_penetr);
+				}
+
+				function updateBasicParameters() {
+					var param;
+					if($('#selectBehavior option:selected').val() == "moving"){
+						var param = robotParameters.moving;
+					}
+					else{
+						var param = robotParameters.static;
+					}
+					var Kx = $(':input[name=Kx]');
+					Kx.val(param.k[0]);
+					var Ky = $(':input[name=Ky]');
+					Ky.val(param.k[1]);
+					var Kz = $(':input[name=Kz]');
+					Kz.val(param.k[2]);
+					var Rx = $(':input[name=Rx]');
+					Rx.val(param.k[3]);
+					var Ry = $(':input[name=Ry]');
+					Ry.val(param.k[4]);
+					var Rz = $(':input[name=Rz]');
+					Rz.val(param.k[5]);
+					var Fz = $(':input[name=Fz]');
+					Fz.val(param.f[2]);
+				}
 
 				var $popoverSetParameters = $('.setParameters').popover({
 					html: true,
@@ -608,6 +715,21 @@
 						return $(mySetParametersForm).html();
 					}
 				}).on('click', function () {
+					updateBasicParameters();
+					updateAdvancedParameters();
+					$(document).on('change', '#selectBehavior', function () {
+						if($('#selectBehavior option:selected').val() == "advanced") {
+							$('#advancedParams').show()
+							$('#basicParams').hide()
+							updateAdvancedParameters();
+						}
+						else {
+							$('#advancedParams').hide()
+							$('#basicParams').show()
+							updateBasicParameters();
+						}
+					})
+					// updateDefaultParameters($('.setParameters').data().target);
 					$('.btn-primary').click(function () { sendParameters() })
 				});
 				 
@@ -628,7 +750,6 @@
 				})
 
 				// This is to dismiss the popover when not clicking on it.
-
 				$('body, .dropdown-toggle').on('click', function (e) {
 					if ( $('#calibrationForm').is(':visible') ) {
 						$('.calibrate').each(function () {
@@ -652,13 +773,11 @@
 			animate();
 
 			function init() {
-				var PLANE_WIDTH = 20;
-				var PLANE_HEIGHT = 10;
 				var container = document.getElementById('container');
 				scene = new THREE.Scene();
 				console.log(scene.position);
 				clock = new THREE.Clock();
-				camera = new THREE.PerspectiveCamera(70, 1, 1, 1000);
+				camera = new THREE.PerspectiveCamera(70, 1, 0.0001, 10);
 				// camera.up.set(0,0,1);
 				adjustCamera(PLANE_WIDTH, PLANE_HEIGHT);
 
@@ -668,15 +787,15 @@
 
 				plane = createPlane(PLANE_WIDTH, PLANE_HEIGHT);
 				scene.add(plane);
-				grid = createAGrid({ width: PLANE_WIDTH, height: PLANE_HEIGHT, linesWidth: PLANE_WIDTH * 10, linesHeight: PLANE_HEIGHT * 10, color: 0x1dc092 });
+				grid = createAGrid({ width: PLANE_WIDTH, height: PLANE_HEIGHT, linesWidth: 0.01, linesHeight: 0.01, color: 0x1dc092 });
 				scene.add(grid);
 				// adjustCamera(PLANE_WIDTH, PLANE_HEIGHT);
 
-				var worldAxis = new THREE.AxesHelper(1);
+				var worldAxis = new THREE.AxesHelper(0.05);
 				scene.add(worldAxis);
 
-				var sphereGeometry = new THREE.SphereBufferGeometry(0.1, 32, 32);
-				var sphereMaterial = new THREE.MeshBasicMaterial({ color: 0x363cfb });
+				var sphereGeometry = new THREE.SphereBufferGeometry(0.001, 32, 32);
+				var sphereMaterial = new THREE.MeshBasicMaterial({ color: 0xf1170f });
 				for (var i = 0; i < 40; i++) {
 					var sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
 					scene.add(sphere);
@@ -746,8 +865,9 @@
 			function updateSelectList(selector, arrayRos, arrayJs) {
 				arrayJs.forEach(function (item, index) {
 					if (!arrayRos.includes(item)) {
-						var elem = getElementById(item);
-						selector.removeChild(elem)
+						var dropdownItem = selector.querySelector("li > a[data-value='"+item+"']");
+						var listElement = dropdownItem.parentNode;
+						selector.removeChild(listElement);
 						arrayJs.splice(index, 1);
 					}
 				})
@@ -762,27 +882,35 @@
 						newLink.value = item;
 						listElement.appendChild(newLink);
 						selector.appendChild(listElement);
-						arrayJs.push(item)
+						arrayJs.push(item);
 					}
 				})
 				// arrayJs = arrayRos.slice();
 			}
 
 			function sendParameters() {
+				var descriptors = [];
 				var selectedBehavior = $('#selectBehavior option:selected').val();
-				$('#result').after("Parameters for " + selectedBehavior + "set!")
-				var stiffnesses = [$('#Kx').val(), $('#Ky').val(), $('#Kz').val(), $('#Rx').val(), $('#Ry').val(), $('#Rz').val()];
-				var dampings = ["0", "0", "0", "0", "0", "0"];
-				var forces = ["0", "0", $('#Fz').val(), "0", "0", "0"];
-				var desiredVelocity = [$('#desiredVelocity').val()];
-				var name = [selectedBehavior];
-				var descriptors = stiffnesses.concat(dampings.concat(forces.concat(desiredVelocity)));
-				console.log(descriptors);
+				if(selectedBehavior == "advanced"){
+					var linearVelocity = [$('#linearVelocity').val()];
+					var angularVelocity = [$('#angularVelocity').val()];
+					var penRaiseHeight = [$('#penRaiseHeight').val()];
+					var penPenetration = [$('#penPenetration').val()];
+					var descriptors = linearVelocity.concat(angularVelocity.concat(penRaiseHeight.concat(penPenetration)));
+					console.log(descriptors);
+				}
+				else {
+					var stiffnesses = [$('#Kx').val(), $('#Ky').val(), $('#Kz').val(), $('#Rx').val(), $('#Ry').val(), $('#Rz').val()];
+					var dampings = ["0", "0", "0", "0", "0", "0"];
+					var forces = ["0", "0", $('#Fz').val(), "0", "0", "0"];
+					var descriptors = stiffnesses.concat(dampings.concat(forces));
+					console.log(descriptors);
+				}
 				var commandData = {
 					'type': "SET",
 					'action': "upd",
 					'target': ["params"],
-					'name': name,
+					'name': [selectedBehavior],
 					'descriptors': descriptors
 				};
 				$.ajax({
@@ -849,9 +977,10 @@
 									scene.remove(grid);
 									plane = createPlane(data.lx, data.ly);
 									scene.add(plane);
-									grid = createAGrid({ width: data.lx, height: data.ly, linesWidth: data.lx * 10, linesHeight: data.ly * 10, color: 0x1dc092 });
+									grid = createAGrid({ width: data.lx, height: data.ly, linesWidth: 0.01, linesHeight: 0.01, color: 0x1dc092 });
 									scene.add(grid);
 									adjustCamera(data.lx, data.ly);
+									distanceThreshold = (PLANE_WIDTH>PLANE_HEIGHT) ? PLANE_HEIGHT*0.1 : PLANE_WIDTH*0.1;
 
 									geometryMap.set(data.name, plane);
 									gridMap.set(data.name, grid);
@@ -920,13 +1049,12 @@
 					method: 'POST',
 					success: function (data) {
 						console.log(data)
-						//$('#setParameters').popover('hide')
+						// changeSMState(data.sm_state)
 						//callback()           
 					},
 					async: true //async_bool
 				})
 			}
-
 
 			function pauseResume() {
 				var el = $(pause);
@@ -939,9 +1067,29 @@
                 var other_el_text = $(zeroGText);
                 console.log(other_el_text.html());
                 
-                if(el_text.text() == el.data("text-original")){
-                    el_text.text(el.data("text-swap"));
-					other_el_text.text(other_el.data("text-original"));
+                if(SM_STATE=="PAUSE"){                    
+					var commandData = {
+						'type': "CMD",
+						'action': "resume",
+						'target': [],
+						'name': [],
+						'descriptors': []
+					};
+					$.ajax({
+						url: $SCRIPT_ROOT + 'sendCommands/',
+						data: JSON.stringify(commandData),
+						contentType: "application/json; charset=utf-8",
+						dataType: 'json',
+						method: 'POST',
+						success: function (data) {
+							console.log(data)
+							// changeSMState(data.sm_state)
+							//callback()           
+						},
+						async: true //async_bool
+					})            
+                }
+                else{			
 					var commandData = {
 						'type': "CMD",
 						'action': "pause",
@@ -957,16 +1105,17 @@
 						method: 'POST',
 						success: function (data) {
 							console.log(data)
-							//$('#setParameters').popover('hide')
+							// changeSMState(data.sm_state)
 							//callback()           
 						},
 						async: true //async_bool
 					})
-                               
-                }
-                else{
-                    el_text.text(el.data("text-original"));
-					
+                }   
+				
+			}
+
+			function zeroGResume() {
+                if(SM_STATE=="STOP"){
 					var commandData = {
 						'type': "CMD",
 						'action': "resume",
@@ -982,30 +1131,14 @@
 						method: 'POST',
 						success: function (data) {
 							console.log(data)
-							//$('#setParameters').popover('hide')
+							// changeSMState(data.sm_state)
 							//callback()           
 						},
 						async: true //async_bool
 					})
-                }   
-				
-			}
-
-			function zeroGResume() {
-				var el = $(zeroG);
-                // console.log(el.html())
-                var el_text = $(zeroGText);
-                // console.log(el_text.html());
-
-				var other_el = $(pause);
-                // console.log(other_el.html())
-                var other_el_text = $(pauseText);
-                // console.log(other_el_text.html());
-                
-                if(el_text.text() == el.data("text-original")){
-                    el_text.text(el.data("text-swap"));
-					other_el_text.text(other_el.data("text-original"));
-					var commandData = {
+				}
+                else{
+                    var commandData = {
 						'type': "CMD",
 						'action': "stop",
 						'target': [],
@@ -1020,31 +1153,7 @@
 						method: 'POST',
 						success: function (data) {
 							console.log(data)
-							//$('#setParameters').popover('hide')
-							//callback()           
-						},
-						async: true //async_bool
-					})
-				}
-                else{
-                    el_text.text(el.data("text-original"));
-					
-					var commandData = {
-						'type': "CMD",
-						'action': "resume",
-						'target': [],
-						'name': [],
-						'descriptors': []
-					};
-					$.ajax({
-						url: $SCRIPT_ROOT + 'sendCommands/',
-						data: JSON.stringify(commandData),
-						contentType: "application/json; charset=utf-8",
-						dataType: 'json',
-						method: 'POST',
-						success: function (data) {
-							console.log(data)
-							//$('#setParameters').popover('hide')
+							// changeSMState(data.sm_state)
 							//callback()           
 						},
 						async: true //async_bool
@@ -1162,7 +1271,7 @@
 			}
 
 			function addPoint(point) {
-				var sphereGeometry = new THREE.SphereBufferGeometry(0.05, 32, 32);
+				var sphereGeometry = new THREE.SphereBufferGeometry(0.001, 32, 32);
 				var sphereMaterial = new THREE.MeshBasicMaterial({ color: 0x9fe80e});
 				var sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
 				var intersection = projectOnPlane(point);
@@ -1210,8 +1319,8 @@
 				var config = opts || {
 					width: 10,
 					height: 10,
-					linesWidth: 100,
-					linesHeight: 100,
+					linesWidth: 0.01,
+					linesHeight: 0.01,
 					color: 0x888888
 				};
 
@@ -1223,8 +1332,8 @@
 
 				var gridObject = new THREE.Object3D(),
 					gridGeo = new THREE.Geometry(),
-					stepw = config.width / config.linesWidth,
-					steph = config.height / config.linesHeight;
+					stepw = config.linesWidth,
+					steph = config.linesHeight;
 
 				//width
 				for (var i = 0; i <= config.width; i += stepw) {
@@ -1262,28 +1371,41 @@
 				camera.updateMatrix();
 			}
 
+			function renderPointsTrace(intersection) {
+				if (toggle > 0.02 && intersection !== null) {
+					tailSpheres[spheresIndex].position.copy(intersection.point);
+					tailSpheres[spheresIndex].scale.set(1, 1, 1);
+					spheresIndex = (spheresIndex + 1) % tailSpheres.length;
+					toggle = 0;
+				}
+				for (var i = 0; i < tailSpheres.length; i++) {
+					var sphere = tailSpheres[i];
+					sphere.scale.multiplyScalar(0.98);
+					sphere.scale.clampScalar(0.01, 1);
+				}
+
+				toggle += clock.getDelta();
+			}
+
+			function canvasTo3DPoint(canvas_point, point) {
+				point.set(canvas_point[0], canvas_point[1], 0.0);
+			}
+
 			function animate() {
 				requestAnimationFrame(animate);
 				render();
 				// stats.update();
 			};
-			var toggle = 0;
+			
 			function render() {
 				resizeCanvasToDisplaySize();
-				// var intersection = projectOnPlane(mouse);
-				// if (toggle > 0.02 && intersection !== null) {
-				// 	tailSpheres[spheresIndex].position.copy(intersection.point);
-				// 	tailSpheres[spheresIndex].scale.set(1, 1, 1);
-				// 	spheresIndex = (spheresIndex + 1) % tailSpheres.length;
-				// 	toggle = 0;
-				// }
-				// for (var i = 0; i < tailSpheres.length; i++) {
-				// 	var sphere = tailSpheres[i];
-				// 	sphere.scale.multiplyScalar(0.98);
-				// 	sphere.scale.clampScalar(0.01, 1);
-				// }
-
-				toggle += clock.getDelta();
+				if(ROS_OK){
+					canvasTo3DPoint(robotCanvasPoint, robotPosition);
+					// var intersection = projectOnPlane(mouse);
+					var intersection = {};
+					intersection.point = robotPosition;
+					renderPointsTrace(intersection);
+				}
 				renderer.render(scene, camera);
 			};
 
