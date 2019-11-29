@@ -950,10 +950,11 @@
                 });
             }
 
+            // TODO: merge it with stopXBOT -> cmd:RESET
             function stopMaster(async_bool, callback) {
                 $.ajax({
                     url: $SCRIPT_ROOT + 'pub_cmd/',
-                    data: {'cmd': 'STOP_ECAT'},
+                    data: {'cmd': 'STOP_XBOT'},
                     method: 'POST',
                     success: function(data) {
                         console.log(data)
