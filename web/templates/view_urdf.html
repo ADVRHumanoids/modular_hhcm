@@ -605,10 +605,12 @@
                 start_master.style.display = 'inline-flex';
             
                 if(buildingModeON){
+                    selector.style.display = 'block';
                     deploy.style.display = 'inline-flex';
                     start_stop.style.display = 'none';                    
                 }
                 else {
+                    selector.style.display = 'none';
                     deploy.style.display = 'none';
                     start_stop.style.display = 'inline-flex';                    
                 }
@@ -666,7 +668,7 @@
                             if(modeInput.checked) {
                                 console.log("Discovery mode on")
                                 // buildingModeON = false;
-
+                                selector.style.display = 'none';
                                 deploy.style.display = 'none';
                                 start_stop.style.display = 'inline-flex';
                             }
@@ -676,7 +678,7 @@
                                 // buildingModeON = true;
                                 erasePrevious = false;
                                 requestURDF();
-
+                                selector.style.display = 'block';
                                 deploy.style.display = 'inline-flex';
                                 start_stop.style.display = 'none';
                             }
@@ -993,6 +995,8 @@
                 $.ajax({
                     url: $SCRIPT_ROOT + 'pub_cmd/',
                     data: {'cmd': 'START_XBOT'},
+                    // contentType: 'application/json',
+                    // dataType : 'json',
                     method: 'POST',
                     success: function(data) {
                         console.log(data)
@@ -1007,6 +1011,8 @@
                     url: $SCRIPT_ROOT + 'pub_cmd/',
                     data: {'cmd': 'STOP_XBOT'},
                     method: 'POST',
+                    // contentType: 'application/json',
+                    // dataType : 'json',
                     success: function(data) {
                         console.log(data)
                         callback()
