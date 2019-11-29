@@ -568,6 +568,8 @@
                 var addYawJoint = document.getElementById('addYawJoint');
                 var addDoubleElbowJoint = document.getElementById('addDoubleElbowJoint');
 
+                var URDFChangeEventHandler = new URDF_change_eventHandler();
+
                 // Initialize the urdfViewer class: create a scene, renderer, etc.
                 urdfViewer._init();
                 requestURDF();
@@ -680,7 +682,17 @@
 
                 deploy.onclick = function() {writeDeploy()};
 
-                syncModel.onclick = function() {startMaster(false, syncHW())};
+                syncModel.onclick = function() {
+                    startMaster(false, function() {
+                        syncHW(true, function(){
+                            URDFChangeEventHandler.addEventListener('urdf-change', function (event) {
+                            console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+                            stopMaster(false, function() {})
+                            });
+
+                        });
+                    });
+                };
 
                 addElbowJoint.onclick = function() {addModule("module_joint_elbow_AVOCADO", size)};
                 
@@ -812,7 +824,7 @@
                 });
             }
 
-            function syncHW() {
+            function syncHW(async_bool, callback) {
                 $.ajax({
                     url: $SCRIPT_ROOT + 'syncHW/',
                     method: 'POST',
@@ -835,8 +847,10 @@
                             //write the file
                             writeRequest(data['string'], true, function(){})
                         }
+
+                        callback();
                     },
-                    async: true
+                    async: async_bool //true
                 });
             }
 
@@ -927,6 +941,19 @@
                 $.ajax({
                     url: $SCRIPT_ROOT + 'pub_cmd/',
                     data: {'cmd': 'START_ECAT'},
+                    method: 'POST',
+                    success: function(data) {
+                        console.log(data)
+                        callback();    
+                    },
+                    async: async_bool //true
+                });
+            }
+
+            function stopMaster(async_bool, callback) {
+                $.ajax({
+                    url: $SCRIPT_ROOT + 'pub_cmd/',
+                    data: {'cmd': 'STOP_ECAT'},
                     method: 'POST',
                     success: function(data) {
                         console.log(data)
