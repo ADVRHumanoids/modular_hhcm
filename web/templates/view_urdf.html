@@ -114,7 +114,7 @@
                 padding: 12px 16px;
                 display: none;
             }
-            #syncHardware {
+            /* #syncHardware {
                 background-color: rgb(31, 101, 206);
                 border: none;
                 position: absolute;
@@ -125,56 +125,30 @@
                 padding: 11px 16px;
                 vertical-align: bottom;
                 display: none;
-            }
+            } */
             #deploy {
-                background-color: rgb(66, 206, 31);
+                /* background-color: rgb(66, 206, 31); */
                 border: none;
                 position: absolute;
                 bottom: 0;
-                right: 55%;
-                font-size: 19px;
+                left: 45%;
+                font-size: 24px;
                 color: white;
                 padding: 11px 16px;
-                vertical-align: bottom;
+                /* vertical-align: bottom; */
             }
 
-            /* #start_stop_text {
-                content: "Start XBotCore";
-            } */
-
-            #start_stop {
-                background-color: rgb(66, 206, 31);
+            #syncModel {
+                /* background-color: rgb(206, 101, 31); */
                 border: none;
                 position: absolute;
                 bottom: 0;
-                right: 55%;
-                font-size: 19px;
-                /* font-family: Ubuntu; */
+                left: 25%;
+                font-size: 24px;
                 color: white;
                 padding: 11px 16px;
-                vertical-align: bottom;
-                display: none;
-            }
-
-            /* #start_stop_checkbox {
-                display: none;
-            } */
-            /* #start_stop_checkbox:checked + #start_stop:after {
-                content: "Stop XBotCore";
-                background-color: rgb(206, 31, 31);
-            } */
-
-            #start_master {
-                background-color: rgb(206, 101, 31);
-                border: none;
-                position: absolute;
-                bottom: 0;
-                right: 75%;
-                font-size: 19px;
-                color: white;
-                padding: 11px 16px;
-                vertical-align: bottom;
-                display: none;
+                /* vertical-align: bottom; */
+                /* display: none; */
             }
 
 			.button-selector {
@@ -361,16 +335,20 @@
                 <div id="div-BuildingMode">Building Mode</div>
                 <div id="div-switch">
                     <label class="switch" id="modeSwitch" style="overflow-y:auto;">
-                        <input type="checkbox" id="modeInput">
+                        <input type="checkbox" id="modeInput" checked>
                         <span class="slider round" id="modeSwitchSlider" style="overflow-y:auto;"></span>
                     </label>
                 </div>
                 <div id="div-DiscoveryMode">Discovery Mode</div>
             </div>
             <button id=removeLast class="btn"><i class="fa fa-trash"></i> Remove Module</button>
-            <button id=syncHardware class="btn"><span style="padding-right: 4px"><i class="material-icons">developer_board</i></span>Sync with hardware</button>
-            <button id=deploy class="btn"><span style="padding-right: 4px"><i class="material-icons">done</i></span>Deploy Robot</button>
-            <button id=start_master class="btn"><span style="padding-right: 4px"><i class="material-icons">power_settings_new</i></span>Start EtherCat</button>
+            <!-- <button id=syncHardware class="btn"><span style="padding-right: 4px"><i class="material-icons">developer_board</i></span>Sync with hardware</button> -->
+            <button id=deploy class="btn btn-success">
+                <i class="material-icons" style="font-size: 30px; padding-top: 4px; padding-right: 4px;">done</i>Deploy Robot
+            </button>
+            <button id=syncModel class="btn btn-primary">
+                <i class="material-icons" style="font-size: 30px; padding-top: 4px; padding-right: 4px;">power_settings_new</i>Generate model
+            </button>
             <div id="selector" class="btn-group-vertical" style="overflow-y:auto;">
                 Select a module to add: 
                 <!-- <input type="file" id="moduleInput"> -->
@@ -555,7 +533,7 @@
         <script>
             var flag, reader, robots, doc;
             var size = 3;
-            var buildingModeON = true;
+            var buildingModeON;
             var erasePrevious = false;
             var link_positions, joint_names;
             var i=0;
@@ -564,6 +542,7 @@
             
             window.onload = function() {
                 var fileInput = document.getElementById('fileInput');
+                var header = document.getElementById('header');
                 var modeInput = document.getElementById('modeInput');
                 buildingModeON = !modeInput.checked;
                 console.log(buildingModeON);
@@ -580,9 +559,9 @@
                 var addSizeAdapter_Medium2Small = document.getElementById('addSizeAdapter_Medium2Small');
                 var addSlaveCube = document.getElementById('addSlaveCube');
                 var removeLast = document.getElementById('removeLast');
-                var syncHardware = document.getElementById('syncHardware');
+                // var syncHardware = document.getElementById('syncHardware');
                 var deploy = document.getElementById('deploy');
-                var start_master = document.getElementById('start_master');
+                var syncModel = document.getElementById('syncModel');
                 var addElbowJoint = document.getElementById('addElbowJoint');
                 var modeSwitch = document.getElementById('modeSwitch');
                 var modeSwitchSlider = document.getElementById('modeSwitchSlider');
@@ -591,17 +570,20 @@
 
                 // Initialize the urdfViewer class: create a scene, renderer, etc.
                 urdfViewer._init();
-                console.log("AOOOOOO")
                 requestURDF();
                 selector.style.display = 'block';
-                syncHardware.style.display = 'inline-flex';
-                start_master.style.display = 'inline-flex';
+                header.style.display = 'block';
+                // syncHardware.style.display = 'inline-flex';
+                syncModel.style.display = 'inline-flex';
+                deploy.style.display = 'inline-flex';
             
                 if(buildingModeON){
-                    selector.style.display = 'block';                    
+                    selector.style.display = 'block';
+                    header.style.display = 'block';                    
                 }
                 else {
-                    selector.style.display = 'none';                 
+                    selector.style.display = 'none'; 
+                    header.style.display = 'none';                
                 }
 
                 fileInput.addEventListener('change', function(e) {
@@ -613,10 +595,10 @@
                         //fileDisplayArea.innerText = reader.result;
                         document.getElementById('header').style.display="none";
                         //robots = urdfViewer.showURDF(reader);
-                        selector.style.display = 'block';
+                        // selector.style.display = 'block';
                         // modeSwitch.style.display = 'inline-block';
                         // modeSwitchSlider.style.display = 'block';
-                        syncHardware.style.display = 'inline-flex';
+                        // syncHardware.style.display = 'inline-flex';
 
                         //console.log(reader.result)
                         $.ajax({
@@ -658,6 +640,7 @@
                                 console.log("Discovery mode on")
                                 // buildingModeON = false;
                                 selector.style.display = 'none';
+                                header.style.display = 'none';
                             }
                             else {
                                 console.log("Building mode on")
@@ -666,6 +649,7 @@
                                 erasePrevious = false;
                                 requestURDF();
                                 selector.style.display = 'block';
+                                header.style.display = 'block';
                             }
                         
 
@@ -692,11 +676,11 @@
 
                 removeLast.onclick = function() {removeModule()};
 
-                syncHardware.onclick = function() {syncHW()};
+                // syncHardware.onclick = function() {syncHW()};
 
                 deploy.onclick = function() {writeDeploy()};
 
-                start_master.onclick = function() {startMaster(false, function(){})};
+                syncModel.onclick = function() {startMaster(false, syncHW())};
 
                 addElbowJoint.onclick = function() {addModule("module_joint_elbow_AVOCADO", size)};
                 
