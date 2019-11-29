@@ -8,6 +8,9 @@
         <!-- <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"> -->
         <link href="{{ url_for('static', filename='/material-design-icons-3.0.1/iconfont/material-icons.css') }}" rel="stylesheet">
 
+        <!-- <link rel="stylesheet" > -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+	    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     </head>
 
     <body>
@@ -44,6 +47,9 @@
 
         <script type="text/javascript" src="http://static.robotwebtools.org/EventEmitter2/current/eventemitter2.min.js"></script>
 		<script type="text/javascript" src="http://static.robotwebtools.org/roslibjs/current/roslib.min.js"></script>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 
         <script type=text/javascript>
             $SCRIPT_ROOT = "{{ url_for('index', _external=True) }}";
@@ -111,7 +117,7 @@
                 padding: 12px 16px;
                 display: none;
             }
-            #syncHardware {
+            /* #syncHardware {
                 background-color: rgb(31, 101, 206);
                 border: none;
                 position: absolute;
@@ -122,57 +128,30 @@
                 padding: 11px 16px;
                 vertical-align: bottom;
                 display: none;
-            }
+            } */
             #deploy {
-                background-color: rgb(66, 206, 31);
+                /* background-color: rgb(66, 206, 31); */
                 border: none;
                 position: absolute;
                 bottom: 0;
-                right: 55%;
-                font-size: 19px;
+                left: 45%;
+                font-size: 24px;
                 color: white;
                 padding: 11px 16px;
-                vertical-align: bottom;
-                display: none;
+                /* vertical-align: bottom; */
             }
 
-            /* #start_stop_text {
-                content: "Start XBotCore";
-            } */
-
-            #start_stop {
-                background-color: rgb(66, 206, 31);
+            #syncModel {
+                /* background-color: rgb(206, 101, 31); */
                 border: none;
                 position: absolute;
                 bottom: 0;
-                right: 55%;
-                font-size: 19px;
-                /* font-family: Ubuntu; */
+                left: 25%;
+                font-size: 24px;
                 color: white;
                 padding: 11px 16px;
-                vertical-align: bottom;
-                display: none;
-            }
-
-            /* #start_stop_checkbox {
-                display: none;
-            } */
-            /* #start_stop_checkbox:checked + #start_stop:after {
-                content: "Stop XBotCore";
-                background-color: rgb(206, 31, 31);
-            } */
-
-            #start_master {
-                background-color: rgb(206, 101, 31);
-                border: none;
-                position: absolute;
-                bottom: 0;
-                right: 75%;
-                font-size: 19px;
-                color: white;
-                padding: 11px 16px;
-                vertical-align: bottom;
-                display: none;
+                /* vertical-align: bottom; */
+                /* display: none; */
             }
 
 			.button-selector {
@@ -359,26 +338,27 @@
                 <div id="div-BuildingMode">Building Mode</div>
                 <div id="div-switch">
                     <label class="switch" id="modeSwitch" style="overflow-y:auto;">
-                        <input type="checkbox" id="modeInput">
+                        <input type="checkbox" id="modeInput" checked>
                         <span class="slider round" id="modeSwitchSlider" style="overflow-y:auto;"></span>
                     </label>
                 </div>
                 <div id="div-DiscoveryMode">Discovery Mode</div>
             </div>
-            <button id=removeLast class="btn"><span style="padding-right: 4px"><i class="material-icons">delete</i></span> Remove Module</button>
-            <button id=syncHardware class="btn"><span style="padding-right: 4px"><i class="material-icons">developer_board</i></span>Sync with hardware</button>
-            <button id=deploy class="btn"><span style="padding-right: 4px"><i class="material-icons">done</i></span>Deploy Robot</button>
-            <button id=start_stop class="btn" data-text-swap="Stop XBotCore" data-text-original="Start XBotCore"><span style="padding-right: 4px"><i class="material-icons">power_settings_new</i></span><p id="start_stop_text">Start XBotCore</p></button>
-            <!-- <input type="checkbox" id="start_stop_checkbox">
-            <label id="start_stop" for="start_stop_checkbox"><span id="start_stop_text"style="padding-right: 4px"><i class="material-icons">power_settings_new</i></span>Start XBotCore</label> -->
-            <button id=start_master class="btn"><span style="padding-right: 4px"><i class="material-icons">power_settings_new</i></span>Start EtherCat</button>
-            <div id="selector" style="overflow-y:auto;">
+            <button id=removeLast class="btn"><i class="fa fa-trash"></i> Remove Module</button>
+            <!-- <button id=syncHardware class="btn"><span style="padding-right: 4px"><i class="material-icons">developer_board</i></span>Sync with hardware</button> -->
+            <button id=deploy class="btn btn-success">
+                <i class="material-icons" style="font-size: 30px; padding-top: 4px; padding-right: 4px;">done</i>Deploy Robot
+            </button>
+            <button id=syncModel class="btn btn-primary">
+                <i class="material-icons" style="font-size: 30px; padding-top: 4px; padding-right: 4px;">power_settings_new</i>Generate model
+            </button>
+            <div id="selector" class="btn-group-vertical" style="overflow-y:auto;">
                 Select a module to add: 
                 <!-- <input type="file" id="moduleInput"> -->
-                <button type="button" id="addElbowJoint" class="button-selector"><div>Elbow joint</div></button>
-                <button type="button" id="addSlaveCube" class="button-selector"><div>Slave cube</div></button>
-                <button type="button" id="addYawJoint" class="button-selector"><div>Yaw joint</div></button>
-                <button type="button" id="addDoubleElbowJoint" class="button-selector"><div>Double Elbow joint</div></button>
+                <button type="button" id="addElbowJoint" class="btn btn-dark "><div>Elbow joint</div></button>
+                <button type="button" id="addSlaveCube" class="btn btn-dark "><div>Slave cube</div></button>
+                <button type="button" id="addYawJoint" class="btn btn-dark "><div>Yaw joint</div></button>
+                <button type="button" id="addDoubleElbowJoint" class="btn btn-dark "><div>Double Elbow joint</div></button>
                 <!-- <button type="button" id="remove"><div>Remove module</div></button> -->
             </div>
 		</div>
@@ -556,7 +536,7 @@
         <script>
             var flag, reader, robots, doc;
             var size = 3;
-            var buildingModeON = true;
+            var buildingModeON;
             var erasePrevious = false;
             var link_positions, joint_names;
             var i=0;
@@ -565,6 +545,7 @@
             
             window.onload = function() {
                 var fileInput = document.getElementById('fileInput');
+                var header = document.getElementById('header');
                 var modeInput = document.getElementById('modeInput');
                 buildingModeON = !modeInput.checked;
                 console.log(buildingModeON);
@@ -581,12 +562,9 @@
                 var addSizeAdapter_Medium2Small = document.getElementById('addSizeAdapter_Medium2Small');
                 var addSlaveCube = document.getElementById('addSlaveCube');
                 var removeLast = document.getElementById('removeLast');
-                var syncHardware = document.getElementById('syncHardware');
+                // var syncHardware = document.getElementById('syncHardware');
                 var deploy = document.getElementById('deploy');
-                var start_stop = document.getElementById('start_stop');
-                // var start_stop_checkbox = document.getElementById('start_stop_checkbox');
-                var start_stop_text = document.getElementById('start_stop_text');
-                var start_master = document.getElementById('start_master');
+                var syncModel = document.getElementById('syncModel');
                 var addElbowJoint = document.getElementById('addElbowJoint');
                 var modeSwitch = document.getElementById('modeSwitch');
                 var modeSwitchSlider = document.getElementById('modeSwitchSlider');
@@ -595,19 +573,20 @@
 
                 // Initialize the urdfViewer class: create a scene, renderer, etc.
                 urdfViewer._init();
-                console.log("AOOOOOO")
                 requestURDF();
                 selector.style.display = 'block';
-                syncHardware.style.display = 'inline-flex';
-                start_master.style.display = 'inline-flex';
+                header.style.display = 'block';
+                // syncHardware.style.display = 'inline-flex';
+                syncModel.style.display = 'inline-flex';
+                deploy.style.display = 'inline-flex';
             
                 if(buildingModeON){
-                    deploy.style.display = 'inline-flex';
-                    start_stop.style.display = 'none';                    
+                    selector.style.display = 'block';
+                    header.style.display = 'block';                    
                 }
                 else {
-                    deploy.style.display = 'none';
-                    start_stop.style.display = 'inline-flex';                    
+                    selector.style.display = 'none'; 
+                    header.style.display = 'none';                
                 }
 
                 fileInput.addEventListener('change', function(e) {
@@ -619,10 +598,10 @@
                         //fileDisplayArea.innerText = reader.result;
                         document.getElementById('header').style.display="none";
                         //robots = urdfViewer.showURDF(reader);
-                        selector.style.display = 'block';
+                        // selector.style.display = 'block';
                         // modeSwitch.style.display = 'inline-block';
                         // modeSwitchSlider.style.display = 'block';
-                        syncHardware.style.display = 'inline-flex';
+                        // syncHardware.style.display = 'inline-flex';
 
                         //console.log(reader.result)
                         $.ajax({
@@ -663,9 +642,8 @@
                             if(modeInput.checked) {
                                 console.log("Discovery mode on")
                                 // buildingModeON = false;
-
-                                deploy.style.display = 'none';
-                                start_stop.style.display = 'inline-flex';
+                                selector.style.display = 'none';
+                                header.style.display = 'none';
                             }
                             else {
                                 console.log("Building mode on")
@@ -673,9 +651,8 @@
                                 // buildingModeON = true;
                                 erasePrevious = false;
                                 requestURDF();
-
-                                deploy.style.display = 'inline-flex';
-                                start_stop.style.display = 'none';
+                                selector.style.display = 'block';
+                                header.style.display = 'block';
                             }
                         
 
@@ -702,13 +679,11 @@
 
                 removeLast.onclick = function() {removeModule()};
 
-                syncHardware.onclick = function() {syncHW()};
+                // syncHardware.onclick = function() {syncHW()};
 
                 deploy.onclick = function() {writeDeploy()};
 
-                start_stop.onclick = function() {startStop()};
-
-                start_master.onclick = function() {startMaster(false, function(){})};
+                syncModel.onclick = function() {startMaster(false, syncHW())};
 
                 addElbowJoint.onclick = function() {addModule("module_joint_elbow_AVOCADO", size)};
                 
@@ -951,28 +926,6 @@
                 });  
             }
 
-            function startStop(){
-                var el = $(start_stop);
-                console.log(el.html())
-                var el_text = $(start_stop_text);
-                console.log(el_text.html());
-                
-                if(el_text.text() == el.data("text-original")){
-                    el_text.text(el.data("text-swap"));
-                    removeConnectors(false, function(){
-                        writeRequest("", false, function(){
-                            deployRobot("", false, function(){
-                                startXBot(false, function(){})
-                            });
-                        });
-                    });           
-                }
-                else{
-                    el_text.text(el.data("text-original"));
-                    stopXBot(false, function() {});
-                }   
-            } 
-
             function startMaster(async_bool, callback) {
                 $.ajax({
                     url: $SCRIPT_ROOT + 'pub_cmd/',
@@ -985,33 +938,6 @@
                     async: async_bool //true
                 });
             }
-
-            function startXBot(async_bool, callback) {
-                $.ajax({
-                    url: $SCRIPT_ROOT + 'pub_cmd/',
-                    data: {'cmd': 'START_XBOT'},
-                    method: 'POST',
-                    success: function(data) {
-                        console.log(data)
-                        callback();
-                    },
-                    async: async_bool //false
-                });  
-            }
-
-            function stopXBot(async_bool, callback) {
-                $.ajax({
-                    url: $SCRIPT_ROOT + 'pub_cmd/',
-                    data: {'cmd': 'STOP_XBOT'},
-                    method: 'POST',
-                    success: function(data) {
-                        console.log(data)
-                        callback()
-                    },
-                    async: async_bool //false
-                });      
-            }
-
 
             // //Function to open a file on the server side from the HTML page
             // function openfile(url, cB) {

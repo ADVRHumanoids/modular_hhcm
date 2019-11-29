@@ -853,7 +853,7 @@ class URDF_viewer extends HTMLElement {
         const rnd = document.getElementById('renderer')
 
         this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0xf0f0f0);
+        this.scene.background = new THREE.Color(0x495057);
 
         // const ambientLight = new THREE.AmbientLight(this.ambientColor)
         // this.scene.add(ambientLight)
@@ -899,7 +899,7 @@ class URDF_viewer extends HTMLElement {
         plane.receiveShadow = true;
         this.scene.add(plane);
 
-        var helper = new THREE.GridHelper(10, 100);
+        var helper = new THREE.GridHelper(10, 100, 0x1dc092, 0x1dc092);
         helper.position.y = 0;
         helper.material.opacity = 0.25;
         helper.material.transparent = true;

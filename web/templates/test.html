@@ -7,7 +7,8 @@
 	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-  
+	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
   <script src="https://code.jquery.com/jquery-3.2.1.min.js" ></script>
   <!-- integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous" -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
@@ -194,10 +195,24 @@
 			font-size: large;
 			font-weight: bold;
 		}
+		#start_stop {
+			border: none;
+			position: absolute;
+			bottom: 2.5%;
+			left: 2.5%;
+			color: white;
+			
+			width: 70px;
+			height: 70px;
+			padding: 10px 16px;
+			border-radius: 35px;
+			font-size: 30px;
+			line-height: 1.33;
+			}
 
 		.smStateOverlay {
 			position: absolute;
-			bottom: 0;
+			bottom: 5%;
 			left: 45%;
 			/* transform: translate(10px, -50%); */
 			display: none;
@@ -205,16 +220,29 @@
 			font-size: large;
 			font-weight: bold;
 		}
+
+		.alertOverlay {
+			position: absolute;
+			bottom: 0;
+			right: 0;
+		}
+
+
 	</style>
 	<div id="container">
 		<div class="taskOverlay">Top Left</div>
 		<div class="colorOverlay">Top Right</div>
 		<div class="geometryOverlay">Top Center</div>
+		<button id=start_stop type="button" class="btn btn-danger btn-circle btn-xl" data-text-swap="Stop XBotCore" data-text-original="Start XBotCore">
+			<i class="material-icons">power_settings_new</i>
+			<p id="start_stop_text" style="display:none">Start XBotCore</p>
+		</button>
 		<div class="smStateOverlay">Bottom Center</div>
-		<canvas></canvas>
+		<div class="alertOverlay">		  		
+			<ul id='alertGroup'class="list-group"></ul>
+		</div>
+		<canvas></canvas>		
 	</div>
-	<div id="info"><a href="http://threejs.org" target="_blank" rel="noopener">three.js</a> webgl - interactive -
-		raycasting - points </div>
 	<div id=BarContainer class="button-bar-container">
 		<div id="leftBar" class="btn-group-vertical">			
 			<div id="selectButtons" class="btn-group-vertical btn-subgroup">
@@ -354,34 +382,48 @@
 			<select name="selectBehavior" id="selectBehavior" class="selectpicker">
 				<option value="moving">Moving behavior</option>
 				<option value="static">Static behavior</option>
+				<option value="advanced">Advanced parameters</option>
 			</select>	
-			<div class="row">
-				<div class="col-md-6">
-					<label for="Kx">Kx (N/m):</label>
-					<input type="number" name="Kx" id="Kx" value="1200" step="100" class="form-control form-control-sm">
-					<label for="Ky">Ky (N/m):</label>
-					<input type="number" name="Ky" id="Ky" value="1200" step="100" class="form-control form-control-sm">
-					<label for="Kz">Kz (N/m):</label>
-					<input type="number" name="Kz" id="Kz" value="1200" step="100" class="form-control form-control-sm ">
+			<div id="basicParams">
+				<div class="row">
+					<div class="col-md-6">
+						<label for="Kx">Kx (N/m):</label>
+						<input type="number" name="Kx" id="Kx" value="1200" step="100" class="form-control form-control-sm">
+						<label for="Ky">Ky (N/m):</label>
+						<input type="number" name="Ky" id="Ky" value="1200" step="100" class="form-control form-control-sm">
+						<label for="Kz">Kz (N/m):</label>
+						<input type="number" name="Kz" id="Kz" value="1200" step="100" class="form-control form-control-sm ">
+					</div>
+					<div class="col-md-6">
+							<label for="Rx">Rx (Nm/rad):</label>
+							<input type="number" name="Rx" id="Rx" value="200" step="10" class="form-control form-control-sm ">
+							<label for="Ry">Ry (Nm/rad):</label>
+							<input type="number" name="Ry" id="Ry" value="200" step="10" class="form-control form-control-sm ">
+							<label for="Rz">Rz (Nm/rad):</label>
+							<input type="number" name="Rz" id="Rz" value="0" step="10" class="form-control form-control-sm">	
+					</div>
 				</div>
-				<div class="col-md-6">
-						<label for="Rx">Rx (Nm/rad):</label>
-						<input type="number" name="Rx" id="Rx" value="200" step="10" class="form-control form-control-sm ">
-						<label for="Ry">Ry (Nm/rad):</label>
-						<input type="number" name="Ry" id="Ry" value="200" step="10" class="form-control form-control-sm ">
-						<label for="Rz">Rz (Nm/rad):</label>
-						<input type="number" name="Rz" id="Rz" value="0" step="10" class="form-control form-control-sm">	
-				</div>
+				<label for="Fz">Fz (N):</label>
+				<input type="number" name="Fz" id="Fz" value="-1" step="0.1" class="form-control input-md">
+				<!-- <label for="baseLink">base link:</label>
+				<input type="text" name="baseLink" id="baseLink" value="base_link"class="form-control input-md">
+				<label for="distalLink">distal link:</label>
+				<input type="text" name="distalLink" id="distalLink" value="TCP"class="form-control input-md"> -->
+				<!-- <label for="desiredVelocity">desired velocity (m/s):</label>
+				<input type="number" name="desiredVelocity" id="desiredVelocity" value="0.05" step="0.01" class="form-control input-md"> -->
+				<button type="button" class="btn btn-primary" data-loading-text="Sending info.."><em class="icon-ok"></em> Set Parameters</button>
 			</div>
-			<label for="Fz">Fz (N):</label>
-			<input type="number" name="Fz" id="Fz" value="-1" step="0.1" class="form-control input-md">
-			<!-- <label for="baseLink">base link:</label>
-			<input type="text" name="baseLink" id="baseLink" value="base_link"class="form-control input-md">
-			<label for="distalLink">distal link:</label>
-			<input type="text" name="distalLink" id="distalLink" value="TCP"class="form-control input-md"> -->
-			<label for="desiredVelocity">desired velocity (m/s):</label>
-			<input type="number" name="desiredVelocity" id="desiredVelocity" value="0.05" step="0.01" class="form-control input-md">
-			<button type="button" class="btn btn-primary" data-loading-text="Sending info.."><em class="icon-ok"></em> Set Parameters</button>
+			<div id="advancedParams" style="display:none">
+				<label for="linearVelocity">Desired velocity (m/s):</label>
+				<input type="number" name="linearVelocity" id="linearVelocity" value="0.05" step="0.01" class="form-control input-md">
+				<label for="angularVelocity">Angular velocity (rad/s):</label>
+				<input type="number" name="angularVelocity" id="angularVelocity" value="0.1" step="0.05" class="form-control input-md">
+				<label for="angularVelocity">Penetration (m):</label>
+				<input type="number" name="penPenetration" id="penPenetration" value="0.0" step="0.01" class="form-control input-md">
+				<label for="penRaiseHeight">Raise height (m)):</label>
+				<input type="number" name="penRaiseHeight" id="penRaiseHeight" value="0.05" step="0.01" class="form-control input-md">
+				<button type="button" class="btn btn-primary" data-loading-text="Sending info.."><em class="icon-ok"></em> Set Parameters</button>
+			</div>
 		</div>
 	</script>
 
@@ -417,7 +459,7 @@
 
 			var ROS_OK;
 			var taskList = ['task 1', 'task 2'], geometryList = ['plane 1', 'plane 2'], colorList = ['color 1', 'color 2'];
-			var robotPose, robotCanvasPoint;
+			var robotPose, robotCanvasPoint, robotParameters;
 			var robotPosition = new THREE.Vector3();
 
 			let mouseDown = false;
@@ -464,6 +506,9 @@
 				var pauseBtn = document.getElementById("pause");
 				var zeroGBtn = document.getElementById("zeroG");
 
+				var start_stop = document.getElementById('start_stop');
+                var start_stop_text = document.getElementById('start_stop_text');
+
 				var selectTask = document.getElementById("selectTask");
 				var taskDropdownMenu = selectTask.querySelector('.dropdown-menu');
 				var selectGeometry = document.getElementById("selectGeometry");
@@ -478,6 +523,8 @@
 				pauseBtn.onclick = function () {pauseResume()};
 				zeroGBtn.onclick = function () {zeroGResume()};
 
+				start_stop.onclick = function() {startStop()};
+
 				jointstate_listener.subscribe(function (m) {
 					// console.log(m)
 				});
@@ -489,6 +536,7 @@
 					updateSelectList(colorDropdownMenu, m.colors_id_list, colorList)
 					robotCanvasPoint = m.canvas_point
 					changeSMState(m.current_state);
+					robotParameters = m.robot_parameters;
 				});
 
 				function changeSMState(sm_state){
@@ -538,6 +586,11 @@
 
 				$(document).on('change', '#selectTaskBtn', function () {
 					// var taskName = $('#selectTask option:selected').val();
+					
+					var myNode = document.getElementById("alertGroup");
+					var taskChild = document.getElementById("taskWarning");
+					myNode.removeChild(taskChild)
+
 					var taskName = $('#selectTaskBtn').val();
 					$('.taskOverlay').show();
 					$('.taskOverlay').html("Task: " + taskName);
@@ -563,6 +616,11 @@
 				})
 				$(document).on('change', '#selectGeometryBtn', function () {
 					// var geometryName = $('#selectGeometry option:selected').val();
+
+					var myNode = document.getElementById("alertGroup");
+					var taskChild = document.getElementById("geometryWarning");
+					myNode.removeChild(taskChild)
+
 					var geometryName = $('#selectGeometryBtn').val();
 					$('.geometryOverlay').show();
 					$('.geometryOverlay').html("Geometry: " + geometryName);
@@ -588,6 +646,11 @@
 				})
 				$(document).on('change', '#selectColorBtn', function () {
 					// var colorName = $('#selectColor option:selected').val();
+
+					var myNode = document.getElementById("alertGroup");
+					var taskChild = document.getElementById("colorWarning");
+					myNode.removeChild(taskChild)
+
 					var colorName = $('#selectColorBtn').val();
 					$('.colorOverlay').show();
 					$('.colorOverlay').html("Color: " + colorName); var commandData = {
@@ -654,6 +717,42 @@
 					console.log('popover hidden')
 				})
 
+				function updateAdvancedParameters() {
+					var param = robotParameters.advanced;
+					var linVel = $(':input[name=linearVelocity]');
+					linVel.val(param.lin_speed);
+					var linVel = $(':input[name=angularVelocity]');
+					linVel.val(param.ang_speed);
+					var linVel = $(':input[name=penRaiseHeight]');
+					linVel.val(param.pen_raise);
+					var linVel = $(':input[name=penPenetration]');
+					linVel.val(param.pen_penetr);
+				}
+
+				function updateBasicParameters() {
+					var param;
+					if($('#selectBehavior option:selected').val() == "moving"){
+						var param = robotParameters.moving;
+					}
+					else{
+						var param = robotParameters.static;
+					}
+					var Kx = $(':input[name=Kx]');
+					Kx.val(param.k[0]);
+					var Ky = $(':input[name=Ky]');
+					Ky.val(param.k[1]);
+					var Kz = $(':input[name=Kz]');
+					Kz.val(param.k[2]);
+					var Rx = $(':input[name=Rx]');
+					Rx.val(param.k[3]);
+					var Ry = $(':input[name=Ry]');
+					Ry.val(param.k[4]);
+					var Rz = $(':input[name=Rz]');
+					Rz.val(param.k[5]);
+					var Fz = $(':input[name=Fz]');
+					Fz.val(param.f[2]);
+				}
+
 				var $popoverSetParameters = $('.setParameters').popover({
 					html: true,
 					placement: 'left',
@@ -664,6 +763,21 @@
 						return $(mySetParametersForm).html();
 					}
 				}).on('click', function () {
+					updateBasicParameters();
+					updateAdvancedParameters();
+					$(document).on('change', '#selectBehavior', function () {
+						if($('#selectBehavior option:selected').val() == "advanced") {
+							$('#advancedParams').show()
+							$('#basicParams').hide()
+							updateAdvancedParameters();
+						}
+						else {
+							$('#advancedParams').hide()
+							$('#basicParams').show()
+							updateBasicParameters();
+						}
+					})
+					// updateDefaultParameters($('.setParameters').data().target);
 					$('.btn-primary').click(function () { sendParameters() })
 				});
 				 
@@ -823,20 +937,28 @@
 			}
 
 			function sendParameters() {
+				var descriptors = [];
 				var selectedBehavior = $('#selectBehavior option:selected').val();
-				$('#result').after("Parameters for " + selectedBehavior + "set!")
-				var stiffnesses = [$('#Kx').val(), $('#Ky').val(), $('#Kz').val(), $('#Rx').val(), $('#Ry').val(), $('#Rz').val()];
-				var dampings = ["0", "0", "0", "0", "0", "0"];
-				var forces = ["0", "0", $('#Fz').val(), "0", "0", "0"];
-				var desiredVelocity = [$('#desiredVelocity').val()];
-				var name = [selectedBehavior];
-				var descriptors = stiffnesses.concat(dampings.concat(forces.concat(desiredVelocity)));
-				console.log(descriptors);
+				if(selectedBehavior == "advanced"){
+					var linearVelocity = [$('#linearVelocity').val()];
+					var angularVelocity = [$('#angularVelocity').val()];
+					var penRaiseHeight = [$('#penRaiseHeight').val()];
+					var penPenetration = [$('#penPenetration').val()];
+					var descriptors = linearVelocity.concat(angularVelocity.concat(penRaiseHeight.concat(penPenetration)));
+					console.log(descriptors);
+				}
+				else {
+					var stiffnesses = [$('#Kx').val(), $('#Ky').val(), $('#Kz').val(), $('#Rx').val(), $('#Ry').val(), $('#Rz').val()];
+					var dampings = ["0", "0", "0", "0", "0", "0"];
+					var forces = ["0", "0", $('#Fz').val(), "0", "0", "0"];
+					var descriptors = stiffnesses.concat(dampings.concat(forces));
+					console.log(descriptors);
+				}
 				var commandData = {
 					'type': "SET",
 					'action': "upd",
 					'target': ["params"],
-					'name': name,
+					'name': [selectedBehavior],
 					'descriptors': descriptors
 				};
 				$.ajax({
@@ -891,9 +1013,27 @@
 					method: 'POST',
 					success: function (data) {
 						console.log(data)
+
+						if (data.task == 0) {
+
+							var myNode = document.getElementById("alertGroup");							
+							if ($("#taskWarning").length > 0) {
+								var taskElement = document.getElementById("taskWarning");
+								taskElement.style.fontWeight = 'bold';
+							}
+							else {
+								var listElement = document.createElement("LI");
+								listElement.setAttribute('class', 'list-group-item list-group-item-warning');						
+								listElement.setAttribute('id', 'taskWarning');
+								listElement.textContent = 'SELECT A TASK';
+								$("#alertGroup").append(listElement);
+							}
+						}
+
 						switch(data.target){
 							case "geometry":
-								console.log(data.target)
+								console.log(data.target)						
+
 								if (completePlaneCalibration(data)) {
 									alert("Plane calibration successful")
 									//callback()   
@@ -910,6 +1050,12 @@
 
 									geometryMap.set(data.name, plane);
 									gridMap.set(data.name, grid);
+									
+									if ($('#geometryWarning').length > 0) {
+										listElement = document.getElementById("geometryWarning");
+										listElement.textContent = 'SELECT A GEOMETRY';
+									}
+
 								}
 								break;
 
@@ -917,6 +1063,10 @@
 								console.log(data.target)
 								if (data.status =="ACK")
 									alert("Color calibration successful")
+									if ($('#colorWarning').length > 0) {
+										listElement = document.getElementById("colorWarning");
+										listElement.textContent = 'SELECT A COLOR';
+									}
 								// else if (data.status =="NACK")
 								break;
 						}
@@ -931,6 +1081,48 @@
 				else
 					return false
 			}
+
+			function startXBot(async_bool, callback) {
+                $.ajax({
+                    url: $SCRIPT_ROOT + 'pub_cmd/',
+                    data: {'cmd': 'START_XBOT'},
+                    method: 'POST',
+                    success: function(data) {
+                        console.log(data)
+                        callback();
+                    },
+                    async: async_bool //false
+                });  
+            }
+
+            function stopXBot(async_bool, callback) {
+                $.ajax({
+                    url: $SCRIPT_ROOT + 'pub_cmd/',
+                    data: {'cmd': 'STOP_XBOT'},
+                    method: 'POST',
+                    success: function(data) {
+                        console.log(data)
+                        callback()
+                    },
+                    async: async_bool //false
+                });      
+			}
+			
+			function startStop(){
+                var el = $(start_stop);
+                // console.log(el.html())
+                var el_text = $(start_stop_text);
+                // console.log(el_text.html());
+                
+                if(el_text.text() == el.data("text-original")){
+                    el_text.text(el.data("text-swap"));
+                    startXBot(false, function(){})    
+                }
+                else{
+                    el_text.text(el.data("text-original"));
+                    stopXBot(false, function() {});
+                }   
+            } 
 
 			function onCanvasDoubleClick(event) {
 				event.preventDefault();
@@ -975,6 +1167,54 @@
 					method: 'POST',
 					success: function (data) {
 						console.log(data)
+
+						var myNode = document.getElementById("alertGroup"); 
+						while (myNode.firstChild) {
+							myNode.removeChild(myNode.firstChild);
+						}						
+
+						if (data.task == 0) {	
+							var listElement = document.createElement("LI");
+							listElement.setAttribute('class', 'list-group-item list-group-item-warning');						
+							listElement.setAttribute('id', 'taskWarning');
+							listElement.textContent = 'SELECT A TASK';
+							$("#alertGroup").append(listElement);
+						}
+
+						if (data.path == 0) {
+							var listElement = document.createElement("LI");
+							listElement.setAttribute('class', 'list-group-item list-group-item-warning');							
+							listElement.setAttribute('id', 'pathWarning');
+							listElement.textContent = 'ADD A PATH';
+							$("#alertGroup").append(listElement);
+						}
+
+						if (data.geometry == 0) {
+							var listElement = document.createElement("LI");
+							listElement.setAttribute('class', 'list-group-item list-group-item-warning');
+							listElement.setAttribute('id', 'geometryWarning');
+							if ($( "#selectGeometry" ).find("ul li").length == 0) {
+								listElement.textContent = 'CALIBRATE A GEOMETRY';
+							}
+							else {
+								listElement.textContent = 'SELECT A GEOMETRY';
+							}
+							$("#alertGroup").append(listElement);
+						}
+
+						if (data.color == 0) {	
+							var listElement = document.createElement("LI");
+							listElement.setAttribute('class', 'list-group-item list-group-item-warning');						
+							listElement.setAttribute('id', 'colorWarning');
+							if ($( "#selectColor" ).find("ul li").length == 0) {
+								listElement.textContent = 'CALIBRATE A COLOR';
+							}
+							else {
+								listElement.textContent = 'SELECT A COLOR';
+							}
+							$("#alertGroup").append(listElement);
+						}
+
 						// changeSMState(data.sm_state)
 						//callback()           
 					},
@@ -1089,6 +1329,11 @@
 
 			function addPath() {
 				console.log("add path");
+
+				var myNode = document.getElementById("alertGroup");
+				var taskChild = document.getElementById("pathWarning");
+				myNode.removeChild(taskChild)
+
 				segments.forEach(function (arrayItem) {
 					console.log(arrayItem.geometry.boundingSphere.radius);
 				});
