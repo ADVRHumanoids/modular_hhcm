@@ -6,7 +6,8 @@
         <title>URDF builder</title>
 
         <!-- <link rel="stylesheet" > -->
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+	    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     </head>
 
@@ -43,6 +44,9 @@
 
         <script type="text/javascript" src="http://static.robotwebtools.org/EventEmitter2/current/eventemitter2.min.js"></script>
 		<script type="text/javascript" src="http://static.robotwebtools.org/roslibjs/current/roslib.min.js"></script>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 
         <script type=text/javascript>
             $SCRIPT_ROOT = "{{ url_for('index', _external=True) }}";
@@ -371,13 +375,13 @@
             <!-- <input type="checkbox" id="start_stop_checkbox">
             <label id="start_stop" for="start_stop_checkbox"><span id="start_stop_text"style="padding-right: 4px"><i class="material-icons">power_settings_new</i></span>Start XBotCore</label> -->
             <button id=start_master class="btn"><span style="padding-right: 4px"><i class="material-icons">power_settings_new</i></span>Start EtherCat</button>
-            <div id="selector" style="overflow-y:auto;">
+            <div id="selector" class="btn-group-vertical" style="overflow-y:auto;">
                 Select a module to add: 
                 <!-- <input type="file" id="moduleInput"> -->
-                <button type="button" id="addElbowJoint" class="button-selector"><div>Elbow joint</div></button>
-                <button type="button" id="addSlaveCube" class="button-selector"><div>Slave cube</div></button>
-                <button type="button" id="addYawJoint" class="button-selector"><div>Yaw joint</div></button>
-                <button type="button" id="addDoubleElbowJoint" class="button-selector"><div>Double Elbow joint</div></button>
+                <button type="button" id="addElbowJoint" class="btn btn-dark "><div>Elbow joint</div></button>
+                <button type="button" id="addSlaveCube" class="btn btn-dark "><div>Slave cube</div></button>
+                <button type="button" id="addYawJoint" class="btn btn-dark "><div>Yaw joint</div></button>
+                <button type="button" id="addDoubleElbowJoint" class="btn btn-dark "><div>Double Elbow joint</div></button>
                 <!-- <button type="button" id="remove"><div>Remove module</div></button> -->
             </div>
 		</div>
