@@ -212,6 +212,10 @@
 			right: 0;
 		}
 
+		.alertHighlight {
+			font-weight: bold;
+		}
+
 
 	</style>
 	<div id="container">
@@ -562,10 +566,6 @@
 
 				$(document).on('change', '#selectTaskBtn', function () {
 					// var taskName = $('#selectTask option:selected').val();
-					
-					var myNode = document.getElementById("alertGroup");
-					var taskChild = document.getElementById("taskWarning");
-					myNode.removeChild(taskChild)
 
 					var taskName = $('#selectTaskBtn').val();
 					$('.taskOverlay').show();
@@ -585,14 +585,53 @@
 						method: 'POST',
 						success: function (data) {
 							console.log(data)
-							//callback()           
+
+
+
+							var myNode = document.getElementById("alertGroup");
+							var taskChild = document.getElementById("taskWarning");
+							myNode.removeChild(taskChild) 
+							var children = myNode.childNodes;   
+							children.forEach(function(item){
+								item.setAttribute('class', 'list-group-item list-group-item-warning');
+							});    
 						},
 						async: true //async_bool
 					})
 				})
+
+				var geometryBtn = document.getElementById("selectGeometryBtn")
+				geometryBtn.onclick = function () {
+					const warningId = "geometryWarning"
+					const warningMsg = "CALIBRATE A GEOMETRY"
+					if ($( "#selectGeometry" ).find("ul li").length == 0) {
+						if ($("#" + warningId).length > 0) {
+							var children = document.getElementById('alertGroup').childNodes;
+							children.forEach(function(item){
+								item.setAttribute('class', 'list-group-item list-group-item-warning');
+							});
+							if ($("#" + warningId).text() == warningMsg) {
+								var taskElement = document.getElementById(warningId);
+								taskElement.setAttribute('class', 'list-group-item list-group-item-danger')
+							}
+						}
+						else {
+							var myNode = document.getElementById("alertGroup"); 
+							while (myNode.firstChild) {
+								myNode.removeChild(myNode.firstChild);
+							}
+							var listElement = document.createElement("LI");
+							listElement.setAttribute('class', 'list-group-item list-group-item-warning');						
+							listElement.setAttribute('id', warningId);
+							listElement.textContent = warningMsg;
+							$("#alertGroup").append(listElement);
+						}
+					}
+				};
+
 				$(document).on('change', '#selectGeometryBtn', function () {
 					// var geometryName = $('#selectGeometry option:selected').val();
-
+					
 					var myNode = document.getElementById("alertGroup");
 					var taskChild = document.getElementById("geometryWarning");
 					myNode.removeChild(taskChild)
@@ -620,6 +659,37 @@
 						async: true //async_bool
 					})
 				})
+
+				var colorBtn = document.getElementById("selectColorBtn")
+				colorBtn.onclick = function () {
+					const warningId = "colorWarning"
+					const warningMsg = "CALIBRATE A COLOR"
+					if ($( "#selectColor" ).find("ul li").length == 0) {
+						if ($("#" + warningId).length > 0) {
+							var children = document.getElementById('alertGroup').childNodes;
+							children.forEach(function(item){
+								item.setAttribute('class', 'list-group-item list-group-item-warning');
+							});
+							if ($("#" + warningId).text() == warningMsg) {
+								var taskElement = document.getElementById(warningId);
+								taskElement.setAttribute('class', 'list-group-item list-group-item-danger')
+							}
+						}
+						else {
+							var myNode = document.getElementById("alertGroup"); 
+							while (myNode.firstChild) {
+								myNode.removeChild(myNode.firstChild);
+							}
+
+							var listElement = document.createElement("LI");
+							listElement.setAttribute('class', 'list-group-item list-group-item-warning');						
+							listElement.setAttribute('id', warningId);
+							listElement.textContent = warningMsg;
+							$("#alertGroup").append(listElement);
+						}
+					}
+				};
+
 				$(document).on('change', '#selectColorBtn', function () {
 					// var colorName = $('#selectColor option:selected').val();
 
@@ -773,7 +843,9 @@
 					console.log('popover hidden')
 				})
 
-				// This is to dismiss the popover when not clicking on it.
+				// This is to dismiss the popover when not clicking on it.ù
+				// var bodyElement = document.getElementById('body');
+				// bodyElement.onclick = function(e) { 
 				$('body, .dropdown-toggle').on('click', function (e) {
 					if ( $('#calibrationForm').is(':visible') ) {
 						$('.calibrate').each(function () {
@@ -990,18 +1062,22 @@
 					success: function (data) {
 						console.log(data)
 
+						const warningId = "taskWarning"
+						const warningMsg = "SELECT A TASK"
 						if (data.task == 0) {
-
-							var myNode = document.getElementById("alertGroup");							
-							if ($("#taskWarning").length > 0) {
-								var taskElement = document.getElementById("taskWarning");
-								taskElement.style.fontWeight = 'bold';
+							if ($("#" + warningId).length > 0) {
+								var children = document.getElementById('alertGroup').childNodes;
+								children.forEach(function(item){
+									item.setAttribute('class', 'list-group-item list-group-item-warning');
+								});
+								var taskElement = document.getElementById(warningId);
+								taskElement.setAttribute('class', 'list-group-item list-group-item-danger')
 							}
 							else {
 								var listElement = document.createElement("LI");
 								listElement.setAttribute('class', 'list-group-item list-group-item-warning');						
-								listElement.setAttribute('id', 'taskWarning');
-								listElement.textContent = 'SELECT A TASK';
+								listElement.setAttribute('id', warningId);
+								listElement.textContent = warningMsg;
 								$("#alertGroup").append(listElement);
 							}
 						}
@@ -1037,12 +1113,13 @@
 
 							case "color":
 								console.log(data.target)
-								if (data.status =="ACK")
+								if (data.status =="ACK") {
 									alert("Color calibration successful")
 									if ($('#colorWarning').length > 0) {
 										listElement = document.getElementById("colorWarning");
 										listElement.textContent = 'SELECT A COLOR';
 									}
+								}
 								// else if (data.status =="NACK")
 								break;
 						}
@@ -1264,10 +1341,6 @@
 			function addPath() {
 				console.log("add path");
 
-				var myNode = document.getElementById("alertGroup");
-				var taskChild = document.getElementById("pathWarning");
-				myNode.removeChild(taskChild)
-
 				segments.forEach(function (arrayItem) {
 					console.log(arrayItem.geometry.boundingSphere.radius);
 				});
@@ -1299,7 +1372,17 @@
 					success: function (data) {
 						console.log(data)
 						//$('#setParameters').popover('hide')
-						//callback()           
+						//callback()       
+						
+						var myNode = document.getElementById("alertGroup");
+						var taskChild = document.getElementById("pathWarning");
+						myNode.removeChild(taskChild);
+
+						var children = myNode.childNodes;
+						children.forEach(function(item){
+							item.setAttribute('class', 'list-group-item list-group-item-warning');
+						});
+
 					},
 					async: true //async_bool
 				})
