@@ -500,7 +500,7 @@
 
 				addPathBtn.onclick = function () { addPath() };
 				removePathBtn.onclick = function () { removePath() };
-				removeAllBtn.onclick = function () { removeAll() };
+				removeAllBtn.onclick = function () { removeAllPaths() };
 				drawBtn.onclick = function () {draw()};
 				pauseBtn.onclick = function () {pauseResume()};
 				zeroGBtn.onclick = function () {zeroGResume()};
@@ -864,6 +864,18 @@
 					}
 				});
 			}
+			
+			window.addEventListener('beforeunload', onPageRefresh);
+
+
+
+			function onPageRefresh () {
+				removeTask()
+				removeGeometry()
+				removeColor()
+				removeAllPaths()
+			};
+
 
 			init();
 			animate();
@@ -1420,12 +1432,81 @@
 				})
 			};
 
-			function removeAll() {
+			function removeAllPaths() {
 				for (var i = paths.length; i > 0; i--) {
 					removePath();
 				};
 			}
 
+			function removeTask() {
+				var commandData = {
+					'type': "SET",
+					'action': "rmv",
+					'target': ["task"],
+					'name': [],
+					'descriptors': []
+				};
+				$.ajax({
+					url: $SCRIPT_ROOT + 'sendCommands/',
+					data: JSON.stringify(commandData),
+					contentType: "application/json; charset=utf-8",
+					dataType: 'json',
+					method: 'POST',
+					success: function (data) {
+						console.log(data)
+						//$('#setParameters').popover('hide')
+						//callback()           
+					},
+					async: true //async_bool
+				})
+			}
+
+			function removeGeometry() {
+				var commandData = {
+					'type': "SET",
+					'action': "rmv",
+					'target': ["geometry"],
+					'name': [],
+					'descriptors': []
+				};
+				$.ajax({
+					url: $SCRIPT_ROOT + 'sendCommands/',
+					data: JSON.stringify(commandData),
+					contentType: "application/json; charset=utf-8",
+					dataType: 'json',
+					method: 'POST',
+					success: function (data) {
+						console.log(data)
+						//$('#setParameters').popover('hide')
+						//callback()           
+					},
+					async: true //async_bool
+				})
+			}
+
+			function removeColor() {
+				var commandData = {
+					'type': "SET",
+					'action': "rmv",
+					'target': ["color"],
+					'name': [],
+					'descriptors': []
+				};
+				$.ajax({
+					url: $SCRIPT_ROOT + 'sendCommands/',
+					data: JSON.stringify(commandData),
+					contentType: "application/json; charset=utf-8",
+					dataType: 'json',
+					method: 'POST',
+					success: function (data) {
+						console.log(data)
+						//$('#setParameters').popover('hide')
+						//callback()           
+					},
+					async: true //async_bool
+				})
+			}
+			
 			function removeFromScene(item, index) {
 				scene.remove(item);
 			}
