@@ -32,8 +32,10 @@
 <body>
 	<style type="text/css">
 
-		.btn_dark {
-			border-radius:6px;
+		.btn-dark {
+			border-radius:10px;
+			font-size: 1vw; 
+			padding:0;
 		}
 
 		.btn-dark:hover {
@@ -46,6 +48,26 @@
 			width:100%;
 			height:20%;
 			padding:3px 0 3px 0;
+		}
+
+		#selectButtons {
+			height:25%;
+		}
+
+		#pathButtons {
+			height:25%;
+		}
+
+		#popoverButtons {
+			height:16%;
+		}
+
+		#actionButton {
+			height:16%;
+		}
+
+		#drawButtons {
+			height:10%;
 		}
 
 		.btn-1-in-subgroup {
@@ -64,7 +86,7 @@
 
 		
 		#container {
-			width: 85%;
+			width: 82%;
 			height: 100%;
 			position: fixed;
 			z-index: 1;
@@ -75,7 +97,7 @@
 		}
 
 		.button-bar-container {
-			width: 15%;
+			width: 18%;
 			height: 100%;
 			position: fixed;
 			z-index: 1;
@@ -88,33 +110,12 @@
 		#leftBar {
 			width: 100%;
 			height: 100%;
-			padding: 10px 10px 10px 
+			padding: 0px 10px 0px 
 			/*position: fixed;
 			z-index: 1;
 			top: 0;
 			right: 0;
 			float: right; */
-		}
-
-		.button {
-			/* background-size: 100% 100%; */
-			/* height: 100px; */
-			/* width: 100%; */
-			/* padding-bottom: 10px; */
-			/* text-align: center; */
-			/* text-decoration: none;
-				display: inline-block; */
-			font-size: 1vw;
-		}
-
-		.half-button {
-			background-size: 100% 100%;
-			height: 12.5%;
-			width: 48%;
-			display:inline-block;
-			font-size: 1.2vw;
-			padding: 0px;
-			vertical-align: middle;
 		}
 
 		.active {
@@ -225,6 +226,14 @@
 			position: absolute;
 			bottom: 0;
 			right: 0;
+		}
+
+		.alertHighlight {
+			font-weight: bold;
+		}
+
+		.button>p {
+			margin: auto;
 		}
 
 
@@ -518,7 +527,7 @@
 
 				addPathBtn.onclick = function () { addPath() };
 				removePathBtn.onclick = function () { removePath() };
-				removeAllBtn.onclick = function () { removeAll() };
+				removeAllBtn.onclick = function () { removeAllPaths() };
 				drawBtn.onclick = function () {draw()};
 				pauseBtn.onclick = function () {pauseResume()};
 				zeroGBtn.onclick = function () {zeroGResume()};
@@ -586,10 +595,6 @@
 
 				$(document).on('change', '#selectTaskBtn', function () {
 					// var taskName = $('#selectTask option:selected').val();
-					
-					var myNode = document.getElementById("alertGroup");
-					var taskChild = document.getElementById("taskWarning");
-					myNode.removeChild(taskChild)
 
 					var taskName = $('#selectTaskBtn').val();
 					$('.taskOverlay').show();
@@ -609,14 +614,53 @@
 						method: 'POST',
 						success: function (data) {
 							console.log(data)
-							//callback()           
+
+
+
+							var myNode = document.getElementById("alertGroup");
+							var taskChild = document.getElementById("taskWarning");
+							myNode.removeChild(taskChild) 
+							var children = myNode.childNodes;   
+							children.forEach(function(item){
+								item.setAttribute('class', 'list-group-item list-group-item-warning');
+							});    
 						},
 						async: true //async_bool
 					})
 				})
+
+				var geometryBtn = document.getElementById("selectGeometryBtn")
+				geometryBtn.onclick = function () {
+					const warningId = "geometryWarning"
+					const warningMsg = "CALIBRATE A GEOMETRY"
+					if ($( "#selectGeometry" ).find("ul li").length == 0) {
+						if ($("#" + warningId).length > 0) {
+							var children = document.getElementById('alertGroup').childNodes;
+							children.forEach(function(item){
+								item.setAttribute('class', 'list-group-item list-group-item-warning');
+							});
+							if ($("#" + warningId).text() == warningMsg) {
+								var taskElement = document.getElementById(warningId);
+								taskElement.setAttribute('class', 'list-group-item list-group-item-danger')
+							}
+						}
+						else {
+							var myNode = document.getElementById("alertGroup"); 
+							while (myNode.firstChild) {
+								myNode.removeChild(myNode.firstChild);
+							}
+							var listElement = document.createElement("LI");
+							listElement.setAttribute('class', 'list-group-item list-group-item-warning');						
+							listElement.setAttribute('id', warningId);
+							listElement.textContent = warningMsg;
+							$("#alertGroup").append(listElement);
+						}
+					}
+				};
+
 				$(document).on('change', '#selectGeometryBtn', function () {
 					// var geometryName = $('#selectGeometry option:selected').val();
-
+					
 					var myNode = document.getElementById("alertGroup");
 					var taskChild = document.getElementById("geometryWarning");
 					myNode.removeChild(taskChild)
@@ -644,6 +688,37 @@
 						async: true //async_bool
 					})
 				})
+
+				var colorBtn = document.getElementById("selectColorBtn")
+				colorBtn.onclick = function () {
+					const warningId = "colorWarning"
+					const warningMsg = "CALIBRATE A COLOR"
+					if ($( "#selectColor" ).find("ul li").length == 0) {
+						if ($("#" + warningId).length > 0) {
+							var children = document.getElementById('alertGroup').childNodes;
+							children.forEach(function(item){
+								item.setAttribute('class', 'list-group-item list-group-item-warning');
+							});
+							if ($("#" + warningId).text() == warningMsg) {
+								var taskElement = document.getElementById(warningId);
+								taskElement.setAttribute('class', 'list-group-item list-group-item-danger')
+							}
+						}
+						else {
+							var myNode = document.getElementById("alertGroup"); 
+							while (myNode.firstChild) {
+								myNode.removeChild(myNode.firstChild);
+							}
+
+							var listElement = document.createElement("LI");
+							listElement.setAttribute('class', 'list-group-item list-group-item-warning');						
+							listElement.setAttribute('id', warningId);
+							listElement.textContent = warningMsg;
+							$("#alertGroup").append(listElement);
+						}
+					}
+				};
+
 				$(document).on('change', '#selectColorBtn', function () {
 					// var colorName = $('#selectColor option:selected').val();
 
@@ -797,7 +872,9 @@
 					console.log('popover hidden')
 				})
 
-				// This is to dismiss the popover when not clicking on it.
+				// This is to dismiss the popover when not clicking on it.ù
+				// var bodyElement = document.getElementById('body');
+				// bodyElement.onclick = function(e) { 
 				$('body, .dropdown-toggle').on('click', function (e) {
 					if ( $('#calibrationForm').is(':visible') ) {
 						$('.calibrate').each(function () {
@@ -816,6 +893,16 @@
 					}
 				});
 			}
+			
+			window.addEventListener('beforeunload', onPageRefresh);
+
+			function onPageRefresh () {
+				removeTask()
+				removeGeometry()
+				removeColor()
+				removeAllPaths()
+			};
+
 
 			init();
 			animate();
@@ -1014,18 +1101,22 @@
 					success: function (data) {
 						console.log(data)
 
+						const warningId = "taskWarning"
+						const warningMsg = "SELECT A TASK"
 						if (data.task == 0) {
-
-							var myNode = document.getElementById("alertGroup");							
-							if ($("#taskWarning").length > 0) {
-								var taskElement = document.getElementById("taskWarning");
-								taskElement.style.fontWeight = 'bold';
+							if ($("#" + warningId).length > 0) {
+								var children = document.getElementById('alertGroup').childNodes;
+								children.forEach(function(item){
+									item.setAttribute('class', 'list-group-item list-group-item-warning');
+								});
+								var taskElement = document.getElementById(warningId);
+								taskElement.setAttribute('class', 'list-group-item list-group-item-danger')
 							}
 							else {
 								var listElement = document.createElement("LI");
 								listElement.setAttribute('class', 'list-group-item list-group-item-warning');						
-								listElement.setAttribute('id', 'taskWarning');
-								listElement.textContent = 'SELECT A TASK';
+								listElement.setAttribute('id', warningId);
+								listElement.textContent = warningMsg;
 								$("#alertGroup").append(listElement);
 							}
 						}
@@ -1061,12 +1152,13 @@
 
 							case "color":
 								console.log(data.target)
-								if (data.status =="ACK")
+								if (data.status =="ACK") {
 									alert("Color calibration successful")
 									if ($('#colorWarning').length > 0) {
 										listElement = document.getElementById("colorWarning");
 										listElement.textContent = 'SELECT A COLOR';
 									}
+								}
 								// else if (data.status =="NACK")
 								break;
 						}
@@ -1329,14 +1421,16 @@
 
 			function addPath() {
 				console.log("add path");
-
-				var myNode = document.getElementById("alertGroup");
-				var taskChild = document.getElementById("pathWarning");
-				myNode.removeChild(taskChild)
+				// const addedPathColor = 0xf54242
 
 				segments.forEach(function (arrayItem) {
-					console.log(arrayItem.geometry.boundingSphere.radius);
+					arrayItem.material.color.setHex(0xf54242);
 				});
+
+				drawPoints.forEach(function (arrayItem) {
+					arrayItem.material.color.setHex(0xf54242);
+				});	
+
 				pathID = pathID + 1;
 				var path = { id: pathID.toString(), points: drawPoints, segments: segments };
 				var name = path.id;
@@ -1365,7 +1459,18 @@
 					success: function (data) {
 						console.log(data)
 						//$('#setParameters').popover('hide')
-						//callback()           
+						//callback() 					
+						var myNode = document.getElementById("alertGroup");
+						if ($("#pathWarning").length > 0) {							
+							var taskChild = document.getElementById("pathWarning");
+							myNode.removeChild(taskChild);
+						}
+
+						var children = myNode.childNodes;
+						children.forEach(function(item){
+							item.setAttribute('class', 'list-group-item list-group-item-warning');
+						});
+
 					},
 					async: true //async_bool
 				})
@@ -1403,12 +1508,81 @@
 				})
 			};
 
-			function removeAll() {
+			function removeAllPaths() {
 				for (var i = paths.length; i > 0; i--) {
 					removePath();
 				};
 			}
 
+			function removeTask() {
+				var commandData = {
+					'type': "SET",
+					'action': "rmv",
+					'target': ["task"],
+					'name': [],
+					'descriptors': []
+				};
+				$.ajax({
+					url: $SCRIPT_ROOT + 'sendCommands/',
+					data: JSON.stringify(commandData),
+					contentType: "application/json; charset=utf-8",
+					dataType: 'json',
+					method: 'POST',
+					success: function (data) {
+						console.log(data)
+						//$('#setParameters').popover('hide')
+						//callback()           
+					},
+					async: true //async_bool
+				})
+			}
+
+			function removeGeometry() {
+				var commandData = {
+					'type': "SET",
+					'action': "rmv",
+					'target': ["geometry"],
+					'name': [],
+					'descriptors': []
+				};
+				$.ajax({
+					url: $SCRIPT_ROOT + 'sendCommands/',
+					data: JSON.stringify(commandData),
+					contentType: "application/json; charset=utf-8",
+					dataType: 'json',
+					method: 'POST',
+					success: function (data) {
+						console.log(data)
+						//$('#setParameters').popover('hide')
+						//callback()           
+					},
+					async: true //async_bool
+				})
+			}
+
+			function removeColor() {
+				var commandData = {
+					'type': "SET",
+					'action': "rmv",
+					'target': ["color"],
+					'name': [],
+					'descriptors': []
+				};
+				$.ajax({
+					url: $SCRIPT_ROOT + 'sendCommands/',
+					data: JSON.stringify(commandData),
+					contentType: "application/json; charset=utf-8",
+					dataType: 'json',
+					method: 'POST',
+					success: function (data) {
+						console.log(data)
+						//$('#setParameters').popover('hide')
+						//callback()           
+					},
+					async: true //async_bool
+				})
+			}
+			
 			function removeFromScene(item, index) {
 				scene.remove(item);
 			}
