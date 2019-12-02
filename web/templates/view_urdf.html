@@ -9,8 +9,12 @@
         <link href="{{ url_for('static', filename='/material-design-icons-3.0.1/iconfont/material-icons.css') }}" rel="stylesheet">
 
         <!-- <link rel="stylesheet" > -->
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-	    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+        <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+	    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"> -->
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
     </head>
 
     <body>
@@ -43,13 +47,15 @@
         <script type="text/javascript" src="{{ url_for('static', filename='/examples/js/renderers/Projector.js') }}"></script>
         
         <!-- <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script> -->
-        <script type="text/javascript" src="{{ url_for('static', filename='/js/jquery-3.2.1.min.js') }}"></script>
+        <!-- <script type="text/javascript" src="{{ url_for('static', filename='/js/jquery-3.2.1.min.js') }}"></script> -->
+
+        <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
 
         <script type="text/javascript" src="http://static.robotwebtools.org/EventEmitter2/current/eventemitter2.min.js"></script>
 		<script type="text/javascript" src="http://static.robotwebtools.org/roslibjs/current/roslib.min.js"></script>
 
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
 
         <script type=text/javascript>
             $SCRIPT_ROOT = "{{ url_for('index', _external=True) }}";
@@ -320,11 +326,32 @@
 				width: 200px;
 				margin-top: 0.5em;
 			}
+
+            #waitOverlay {
+                position: fixed; /* Sit on top of the page content */
+                visibility: hidden; /* Hidden by default */
+                width: 100%; /* Full width (cover the whole page) */
+                height: 100%; /* Full height (cover the whole page) */
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: rgba(0,0,0,0.5); /* Black background with opacity */
+                z-index: 5; /* Specify a stack order in case you're using a different order for other elements */
+                cursor: pointer; /* Add a pointer on hover */
+            }
+
         </style>
         
         
         <!-- <pre id="fileDisplayArea"></pre> -->
         <div id = "container">
+            <div id="waitOverlay" class="d-flex justify-content-center align-self-center align-items-center flex-column">
+                <div class="spinner-border m-5" style="width: 7rem; height: 7rem; color: #1dc092;" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+                <strong style="font-size: xxx-large; color: #1dc092;">Loading...</strong>
+            </div> 
             <div id="header" style="overflow-y:auto;">
                 Select a text file: 
                 <input type="file" id="fileInput">
@@ -686,12 +713,14 @@
                 deploy.onclick = function() {writeDeploy()};
 
                 syncModel.onclick = function() {
+                    activateWaitOverlay();
                     startMaster(false, function() {
                         syncHW(true, function(){
-                            URDFChangeEventHandler.addEventListener('urdf-change', function (event) {
-                            console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+                            deactivateWaitOverlay();
                             stopMaster(false, function() {})
-                            });
+                            // URDFChangeEventHandler.addEventListener('urdf-change', function (event) {
+                            // console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+                            // });
 
                         });
                     });
@@ -966,6 +995,14 @@
                     async: async_bool //true
                 });
             }
+
+			function activateWaitOverlay() {
+				document.getElementById("waitOverlay").style.visibility = "visible";
+			}
+
+			function deactivateWaitOverlay() {
+				document.getElementById("waitOverlay").style.display = "hidden";
+			}
 
             // //Function to open a file on the server side from the HTML page
             // function openfile(url, cB) {
