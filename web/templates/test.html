@@ -6,14 +6,13 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
 	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
-  <script src="https://code.jquery.com/jquery-3.2.1.min.js" ></script>
-  <!-- integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous" -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-  
+  	<script src="https://code.jquery.com/jquery-3.3.1.min.js" ></script>
+  	<!-- integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous" -->
+  	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/89/three.js"></script>
 
 	<script type="text/javascript"
@@ -120,6 +119,8 @@
 
 		.active {
 			background-color:#1dc092 !important;
+			color: #343a40 !important;
+			font-weight: 700;
 			
 		}
 		.active div{
@@ -127,6 +128,10 @@
 			font-weight: 700;
 		}	
 		
+		.active span{
+			color: #343a40;
+			font-weight: 700;
+		}	
 
 		.show>.btn-dark.dropdown-toggle {
 			background-color:#1dc092 !important;
@@ -201,7 +206,8 @@
 			position: absolute;
 			bottom: 2.5%;
 			left: 2.5%;
-			color: white;
+			/* background-color: #343a40; */
+			/* color: #19cf9b; */
 			
 			width: 70px;
 			height: 70px;
@@ -242,9 +248,11 @@
 		<div class="taskOverlay">Top Left</div>
 		<div class="colorOverlay">Top Right</div>
 		<div class="geometryOverlay">Top Center</div>
-		<button id=start_stop type="button" class="btn btn-danger btn-circle btn-xl" data-text-swap="Stop XBotCore" data-text-original="Start XBotCore">
-			<i class="material-icons">power_settings_new</i>
+		<button id=start_stop type="button" class="btn btn-dark btn-circle btn-xl" data-text-swap="Stop XBotCore" data-text-original="Start XBotCore">
+			<span id="powerOnIcon" class="material-icons" >power_settings_new</span>
 			<p id="start_stop_text" style="display:none">Start XBotCore</p>
+			<span id="powerOnSpinner" class="spinner-border" style="border-width: 0.15em; display:none; width: 1.3em; height: 1.3em; color: #1dc092;" role="status"></span>
+			<span class="sr-only">Loading...</span>
 		</button>
 		<div class="smStateOverlay">Bottom Center</div>
 		<div class="alertOverlay">		  		
@@ -559,21 +567,29 @@
 								$(pauseText).text($(pause).data("text-original"));
 								$(zeroGText).text($(zeroG).data("text-original"));
 								$('.btn-dark').prop("disabled", false);
+								$(start_stop).prop("disabled", true);
+								$(start_stop).addClass("active");
 								break;
 							case "PAUSE":
 								$(pauseText).text($(pause).data("text-swap"));
 								$(zeroGText).text($(zeroG).data("text-original"));
 								$('.btn-dark').prop("disabled", false);
+								$(start_stop).prop("disabled", true);
+								$(start_stop).addClass("active");
 								break;
 							case "STOP":
 								$(pauseText).text($(pause).data("text-original"));
 								$(zeroGText).text($(zeroG).data("text-swap"));
 								$('.btn-dark').prop("disabled", false);
+								$(start_stop).prop("disabled", true);
+								$(start_stop).addClass("active");
 								break;
 							case "OFFLINE":
 								$(pauseText).text($(pause).data("text-original"));
 								$(zeroGText).text($(zeroG).data("text-original"));
 								$('.btn-dark').prop("disabled", true);
+								$(start_stop).prop("disabled", false);
+								$(start_stop).removeClass("active");
 								break;
 						}
 					}
@@ -614,12 +630,12 @@
 						method: 'POST',
 						success: function (data) {
 							console.log(data)
-
-
-
+							
 							var myNode = document.getElementById("alertGroup");
-							var taskChild = document.getElementById("taskWarning");
-							myNode.removeChild(taskChild) 
+							if ($('#taskWarning').length > 0) {							
+								var taskChild = document.getElementById("taskWarning");
+								myNode.removeChild(taskChild) 
+							}
 							var children = myNode.childNodes;   
 							children.forEach(function(item){
 								item.setAttribute('class', 'list-group-item list-group-item-warning');
@@ -661,10 +677,6 @@
 				$(document).on('change', '#selectGeometryBtn', function () {
 					// var geometryName = $('#selectGeometry option:selected').val();
 					
-					var myNode = document.getElementById("alertGroup");
-					var taskChild = document.getElementById("geometryWarning");
-					myNode.removeChild(taskChild)
-
 					var geometryName = $('#selectGeometryBtn').val();
 					$('.geometryOverlay').show();
 					$('.geometryOverlay').html("Geometry: " + geometryName);
@@ -683,7 +695,13 @@
 						method: 'POST',
 						success: function (data) {
 							console.log(data)
-							//callback()           
+							//callback()      
+
+							if ($('#geometryWarning').length > 0 ) {
+								var myNode = document.getElementById('alertGroup');
+								var myChild = document.getElementById('geometryWarning');
+								myNode.removeChild(myChild); 
+							}   
 						},
 						async: true //async_bool
 					})
@@ -722,10 +740,6 @@
 				$(document).on('change', '#selectColorBtn', function () {
 					// var colorName = $('#selectColor option:selected').val();
 
-					var myNode = document.getElementById("alertGroup");
-					var taskChild = document.getElementById("colorWarning");
-					myNode.removeChild(taskChild)
-
 					var colorName = $('#selectColorBtn').val();
 					$('.colorOverlay').show();
 					$('.colorOverlay').html("Color: " + colorName); var commandData = {
@@ -743,7 +757,13 @@
 						method: 'POST',
 						success: function (data) {
 							console.log(data)
-							//callback()           
+							//callback()        
+
+							if ($('#colorWarning').length > 0 ) {
+								var myNode = document.getElementById('alertGroup');
+								var myChild = document.getElementById('colorWarning');
+								myNode.removeChild(myChild); 
+							}   
 						},
 						async: true //async_bool
 					})
@@ -1199,20 +1219,35 @@
                     async: async_bool //false
                 });      
 			}
+
+			function isXBotCoreOnline() {
+				if (SM_STATE == "INIT" || SM_STATE == "OFFLINE") {
+					document.getElementById("powerOnSpinner").style.display = "block";
+					document.getElementById("powerOnIcon").style.display = "none";
+					setTimeout(isXBotCoreOnline, 300); // try again in 300 milliseconds
+				} else {
+					document.getElementById("powerOnSpinner").style.display = "none";
+					document.getElementById("powerOnIcon").style.display = "block";
+				}
+			}
 			
 			function startStop(){
                 var el = $(start_stop);
-                // console.log(el.html())
                 var el_text = $(start_stop_text);
-                // console.log(el_text.html());
                 
                 if(el_text.text() == el.data("text-original")){
-                    el_text.text(el.data("text-swap"));
-                    startXBot(false, function(){})    
+                    // el_text.text(el.data("text-swap"));
+                    startXBot(true, function(){
+						// start spinner 
+						// wait until xbotcore state is not OFFLINE or INIT
+						isXBotCoreOnline();
+					});    
                 }
                 else{
                     el_text.text(el.data("text-original"));
-                    stopXBot(false, function() {});
+                    stopXBot(false, function() {
+						//el.removeClass("active");
+					});
                 }   
             } 
 
@@ -1504,7 +1539,7 @@
 						//$('#setParameters').popover('hide')
 						//callback()           
 					},
-					async: true //async_bool
+					async: false //async_bool
 				})
 			};
 
@@ -1533,7 +1568,7 @@
 						//$('#setParameters').popover('hide')
 						//callback()           
 					},
-					async: true //async_bool
+					async: false //async_bool
 				})
 			}
 
@@ -1556,7 +1591,7 @@
 						//$('#setParameters').popover('hide')
 						//callback()           
 					},
-					async: true //async_bool
+					async: false //async_bool
 				})
 			}
 
@@ -1579,7 +1614,7 @@
 						//$('#setParameters').popover('hide')
 						//callback()           
 					},
-					async: true //async_bool
+					async: false //async_bool
 				})
 			}
 			
