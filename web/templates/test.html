@@ -119,6 +119,8 @@
 
 		.active {
 			background-color:#1dc092 !important;
+			color: #343a40 !important;
+			font-weight: 700;
 			
 		}
 		.active div{
@@ -126,6 +128,10 @@
 			font-weight: 700;
 		}	
 		
+		.active span{
+			color: #343a40;
+			font-weight: 700;
+		}	
 
 		.show>.btn-dark.dropdown-toggle {
 			background-color:#1dc092 !important;
@@ -200,7 +206,8 @@
 			position: absolute;
 			bottom: 2.5%;
 			left: 2.5%;
-			color: white;
+			/* background-color: #343a40; */
+			/* color: #19cf9b; */
 			
 			width: 70px;
 			height: 70px;
@@ -241,9 +248,11 @@
 		<div class="taskOverlay">Top Left</div>
 		<div class="colorOverlay">Top Right</div>
 		<div class="geometryOverlay">Top Center</div>
-		<button id=start_stop type="button" class="btn btn-danger btn-circle btn-xl" data-text-swap="Stop XBotCore" data-text-original="Start XBotCore">
-			<i class="material-icons">power_settings_new</i>
+		<button id=start_stop type="button" class="btn btn-dark btn-circle btn-xl" data-text-swap="Stop XBotCore" data-text-original="Start XBotCore">
+			<span id="powerOnIcon" class="material-icons" >power_settings_new</span>
 			<p id="start_stop_text" style="display:none">Start XBotCore</p>
+			<span id="powerOnSpinner" class="spinner-border" style="border-width: 0.15em; display:none; width: 1.3em; height: 1.3em; color: #1dc092;" role="status"></span>
+			<span class="sr-only">Loading...</span>
 		</button>
 		<div class="smStateOverlay">Bottom Center</div>
 		<div class="alertOverlay">		  		
@@ -558,21 +567,29 @@
 								$(pauseText).text($(pause).data("text-original"));
 								$(zeroGText).text($(zeroG).data("text-original"));
 								$('.btn-dark').prop("disabled", false);
+								$(start_stop).prop("disabled", true);
+								$(start_stop).addClass("active");
 								break;
 							case "PAUSE":
 								$(pauseText).text($(pause).data("text-swap"));
 								$(zeroGText).text($(zeroG).data("text-original"));
 								$('.btn-dark').prop("disabled", false);
+								$(start_stop).prop("disabled", true);
+								$(start_stop).addClass("active");
 								break;
 							case "STOP":
 								$(pauseText).text($(pause).data("text-original"));
 								$(zeroGText).text($(zeroG).data("text-swap"));
 								$('.btn-dark').prop("disabled", false);
+								$(start_stop).prop("disabled", true);
+								$(start_stop).addClass("active");
 								break;
 							case "OFFLINE":
 								$(pauseText).text($(pause).data("text-original"));
 								$(zeroGText).text($(zeroG).data("text-original"));
 								$('.btn-dark').prop("disabled", true);
+								$(start_stop).prop("disabled", false);
+								$(start_stop).removeClass("active");
 								break;
 						}
 					}
@@ -1198,20 +1215,35 @@
                     async: async_bool //false
                 });      
 			}
+
+			function isXBotCoreOnline() {
+				if (SM_STATE == "INIT" || SM_STATE == "OFFLINE") {
+					document.getElementById("powerOnSpinner").style.display = "block";
+					document.getElementById("powerOnIcon").style.display = "none";
+					setTimeout(isXBotCoreOnline, 300); // try again in 300 milliseconds
+				} else {
+					document.getElementById("powerOnSpinner").style.display = "none";
+					document.getElementById("powerOnIcon").style.display = "block";
+				}
+			}
 			
 			function startStop(){
                 var el = $(start_stop);
-                // console.log(el.html())
                 var el_text = $(start_stop_text);
-                // console.log(el_text.html());
                 
                 if(el_text.text() == el.data("text-original")){
-                    el_text.text(el.data("text-swap"));
-                    startXBot(false, function(){})    
+                    // el_text.text(el.data("text-swap"));
+                    startXBot(true, function(){
+						// start spinner 
+						// wait until xbotcore state is not OFFLINE or INIT
+						isXBotCoreOnline();
+					});    
                 }
                 else{
                     el_text.text(el.data("text-original"));
-                    stopXBot(false, function() {});
+                    stopXBot(false, function() {
+						//el.removeClass("active");
+					});
                 }   
             } 
 
