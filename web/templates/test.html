@@ -630,12 +630,12 @@
 						method: 'POST',
 						success: function (data) {
 							console.log(data)
-
-
-
+							
 							var myNode = document.getElementById("alertGroup");
-							var taskChild = document.getElementById("taskWarning");
-							myNode.removeChild(taskChild) 
+							if ($('#taskWarning').length > 0) {							
+								var taskChild = document.getElementById("taskWarning");
+								myNode.removeChild(taskChild) 
+							}
 							var children = myNode.childNodes;   
 							children.forEach(function(item){
 								item.setAttribute('class', 'list-group-item list-group-item-warning');
@@ -677,10 +677,6 @@
 				$(document).on('change', '#selectGeometryBtn', function () {
 					// var geometryName = $('#selectGeometry option:selected').val();
 					
-					var myNode = document.getElementById("alertGroup");
-					var taskChild = document.getElementById("geometryWarning");
-					myNode.removeChild(taskChild)
-
 					var geometryName = $('#selectGeometryBtn').val();
 					$('.geometryOverlay').show();
 					$('.geometryOverlay').html("Geometry: " + geometryName);
@@ -699,7 +695,13 @@
 						method: 'POST',
 						success: function (data) {
 							console.log(data)
-							//callback()           
+							//callback()      
+
+							if ($('#geometryWarning').length > 0 ) {
+								var myNode = document.getElementById('alertGroup');
+								var myChild = document.getElementById('geometryWarning');
+								myNode.removeChild(myChild); 
+							}   
 						},
 						async: true //async_bool
 					})
@@ -738,10 +740,6 @@
 				$(document).on('change', '#selectColorBtn', function () {
 					// var colorName = $('#selectColor option:selected').val();
 
-					var myNode = document.getElementById("alertGroup");
-					var taskChild = document.getElementById("colorWarning");
-					myNode.removeChild(taskChild)
-
 					var colorName = $('#selectColorBtn').val();
 					$('.colorOverlay').show();
 					$('.colorOverlay').html("Color: " + colorName); var commandData = {
@@ -759,7 +757,13 @@
 						method: 'POST',
 						success: function (data) {
 							console.log(data)
-							//callback()           
+							//callback()        
+
+							if ($('#colorWarning').length > 0 ) {
+								var myNode = document.getElementById('alertGroup');
+								var myChild = document.getElementById('colorWarning');
+								myNode.removeChild(myChild); 
+							}   
 						},
 						async: true //async_bool
 					})
