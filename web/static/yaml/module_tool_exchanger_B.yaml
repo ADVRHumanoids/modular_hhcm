@@ -26,13 +26,13 @@ kinematics:
     a_l: 0.0
     alpha_l: 0.0
     p_l: 0.0
-    n_l: 0.23
+    n_l: 0.24 # quick fix after iacobelli disaster. original = 0.23
     delta_l_in: 0.0
     delta_l_out: 0.0
 
 dynamics:
   body_1:
-    mass: 0.855 #0.771 + 0.084 
+    mass: 0.934 #0.771 + 0.163 
     inertia_tensor:
       I_xx: 1.1564566e-03
       I_yy: 1.2469918e-03
