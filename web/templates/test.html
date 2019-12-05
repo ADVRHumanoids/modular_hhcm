@@ -6,22 +6,42 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 
-	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
-	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+	<!-- <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous"> -->
+	<!-- <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"> -->
 
-  	<script src="https://code.jquery.com/jquery-3.3.1.min.js" ></script>
+  	<!-- <script src="https://code.jquery.com/jquery-3.3.1.min.js" ></script> -->
   	<!-- integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous" -->
-  	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
-	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
-	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/89/three.js"></script>
+  	<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script> -->
+	<!-- <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script> -->
+	<!-- <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/89/three.js"></script> -->
+
+	<!-- <script type="text/javascript"
+		src="http://static.robotwebtools.org/EventEmitter2/current/eventemitter2.min.js"></script>
+	<script type="text/javascript" src="http://static.robotwebtools.org/roslibjs/current/roslib.min.js"></script> -->
+
+	<!-- <link rel="stylesheet" type="text/css"
+		href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css"> -->
+		
+	<link rel="stylesheet" type="text/css"
+		href="{{ url_for('static', filename='/css/bootstrap-4.2.1/bootstrap.min.css') }}">
+
+	<link href="{{ url_for('static', filename='/material-design-icons-3.0.1/iconfont/material-icons.css') }}" rel="stylesheet">
+	
+	<script type="text/javascript" src="{{ url_for('static', filename='/js/three.js') }}"></script>
 
 	<script type="text/javascript"
-		src="http://static.robotwebtools.org/EventEmitter2/current/eventemitter2.min.js"></script>
-	<script type="text/javascript" src="http://static.robotwebtools.org/roslibjs/current/roslib.min.js"></script>
+			src="{{ url_for('static', filename='/js/jquery-3.3.1.min.js') }}"></script>
 
-	<link rel="stylesheet" type="text/css"
-		href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">
+	<script type="text/javascript"
+		src="{{ url_for('static', filename='/js/bootstrap-4.2.1/popper-1.14.6/popper.js') }}"></script>
 
+	<script type="text/javascript"
+		src="{{ url_for('static', filename='/js/bootstrap-4.2.1/bootstrap.min.js') }}"></script>
+
+	<script type="text/javascript" src="{{ url_for('static', filename='/js/robotwebtools/eventemitter2.min.js') }}"></script>
+	
+	<script type="text/javascript" src="{{ url_for('static', filename='/js/robotwebtools/roslib.min.js') }}"></script>
+	
 	<script type="text/javascript"
 		src="{{ url_for('static', filename='/examples/js/controls/OrbitControls.js') }}"></script>
 
@@ -1661,19 +1681,20 @@
 					scene.add(sphere);
 					drawPoints.push(sphere);
 					previousPoint = intersection.point;
+
+					var geometry = new THREE.Geometry();
+					if (drawPoints.length > 1) {
+						var last_sphere = drawPoints[drawPoints.length - 2];
+						geometry.vertices.push(last_sphere.position);
+						geometry.vertices.push(sphere.position);
+						console.log(last_sphere.position.distanceTo(sphere.position));
+						var material = new THREE.LineBasicMaterial({ color: 0x9fe80e });
+						var line = new THREE.Line(geometry, material);
+						scene.add(line);
+						segments.push(line);
+					}
 				}
 
-				var geometry = new THREE.Geometry();
-				if (drawPoints.length > 1) {
-					var last_sphere = drawPoints[drawPoints.length - 2];
-					geometry.vertices.push(last_sphere.position);
-					geometry.vertices.push(sphere.position);
-					console.log(last_sphere.position.distanceTo(sphere.position));
-					var material = new THREE.LineBasicMaterial({ color: 0x9fe80e });
-					var line = new THREE.Line(geometry, material);
-					scene.add(line);
-					segments.push(line);
-				}
 			};
 
 			function onWindowResize() {
