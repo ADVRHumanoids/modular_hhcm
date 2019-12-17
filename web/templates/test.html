@@ -355,14 +355,19 @@
 				</div>			
 			</div>
 			<div id="actionButtons" class="btn-group-vertical btn-subgroup">
-				<div id="pauseDiv" class="btn-group btn-2-in-subgroup">
+				<div id="pauseDiv" class="btn-group btn-3-in-subgroup">
 					<button type="button" id="pause" class="button btn btn-dark" data-text-swap="Resume" data-text-original="Pause">
 						<p id="pauseText">Pause</p>
 					</button>
 				</div>
-				<div id="zeroGDiv" class="btn-group btn-2-in-subgroup">
+				<div id="zeroGDiv" class="btn-group btn-3-in-subgroup">
 					<button type="button" id="zeroG" class="button btn btn-dark" data-text-swap="Resume" data-text-original="Zero gravity">
 						<p id="zeroGText">Zero gravity</p>
+					</button>	
+				</div>
+				<div id="holdToolDiv" class="btn-group btn-3-in-subgroup">
+					<button type="button" id="holdTool" class="button btn btn-dark" data-text-swap="Release tool" data-text-original="Hold tool">
+						<p id="holdToolText">Hold tool</p>
 					</button>	
 				</div>
 			</div>	
@@ -535,13 +540,32 @@
 				messageType: 'json_parser/ToFrontend'
 			});
 
+			var tool_exchanger_control = new ROSLIB.Topic({
+			    ros : ros,
+			    name : '/tool_exchanger_control',
+			    messageType : 'std_msgs/Bool'
+			});
+
 			window.onload = function () {
+				if(sessionStorage.getItem("magnet_on") == null){
+					console.log("setto magnet_on");
+					sessionStorage.setItem("magnet_on", JSON.stringify(false));
+				};
+				var magnet_on = JSON.parse(sessionStorage.getItem("magnet_on"));
+				if(!magnet_on){
+					$(holdToolText).text($(holdTool).data("text-original"));	
+				}
+				else{
+					$(holdToolText).text($(holdTool).data("text-swap"));	
+				}
+
 				var removePathBtn = document.getElementById('removePath');
 				var addPathBtn = document.getElementById('addPath');
 				var removeAllBtn = document.getElementById('removeAll');
 				var drawBtn = document.getElementById("draw");
 				var pauseBtn = document.getElementById("pause");
 				var zeroGBtn = document.getElementById("zeroG");
+				var holdToolBtn = document.getElementById("holdTool");
 
 				var start_stop = document.getElementById('start_stop');
                 var start_stop_text = document.getElementById('start_stop_text');
@@ -559,6 +583,7 @@
 				drawBtn.onclick = function () {draw()};
 				pauseBtn.onclick = function () {pauseResume()};
 				zeroGBtn.onclick = function () {zeroGResume()};
+				holdToolBtn.onclick = function () {holdReleaseTool()};
 
 				start_stop.onclick = function() {startStop()};
 
@@ -1471,6 +1496,30 @@
 						},
 						async: true //async_bool
 					})
+                }   
+			}
+
+			function holdReleaseTool() {
+				var el = $(holdTool);
+                var el_text = $(holdToolText);
+				var magnet_on = JSON.parse(sessionStorage.getItem("magnet_on"));
+				if(!magnet_on){
+					el_text.text(el.data("text-swap"));
+					console.log(el_text.html());
+					var holdTool_cmd = new ROSLIB.Message({
+						data: true
+					});
+					sessionStorage.setItem("magnet_on", JSON.stringify(holdTool_cmd.data));
+					tool_exchanger_control.publish(holdTool_cmd);
+				}
+                else{
+					el_text.text(el.data("text-original"));
+					console.log(el_text.html());
+                    var releaseTool_cmd = new ROSLIB.Message({
+						data: false
+					});
+					sessionStorage.setItem("magnet_on", JSON.stringify(releaseTool_cmd.data));
+					tool_exchanger_control.publish(releaseTool_cmd);
                 }   
 			}
 
