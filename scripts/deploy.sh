@@ -204,3 +204,12 @@ cat >> ${package_name}_sliders.launch << 'EOF'
 </launch>
 EOF
 cd ..
+
+mkdir database
+# cd $SCRIPT_ROOT/../web/static/
+cp -TRfv $SCRIPT_ROOT/../web/static/models $ROBOTOLOGY_ROOT/robots/${package_name}/database
+#cd $ROBOTOLOGY_ROOT/robots/${package_name}
+cd urdf
+gz sdf --print ${package_name}.urdf > ${package_name}.sdf
+mv -f ${package_name}.sdf ../database/ModularBot_fixed_base/
+cd ..
