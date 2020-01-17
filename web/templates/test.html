@@ -740,7 +740,28 @@
 						method: 'POST',
 						success: function (data) {
 							console.log(data)
-							//callback()      
+							//callback()  
+
+							if (completePlaneCalibration(data)) {
+								alert("Plane successfully set")
+
+								console.log(data.lx)
+								console.log(data.ly)
+								scene.remove(plane);
+								scene.remove(grid);
+								plane = createPlane(data.lx, data.ly);
+								scene.add(plane);
+								grid = createAGrid({ width: data.lx, height: data.ly, linesWidth: 0.01, linesHeight: 0.01, color: 0x1dc092 });
+								scene.add(grid);
+								adjustCamera(data.lx, data.ly);
+								distanceThreshold = (PLANE_WIDTH>PLANE_HEIGHT) ? PLANE_HEIGHT*0.1 : PLANE_WIDTH*0.1;
+
+								if ($('#geometryWarning').length > 0) {
+									listElement = document.getElementById("geometryWarning");
+									listElement.textContent = 'SELECT A GEOMETRY';
+								}
+
+							}    
 
 							if ($('#geometryWarning').length > 0 ) {
 								var myNode = document.getElementById('alertGroup');
