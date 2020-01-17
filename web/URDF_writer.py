@@ -156,6 +156,12 @@ class UrdfWriter:
 
         self.base_link = ModuleNode.ModuleNode(data, "base_link")
         setattr(self.base_link, 'name', "base_link")
+        setattr(self.base_link, 'tag', "_A")
+        setattr(self.base_link, 'size', 3)
+        setattr(self.base_link, 'i', 0)
+        setattr(self.base_link, 'p', 0)
+        setattr(self.base_link, 'Homogeneous_tf', tf.transformations.identity_matrix())
+        
         self.parent_module = self.base_link
 
     @staticmethod
@@ -766,6 +772,9 @@ class UrdfWriter:
 
         # Depending on the type of the parent module and the new module, call the right method to add the new module.
         # If the new module is a joint add it to the correct chain via the 'add_to_chain' method.
+        
+        #if self.parent_module.type == "base_link":
+
         if self.parent_module.type == 'joint':
             if new_module.type == 'joint':
                 # joint + joint
@@ -1308,7 +1317,7 @@ class UrdfWriter:
         ET.SubElement(self.root, "xacro:add_fixed_joint",
                       type="fixed_joint_stator",
                       name=joint_stator_name,
-                      father=past_Link.parent.name,
+                      father=past_Link.name, #TODO: check!
                       child=stator_name,
                       x=x,
                       y=y,
