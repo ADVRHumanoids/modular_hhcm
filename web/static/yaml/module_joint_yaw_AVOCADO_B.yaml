@@ -120,4 +120,4 @@ CentAcESC:
     position:   [1000.0 , 0.0 , 30.0]
     # pos_Kp pos_Kd tor_Kp tor_Kd tor_Ki
     #  .... tor_K divided by 10000 to respect the int range [0..65536]
-    impedance:   [500.0, 20.0, 1.0, 0.025, 0.90]
+    impedance:   [500.0, 20.0, 1.0, 0.01, 0.99]
