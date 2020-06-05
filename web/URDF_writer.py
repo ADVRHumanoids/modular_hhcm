@@ -274,7 +274,7 @@ class UrdfWriter:
 
         # Add a first cube for the initial ethercat test with no Hub.
         # TODO: remove it once the hub is implemented and can be added automatically
-        data = self.add_slave_cube(0)
+        #data = self.add_slave_cube(0)
         # module_name = data['lastModule_name']
         # module_name = 'L_0a_con2'
         # module_type = data['lastModule_type']

@@ -5,9 +5,9 @@ stack:
 
 EE:
     type: Interaction
-    base_link: L_0a
+    base_link: J1_A_stator
     distal_link: tool_exchanger_A
     stiffness: [50.0, 50.0, 50.0, 1.0, 1.0, 1.0] 
-    damping: [5.0, 5.0, 5.0, 0.0, 0.0, 0.0]
+    damping: [0.7, 0.7, 0.7, 0.7, 0.7, 0.7]
     
 
