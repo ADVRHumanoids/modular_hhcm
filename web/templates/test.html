@@ -983,9 +983,9 @@
 			window.addEventListener('beforeunload', onPageRefresh);
 
 			function onPageRefresh () {
-				removeTask()
-				removeGeometry()
-				removeColor()
+				// removeTask()
+				// removeGeometry()
+				// removeColor()
 				removeAllPaths()
 			};
 
@@ -1027,7 +1027,7 @@
 				canvas = renderer.domElement;
 
 				var controls = new THREE.OrbitControls(camera, renderer.domElement);
-				controls.enablePan = false;
+				controls.enablePan = true;
 				controls.enableRotate = false;
 				controls.target = cameraTarget;
 				adjustCamera(PLANE_WIDTH, PLANE_HEIGHT);
