@@ -663,6 +663,7 @@
         </link>
     </xacro:macro>
 
+    <!-- Add a pen to the tool-exchanger. Length may vary -->
     <xacro:macro name="add_pen" params="type name father">
         <link name="${name}"/>
         <joint name="fixed_${name}" type="fixed">
