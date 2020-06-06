@@ -285,7 +285,7 @@ class UrdfWriter:
                     # print(treestr.ljust(8), node.name, node.robot_id)
                 parent_module = anytree.search.findall_by_attr(self.base_link, parent_id, name='robot_id')[0]
                 print('parent_module:', parent_module, '\nparent name:', parent_module.name)
-                self.select_module(parent_module.name)
+                self.select_module_from_name(parent_module.name)
                 print(self.parent_module.name)
                 #TODO:replace with select_module_from_id
 
@@ -433,7 +433,7 @@ class UrdfWriter:
         print('enter!')
         for child_id in connections_list[1:]:
             print('child: ', child_id)
-            self.select_module(name)
+            self.select_module_from_name(name)
             print(self.parent_module.name)
             if child_id != -1:
                 # Find child module to process searching by id
@@ -442,7 +442,7 @@ class UrdfWriter:
                 if m_type == 'mastercube':
                     _connector_index = connections_list.index(child_id) + 1
                     con_name = name + '_con' + str(_connector_index)
-                    self.select_module(con_name)
+                    self.select_module_from_name(con_name)
                 # Add the module
                 if child['type'] == 'master_cube':
                     data = self.add_slave_cube(0)
@@ -477,7 +477,7 @@ class UrdfWriter:
         print('enter!')
         for child_id in connections_list:
             print('child: ', child_id)
-            self.select_module(name)
+            self.select_module_from_name(name)
             print(self.parent_module.name)
             if child_id != -1:
                 # Find child module to process searching by id in the modules_list
@@ -585,7 +585,7 @@ class UrdfWriter:
 
 
     # noinspection PyPep8Naming
-    def add_slave_cube(self, angle_offset, robot_id=0, active_ports=None):
+    def add_slave_cube(self, angle_offset, robot_id=0, active_ports=1):
         """Method adding slave/master cube to the tree.
 
         Parameters
@@ -1211,14 +1211,14 @@ class UrdfWriter:
 
         return queried_module
 
-    def select_module(self, module_name, selected_port=None):
+    def select_module_from_name(self, name):
         """Allows to select a module from the tree. An inner call to access_module sets the selected module as the
         current parent module. Returns info on the selected module, so that the GUI can display it.
 
         Parameters
         ----------
-        module_name: str
-            String with the name of the module to select. It will be used to call the access_module method.
+        name: str
+            String with the name of the module to select or the name of the mesh clicked on the GUI. It will be used to call the access_module method.
             The corresponding object module data is then put in a dictionary and returned.
         
         selected_port: int
@@ -1231,40 +1231,69 @@ class UrdfWriter:
 
         """
 
-        print(module_name)
+        print(name)
 
         # If the selected module is the stator of a joint modify the string so to select the joint itself.
         # This is needed because from the GUI when you select a joint by clicking, the mesh corresponding to the stator
-        # is selected, while the module we want to access is the joint (the stator is not part of the tree, only urdf).
-        
-        if module_name.endswith('_stator'):
+        # is selected, while the module we want to access is the joint (the stator is not part of the tree, only urdf).    
+        if name.endswith('_stator'):
             # Take the joint when the mesh of the joint stator is selected
-            selected_module_name = module_name[:-7]
-        elif '_con' in module_name:
+            selected_module_name = name[:-7]
+        elif '_con' in name:
             # Take the box as parent when a connector is selected
-            selected_module_name = module_name[:-5]
-            # Save the selected port
-            selected_port = int(module_name[-1])
-            print(selected_port)
+            selected_module_name = name[:-5]
         else:
-            selected_module_name = module_name
+            selected_module_name = name
 
         print(selected_module_name)
 
         # Call access_module to get the object with the requested name and sets it as parent.
         # The method doing the real work is actually access_module
         selected_module = self.access_module(selected_module_name)
-        print(selected_module.type)
-        print(selected_module.name)
-        print(selected_module.robot_id)
-        print(selected_module.active_ports)
-        print(selected_module.occupied_ports)
+
+        # Update active and occupied port of the ESC and select the right port
+        self.select_ports(selected_module, name)
+
+        # Create the dictionary with the relevant info on the selected module, so that the GUI can dispaly it.
+        if selected_module.type == 'cube':
+            data = {'lastModule_type': selected_module.type,
+                    'lastModule_name': selected_module.name,
+                    'size': selected_module.size,
+                    'count': self.n_cubes}
+        else:
+            data = {'lastModule_type': selected_module.type,
+                    'lastModule_name': selected_module.name,
+                    'size': selected_module.size,
+                    'count': selected_module.i}
+
+        return data
+
+    def select_ports(self, module, name):
+        # In building mode the port is not set by reading the EtherCAT infos, but from the user which selects the connector mesh with a mouse click
+        if '_con' in name:
+            # "Deactivate" ports which are not occupied. This is necessary if from the GUI the user selects a port but doesn't attach anything to it. 
+            module.active_ports = module.occupied_ports #int(module.active_ports, 2) & int(module.occupied_ports, 2)
+            # Save the selected port
+            selected_port = int(name[-1])
+            print(selected_port)
+            # Set the selected_port as active
+            mask = 1 << selected_port - 1
+            print(mask)
+            print(module.active_ports)
+            # binary OR
+            module.active_ports = "{0:04b}".format(int(module.active_ports, 2) | mask)
+            print(module.active_ports)
+        print(module.type)
+        print(module.name)
+        print(module.robot_id)
+        print(module.active_ports)
+        print(module.occupied_ports)
         # binary XOR
-        free_ports = int(selected_module.active_ports, 2) ^ int(selected_module.occupied_ports, 2)
+        free_ports = int(module.active_ports, 2) ^ int(module.occupied_ports, 2)
         print("{0:04b}".format(free_ports))
 
-        selected_module.selected_port = self.ffs(free_ports)
-        print('selected_module.selected_port :', selected_module.selected_port)
+        module.selected_port = self.ffs(free_ports)
+        print('module.selected_port :', module.selected_port)
         
         # # If parent topology is greater than 2 the parent is a switch/hub so we need to find the right port where the module is connected
         # if active_ports >= 3:
@@ -1280,23 +1309,11 @@ class UrdfWriter:
         # print('self.parent_module.selected_port: ', self.parent_module.selected_port)
 
         # Select the correct port where to add the module to
-        if '_con' in module_name:
-            print('AAAAAAAAAAAAAAAAAAAAAAA')
-            selected_module.selected_port = selected_port
+        # if '_con' in name:
+        #     print('AAAAAAAAAAAAAAAAAAAAAAA')
+        #     module.selected_port = selected_port
 
-        # Create the dictionary with the relevant info on the selected module, so that the GUI can dispaly it.
-        if selected_module.type == 'cube':
-            data = {'lastModule_type': selected_module.type,
-                    'lastModule_name': selected_module.name,
-                    'size': selected_module.size,
-                    'count': self.n_cubes}
-        else:
-            data = {'lastModule_type': selected_module.type,
-                    'lastModule_name': selected_module.name,
-                    'size': selected_module.size,
-                    'count': selected_module.i}
-
-        return data
+        return 0
 
     @staticmethod
     def ffs(x):

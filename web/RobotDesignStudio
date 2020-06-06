@@ -132,7 +132,7 @@ def remove():
 @app.route('/updateLastModule/', methods=['POST'])
 def accessModule():
     parent = request.form.get('parent', 0)
-    data = urdf_writer.select_module(parent)
+    data = urdf_writer.select_module_from_name(parent)
     data = jsonify(data)
     return data
 
