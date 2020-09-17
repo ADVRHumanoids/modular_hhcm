@@ -7,7 +7,5 @@ EE:
     type: Interaction
     base_link: J1_A_stator
     distal_link: tool_exchanger_A
-    stiffness: [50.0, 50.0, 50.0, 1.0, 1.0, 1.0] 
-    damping: [0.7, 0.7, 0.7, 0.7, 0.7, 0.7]
-    
-
+    stiffness: [1200.0, 1200.0, 1200.0, 600.0, 600.0, 600.0] 
+    damping: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
