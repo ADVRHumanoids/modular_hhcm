@@ -2,13 +2,13 @@ geometry:
     cube_size: 0.34
     connector_length: 0.1
 kinematics:
-    connector_1:
-        roll: 3.14
-        pitch: 0.0
-        yaw: 0.0
-        x: 0.0
-        y: 0.0
-        z: 0.0
+    # connector_1:
+    #     roll: 3.14
+    #     pitch: 0.0
+    #     yaw: 0.0
+    #     x: 0.0
+    #     y: 0.0
+    #     z: 0.0
     connector_2:
         roll: 0
         pitch: 0
@@ -17,11 +17,11 @@ kinematics:
         y: 0
         z: 0.34
     connector_3:
-        roll: 1.57
-        pitch: 0
+        roll: -1.57
+        pitch: 1.57
         yaw: 0
         x: 0
-        y: -0.17
+        y: 0.17
         z: 0.17
     connector_4:
         roll: 0.0

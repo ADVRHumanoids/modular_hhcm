@@ -116,78 +116,86 @@
     <xacro:macro name="add_connectors" params="name filename type">
         
         <xacro:property name="module" value="${load_yaml(filename)}"/>
-        
-        <link name="${name}_con1">
-            <visual>
-                <origin rpy="0 0 0" xyz="0 0 0.05"/>
-                <geometry>
-                    <cylinder length="0.1" radius="${size_interface}"/>
-                </geometry>
-                <material name="green"/>
-            </visual>
-        </link>
 
-        <link name="${name}_con2">
-            <visual>
-                <origin rpy="0 0 0" xyz="0 0 0.05"/>
-                <geometry>
-                    <cylinder length="0.1" radius="${size_interface}"/>
-                </geometry>
-                <material name="green"/>
-            </visual>
-        </link>
-        
-        <link name="${name}_con3">
-            <visual>
-                <origin rpy="0 0 0" xyz="0 0 0.05"/>
-                <geometry>
-                    <cylinder length="0.1" radius="${size_interface}"/>
-                </geometry>
-                <material name="green"/>
-            </visual>
-        </link>
+        <xacro:if value="${'connector_1' in module['kinematics']}">
+            <link name="${name}_con1">
+                <visual>
+                    <origin rpy="0 0 0" xyz="0 0 0.05"/>
+                    <geometry>
+                        <cylinder length="0.1" radius="${size_interface}"/>
+                    </geometry>
+                    <material name="green"/>
+                </visual>
+            </link>
 
-        <link name="${name}_con4">
-            <visual>
-                <origin rpy="0 0 0" xyz="0 0 0.05"/>
-                <geometry>
-                    <cylinder length="0.1" radius="${size_interface}"/>
-                </geometry>
-                <material name="green"/>
-            </visual>
-        </link>
+            <joint name="${name}_fixed_1" type="fixed">
+                <parent link="${name}"/>
+                <child link="${name}_con1"/>
+                <axis rpy="0 0 0" xyz="0 0 1"/>
+                <origin rpy="${module['kinematics']['connector_1']['roll']} ${module['kinematics']['connector_1']['pitch']} ${module['kinematics']['connector_1']['yaw']}" 
+                        xyz="${module['kinematics']['connector_1']['x']} ${module['kinematics']['connector_1']['y']} ${module['kinematics']['connector_1']['z']}"/>
+            </joint>
+        </xacro:if>
 
-        <joint name="${name}_fixed_1" type="fixed">
-            <parent link="${name}"/>
-            <child link="${name}_con1"/>
-            <axis rpy="0 0 0" xyz="0 0 1"/>
-            <origin rpy="${module['kinematics']['connector_1']['roll']} ${module['kinematics']['connector_1']['pitch']} ${module['kinematics']['connector_1']['yaw']}" 
-                    xyz="${module['kinematics']['connector_1']['x']} ${module['kinematics']['connector_1']['y']} ${module['kinematics']['connector_1']['z']}"/>
-        </joint>
+        <xacro:if value="${'connector_2' in module['kinematics']}">
+            <link name="${name}_con2">
+                <visual>
+                    <origin rpy="0 0 0" xyz="0 0 0.05"/>
+                    <geometry>
+                        <cylinder length="0.1" radius="${size_interface}"/>
+                    </geometry>
+                    <material name="green"/>
+                </visual>
+            </link>
 
-        <joint name="${name}_fixed_2" type="fixed">
-            <parent link="${name}"/>
-            <child link="${name}_con2"/>
-            <axis rpy="0 0 0" xyz="0 0 1"/>
-            <origin rpy="${module['kinematics']['connector_2']['roll']} ${module['kinematics']['connector_2']['pitch']} ${module['kinematics']['connector_2']['yaw']}" 
-                    xyz="${module['kinematics']['connector_2']['x']} ${module['kinematics']['connector_2']['y']} ${module['kinematics']['connector_2']['z']}"/>
-        </joint>
+            <joint name="${name}_fixed_2" type="fixed">
+                <parent link="${name}"/>
+                <child link="${name}_con2"/>
+                <axis rpy="0 0 0" xyz="0 0 1"/>
+                <origin rpy="${module['kinematics']['connector_2']['roll']} ${module['kinematics']['connector_2']['pitch']} ${module['kinematics']['connector_2']['yaw']}"
+                        xyz="${module['kinematics']['connector_2']['x']} ${module['kinematics']['connector_2']['y']} ${module['kinematics']['connector_2']['z']}"/>
+            </joint>
+        </xacro:if>
 
-        <joint name="${name}_fixed_3" type="fixed">
-            <parent link="${name}"/>
-            <child link="${name}_con3"/>
-            <axis rpy="0 0 0" xyz="0 0 1"/>
-            <origin rpy="${module['kinematics']['connector_3']['roll']} ${module['kinematics']['connector_3']['pitch']} ${module['kinematics']['connector_3']['yaw']}" 
-                    xyz="${module['kinematics']['connector_3']['x']} ${module['kinematics']['connector_3']['y']} ${module['kinematics']['connector_3']['z']}"/>
-        </joint>
+        <xacro:if value="${'connector_3' in module['kinematics']}">
+            <link name="${name}_con3">
+                <visual>
+                    <origin rpy="0 0 0" xyz="0 0 0.05"/>
+                    <geometry>
+                        <cylinder length="0.1" radius="${size_interface}"/>
+                    </geometry>
+                    <material name="green"/>
+                </visual>
+            </link>
 
-        <joint name="${name}_fixed_4" type="fixed">
-            <parent link="${name}"/>
-            <child link="${name}_con4"/>
-            <axis rpy="0 0 0" xyz="0 0 1"/>
-            <origin rpy="${module['kinematics']['connector_4']['roll']} ${module['kinematics']['connector_4']['pitch']} ${module['kinematics']['connector_4']['yaw']}" 
-                    xyz="${module['kinematics']['connector_4']['x']} ${module['kinematics']['connector_4']['y']} ${module['kinematics']['connector_4']['z']}"/>
-        </joint>
+            <joint name="${name}_fixed_3" type="fixed">
+                <parent link="${name}"/>
+                <child link="${name}_con3"/>
+                <axis rpy="0 0 0" xyz="0 0 1"/>
+                <origin rpy="${module['kinematics']['connector_3']['roll']} ${module['kinematics']['connector_3']['pitch']} ${module['kinematics']['connector_3']['yaw']}"
+                        xyz="${module['kinematics']['connector_3']['x']} ${module['kinematics']['connector_3']['y']} ${module['kinematics']['connector_3']['z']}"/>
+            </joint>
+        </xacro:if>
+
+        <xacro:if value="${'connector_4' in module['kinematics']}">
+            <link name="${name}_con4">
+                <visual>
+                    <origin rpy="0 0 0" xyz="0 0 0.05"/>
+                    <geometry>
+                        <cylinder length="0.1" radius="${size_interface}"/>
+                    </geometry>
+                    <material name="green"/>
+                </visual>
+            </link>
+
+            <joint name="${name}_fixed_4" type="fixed">
+                <parent link="${name}"/>
+                <child link="${name}_con4"/>
+                <axis rpy="0 0 0" xyz="0 0 1"/>
+                <origin rpy="${module['kinematics']['connector_4']['roll']} ${module['kinematics']['connector_4']['pitch']} ${module['kinematics']['connector_4']['yaw']}"
+                        xyz="${module['kinematics']['connector_4']['x']} ${module['kinematics']['connector_4']['y']} ${module['kinematics']['connector_4']['z']}"/>
+            </joint>
+        </xacro:if>
 
     </xacro:macro>
 
@@ -214,7 +222,28 @@
             <xacro:default_inertial mass="2.0"/>
         </link>
 
-        <link name="${name}_con1">
+        <xacro:add_connectors name="${name}" filename="${filename}" type="${type}"/>
+
+        <!-- <xacro:if value="1"> -->
+            <!-- <link name="${name}_con1">
+                <visual>
+                    <origin rpy="0 0 0" xyz="0 0 0.05"/>
+                    <geometry>
+                        <cylinder length="0.1" radius="${size_interface}"/>
+                    </geometry>
+                    <material name="green"/>
+                </visual>
+            </link>
+
+            <joint name="${name}_fixed_1" type="fixed">
+                <parent link="${name}_con1"/>
+                <child link="${name}"/>
+                <origin rpy="${module['kinematics']['connector_1']['roll']} ${module['kinematics']['connector_1']['pitch']} ${module['kinematics']['connector_1']['yaw']}" 
+                        xyz="${module['kinematics']['connector_1']['x']} ${module['kinematics']['connector_1']['y']} ${module['kinematics']['connector_1']['z']}"/>
+            </joint> -->
+        <!-- </xacro:if> -->
+
+        <!-- <link name="${name}_con2">
             <visual>
                 <origin rpy="0 0 0" xyz="0 0 0.05"/>
                 <geometry>
@@ -224,15 +253,13 @@
             </visual>
         </link>
 
-        <link name="${name}_con2">
-            <visual>
-                <origin rpy="0 0 0" xyz="0 0 0.05"/>
-                <geometry>
-                    <cylinder length="0.1" radius="${size_interface}"/>
-                </geometry>
-                <material name="green"/>
-            </visual>
-        </link>
+        <joint name="${name}_fixed_2" type="fixed">
+            <parent link="${name}"/>
+            <child link="${name}_con2"/>
+            <axis rpy="0 0 0" xyz="0 0 1"/>
+            <origin rpy="${module['kinematics']['connector_2']['roll']} ${module['kinematics']['connector_2']['pitch']} ${module['kinematics']['connector_2']['yaw']}" 
+                    xyz="${module['kinematics']['connector_2']['x']} ${module['kinematics']['connector_2']['y']} ${module['kinematics']['connector_2']['z']}"/>
+        </joint>
         
         <link name="${name}_con3">
             <visual>
@@ -244,7 +271,15 @@
             </visual>
         </link>
 
-        <link name="${name}_con4">
+        <joint name="${name}_fixed_3" type="fixed">
+            <parent link="${name}"/>
+            <child link="${name}_con3"/>
+            <axis rpy="0 0 0" xyz="0 0 1"/>
+            <origin rpy="${module['kinematics']['connector_3']['roll']} ${module['kinematics']['connector_3']['pitch']} ${module['kinematics']['connector_3']['yaw']}" 
+                    xyz="${module['kinematics']['connector_3']['x']} ${module['kinematics']['connector_3']['y']} ${module['kinematics']['connector_3']['z']}"/>
+        </joint> -->
+
+        <!-- <link name="${name}_con4">
             <visual>
                 <origin rpy="0 0 0" xyz="0 0 0.05"/>
                 <geometry>
@@ -252,38 +287,15 @@
                 </geometry>
                 <material name="green"/>
             </visual>
-        </link>
-
-        <joint name="${name}_fixed_1" type="fixed">
-            <parent link="${name}_con1"/>
-            <child link="${name}"/>
-            <axis rpy="0 0 0" xyz="0 0 1"/>
-            <origin rpy="0 0 0" xyz="0 0 0.0"/>
-        </joint>
-
-        <joint name="${name}_fixed_2" type="fixed">
-            <parent link="${name}"/>
-            <child link="${name}_con2"/>
-            <axis rpy="0 0 0" xyz="0 0 1"/>
-            <origin rpy="${module['kinematics']['connector_2']['roll']} ${module['kinematics']['connector_2']['pitch']} ${module['kinematics']['connector_2']['yaw']}" 
-                    xyz="${module['kinematics']['connector_2']['x']} ${module['kinematics']['connector_2']['y']} ${module['kinematics']['connector_2']['z']}"/>
-        </joint>
-
-        <joint name="${name}_fixed_3" type="fixed">
-            <parent link="${name}"/>
-            <child link="${name}_con3"/>
-            <axis rpy="0 0 0" xyz="0 0 1"/>
-            <origin rpy="${module['kinematics']['connector_3']['roll']} ${module['kinematics']['connector_3']['pitch']} ${module['kinematics']['connector_3']['yaw']}" 
-                    xyz="${module['kinematics']['connector_3']['x']} ${module['kinematics']['connector_3']['y']} ${module['kinematics']['connector_3']['z']}"/>
-        </joint>
-
-        <joint name="${name}_fixed_4" type="fixed">
+        </link> -->
+        
+        <!-- <joint name="${name}_fixed_4" type="fixed">
             <parent link="${name}"/>
             <child link="${name}_con4"/>
             <axis rpy="0 0 0" xyz="0 0 1"/>
             <origin rpy="${module['kinematics']['connector_4']['roll']} ${module['kinematics']['connector_4']['pitch']} ${module['kinematics']['connector_4']['yaw']}" 
                     xyz="${module['kinematics']['connector_4']['x']} ${module['kinematics']['connector_4']['y']} ${module['kinematics']['connector_4']['z']}"/>
-        </joint>
+        </joint> -->
 
     </xacro:macro>
 
@@ -627,7 +639,7 @@
                     <geometry>
                         <mesh filename="${module['visual']['mesh_body_1']}" scale="0.001 0.001 0.001"/>
                     </geometry>
-                    <material name="black"/>
+                    <material name="tree_green"/>
                 </visual>
                 <collision>
                     <origin 
