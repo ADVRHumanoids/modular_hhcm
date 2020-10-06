@@ -542,11 +542,11 @@
                         iyy="${module['dynamics']['body_2_fast']['inertia_tensor']['I_yy']}" 
                         ixz="${module['dynamics']['body_2_fast']['inertia_tensor']['I_xz'] }"
                         iyz="${module['dynamics']['body_2_fast']['inertia_tensor']['I_yz'] }"
-                        izz="${module['dynamics']['body_2_fast']['inertia_tensor']['I_zz'] }"/>
+                        izz="${ gear_ratio * gear_ratio * module['dynamics']['body_2_fast']['inertia_tensor']['I_zz'] }"/>
 
                         <!-- ixz="${ gear_ratio * module['dynamics']['body_2_fast']['inertia_tensor']['I_xz'] }" -->
                         <!-- iyz="${ gear_ratio * module['dynamics']['body_2_fast']['inertia_tensor']['I_yz'] }" -->
-                        <!-- izz="${ gear_ratio * gear_ratio * module['dynamics']['body_2_fast']['inertia_tensor']['I_zz'] }" -->
+                        <!-- izz="${module['dynamics']['body_2_fast']['inertia_tensor']['I_zz'] }" -->
             </inertial>
         </link>
     </xacro:macro>
@@ -670,7 +670,7 @@
             <axis xyz="0 0 1" rpy="0 0 0" />
             <parent link="${father}"/>
             <child link="${name}"/>
-            <origin xyz="0.0 0.0 0.222" rpy="0.0 0.0 0.0"/>
+            <origin xyz="0.0 0.0 0.233" rpy="0.0 0.0 0.0"/>
         </joint>
     </xacro:macro>
 
