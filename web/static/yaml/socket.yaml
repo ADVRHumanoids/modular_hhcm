@@ -1,0 +1,16 @@
+kinematics:
+  joint:
+
+  link:
+    a_l: 0.0
+    alpha_l: 0.0
+    p_l: 0.0
+    n_l: 0.06
+    delta_l_in: 0.0
+    delta_l_out: 0.0
+
+size: 'big'
+size_in:
+size_out:
+
+type: 'link'

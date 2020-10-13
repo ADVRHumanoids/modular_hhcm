@@ -17,10 +17,10 @@ kinematics:
     joint:
       delta_j: 0
       type: 'revolute'
-      lower_limit: -3.14
-      upper_limit: 3.14
-      effort: 55 
-      velocity: 11.7
+      lower_limit: -2.5
+      upper_limit: 2.5
+      effort: 147
+      velocity: 3.9
       
   link:
     a_l: 0

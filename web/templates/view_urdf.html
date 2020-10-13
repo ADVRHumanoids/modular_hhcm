@@ -52,6 +52,7 @@
 
         <script type="text/javascript" src="{{ url_for('static', filename='/examples/js/renderers/Projector.js') }}"></script>
         
+        <script type="text/javascript" src="{{ url_for('static', filename='/js/dat.gui.js') }}"></script>
         <!-- <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script> -->
         <!-- <script type="text/javascript" src="{{ url_for('static', filename='/js/jquery-3.2.1.min.js') }}"></script> -->
 
@@ -403,6 +404,7 @@
                 <!-- <input type="file" id="moduleInput"> -->
                 <button type="button" id="addElbowJoint" class="btn btn-dark "><div>Elbow joint</div></button>
                 <button type="button" id="addSlaveCube" class="btn btn-dark "><div>Slave cube</div></button>
+                <button type="button" id="addSocketBase" class="btn btn-dark "><div>Socket base</div></button>
                 <button type="button" id="addYawJoint" class="btn btn-dark "><div>Yaw joint</div></button>
                 <button type="button" id="addDoubleElbowJoint" class="btn btn-dark "><div>Double Elbow joint</div></button>
                 <!-- <button type="button" id="remove"><div>Remove module</div></button> -->
@@ -607,6 +609,7 @@
                 var addSizeAdapter_Big2Small = document.getElementById('addSizeAdapter_Big2Small');
                 var addSizeAdapter_Medium2Small = document.getElementById('addSizeAdapter_Medium2Small');
                 var addSlaveCube = document.getElementById('addSlaveCube');
+                var addSocketBase = document.getElementById('addSocketBase');
                 var removeLast = document.getElementById('removeLast');
                 // var syncHardware = document.getElementById('syncHardware');
                 var deploy = document.getElementById('deploy');
@@ -618,6 +621,8 @@
                 var addDoubleElbowJoint = document.getElementById('addDoubleElbowJoint');
 
                 var URDFChangeEventHandler = new URDF_change_eventHandler();
+
+                // var gui = new dat.GUI();
 
                 // Initialize the urdfViewer class: create a scene, renderer, etc.
                 urdfViewer._init();
@@ -725,6 +730,8 @@
 
                 addSlaveCube.onclick = function() {addCube("mastercube", size)};
 
+                addSocketBase.onclick = function() {addSocket()};
+
                 removeLast.onclick = function() {removeModule()};
 
                 // syncHardware.onclick = function() {syncHW()};
@@ -745,7 +752,7 @@
                     });
                 };
 
-                addElbowJoint.onclick = function() {addModule("module_joint_elbow_AVOCADO", size)};
+                addElbowJoint.onclick = function() {addModule("module_tool_exchanger_heavy", size)};
                 
                 addYawJoint.onclick = function() {addModule("module_joint_yaw_AVOCADO", size)};
 
@@ -906,13 +913,40 @@
             }
 
             function addCube(modulename) {
-                //making an ajax request to the server to proceed to write the modified URDF
+                //making an ajax request to the server to add a Cube
                 var offset = parseFloat(prompt("Enter the angle offset for the module:", "0"));
                 
                 filename = modulename + '.yaml'
                 $.ajax({
                     url: $SCRIPT_ROOT + 'addMasterCube/',
                     data: {'module_name': filename, 'parent': CURRENT_PARENT, 'angle_offset': offset},
+                    method: 'POST',
+                    success: function(data) {
+                        console.log(data)
+                        robots = urdfViewer.updateURDF(data['result'])//, data['lastModule_name'])
+                        // size = data['size']
+                        updateShownButtons(data['lastModule_type'], data['count'], data['size'])
+                        // console.log(size)
+                        CURRENT_PARENT = data['lastModule_name']
+                        //write the file
+                        writeRequest(data['result'], true, function(){})
+                    },
+                    async: true
+                });
+
+            };
+
+            function addSocket() {
+                //making an ajax request to the server to add a Socket
+                var x_offset = parseFloat(prompt("Enter the x offset for the socket:", "0"));
+                var y_offset = parseFloat(prompt("Enter the yoffset for the socket:", "0"));
+                var z_offset = 0.0
+                var angle_offset = parseFloat(prompt("Enter the angle offset for the socket:", "0"))
+                var values= {'offset': {x_offset, y_offset, z_offset}, 'angle_offset': angle_offset}
+
+                $.ajax({
+                    url: $SCRIPT_ROOT + 'addSocket/',
+                    data: { 'values' : JSON.stringify(values) },
                     method: 'POST',
                     success: function(data) {
                         console.log(data)

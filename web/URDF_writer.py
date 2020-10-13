@@ -87,7 +87,7 @@ def ordered_dump(data, stream=None, Dumper=MyDumper, **kwds):
 def repl_option():
     parser = argparse.ArgumentParser()
     # parser.add_argument("-f", "--file_yaml", dest="esc_type_yaml", action="store", default="esc_type.yaml")
-    parser.add_argument("-f", "--file_yaml", dest="robot_id_yaml", action="store", default="/home/embedded/MultiDoF-superbuild/external/modular/web/robot_id.yaml")
+    parser.add_argument("-f", "--file_yaml", dest="robot_id_yaml", action="store", default="/home/edoardo/MultiDoF-superbuild/external/modular/web/robot_id.yaml")
     parser.add_argument("-c", dest="cmd_exec_cnt", action="store", type=int, default=1)
     args = parser.parse_args()
     dict_opt = vars(args)
@@ -95,8 +95,11 @@ def repl_option():
 
 
 class UrdfWriter:
-    def __init__(self, elementree=None, parent=None):
+    def __init__(self, elementree=None, speedup=False, parent=None):
 
+        # Setting this variable to True, speed up the robot building.
+        # To be used when the urdf does not need to be shown at every iteration
+        self.speedup = speedup
         # self.root = 0
         # self.urdf_tree = 0
 
@@ -713,8 +716,11 @@ class UrdfWriter:
             # update the urdf file, adding the new module
             # string = write_urdf(path_name + '/urdf/ModularBot_test.urdf', urdf_tree)
 
-            # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string.
-            string = self.process_urdf()
+            if self.speedup:
+                string = ""
+            else:
+                # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string.
+                string = self.process_urdf()
 
             # Update the parent_module attribute of the URDF_writer class
             self.parent_module = slavecube
@@ -778,8 +784,6 @@ class UrdfWriter:
             for pre, _, node in anytree.render.RenderTree(self.base_link):
                 print("%s%s" % (pre, node.name))
 
-            print('EEEEEEEEEEEEEEE')
-
             # new_Link = slavecube_con1
             # past_Link = parent_module
             # new_Link.get_rototranslation(past_Link.Homogeneous_tf, tf.transformations.identity_matrix())
@@ -804,8 +808,11 @@ class UrdfWriter:
             # update the urdf file, adding the new module
             # string = write_urdf(path_name + '/urdf/ModularBot_test.urdf', urdf_tree)
 
-            # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string.
-            string = self.process_urdf()
+            if self.speedup:
+                string = ""
+            else:
+                # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string.
+                string = self.process_urdf()
 
             # Update the EtherCAT port connected to the electro-mechanical interface where the new module/slave will be added 
             #    1           2           3           4
@@ -856,6 +863,158 @@ class UrdfWriter:
 
     def get_parent_module(self):
         return self.parent_module
+
+    # Adds a table for simulation purposes
+    def add_table(self):
+        data = {'type': "link", 'name': "table"}
+
+        table = ModuleNode.ModuleNode(data, "table", parent=self.base_link)
+        setattr(table, 'name', "table")
+        setattr(table, 'tag', "_A")
+        setattr(table, 'size', 3)
+        setattr(table, 'i', 0)
+        setattr(table, 'p', 0)
+        setattr(table, 'Homogeneous_tf', tf.transformations.identity_matrix())
+        setattr(table, 'robot_id', 0)
+
+        ET.SubElement(self.root,
+                      "xacro:add_table",
+                      type="link",
+                      name="table",
+                      father=self.parent_module.name)
+
+        self.parent_module = table
+
+        if self.speedup:
+            string = ""
+        else:
+            # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string
+            string = self.process_urdf()
+
+        # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
+        data = {'result': string,
+                'lastModule_type': table.type,
+                'lastModule_name': table.name,
+                'size': table.size,
+                'count': table.i}
+
+        return data
+
+    def move_socket(self, socket_name, x_offset=0.0, y_offset=0.0, z_offset=0.0, angle_offset=0.0):
+        socket = self.access_module(socket_name)
+        fixed_joint_name = 'L_' + str(socket.i) + socket.tag + '_fixed_joint_' + str(socket.p)
+
+        # Generator expression for list of urdf elements without the gazebo tag.
+        # This is needed because of the change in the xacro file, as gazebo simulation tags
+        # are now added from the start and this creates problems with the search
+        gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
+
+        # From the list of xml elements find the ones with name corresponding to the relative joint, stator link
+        # and fixed joint before the stator link and remove them from the xml tree
+        for node in gen:
+            if node.attrib['name'] == fixed_joint_name:
+                node.set('x', str(x_offset))
+                node.set('y', str(y_offset))
+                node.set('z', str(z_offset))
+                node.set('yaw', str(angle_offset))
+
+    def add_socket(self, x_offset=0.0, y_offset=0.0, z_offset=0.0, angle_offset=0.0):
+        # Generate the path to the required YAML file
+        module_name = path_name + '/web/static/yaml/socket.yaml'
+
+        # create a ModuleNode instance for the socket
+        new_socket = ModuleNode.module_from_yaml(module_name, self.parent_module, reverse=0)
+
+        # assign a new tag to the chain
+        tag_letter = self.branch_switcher.get(self.tag_num)
+        setattr(new_socket, 'tag', tag_letter)
+        self.tag_num += 1
+
+        # Set attributes of the newly added module object
+        setattr(new_socket, 'size', self.parent_module.size)
+        setattr(new_socket, 'i', self.parent_module.i)
+        setattr(new_socket, 'p', self.parent_module.p)
+
+        setattr(new_socket, 'angle_offset', angle_offset)
+        setattr(new_socket, 'robot_id', 0)
+
+        # Update the EtherCAT port connected to the electro-mechanical interface where the new module/slave will be added
+        #    1           2           3           4
+        #    o           o           o           o
+        #    |           |           |           |
+        # com-exp   upper port  front port    nothing
+        setattr(new_socket, 'selected_port', 2)
+        print('selected_port :', new_socket.selected_port)
+
+        # save the active ports as a binary string
+        setattr(new_socket, 'active_ports', "{0:04b}".format(3))  # TODO:change this
+        print('active_ports: ', new_socket.active_ports)
+
+        # save the occupied ports as a binary string
+        setattr(new_socket, 'occupied_ports', "0001")
+        print('occupied_ports: ', new_socket.occupied_ports)
+
+        setattr(new_socket, 'name', 'L_' + str(new_socket.i) + new_socket.tag)
+        ET.SubElement(self.root,
+                      "xacro:add_link",
+                      type="link",
+                      name=new_socket.name,
+                      size_z=new_socket.link_size_z,
+                      size=str(new_socket.size))
+
+        transform = ModuleNode.get_rototranslation(self.parent_module.Homogeneous_tf,
+                                                   tf.transformations.rotation_matrix(angle_offset,
+                                                                                      self.zaxis))
+        x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(transform)
+        x = str(x_offset)
+        y = str(y_offset)
+        z = str(z_offset)
+
+        fixed_joint_name = 'L_' + str(new_socket.i) + new_socket.tag + '_fixed_joint_' + str(new_socket.p)
+
+        ET.SubElement(self.root,
+                      "xacro:add_fixed_joint",
+                      name=fixed_joint_name,
+                      type="fixed_joint",
+                      father=self.parent_module.name,
+                      child=new_socket.name,
+                      x=x,
+                      y=y,
+                      z=z,
+                      roll=roll,
+                      pitch=pitch,
+                      yaw=yaw)
+
+        if self.speedup:
+            string = ""
+        else:
+            # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string
+            string = self.process_urdf()
+
+        # update the urdf file, adding the new module
+        # string = write_urdf(path_name + '/urdf/ModularBot_test.urdf', urdf_tree)
+
+        # Render tree
+        for pre, _, node in anytree.render.RenderTree(self.base_link):
+            print("%s%s" % (pre, node.name))
+
+        # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
+        data = {'result': string,
+                'lastModule_type': new_socket.type,
+                'lastModule_name': new_socket.name,
+                'size': new_socket.size,
+                'count': new_socket.i}
+
+        # if new_module.name.endswith('_stator'):
+        #     new_module.name = selected_module[:-7]
+        # last_module = anytree.search.findall_by_attr(L_0a, selected_module)[0]
+
+        # Update the parent_module attribute of the URDF_writer class
+        self.parent_module = new_socket
+
+        # print(self.parent_module)
+
+        return data
 
     def add_module(self, filename, angle_offset, reverse=False, robot_id=0):
         """Add a module specified by filename as child of the currently selected module.
@@ -920,7 +1079,7 @@ class UrdfWriter:
         #    |           |           |           |
         # com-exp   upper port  front port    nothing
         setattr(new_module, 'selected_port', 2)
-        print('mastercube.selected_port :', new_module.selected_port)
+        print('selected_port :', new_module.selected_port)
 
         # save the active ports as a binary string
         setattr(new_module, 'active_ports', "{0:04b}".format(3)) # TODO:change this
@@ -963,8 +1122,11 @@ class UrdfWriter:
                 # link + link
                 self.link_after_link(new_module, self.parent_module, angle_offset, reverse=reverse)
 
-        # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string
-        string = self.process_urdf()
+        if self.speedup:
+            string = ""
+        else:
+            # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string
+            string = self.process_urdf()
 
         # update the urdf file, adding the new module
         # string = write_urdf(path_name + '/urdf/ModularBot_test.urdf', urdf_tree)
@@ -1144,9 +1306,12 @@ class UrdfWriter:
             #             self.root.remove(node)
             #             gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
 
-        # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string
-        # Update the urdf file, removing the module
-        string = self.process_urdf()
+        if self.speedup:
+            string = ""
+        else:
+            # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string
+            # Update the urdf file, removing the module
+            string = self.process_urdf()
 
         # Update parent module attribute. TODO: understand why and if it's needed
         if not self.parent_module.children:
@@ -1443,7 +1608,6 @@ class UrdfWriter:
             Value of the angle between the parent module output frame and the module input frame
         """
 
-        print('AAAAAAAAAAAAAA')
         print('past_Cube')
         if past_Cube.selected_port == 1:
             interface_transform = past_Cube.Con_1_tf
@@ -2012,6 +2176,84 @@ class UrdfWriter:
                       pitch=pitch,
                       yaw=yaw)
 
+    # TODO: remove hard-coded values
+    # temporary solution for double chain robots
+    # useful to run dual_arm_optimization.py script
+    def write_problem_description_dual_arm(self):
+        basic_probdesc_filename = path_name + '/cartesio/ModularBot_cartesio_IK_config.yaml'
+        probdesc_filename = path_name + '/ModularBot/cartesio/ModularBot_cartesio_IK_config.yaml'
+        probdesc = OrderedDict([])
+
+        with open(basic_probdesc_filename, 'r') as stream:
+            try:
+                probdesc = ordered_load(stream, yaml.SafeLoader)
+                # cartesio_stack['EE']['base_link'] = self.listofchains[0]
+                print(probdesc.items()[0])
+            except yaml.YAMLError as exc:
+                print(exc)
+                
+        print(probdesc.items())
+        i = 0
+        tasks = []
+        stack = [tasks]
+        for joints_chain in self.listofchains:
+            ee_name = "EE_" + str(i + 1)
+            tasks.append(ee_name)
+            probdesc['stack'] = stack
+
+            if joints_chain[-1].children:
+                if "con" in joints_chain[-1].children[0].name:
+                    tip_link = joints_chain[-1].children[0].children[0].name
+                else:
+                    tip_link = joints_chain[-1].children[0].name
+            else:
+                tip_link = 'L_' + str(joints_chain[-1].i) + joints_chain[-1].tag
+                if joints_chain[-1].type == 'tool_exchanger':
+                    # tip_link = joints_chain[-1].name
+                    tip_link = joints_chain[-1].pen_name
+            probdesc[ee_name]['distal_link'] = tip_link
+
+            if "con" in joints_chain[0].parent.name:
+                base_link = joints_chain[0].parent.parent.name
+            else:
+                base_link = joints_chain[0].parent.name
+            probdesc[ee_name]['base_link'] = base_link
+            probdesc[ee_name]['type'] = "Cartesian"
+
+            i = i+1
+
+        # joints_chain = self.listofchains[1]
+        # if joints_chain[-1].children:
+        #     if "con" in joints_chain[-1].children[0].name:
+        #         tip_link = joints_chain[-1].children[0].children[0].name
+        #     else:
+        #         tip_link = joints_chain[-1].children[0].name
+        # else:
+        #     tip_link = 'L_' + str(joints_chain[-1].i) + joints_chain[-1].tag
+        #     if joints_chain[-1].type == 'tool_exchanger':
+        #         # tip_link = joints_chain[-1].name
+        #         tip_link = joints_chain[-1].pen_name
+        # probdesc['EE_2']['distal_link'] = tip_link
+        #
+        # if "con" in joints_chain[0].parent.name:
+        #     base_link = joints_chain[0].parent.parent.name
+        # else:
+        #     base_link = joints_chain[0].parent.name
+        # probdesc['EE_2']['base_link'] = base_link
+
+         # Create folder if doesen't exist
+        if not os.path.exists(os.path.dirname(probdesc_filename)):
+            try:
+                os.makedirs(os.path.dirname(probdesc_filename))
+            except OSError as exc: # Guard against race condition
+                if exc.errno != errno.EEXIST:
+                    raise
+
+        with open(probdesc_filename, 'w') as outfile:
+            #ordered_dump(probdesc, stream=outfile, Dumper=yaml.SafeDumper,  default_flow_style=False, line_break='\n\n', indent=4)
+            ordered_dump(probdesc, stream=outfile, default_flow_style=False, line_break='\n\n', indent=4, canonical = False)
+        return probdesc
+
     # temporary solution for single chain robots
     # useful to run CartesianImpedanceController automatically
     def write_problem_description(self):
@@ -2026,7 +2268,7 @@ class UrdfWriter:
                 print(probdesc.items()[0])
             except yaml.YAMLError as exc:
                 print(exc)
-                
+
         print(probdesc.items())
         joints_chain = self.listofchains[0]
         if joints_chain[-1].children:
@@ -2041,17 +2283,18 @@ class UrdfWriter:
                 tip_link = joints_chain[-1].pen_name
         probdesc['EE']['distal_link'] = tip_link
 
-         # Create folder if doesen't exist
+        # Create folder if doesen't exist
         if not os.path.exists(os.path.dirname(probdesc_filename)):
             try:
                 os.makedirs(os.path.dirname(probdesc_filename))
-            except OSError as exc: # Guard against race condition
+            except OSError as exc:  # Guard against race condition
                 if exc.errno != errno.EEXIST:
                     raise
 
         with open(probdesc_filename, 'w') as outfile:
-            #ordered_dump(probdesc, stream=outfile, Dumper=yaml.SafeDumper,  default_flow_style=False, line_break='\n\n', indent=4)
-            ordered_dump(probdesc, stream=outfile, default_flow_style=False, line_break='\n\n', indent=4, canonical = False)
+            # ordered_dump(probdesc, stream=outfile, Dumper=yaml.SafeDumper,  default_flow_style=False, line_break='\n\n', indent=4)
+            ordered_dump(probdesc, stream=outfile, default_flow_style=False, line_break='\n\n', indent=4,
+                         canonical=False)
         return probdesc
 
 

@@ -152,39 +152,89 @@ cat >> cartesio.launch << 'EOF'
     <node if="$(arg markers)" pkg="cartesian_interface" type="marker_spawner" name="interactive_markers" output="screen">
         <param name="tf_prefix" value="$(arg tf_prefix)"/>
     </node>
-
-
-
 </launch>
 EOF
 
-cat > ${package_name}_cartesio.launch << EOF
-<launch>
-    <arg name="pkg_name"  default="${package_name}"/>
-EOF
-
-cat >> ${package_name}_cartesio.launch << 'EOF'
-    <arg name="rate" default="100.0"/>
-    <arg name="prefix" default=""/>
-    <param name="cartesian/problem_description" 
-        textfile="$(eval find(pkg_name) + '/cartesio/ModularBot_cartesio_config.yaml')"/>
-   
-    <param name="is_model_floating_base" value="false"/>
-</launch>
-EOF
+#cat > ${package_name}_cartesio.launch << EOF
+#<launch>
+#    <arg name="pkg_name"  default="${package_name}"/>
+#EOF
+#
+#cat >> ${package_name}_cartesio.launch << 'EOF'
+#    <arg name="rate" default="100.0"/>
+#    <arg name="prefix" default=""/>
+#    <param name="cartesian/problem_description"
+#        textfile="$(eval find(pkg_name) + '/cartesio/ModularBot_cartesio_config.yaml')"/>
+#
+#    <param name="is_model_floating_base" value="false"/>
+#</launch>
+#EOF
 
 cd ..
 
 mkdir launch
 cd launch
 
-cat >> ${package_name}_sliders.launch << EOF
+printf "${GREEN}Creating ModularBot_ik.launch${NC}"
+echo
+
+cat > ModularBot_ik.launch << EOF
+<launch>
+    <arg name="pkg_name"  default="$package_name"/>
+EOF
+
+cat >> ModularBot_ik.launch << 'EOF'
+    <param name="robot_description" textfile="$(eval find(pkg_name) + '/urdf/ModularBot.urdf')"/>
+    <param name="robot_description_semantic" textfile="$(eval find(pkg_name) + '/srdf/ModularBot.srdf')"/>
+    <param name="cartesian/problem_description" textfile="$(eval find(pkg_name) + '/cartesio/ModularBot_cartesio_IK_config.yaml')"/>
+
+    <arg name="solver" default="OpenSot"/>
+    <arg name="prefix" default=""/>
+    <arg name="use_xbot_config" default="false"/>
+    <arg name="verbosity" default="0"/>
+    <arg name="rate" default="100.0"/>
+    <arg name="tf_prefix" default="ci"/>
+    <arg name="markers" default="true"/>
+    <arg name="namespace" default=""/>
+
+
+    <node pkg="cartesian_interface" type="ros_server_node"
+                                    name="ros_server_node"
+                                    required="true"
+                                    output="screen"
+                                    launch-prefix="$(arg prefix)">
+
+        <param name="is_model_floating_base" type="bool" value="false"/>
+        <param name="model_type" value="RBDL"/>
+        <param name="solver" value="$(arg solver)"/>
+        <param name="use_xbot_config" value="$(arg use_xbot_config)"/>
+        <param name="verbosity" value="$(arg verbosity)"/>
+        <param name="rate" value="$(arg rate)"/>
+        <param name="tf_prefix" value="$(arg tf_prefix)"/>
+
+    </node>
+
+    <node if="$(arg markers)" pkg="cartesian_interface" type="marker_spawner" name="interactive_markers" output="screen">
+        <param name="tf_prefix" value="$(arg tf_prefix)"/>
+    </node>
+
+    <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
+        <param name="use_gui" value="true"/>
+        <param name="rate" value="10"/>
+        <remap from="joint_states" to="cartesian/posture/reference"/>
+        <remap from="zeros" to="cartesian/posture/home"/>
+    </node>
+
+</launch>
+EOF
+
+cat > ModularBot_sliders.launch << EOF
 <launch>
     <arg name="gui" default="true" />
     <arg name="pkg_name"  default="$package_name"/>
 EOF
 
-cat >> ${package_name}_sliders.launch << 'EOF'
+cat >> ModularBot_sliders.launch << 'EOF'
     <param name="robot_description" textfile="$(eval find(pkg_name) + '/urdf/ModularBot.urdf')"/>
     <param name="robot_description_semantic" textfile="$(eval find(pkg_name) + '/srdf/ModularBot.srdf')"/>
     
@@ -210,6 +260,7 @@ mkdir database
 cp -TRfv $SCRIPT_ROOT/../web/static/models $ROBOTOLOGY_ROOT/robots/${package_name}/database
 #cd $ROBOTOLOGY_ROOT/robots/${package_name}
 cd urdf
-gz sdf --print ${package_name}.urdf > ${package_name}.sdf
-mv -f ${package_name}.sdf ../database/ModularBot_fixed_base/
+gz sdf --print ModularBot.urdf > ModularBot.sdf
 cd ..
+rm ./database/ModularBot_fixed_base/ModularBot.sdf
+mv -f ./urdf/ModularBot.sdf ./database/ModularBot_fixed_base/
