@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import time
 from flask import Flask, render_template, request, jsonify, send_from_directory, url_for
-import hierarchy_server as hp
+#import hierarchy_server as hp
 # import flask
 # print(flask.__file__, flask.__version__)
 
@@ -26,9 +26,9 @@ urdf_writer = URDF_writer.UrdfWriter()
 urdf_writer_fromHW = URDF_writer.UrdfWriter()
 
 # Initialize json parser server manager
-manager = hp.MANAGER(config_namespace='/state_machine')
+#manager = hp.MANAGER(config_namespace='/state_machine')
 
-manager.publish_to_frontend()
+#manager.publish_to_frontend()
 # Prepare context and sockets. When not using Poller class
 
 # Prepare our context and sockets
@@ -85,7 +85,7 @@ def writeURDF():
         print(srdf)
         joint_map = urdf_writer.write_joint_map()
         lowlevel_config = urdf_writer.write_lowlevel_config()
-        probdesc = urdf_writer.write_problem_description()
+#        probdesc = urdf_writer.write_problem_description()
         # cartesio_stack = urdf_writer.write_cartesio_stack()
     else:
         data = urdf_writer_fromHW.write_urdf()
@@ -118,6 +118,19 @@ def addCube():
     data = jsonify(data)
     return data 
 
+
+# call URDF_writer.py to add another socket
+@app.route('/addSocket/', methods=['POST'])
+def addSocket():
+    values = json.loads(request.form.get('values'))
+    offset = values['offset']
+    print(offset)
+    angle_offset = values['angle_offset']
+    print(angle_offset)
+    data = urdf_writer.add_socket(float(offset.get('x_offset')), float(offset.get('y_offset')),
+                                  float(offset.get('z_offset')), float(angle_offset))
+    data = jsonify(data)
+    return data
 
 # call URDF_writer.py to remove the last module
 @app.route('/removeModule/', methods=['POST'])
@@ -315,7 +328,7 @@ def byteify(input):
 if __name__ == '__main__':
 
     # Start Flask web-server
-    app.run(host='192.168.9.211', port=5000, debug=False, threaded=True)
+    app.run(debug=True, threaded=True)
     #host='10.24.8.100', port=5000, debug=False, 
 
     #main()

@@ -200,9 +200,10 @@ cat >> ModularBot_ik.launch << 'EOF'
 
     <node pkg="cartesian_interface" type="ros_server_node"
                                     name="ros_server_node"
-                                    required="true"
                                     output="screen"
-                                    launch-prefix="$(arg prefix)">
+                                    launch-prefix="$(arg prefix)"
+                                    respawn="true">
+                                    <!-- required="true" -->
 
         <param name="is_model_floating_base" type="bool" value="false"/>
         <param name="model_type" value="RBDL"/>
@@ -218,14 +219,15 @@ cat >> ModularBot_ik.launch << 'EOF'
         <param name="tf_prefix" value="$(arg tf_prefix)"/>
     </node>
 
-    <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
+    <!-- <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
         <param name="use_gui" value="true"/>
         <param name="rate" value="10"/>
         <remap from="joint_states" to="cartesian/posture/reference"/>
         <remap from="zeros" to="cartesian/posture/home"/>
-    </node>
+    </node> -->
 
 </launch>
+
 EOF
 
 cat > ModularBot_sliders.launch << EOF

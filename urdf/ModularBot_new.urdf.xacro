@@ -80,16 +80,16 @@
         </joint>
         <link name="${name}">
             <visual>
-                <origin rpy="0 0 0" xyz="0.25 0 0.005"/>
+                <origin rpy="0 0 0" xyz="0.3 0 -0.005"/>
                 <geometry>
-                    <box size="0.5 0.5 0.01"/>
+                    <box size="0.6 0.6 0.01"/>
                 </geometry>
                 <material name="gray"/>
             </visual>
             <collision>
-                <origin rpy="0 0 0" xyz="0.25 0 0.005"/>
+                <origin rpy="0 0 0" xyz="0.25 0 -0.005"/>
                 <geometry>
-                    <box size="0.5 0.5 0.01"/>
+                    <box size="0.6 0.6 0.01"/>
                 </geometry>
             </collision>
             <inertial>
@@ -555,7 +555,7 @@
                     <!--</geometry>-->
                 <!--</collision>-->
             <!--</xacro:if>-->
-            <!--&lt;!&ndash; inertial parameters for avocado rotating part. wrt a point on one end of the rod &ndash;&gt;-->
+            <!--&lt;!&ndash; inertial parameters for ORANGE rotating part. wrt a point on one end of the rod &ndash;&gt;-->
             <!--<inertial>-->
                 <!--<origin xyz="0 0 -0.0635" rpy="0 0 0"/>-->
                 <!--<mass value="${mass}"/>-->
@@ -624,7 +624,7 @@
                     </geometry>
                 </collision>
             </xacro:if>
-            <!--inertial parameters for avocado rotating part. wrt a point on one end of the rod-->
+            <!--inertial parameters for ORANGE rotating part. wrt a point on one end of the rod-->
             <!-- <inertial>
                 <origin xyz="0 0 -0.002265" rpy="0 0 0"/>
                 <mass value="0.153466"/>
@@ -680,7 +680,7 @@
                     </geometry>
                 </collision>
             </xacro:if>
-            <!--inertial parameters for avocado rotating part. wrt a point on one end of the rod-->
+            <!--inertial parameters for ORANGE rotating part. wrt a point on one end of the rod-->
             <!-- <inertial>
                 <origin xyz="0 0 -0.002265" rpy="0 0 0"/>
                 <mass value="0.153466"/>
@@ -714,6 +714,20 @@
             <child link="${name}"/>
             <origin xyz="0.0 0.0 0.222" rpy="0.0 0.0 0.0"/>
         </joint>
+    </xacro:macro>
+
+    <!-- Add a simple frame ("end-effector") for simulation purposes -->
+    <xacro:macro name="add_simple_ee" params="type name size_z">
+        <link name="${name}">
+            <inertial>
+                <origin xyz="0 0 ${size_z/2}" rpy="0 0 0"/>
+                <mass value="0.848"/>
+                <inertia
+                        ixx="1.1564566e-03" ixy="0.0" ixz="0.0"
+                        iyy="1.2469918e-03" iyz="0.0"
+                        izz="5.7388903e-04"/>
+            </inertial>
+        </link>
     </xacro:macro>
 
     <!-- Macro for adding the physical module housing the actuator -->
