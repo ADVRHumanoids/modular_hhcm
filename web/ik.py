@@ -20,6 +20,7 @@ from urdf_parser_py.urdf import URDF
 from pykdl_utils.kdl_kinematics import KDLKinematics, kdl_to_mat
 import PyKDL as kdl
 
+pickle_path = '/home/edoardo/Documents/Papers/ICRA2021_task_based_optimization/pickles'
 
 def tf_subscriber(ci, caller_id=""):
     poses = []
@@ -65,8 +66,7 @@ def playback():
     task_B = task_list[1]
     print task_A, task_B
 
-    poses_tuple_list = pickle_utilities.load_pickle(
-        '/home/edoardo/MultiDoF-superbuild/external/modular/web/ee_A_poses_5DOF.pkl')
+    poses_tuple_list = pickle_utilities.load_pickle(pickle_path + '/ee_A_poses_5DOF.pkl')
     for p in poses_tuple_list:
         target_pose = Affine3(pos=p[0], rot=p[1])
         # w = pyci.WayPoint()
@@ -74,8 +74,7 @@ def playback():
         # w.time = 4.0
         ee_A_waypoints.append(target_pose)
 
-    poses_tuple_list = pickle_utilities.load_pickle(
-        '/home/edoardo/MultiDoF-superbuild/external/modular/web/ee_B_poses_5DOF.pkl')
+    poses_tuple_list = pickle_utilities.load_pickle(pickle_path + '/ee_B_poses_5DOF.pkl')
     for p in poses_tuple_list:
         target_pose = Affine3(pos=p[0], rot=p[1])
         # w = pyci.WayPoint()
@@ -392,8 +391,8 @@ def cartesio_ik2(ci):
     print ee_B_pose
     ee_B_poses.append((ee_B_pose.translation, ee_B_pose.quaternion))
 
-    pickle_utilities.dump_pickle('ee_A_poses_2nd_bis.pkl', ee_A_poses)
-    pickle_utilities.dump_pickle('ee_B_poses_2nd_bis.pkl', ee_B_poses)
+    pickle_utilities.dump_pickle(pickle_path + 'ee_A_poses_2nd_bis.pkl', ee_A_poses)
+    pickle_utilities.dump_pickle(pickle_path + 'ee_B_poses_2nd_bis.pkl', ee_B_poses)
 
     # Compute error norm. Only translation , no rotation!
     tr_norm_1, rot_norm_1 = compute_error_norm(ee_pose_1, target_pose_1)
@@ -591,8 +590,8 @@ def cartesio_ik(ci):
     # process.stop()
     # print "Poses size: ", len(listened_poses)
 
-    pickle_utilities.dump_pickle('ee_A_poses_5DOF.pkl', ee_A_poses)
-    pickle_utilities.dump_pickle('ee_B_poses_5DOF.pkl', ee_B_poses)
+    pickle_utilities.dump_pickle(pickle_path + 'ee_A_poses_5DOF.pkl', ee_A_poses)
+    pickle_utilities.dump_pickle(pickle_path + 'ee_B_poses_5DOF.pkl', ee_B_poses)
 
     tr_norm_1, rot_norm_1 = compute_error_norm(ee_pose_1, target_pose_1)
     tr_norm_2, rot_norm_2 = compute_error_norm(ee_pose_2, target_pose_2)

@@ -246,7 +246,7 @@ def plot_force_transmission_ratios(ft1, ft2, ft3, ft4, ft5):
 
 
 if __name__ == "__main__":
-    candidates = pickle_utilities.load_pickle('/home/edoardo/MultiDoF-superbuild/external/modular/web/20201016-231348.pkl')
+    candidates = pickle_utilities.load_pickle('pickle_path + /20201016-231348.pkl')
 
     tau_list, dist_list, manip_list, ratios_list = eval(candidates)
 

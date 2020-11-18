@@ -16,6 +16,8 @@ import URDF_writer
 
 list_of_candidates = []
 
+pickle_path = '/home/edoardo/Documents/Papers/ICRA2021_task_based_optimization/pickles'
+
 class Solution(object):
     def __init__(self, sol_robot, sol_xy, sol_angle_offset, sol_pose_1, sol_pose_2, sol_q, sol_tau):
         self.robot = sol_robot
@@ -332,7 +334,7 @@ def optimize():
                     c = Candidate(robot, xy, angle_offset, result)
                     list_of_candidates.append(c)
 
-    pickle_utilities.dump_pickle(time.strftime("%Y%m%d-%H%M%S")+'.pkl', list_of_candidates)
+    pickle_utilities.dump_pickle(pickle_path + time.strftime("%Y%m%d-%H%M%S")+'.pkl', list_of_candidates)
     launch.shutdown()
 
 def optimize2ndtask():
@@ -348,8 +350,7 @@ def optimize2ndtask():
     # Instance of UrdfWriter class
     urdf_writer = URDF_writer.UrdfWriter(speedup=True)
 
-    first_task_solutions = pickle_utilities.load_pickle(
-        '/home/edoardo/MultiDoF-superbuild/external/modular/web/20201028-011803_peginhole.pkl')
+    first_task_solutions = pickle_utilities.load_pickle(pickle_path + '/20201028-011803_peginhole.pkl')
 
     taus, dists, manips, ratios = evaluate(first_task_solutions)
     idx_to_rmv = filter_manipulability(first_task_solutions, manips)
@@ -433,7 +434,7 @@ def optimize2ndtask():
             c = Candidate(sol.robot, sol.xy, sol.angle_offset, result)
             list_of_candidates.append(c)
 
-    pickle_utilities.dump_pickle(time.strftime("%Y%m%d-%H%M%S")+'.pkl', list_of_candidates)
+    pickle_utilities.dump_pickle(pickle_path + time.strftime("%Y%m%d-%H%M%S")+'.pkl', list_of_candidates)
     launch.shutdown()
 
 
