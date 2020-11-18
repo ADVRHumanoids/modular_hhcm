@@ -16,6 +16,10 @@ def generate_robot_set(n):
             robot = (first_chain, second_chain)
             robots.append(tuple(sorted(robot, reverse=True)))
 
+    for r in robots:
+        if len(r[1]) > len(r[0]):
+            r = (r[1], r[0])
+
     print "Number of combinations:" , len(robots)
     unique_robots_set = set(robots)
     print "Number of unique robots:" , len(unique_robots_set)
