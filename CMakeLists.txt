@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(modular)
 
 find_package(catkin REQUIRED)
+catkin_python_setup()
 catkin_package()
 
 if(CATKIN_ENABLE_TESTING)
@@ -9,13 +10,13 @@ if(CATKIN_ENABLE_TESTING)
   roslaunch_add_file_check(launch)
 endif()
 
-install(DIRECTORY launch rviz  scripts web/static/models/modular/meshes
+install(DIRECTORY launch rviz  scripts src/modular/static/models/modular/meshes
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
-if(EXISTS ModularBot)
-	install(DIRECTORY ModularBot
-		DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
-endif()
+# if(EXISTS ModularBot)
+# 	install(DIRECTORY ModularBot
+# 		DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+# endif()
 
 #### NOW YOU CAN EVENTUALLY DIRECTLY COPY ModularBot FOLDER INTO configs ####
 #file(COPY ModularBot/urdf/ModularBot.urdf DESTINATION ../../../configs/ADVR_shared/ModularBot/urdf)

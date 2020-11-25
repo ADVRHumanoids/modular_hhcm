@@ -9,10 +9,10 @@ import pickle_utilities
 import time
 import numpy as np
 
-from generator import generate_robot_set
-from ik import cartesio_ik, cartesio_ik2, get_manipulability
+from modular.generator import generate_robot_set
+from modular.ik import cartesio_ik, cartesio_ik2, get_manipulability
 
-import URDF_writer
+from modular.URDF_writer import UrdfWriter
 
 list_of_candidates = []
 
@@ -146,7 +146,7 @@ def evaluate_robot(robot, xy, angle_offset):
     homing_joint_map = {}
     # homing_value = float(builder_joint_map[joint_module.name]['angle'])
 
-    urdf_writer = URDF_writer.UrdfWriter(speedup=True)
+    urdf_writer = UrdfWriter(speedup=True)
 
     # Add a table
     urdf_writer.add_table()
@@ -222,7 +222,7 @@ def optimize():
     rospy.loginfo("started")
 
     # Instance of UrdfWriter class
-    urdf_writer = URDF_writer.UrdfWriter(speedup=True)
+    urdf_writer = UrdfWriter(speedup=True)
 
     required_dofs = 5
     robot_set = generate_robot_set(required_dofs)
@@ -237,7 +237,7 @@ def optimize():
     print coordinates
     print len(coordinates)
 
-    for robot in robot_set:  # [((0, 1, 0, 1), (1,))]
+    for robot in robot_set:  # [((0, 1, 0, 1), (1,)), ((0, 1, 0, 1, 1), ()), ((0, 1, 1), (0, 1))]
         print "Evaluating", robot
 
         # if not robot[1]:
@@ -306,7 +306,7 @@ def optimize():
         # Add a simple virtual end-effector
         urdf_writer.add_simple_ee(0.0, 0.0, 0.075, 0.0)
         # Modify position and orientation of the 2nd base
-        for xy in coordinates:
+        for xy in [(0.4, 0.0), (0.6, 0.0)]: # coordinates:
             for angle_offset in [3.14]:  # [0.0, 1.57, 3.14, -1.57]
                 # This robot breaks Opensot for some reason. skip it
                 if angle_offset == -1.57 and robot == ((0, 1, 0), (0, 1)):
@@ -329,7 +329,7 @@ def optimize():
                 rospy.wait_for_message("/cartesian/heartbeat", Empty)
                 # # Instance of Cartesian Interface
                 ci = pyci.CartesianInterfaceRos()
-                result = cartesio_ik2(ci)
+                result = cartesio_ik(ci)
                 if result['success']:
                     c = Candidate(robot, xy, angle_offset, result)
                     list_of_candidates.append(c)
@@ -348,7 +348,7 @@ def optimize2ndtask():
     rospy.loginfo("started")
 
     # Instance of UrdfWriter class
-    urdf_writer = URDF_writer.UrdfWriter(speedup=True)
+    urdf_writer = UrdfWriter(speedup=True)
 
     first_task_solutions = pickle_utilities.load_pickle(pickle_path + '/20201028-011803_peginhole.pkl')
 
@@ -441,5 +441,5 @@ def optimize2ndtask():
 if __name__ == "__main__":
     # optimize()
     # optimize2ndtask()
-    # evaluate_robot(((0, 1, 1), (0, 1)), (0.4, 0.4), 3.14)
-    evaluate_robot(((1, 0, 1, 0, 1), ()), (0.6, 0.0), 3.14)
+    evaluate_robot(((0, 1, 1), (0, 1)), (0.4, 0.4), 3.14)
+    # evaluate_robot(((1, 0, 1, 0, 1), ()), (0.6, 0.0), 3.14)
