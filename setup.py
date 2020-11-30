@@ -9,7 +9,7 @@ d = generate_distutils_setup(
    # This will make the RobotDesignStudio.py script globally visible
    # Not needed if using $ env FLASK_APP=modular flask run
    # scripts=['src/modular/RobotDesignStudio.py'],
-   packages=['modular', 'modular.optimization', 'modular.protobuf'],
+   packages=['modular', 'modular.optimization', 'modular.protobuf', 'modular.web'],
    package_dir={'': 'src'},
    # package_data={'modular': ['*.yaml', 'templates/*', 'static/*']},  # Alternative to include_package_data
    include_package_data=True,

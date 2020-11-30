@@ -34,7 +34,14 @@ if rootDir not in sys.path:  # add parent dir to paths
 import modular
 
 path_name = os.path.dirname(modular.__file__)
-path_superbuild = os.path.abspath(os.path.join(path_name, '../..'))
+
+import pkg_resources
+# Could be any dot-separated package/module name or a "Requirement"
+resource_package = __name__
+#resource_path = '/'.join(('templates', 'temp_file'))  # Do not use os.path.join()
+repl_yaml = pkg_resources.resource_string(resource_package, 'repl.yaml')
+# or for a file-like stream:
+#template = pkg_resources.resource_stream(resource_package, resource_path)
 
 ET.register_namespace('xacro', 'http://ros.org/wiki/xacro')
 ns = {'xacro': 'http://ros.org/wiki/xacro'}
@@ -2424,7 +2431,6 @@ class UrdfWriter:
 
         # global path_name
         jointmap_filename = path_name + '/ModularBot/joint_map/ModularBot_joint_map.yaml'
-        # jointmap_filename = path_superbuild + '/configs/ADVR_shared/ModularBot/joint_map/ModularBot_joint_map.yaml'
         i = 0
         joint_map = {'joint_map': {}}
         for joints_chain in self.listofchains:
@@ -2459,7 +2465,6 @@ class UrdfWriter:
         """Generates a basic srdf so that the model can be used right away with XBotCore"""
         global path_name
         srdf_filename = path_name + '/ModularBot/srdf/ModularBot.srdf'
-        # srdf_filename = path_superbuild + '/configs/ADVR_shared/ModularBot/srdf/ModularBot.srdf'
 
         root = ET.Element('robot', name="ModularBot")
 
@@ -2531,9 +2536,8 @@ class UrdfWriter:
     # Function writin the urdf file after converting from .xacro (See xacro/__init__.py for reference)
     def write_urdf(self):
         """Returns the string with the URDF, after writing it to file"""
-        global path_name, path_superbuild
+        global path_name
         urdf_filename = path_name + '/ModularBot/urdf/ModularBot.urdf'
-        # urdf_filename = path_superbuild + '/configs/ADVR_shared/ModularBot/urdf/ModularBot.urdf'
 
         out = xacro.open_output(urdf_filename)
 

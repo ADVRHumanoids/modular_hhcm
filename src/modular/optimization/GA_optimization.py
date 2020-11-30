@@ -9,8 +9,6 @@ from cartesian_interface.pyci_all import *
 import rospy
 from sensor_msgs.msg import JointState
 import timeit
-import subprocess
-import shlex
 import roslaunch
 
 from deap import base
