@@ -1,16 +1,9 @@
 from cartesian_interface.pyci_all import *
-import pickle_utilities
-import rospy
 import rbdl
 import numpy as np
-import matplotlib.pyplot as plt
 from scipy.spatial.transform import Rotation as R
-import threading
-import time
-import tf
 
 import rospy
-import roslaunch
 import timeit
 from sensor_msgs.msg import JointState
 
@@ -140,7 +133,7 @@ class cartesio_ik2(object):
 
             # Check accuracy of goals reaching
             if tr_norm < 0.001:  # and rot_norm < 0.005:
-                model = rbdl.loadModel('/home/edoardo/MultiDoF-superbuild/external/modular/ModularBot/urdf/ModularBot.urdf')
+                model = rbdl.loadModel('/ModularBot/urdf/ModularBot.urdf')
                 rbdl.InverseDynamics(model, self.q[i], self.q[i] * 0, self.q[i] * 0, self.tau[i])
                 self.J[i], self.manipulability[i], self.force_transmission_ratios[i] = get_jacobian(self.q[i])
             else:
@@ -161,7 +154,7 @@ class cartesio_ik2(object):
 
 
 def get_jacobian(q):
-    robot = URDF.from_xml_file('/home/edoardo/MultiDoF-superbuild/external/modular/ModularBot/urdf/ModularBot.urdf')
+    robot = URDF.from_xml_file('/ModularBot/urdf/ModularBot.urdf')
     kdl_kin_A = KDLKinematics(robot, 'base_link', 'ee_A')
     kdl_kin_B = KDLKinematics(robot, 'base_link', 'ee_B')
 

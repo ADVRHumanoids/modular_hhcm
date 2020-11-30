@@ -21,10 +21,10 @@ from deap import algorithms
 
 import sys
 sys.path.insert(0, '/home/edoardo/advr-superbuild/external')
-import URDF_writer
+import src.modular.URDF_writer
 
 # Instance of UrdfWriter class
-urdf_writer = URDF_writer.UrdfWriter()
+urdf_writer = src.modular.URDF_writer.UrdfWriter()
 
 
 def Joint1(child):

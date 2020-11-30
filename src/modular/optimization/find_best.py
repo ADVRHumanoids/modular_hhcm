@@ -1,8 +1,6 @@
-import pickle_utilities
-from ik import get_manipulability
+from modular.optimization.ik import get_manipulability
 import numpy as np
-import math
-from dual_arm_optimization import Candidate, evaluate_robot
+from modular.optimization.pickle_utilities import load_pickle
 
 
 # def get_manipulabilty(jacobian):  # TODO: specify indexes to discard for manip. computation. Now z rot. is discarded
@@ -246,7 +244,7 @@ def plot_force_transmission_ratios(ft1, ft2, ft3, ft4, ft5):
 
 
 if __name__ == "__main__":
-    candidates = pickle_utilities.load_pickle('pickle_path + /20201016-231348.pkl')
+    candidates = load_pickle('pickle_path + /20201016-231348.pkl')
 
     tau_list, dist_list, manip_list, ratios_list = eval(candidates)
 

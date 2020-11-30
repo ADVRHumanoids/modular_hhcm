@@ -1,17 +1,12 @@
 from cartesian_interface.pyci_all import *
-import pickle_utilities
-import rospy
 import rbdl
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial.transform import Rotation as R
 import threading
-import time
 import tf
 import math
-
 import rospy
-import roslaunch
 import timeit
 from sensor_msgs.msg import JointState
 
@@ -19,6 +14,8 @@ from urdf_parser_py.urdf import URDF
 # from pykdl_utils.kdl_parser import kdl_tree_from_urdf_model
 from pykdl_utils.kdl_kinematics import KDLKinematics, kdl_to_mat
 import PyKDL as kdl
+
+from modular.optimization.pickle_utilities import load_pickle, dump_pickle
 
 pickle_path = '/home/edoardo/Documents/Papers/ICRA2021_task_based_optimization/pickles'
 
@@ -66,7 +63,7 @@ def playback():
     task_B = task_list[1]
     print task_A, task_B
 
-    poses_tuple_list = pickle_utilities.load_pickle(pickle_path + '/ee_A_poses_5DOF.pkl')
+    poses_tuple_list = load_pickle(pickle_path + '/ee_A_poses_5DOF.pkl')
     for p in poses_tuple_list:
         target_pose = Affine3(pos=p[0], rot=p[1])
         # w = pyci.WayPoint()
@@ -74,7 +71,7 @@ def playback():
         # w.time = 4.0
         ee_A_waypoints.append(target_pose)
 
-    poses_tuple_list = pickle_utilities.load_pickle(pickle_path + '/ee_B_poses_5DOF.pkl')
+    poses_tuple_list = load_pickle(pickle_path + '/ee_B_poses_5DOF.pkl')
     for p in poses_tuple_list:
         target_pose = Affine3(pos=p[0], rot=p[1])
         # w = pyci.WayPoint()
@@ -391,8 +388,8 @@ def cartesio_ik2(ci):
     print ee_B_pose
     ee_B_poses.append((ee_B_pose.translation, ee_B_pose.quaternion))
 
-    pickle_utilities.dump_pickle(pickle_path + 'ee_A_poses_2nd_bis.pkl', ee_A_poses)
-    pickle_utilities.dump_pickle(pickle_path + 'ee_B_poses_2nd_bis.pkl', ee_B_poses)
+    dump_pickle(pickle_path + 'ee_A_poses_2nd_bis.pkl', ee_A_poses)
+    dump_pickle(pickle_path + 'ee_B_poses_2nd_bis.pkl', ee_B_poses)
 
     # Compute error norm. Only translation , no rotation!
     tr_norm_1, rot_norm_1 = compute_error_norm(ee_pose_1, target_pose_1)
@@ -410,7 +407,7 @@ def cartesio_ik2(ci):
     # Check accuracy of goals reaching
     if all(norm < 0.001 for norm in tr_norms) and all(norm < 0.75 for norm in rot_norms):
         success = True
-        model = rbdl.loadModel('/home/edoardo/MultiDoF-superbuild/external/modular/ModularBot/urdf/ModularBot.urdf')
+        model = rbdl.loadModel('/ModularBot/urdf/ModularBot.urdf')
         rbdl.InverseDynamics(model, q_1, q_1 * 0, q_1 * 0, tau_1)
         rbdl.InverseDynamics(model, q_2, q_2 * 0, q_2 * 0, tau_2)
         rbdl.InverseDynamics(model, q_3, q_3 * 0, q_3 * 0, tau_3)
@@ -590,8 +587,8 @@ def cartesio_ik(ci):
     # process.stop()
     # print "Poses size: ", len(listened_poses)
 
-    pickle_utilities.dump_pickle(pickle_path + 'ee_A_poses_5DOF.pkl', ee_A_poses)
-    pickle_utilities.dump_pickle(pickle_path + 'ee_B_poses_5DOF.pkl', ee_B_poses)
+    dump_pickle(pickle_path + 'ee_A_poses_5DOF.pkl', ee_A_poses)
+    dump_pickle(pickle_path + 'ee_B_poses_5DOF.pkl', ee_B_poses)
 
     tr_norm_1, rot_norm_1 = compute_error_norm(ee_pose_1, target_pose_1)
     tr_norm_2, rot_norm_2 = compute_error_norm(ee_pose_2, target_pose_2)
@@ -606,7 +603,7 @@ def cartesio_ik(ci):
     # Check accuracy of goals reaching
     if tr_norm_1 < 0.001 and tr_norm_2 < 0.001 and rot_norm_1 < 0.005 and rot_norm_2 < 0.005:
         success = True
-        model = rbdl.loadModel('/home/edoardo/MultiDoF-superbuild/external/modular/ModularBot/urdf/ModularBot.urdf')
+        model = rbdl.loadModel('/ModularBot/urdf/ModularBot.urdf')
         rbdl.InverseDynamics(model, q_1, q_1 * 0, q_1 * 0, tau_1)
         rbdl.InverseDynamics(model, q_2, q_2 * 0, q_2 * 0, tau_2)
         J1, m1, fr1 = get_jacobian(q_1, 1)
@@ -636,7 +633,7 @@ def cartesio_ik(ci):
 
 
 def get_jacobian(q, indexes_to_reduce):
-    robot = URDF.from_xml_file('/home/edoardo/MultiDoF-superbuild/external/modular/ModularBot/urdf/ModularBot.urdf')
+    robot = URDF.from_xml_file('/ModularBot/urdf/ModularBot.urdf')
     kdl_kin_A = KDLKinematics(robot, 'base_link', 'ee_A')
     kdl_kin_B = KDLKinematics(robot, 'base_link', 'ee_B')
 

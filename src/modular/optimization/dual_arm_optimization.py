@@ -1,16 +1,16 @@
-from itertools import product, ifilterfalse
+from itertools import product
 import numpy
 import rospy
 import roslaunch
 import rosnode
 from cartesian_interface.pyci_all import *
 from std_msgs.msg import Empty
-import pickle_utilities
 import time
 import numpy as np
 
-from modular.generator import generate_robot_set
-from modular.ik import cartesio_ik, cartesio_ik2, get_manipulability
+from modular.optimization.pickle_utilities import load_pickle, dump_pickle
+from modular.optimization.generator import generate_robot_set
+from modular.optimization.ik import cartesio_ik, cartesio_ik2, get_manipulability
 
 from modular.URDF_writer import UrdfWriter
 
@@ -334,7 +334,7 @@ def optimize():
                     c = Candidate(robot, xy, angle_offset, result)
                     list_of_candidates.append(c)
 
-    pickle_utilities.dump_pickle(pickle_path + time.strftime("%Y%m%d-%H%M%S")+'.pkl', list_of_candidates)
+    dump_pickle(pickle_path + time.strftime("%Y%m%d-%H%M%S") + '.pkl', list_of_candidates)
     launch.shutdown()
 
 def optimize2ndtask():
@@ -350,7 +350,7 @@ def optimize2ndtask():
     # Instance of UrdfWriter class
     urdf_writer = UrdfWriter(speedup=True)
 
-    first_task_solutions = pickle_utilities.load_pickle(pickle_path + '/20201028-011803_peginhole.pkl')
+    first_task_solutions = load_pickle(pickle_path + '/20201028-011803_peginhole.pkl')
 
     taus, dists, manips, ratios = evaluate(first_task_solutions)
     idx_to_rmv = filter_manipulability(first_task_solutions, manips)
@@ -434,7 +434,7 @@ def optimize2ndtask():
             c = Candidate(sol.robot, sol.xy, sol.angle_offset, result)
             list_of_candidates.append(c)
 
-    pickle_utilities.dump_pickle(pickle_path + time.strftime("%Y%m%d-%H%M%S")+'.pkl', list_of_candidates)
+    dump_pickle(pickle_path + time.strftime("%Y%m%d-%H%M%S") + '.pkl', list_of_candidates)
     launch.shutdown()
 
 

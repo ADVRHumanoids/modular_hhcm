@@ -1,0 +1,6 @@
+# It seems to be ignored by catkin installation.
+# Everything gets installed whether included here or not
+
+graft src/modular/static
+graft src/modular/templates
+global-exclude *.pyc
