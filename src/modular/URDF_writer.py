@@ -33,15 +33,14 @@ if rootDir not in sys.path:  # add parent dir to paths
 
 import modular
 
-ET.register_namespace('xacro', 'http://ros.org/wiki/xacro')
-ns = {'xacro': 'http://ros.org/wiki/xacro'}
-
 path_name = os.path.dirname(modular.__file__)
 path_superbuild = os.path.abspath(os.path.join(path_name, '../..'))
 
+ET.register_namespace('xacro', 'http://ros.org/wiki/xacro')
+ns = {'xacro': 'http://ros.org/wiki/xacro'}
 
 # #obtaining tree from base file
-# basefile_name=path_name + '/urdf/ModularBot_new.urdf.xacro'
+# basefile_name=path_name + '/modular_data/urdf/ModularBot_library.urdf.xacro'
 # urdf_tree = ET.parse(basefile_name)
 
 
@@ -111,7 +110,7 @@ class UrdfWriter:
 
         if elementree is None:
             # Open the base xacro file
-            filename = path_name + '/urdf/ModularBot_new.urdf.xacro'
+            filename = path_name + '/modular_data/urdf/ModularBot_library.urdf.xacro'
             with codecs.open(filename, 'r') as f:
                 string = f.read()
             # Instantiate an Element Tree
@@ -219,7 +218,7 @@ class UrdfWriter:
             self.__init__()
 
         # # Open the base xacro file
-        # filename = path_name + '/urdf/ModularBot_new.urdf.xacro'
+        # filename = path_name + '/modular_data/urdf/ModularBot_library.urdf.xacro'
         # with codecs.open(filename, 'r') as f:
         #     string = f.read()
         # # Instantiate an Element Tree
@@ -369,7 +368,7 @@ class UrdfWriter:
             self.__init__()
 
         # # Open the base xacro file
-        # filename = path_name + '/urdf/ModularBot_new.urdf.xacro'
+        # filename = path_name + '/modular_data/urdf/ModularBot_library.urdf.xacro'
         # with codecs.open(filename, 'r') as f:
         #     string = f.read()
         # # Instantiate an Element Tree

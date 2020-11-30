@@ -152,7 +152,7 @@ venv.bak/
 .pylintrc
 
 # Folders to ignore
-configs/*
+src/modular/modular_data/configs/*
 .idea/*
 ModularBot/*
 

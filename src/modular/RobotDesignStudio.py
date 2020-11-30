@@ -6,24 +6,24 @@ from flask import Flask, render_template, request, jsonify, send_from_directory,
 # print(flask.__file__, flask.__version__)
 
 # import logging
-import URDF_writer
+from modular.URDF_writer import UrdfWriter
 # import zmq_poller
 import zmq
 import yaml
 import json
 
-import zmq_requester
+import modular.zmq_requester
 
-app = Flask(__name__, static_folder='static', static_url_path='')
+app = Flask(__name__) #, static_folder='static', static_url_path='')
 
 # Instance of ZMQ Poller class (create sockets, etc.)
 #zmq_poller = zmq_poller.ZmqPoller()
 
 # Instance of UrdfWriter class
-urdf_writer = URDF_writer.UrdfWriter()
+urdf_writer = UrdfWriter()
 
 # 2nd instance of UrdfWriter class for the robot got from HW
-urdf_writer_fromHW = URDF_writer.UrdfWriter()
+urdf_writer_fromHW = UrdfWriter()
 
 # Initialize json parser server manager
 #manager = hp.MANAGER(config_namespace='/state_machine')
@@ -210,10 +210,10 @@ def syncHW():
     # data = jsonify(data)
     # return data
 
-    opts = zmq_requester.repl_option()
+    opts = modular.zmq_requester.repl_option()
     d = yaml.load(open(opts["repl_yaml"], 'r'))
 
-    io = zmq_requester.zmqIO(d['uri'])
+    io = modular.zmq_requester.zmqIO(d['uri'])
 
     cnt = opts["cmd_exec_cnt"]
     while cnt:

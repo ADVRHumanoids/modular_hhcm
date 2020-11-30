@@ -5,13 +5,16 @@ find_package(catkin REQUIRED)
 catkin_python_setup()
 catkin_package()
 
+# catkin_install_python(PROGRAMS src/modular/RobotDesignStudio
+#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
 if(CATKIN_ENABLE_TESTING)
   find_package(roslaunch REQUIRED)
   roslaunch_add_file_check(launch)
 endif()
 
-install(DIRECTORY launch rviz  scripts src/modular/static/models/modular/meshes
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+# install(DIRECTORY launch rviz scripts src/modular/static/models/modular/meshes
+#   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
 # if(EXISTS ModularBot)
 # 	install(DIRECTORY ModularBot

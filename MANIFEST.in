@@ -3,4 +3,5 @@
 
 graft src/modular/static
 graft src/modular/templates
+graft src/modular/modular_data
 global-exclude *.pyc
