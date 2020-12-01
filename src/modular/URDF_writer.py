@@ -11,6 +11,7 @@ import json
 import copy
 from collections import OrderedDict
 
+from utils import ResourceFinder
 import ModuleNode  # import module_from_yaml, ModuleNode, mastercube_from_yaml, slavecube_from_yaml
 import argparse
 
@@ -26,28 +27,12 @@ import os
 import errno
 import sys
 
-currDir = os.path.dirname(os.path.realpath(__file__))
-rootDir = os.path.abspath(os.path.join(currDir, '../..'))
-if rootDir not in sys.path:  # add parent dir to paths
-    sys.path.append(rootDir)
-
-import modular
-
-path_name = os.path.dirname(modular.__file__)
-
-import pkg_resources
-# Could be any dot-separated package/module name or a "Requirement"
-resource_package = __name__
-#resource_path = '/'.join(('templates', 'temp_file'))  # Do not use os.path.join()
-repl_yaml = pkg_resources.resource_string(resource_package, 'repl.yaml')
-# or for a file-like stream:
-#template = pkg_resources.resource_stream(resource_package, resource_path)
-
 ET.register_namespace('xacro', 'http://ros.org/wiki/xacro')
 ns = {'xacro': 'http://ros.org/wiki/xacro'}
 
 # #obtaining tree from base file
-# basefile_name=path_name + '/modular_data/urdf/ModularBot_library.urdf.xacro'
+# resource_path = '/'.join(('modular_data', 'urdf/ModularBot_library.urdf.xacro'))
+# basefile_name = pkg_resources.resource_string(resource_package, resource_path)
 # urdf_tree = ET.parse(basefile_name)
 
 
@@ -107,7 +92,7 @@ def repl_option():
 
 # noinspection PyUnresolvedReferences
 class UrdfWriter:
-    def __init__(self, elementree=None, speedup=False, parent=None):
+    def __init__(self, config_file='config_file.yaml', elementree=None, speedup=False, parent=None):
 
         # Setting this variable to True, speed up the robot building.
         # To be used when the urdf does not need to be shown at every iteration
@@ -115,12 +100,11 @@ class UrdfWriter:
         # self.root = 0
         # self.urdf_tree = 0
 
+        self.resource_finder = ResourceFinder(config_file)
+
         if elementree is None:
             # Open the base xacro file
-            filename = path_name + '/modular_data/urdf/ModularBot_library.urdf.xacro'
-            with codecs.open(filename, 'r') as f:
-                string = f.read()
-            # Instantiate an Element Tree
+            string = self.resource_finder.get_string('urdf/ModularBot_library.urdf.xacro', 'data_path')
             self.root = ET.fromstring(string)
             self.urdf_tree = ET.ElementTree(self.root)
             # print(ET.tostring(self.urdf_tree.getroot()))
@@ -223,15 +207,6 @@ class UrdfWriter:
         if self.root != 0:
             print("Re-initialization")
             self.__init__()
-
-        # # Open the base xacro file
-        # filename = path_name + '/modular_data/urdf/ModularBot_library.urdf.xacro'
-        # with codecs.open(filename, 'r') as f:
-        #     string = f.read()
-        # # Instantiate an Element Tree
-        # self.root = ET.fromstring(string)
-        # self.urdf_tree = ET.ElementTree(self.root)
-        # print(ET.tostring(self.urdf_tree.getroot()))
 
         # Load the robot_id dictionary from yaml file
         opts = repl_option()
@@ -373,15 +348,6 @@ class UrdfWriter:
         if self.root != 0:
             print("Re-initialization")
             self.__init__()
-
-        # # Open the base xacro file
-        # filename = path_name + '/modular_data/urdf/ModularBot_library.urdf.xacro'
-        # with codecs.open(filename, 'r') as f:
-        #     string = f.read()
-        # # Instantiate an Element Tree
-        # self.root = ET.fromstring(string)
-        # self.urdf_tree = ET.ElementTree(self.root)
-        # print(ET.tostring(self.urdf_tree.getroot()))
 
         # Load the esc_type dictionary from yaml file
         opts = repl_option()
@@ -668,9 +634,10 @@ class UrdfWriter:
                 yaw=yaw
             )
 
-            filename = path_name + '/web/static/yaml/master_cube.yaml'
-
             # call the method that reads the yaml file describing the cube and instantiate a new module object
+            # cube_path = '/'.join((yaml_path, 'master_cube.yaml'))
+            # filename = pkg_resources.resource_string(resource_package, cube_path)
+            filename = self.resource_finder.get_filename('master_cube.yaml', 'yaml_path')
             slavecube = ModuleNode.slavecube_from_yaml(filename, slavecube_con1)
 
             # set attributes of the newly added module object
@@ -755,9 +722,8 @@ class UrdfWriter:
             # self.T_con = tf.transformations.translation_matrix((0, 0, 0.1))
             # self.T_con = self.mastercube.geometry.connector_length))
 
-            filename = path_name + '/web/static/yaml/master_cube.yaml'
-
             # call the method that reads the yaml file describing the cube and instantiate a new module object
+            filename = self.resource_finder.get_filename('master_cube.yaml', 'yaml_path')
             mastercube = ModuleNode.mastercube_from_yaml(filename, self.parent_module)
 
             # set attributes of the newly added module object
@@ -862,8 +828,6 @@ class UrdfWriter:
             # self.parent_module = slavecube_con3
             self.parent_module = mastercube
 
-            print('FFFFFFFFFFFFFFFFFFFFF')
-
             # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
             data = {'result': string,
                     'lastModule_type': 'mastercube',
@@ -935,7 +899,7 @@ class UrdfWriter:
 
     def add_socket(self, x_offset=0.0, y_offset=0.0, z_offset=0.0, angle_offset=0.0):
         # Generate the path to the required YAML file
-        module_name = path_name + '/web/static/yaml/socket.yaml'
+        module_name = self.resource_finder.get_filename('socket.yaml', yaml_path)
 
         # create a ModuleNode instance for the socket
         new_socket = ModuleNode.module_from_yaml(module_name, self.parent_module, reverse=0)
@@ -1113,11 +1077,8 @@ class UrdfWriter:
             In particular the updated and newly processed urdf string.
 
         """
-        # global tag, parent_module
-        print(path_name)
-        print(filename)
         # Generate the path to the required YAML file
-        module_name = path_name + '/web/static/yaml/' + filename
+        module_name = self.resource_finder.get_filename(filename, 'yaml_path')
 
         # Load the module from YAML and create a ModuleNode instance
         new_module = ModuleNode.module_from_yaml(module_name, self.parent_module, reverse)
@@ -2262,8 +2223,10 @@ class UrdfWriter:
     # temporary solution for multi chain robots
     # not used!
     def write_problem_description_multi(self):
-        basic_probdesc_filename = path_name + '/cartesio/ModularBot_cartesio_multichain_config.yaml'
-        probdesc_filename = path_name + '/ModularBot/cartesio/ModularBot_cartesio_multichain_config.yaml'
+        basic_probdesc_filename = self.resource_finder.get_filename('cartesio/ModularBot_cartesio_multichain_config.yaml',
+                                                                    'data_path')
+        probdesc_filename = self.resource_finder.get_filename('cartesio/ModularBot_cartesio_multichain_config.yaml',
+                                                              'modularbot_path')
         probdesc = OrderedDict([])
 
         with open(basic_probdesc_filename, 'r') as stream:
@@ -2323,8 +2286,10 @@ class UrdfWriter:
     # temporary solution for single chain robots
     # useful to run CartesianImpedanceController automatically
     def write_problem_description(self):
-        basic_probdesc_filename = path_name + '/cartesio/ModularBot_cartesio_config.yaml'
-        probdesc_filename = path_name + '/ModularBot/cartesio/ModularBot_cartesio_config.yaml'
+        basic_probdesc_filename = self.resource_finder.get_filename('cartesio/ModularBot_cartesio_config.yaml',
+                                                                    'data_path')
+        probdesc_filename = self.resource_finder.get_filename('cartesio/ModularBot_cartesio_config.yaml',
+                                                              'modularbot_path')
         probdesc = OrderedDict([])
 
         with open(basic_probdesc_filename, 'r') as stream:
@@ -2367,9 +2332,8 @@ class UrdfWriter:
 
     def write_lowlevel_config(self, use_robot_id=False):
         """Creates the low level config file needed by XBotCore """
-
-        basic_config_filename = path_name + '/configs/ModularBot.yaml'
-        lowlevel_config_filename = path_name + '/ModularBot/configs/ModularBot.yaml'
+        basic_config_filename = self.resource_finder.get_filename('configs/ModularBot.yaml', 'data_path')
+        lowlevel_config_filename = self.resource_finder.get_filename('configs/ModularBot.yaml', 'modularbot_path')
         lowlevel_config = OrderedDict([])
 
         with open(basic_config_filename, 'r') as stream:
@@ -2428,9 +2392,8 @@ class UrdfWriter:
 
     def write_joint_map(self, use_robot_id=False):
         """Creates the joint map needed by XBotCore """
-
-        # global path_name
-        jointmap_filename = path_name + '/ModularBot/joint_map/ModularBot_joint_map.yaml'
+        jointmap_filename = self.resource_finder.get_filename('joint_map/ModularBot_joint_map.yaml',
+                                                              'modularbot_path')
         i = 0
         joint_map = {'joint_map': {}}
         for joints_chain in self.listofchains:
@@ -2463,8 +2426,7 @@ class UrdfWriter:
 
     def write_srdf(self, builder_joint_map):
         """Generates a basic srdf so that the model can be used right away with XBotCore"""
-        global path_name
-        srdf_filename = path_name + '/ModularBot/srdf/ModularBot.srdf'
+        srdf_filename = self.resource_finder.get_filename('srdf/ModularBot.srdf', 'modularbot_path')
 
         root = ET.Element('robot', name="ModularBot")
 
@@ -2536,12 +2498,11 @@ class UrdfWriter:
     # Function writin the urdf file after converting from .xacro (See xacro/__init__.py for reference)
     def write_urdf(self):
         """Returns the string with the URDF, after writing it to file"""
-        global path_name
-        urdf_filename = path_name + '/ModularBot/urdf/ModularBot.urdf'
+        urdf_filename = self.resource_finder.get_filename('urdf/ModularBot.urdf', 'modularbot_path')
 
         out = xacro.open_output(urdf_filename)
 
-        urdf_xacro_filename = path_name + '/ModularBot/urdf/ModularBot.urdf.xacro'
+        urdf_xacro_filename = self.resource_finder.get_filename('urdf/ModularBot.urdf.xacro', 'modularbot_path')
 
         # Create folder if doesen't exist
         if not os.path.exists(os.path.dirname(urdf_xacro_filename)):
@@ -2582,7 +2543,7 @@ class UrdfWriter:
 
     # Save URDF/SRDF etc. in a directory with the specified robot_name
     def deploy_robot(self, robot_name):
-        script = path_name + '/scripts/deploy.sh'
+        script = self.resource_finder.get_filename('deploy.sh', 'modular_data')
         print(script)
         print(robot_name)
         subprocess.check_call([script, robot_name])
@@ -2633,7 +2594,7 @@ class UrdfWriter:
                 node_type = node.attrib['type']
                 if node_type == 'cube':
                     name = node.attrib['name']
-                    filename = path_name + '/web/static/yaml/master_cube.yaml'
+                    filename = self.resource_finder.get_filename('master_cube.yaml', 'yaml_path')
 
                     ET.SubElement(self.root, "xacro:add_connectors", type='connectors', name=name, filename=filename)
             except KeyError:

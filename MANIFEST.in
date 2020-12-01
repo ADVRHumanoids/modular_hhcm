@@ -1,3 +1,4 @@
+include src/modular/*.yaml
 graft src/modular/web/static
 graft src/modular/web/templates
 graft src/modular/modular_data

@@ -23,7 +23,7 @@ echo
 # this way the script can be called from any directory
 SCRIPT_ROOT=$(dirname $(readlink --canonicalize --no-newline $BASH_SOURCE))
 
-cd $SCRIPT_ROOT/..
+cd $SCRIPT_ROOT
 
 cp -TRfv ModularBot $ROBOTOLOGY_ROOT/robots/${package_name}
 
