@@ -12,7 +12,8 @@ d = generate_distutils_setup(
    packages=['modular', 'modular.optimization', 'modular.protobuf', 'modular.web'],
    package_dir={'': 'src'},
    # package_data={'modular': ['*.yaml', 'templates/*', 'static/*']},  # Alternative to include_package_data
-   include_package_data=True
+   include_package_data=True,
+   zip_safe=False,
    # data_files=[('launch', ['launch/*'])],  # Add files outside package. Not working
    # install_requires=['setuptools', 'flask', 'anytree'],
    # python_requires='==2.7.*'

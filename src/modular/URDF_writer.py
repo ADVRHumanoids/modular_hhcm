@@ -1,14 +1,11 @@
 from __future__ import print_function
 from future.utils import iteritems
 
-import re
 import xml.etree.ElementTree as ET
 import xacro
 import xml.dom.minidom
-import codecs
 import yaml
 import json
-import copy
 from collections import OrderedDict
 
 from utils import ResourceFinder
@@ -22,10 +19,8 @@ import anytree
 from anytree import RenderTree
 
 import subprocess
-from shutil import copyfile
 import os
 import errno
-import sys
 
 ET.register_namespace('xacro', 'http://ros.org/wiki/xacro')
 ns = {'xacro': 'http://ros.org/wiki/xacro'}
@@ -899,7 +894,7 @@ class UrdfWriter:
 
     def add_socket(self, x_offset=0.0, y_offset=0.0, z_offset=0.0, angle_offset=0.0):
         # Generate the path to the required YAML file
-        module_name = self.resource_finder.get_filename('socket.yaml', yaml_path)
+        module_name = self.resource_finder.get_filename('socket.yaml', 'yaml_path')
 
         # create a ModuleNode instance for the socket
         new_socket = ModuleNode.module_from_yaml(module_name, self.parent_module, reverse=0)
@@ -2543,7 +2538,7 @@ class UrdfWriter:
 
     # Save URDF/SRDF etc. in a directory with the specified robot_name
     def deploy_robot(self, robot_name):
-        script = self.resource_finder.get_filename('deploy.sh', 'modular_data')
+        script = self.resource_finder.get_filename('deploy.sh', 'data_path')
         print(script)
         print(robot_name)
         subprocess.check_call([script, robot_name])
