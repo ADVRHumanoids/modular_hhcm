@@ -15,4 +15,12 @@
   <run_depend>rviz</run_depend>
   <run_depend>xacro</run_depend>
 
+  <!-- Python dependencies -->
+  <run_depend>python-rospkg</run_depend>
+  <run_depend>python-flask</run_depend>
+  <run_depend>python-future</run_depend>
+  <run_depend>python-numpy</run_depend>
+  <run_depend>python-yaml</run_depend>
+  <run_depend>python-zmq</run_depend>
+
 </package>
