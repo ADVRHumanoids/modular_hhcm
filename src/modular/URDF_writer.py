@@ -1779,6 +1779,275 @@ class UrdfWriter:
                       yaw=yaw)
 
     # noinspection PyPep8Naming
+    def link_after_cube(self, new_Link, past_Cube, offset, reverse):
+        """Adds to the URDF tree a link module as a child of a cube module
+
+        Parameters
+        ----------
+        new_Link: ModuleNode.ModuleNode
+            ModuleNode object of the link module to add
+
+        past_Cube: ModuleNode.ModuleNode
+            ModuleNode object of the cube module to which attach the link
+
+        offset: float
+            Value of the angle between the parent module output frame and the module input frame
+        """
+
+        setattr(new_Link, 'p', past_Cube.p + 1)
+
+        if new_Link.type == 'link':
+            setattr(new_Link, 'name', 'L_' + str(new_Link.i) + '_link_' + str(new_Link.p) + new_Link.tag)
+            ET.SubElement(self.root,
+                          "xacro:add_link",
+                          type="link",
+                          name=new_Link.name,
+                          size_z=new_Link.link_size_z,
+                          size=str(new_Link.size))
+        elif new_Link.type == 'elbow':
+            setattr(new_Link, 'name', 'L_' + str(new_Link.i) + '_elbow_' + str(new_Link.p) + new_Link.tag)
+            ET.SubElement(self.root,
+                          "xacro:add_elbow",
+                          type="elbow",
+                          name=new_Link.name,
+                          size_y=new_Link.link_size_y,
+                          size_z=new_Link.link_size_z,
+                          size=str(new_Link.size))
+        elif new_Link.type == 'tool_exchanger':
+            setattr(new_Link, 'name', 'tool_exchanger' + new_Link.tag)
+            ET.SubElement(self.root,
+                          "xacro:add_tool_exchanger",
+                          type="tool_exchanger",
+                          name=new_Link.name,
+                          filename=new_Link.filename)
+            self.add_to_chain(new_Link)
+            # HACK: add pen after tool_exchanger
+            setattr(new_Link, 'pen_name', 'pen' + new_Link.tag)
+            ET.SubElement(self.root,
+                          "xacro:add_pen",
+                          type="pen",
+                          name=new_Link.pen_name,
+                          father=new_Link.name)
+        elif new_Link.type == 'gripper':
+            setattr(new_Link, 'name', 'gripper' + new_Link.tag)
+            ET.SubElement(self.root,
+                          "xacro:add_gripper",
+                          type="gripper",
+                          name=new_Link.name,
+                          tag=new_Link.tag,
+                          filename=new_Link.filename)
+            self.add_to_chain(new_Link)
+            # HACK: add pen after gripper
+            setattr(new_Link, 'TCP_name', 'TCP_' + new_Link.name)
+        else:
+            if new_Link.size > 1:
+                setattr(new_Link, 'name', 'L_' + str(new_Link.i) + '_size_adapter_' + str(new_Link.p) + new_Link.tag)
+                ET.SubElement(self.root,
+                              "xacro:add_size_adapter",
+                              type="size_adapter",
+                              name=new_Link.name,
+                              size_z=new_Link.link_size_z,
+                              size_in=new_Link.size_in,
+                              size_out=new_Link.size_out)
+                setattr(new_Link, 'size', new_Link.size_out)
+            else:
+                # ERROR
+                print("Error")
+
+        print('past_Cube: ', past_Cube)
+        print('past_Cube.selected_port: ', past_Cube.selected_port)
+
+        if past_Cube.selected_port == 1:
+            interface_transform = past_Cube.Con_1_tf
+        elif past_Cube.selected_port == 2:
+            interface_transform = past_Cube.Con_2_tf
+        elif past_Cube.selected_port == 3:
+            interface_transform = past_Cube.Con_3_tf
+        elif past_Cube.selected_port == 4:
+            interface_transform = past_Cube.Con_4_tf
+
+        print('past_Cube.selected_port:', past_Cube.selected_port)
+        print('interface_transform: ', interface_transform)
+
+        transform = ModuleNode.get_rototranslation(interface_transform,
+                                                   tf.transformations.rotation_matrix(offset,
+                                                                                      self.zaxis))
+        x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(transform)
+
+        if new_Link.type == 'tool_exchanger' or new_Link.type == 'gripper':
+            fixed_joint_name = new_Link.name + '_fixed_joint'
+        else:
+            fixed_joint_name = 'L_' + str(new_Link.i) + '_fixed_joint_' + str(new_Link.p) + new_Link.tag
+
+        ET.SubElement(self.root,
+                      "xacro:add_fixed_joint",
+                      name=fixed_joint_name,
+                      type="fixed_joint",
+                      father=past_Cube.name,
+                      child=new_Link.name,
+                      x=x,
+                      y=y,
+                      z=z,
+                      roll=roll,
+                      pitch=pitch,
+                      yaw=yaw)
+
+    # noinspection PyPep8Naming
+    def joint_after_cube(self, new_Joint, past_Cube, offset, reverse):
+        """Adds to the URDF tree a joint module as a child of a cube module
+
+        Parameters
+        ----------
+        new_Joint: ModuleNode.ModuleNode
+            ModuleNode object of the joint module to add
+
+        past_Cube: ModuleNode.ModuleNode
+            ModuleNode object of the cube module to which the joint will be attached
+
+        offset: float
+            Value of the angle between the parent module output frame and the module input frame
+        """
+
+        print('past_Cube')
+        if past_Cube.selected_port == 1:
+            interface_transform = past_Cube.Con_1_tf
+        elif past_Cube.selected_port == 2:
+            interface_transform = past_Cube.Con_2_tf
+        elif past_Cube.selected_port == 3:
+            interface_transform = past_Cube.Con_3_tf
+        elif past_Cube.selected_port == 4:
+            interface_transform = past_Cube.Con_4_tf
+
+        print('past_Cube.selected_port:', past_Cube.selected_port)
+        print('interface_transform: ', interface_transform)
+
+        transform = ModuleNode.get_rototranslation(interface_transform,
+                                                   tf.transformations.rotation_matrix(offset,
+                                                                                      self.zaxis))
+        # If the module is mounted in the opposite direction rotate the final frame by 180 deg., as per convention
+        if reverse:
+            transform = ModuleNode.get_rototranslation(transform,
+                                                       tf.transformations.rotation_matrix(3.14, self.yaxis))
+        x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(transform)
+
+        setattr(new_Joint, 'i', 1)
+        setattr(new_Joint, 'p', 0)
+
+        setattr(new_Joint, 'name', 'J' + str(new_Joint.i) + new_Joint.tag)
+        stator_name = new_Joint.name + '_stator'
+        joint_stator_name = "fixed_" + new_Joint.name
+        print('stator_name: ', stator_name)
+        print('joint_stator_name: ', joint_stator_name)
+        ET.SubElement(self.root, "xacro:add_fixed_joint",
+                      type="fixed_joint_stator",
+                      name=joint_stator_name,
+                      father=past_Cube.name,  # TODO: check!
+                      child=stator_name,
+                      x=x,
+                      y=y,
+                      z=z,
+                      roll=roll,
+                      pitch=pitch,
+                      yaw=yaw)
+
+        # mesh_transform = ModuleNode.get_rototranslation(tf.transformations.rotation_matrix(-1.57, self.zaxis),
+        #                                            tf.transformations.rotation_matrix(3.14, self.xaxis))
+        mesh_transform = tf.transformations.identity_matrix()
+
+        # If the module is mounted in the opposite direction rotate the final frame by 180 deg., as per convention
+        if reverse:
+            prox_mesh_transform = ModuleNode.get_rototranslation(mesh_transform,
+                                                                 tf.transformations.rotation_matrix(-3.14, self.yaxis))
+            prox_mesh_transform = ModuleNode.get_rototranslation(prox_mesh_transform, tf.transformations.inverse_matrix(
+                new_Joint.Proximal_tf))
+            # prox_mesh_transform = ModuleNode.get_rototranslation(mesh_transform, tf.transformations.translation_matrix((-0.0591857,0,-0.095508)))#tf.transformations.inverse_matrix(new_Joint.Proximal_tf))
+            # prox_mesh_transform = ModuleNode.get_rototranslation(prox_mesh_transform, tf.transformations.rotation_matrix(3.14, self.xaxis))
+            # prox_mesh_transform = ModuleNode.get_rototranslation(prox_mesh_transform,
+            #                                                      tf.transformations.rotation_matrix(1.57, self.zaxis))
+        else:
+            prox_mesh_transform = mesh_transform
+        x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(prox_mesh_transform)
+
+        ET.SubElement(self.root,
+                      "xacro:add_joint_stator",
+                      type="joint_stator",
+                      name=stator_name,
+                      filename=new_Joint.filename,
+                      size_y=new_Joint.joint_size_y,
+                      size_z=new_Joint.joint_size_z,
+                      size=str(new_Joint.size))
+
+        joint_transform = ModuleNode.get_rototranslation(tf.transformations.identity_matrix(),
+                                                         new_Joint.Proximal_tf)
+        x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(joint_transform)
+
+        joint_data = new_Joint.kinematics.joint.joint
+        upper_lim = str(joint_data.upper_limit)
+        lower_lim = str(joint_data.lower_limit)
+        effort = str(joint_data.effort)
+        velocity = str(joint_data.velocity)
+
+        ET.SubElement(self.root,
+                      "xacro:add_joint",
+                      type="joint",
+                      name=new_Joint.name,
+                      father=stator_name,
+                      child='L_' + str(new_Joint.i) + new_Joint.tag,
+                      x=x,
+                      y=y,
+                      z=z,
+                      roll=roll,
+                      pitch=pitch,
+                      yaw=yaw,
+                      upper_lim=upper_lim,
+                      lower_lim=lower_lim,
+                      effort=effort,
+                      velocity=velocity)
+
+        if reverse:
+            dist_mesh_transform = ModuleNode.get_rototranslation(new_Joint.Distal_tf, mesh_transform)
+        else:
+            dist_mesh_transform = mesh_transform
+
+        x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(dist_mesh_transform)
+
+        ET.SubElement(self.root,
+                      "xacro:add_distal",
+                      type="add_distal",
+                      name='L_' + str(new_Joint.i) + new_Joint.tag,
+                      filename=new_Joint.filename)
+
+        if reverse:
+            new_Joint.Distal_tf = ModuleNode.get_rototranslation(new_Joint.Distal_tf,
+                                                                 tf.transformations.rotation_matrix(3.14, self.yaxis))
+
+        # add the fast rotor part to the inertia of the link/rotor part as a new link. NOTE: right now this is
+        # attached at the rotating part not to the fixed one (change it so to follow Pholus robot approach)
+        ET.SubElement(self.root,
+                      "xacro:add_fixed_joint",
+                      type="fixed_joint",
+                      name="fixed_" + 'L_' + str(new_Joint.i) + new_Joint.tag + '_rotor_fast',
+                      father='L_' + str(new_Joint.i) + new_Joint.tag,  # stator_name, #
+                      child='L_' + str(new_Joint.i) + new_Joint.tag + '_rotor_fast',
+                      x=x,
+                      y=y,
+                      z=z,
+                      roll=roll,
+                      pitch=pitch,
+                      yaw=yaw)
+        ET.SubElement(self.root,
+                      "xacro:add_rotor_fast",
+                      type="add_rotor_fast",
+                      name='L_' + str(new_Joint.i) + new_Joint.tag + '_rotor_fast',
+                      filename=new_Joint.filename,
+                      x=x,
+                      y=y,
+                      z=z,
+                      roll=roll,
+                      pitch=pitch,
+                      yaw=yaw)
+
+    # noinspection PyPep8Naming
     def link_after_joint(self, new_Link, past_Joint, offset, reverse):
         """Adds to the URDF tree a link module as a child of a joint module
 
@@ -1830,6 +2099,16 @@ class UrdfWriter:
                           type="pen",
                           name=new_Link.pen_name,
                           father=new_Link.name)
+        elif new_Link.type == 'gripper':
+            setattr(new_Link, 'name', 'gripper' + new_Link.tag)
+            ET.SubElement(self.root,
+                          "xacro:add_gripper",
+                          type="gripper",
+                          name=new_Link.name,
+                          filename=new_Link.filename)
+            self.add_to_chain(new_Link)
+            # HACK: add pen after gripper
+            setattr(new_Link, 'TCP_name', 'TCP_' + new_Link.name)
         else:
             if new_Link.size > 1:
                 setattr(new_Link, 'name', 'L_' + str(new_Link.i) + '_size_adapter_' + str(new_Link.p) + new_Link.tag)
@@ -1850,7 +2129,7 @@ class UrdfWriter:
                                                                                       self.zaxis))
         x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(transform)
 
-        if new_Link.type == 'tool_exchanger':
+        if new_Link.type == 'tool_exchanger' or new_Link.type == 'gripper':
             fixed_joint_name = new_Link.name + '_fixed_joint'
         else:
             fixed_joint_name = 'L_' + str(new_Link.i) + '_fixed_joint_' + str(new_Link.p) + new_Link.tag
@@ -2176,6 +2455,17 @@ class UrdfWriter:
                           type="pen",
                           name=new_Link.pen_name,
                           father=new_Link.name)
+        elif new_Link.type == 'gripper':
+            setattr(new_Link, 'name', 'gripper' + new_Link.tag)
+            ET.SubElement(self.root,
+                          "xacro:add_gripper",
+                          type="gripper",
+                          name=new_Link.name,
+                          tag=new_Link.tag,
+                          filename=new_Link.filename)
+            self.add_to_chain(new_Link)
+            # HACK: add tcp after gripper
+            setattr(new_Link, 'TCP_name', 'TCP_' + new_Link.name)
         else:
             if new_Link.size > 1:
                 setattr(new_Link, 'name', 'L_' + str(new_Link.i) + '_size_adapter_' + str(new_Link.p) + new_Link.tag)
@@ -2196,7 +2486,7 @@ class UrdfWriter:
                                                                                       self.zaxis))
         x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(transform)
 
-        if new_Link.type == 'tool_exchanger':
+        if new_Link.type == 'tool_exchanger' or new_Link.type == 'gripper':
             fixed_joint_name = new_Link.name + '_fixed_joint'
         else:
             fixed_joint_name = 'L_' + str(new_Link.i) + '_fixed_joint_' + str(new_Link.p) + new_Link.tag
@@ -2251,6 +2541,9 @@ class UrdfWriter:
                 if joints_chain[-1].type == 'tool_exchanger':
                     # tip_link = joints_chain[-1].name
                     tip_link = joints_chain[-1].pen_name
+                if joints_chain[-1].type == 'gripper':
+                    # tip_link = joints_chain[-1].name
+                    tip_link = joints_chain[-1].TCP_name
                 elif joints_chain[-1].type == 'simple_ee':
                     tip_link = joints_chain[-1].name
             probdesc[ee_name]['distal_link'] = tip_link
@@ -2307,6 +2600,9 @@ class UrdfWriter:
             if joints_chain[-1].type == 'tool_exchanger':
                 # tip_link = joints_chain[-1].name
                 tip_link = joints_chain[-1].pen_name
+            if joints_chain[-1].type == 'gripper':
+                # tip_link = joints_chain[-1].name
+                tip_link = joints_chain[-1].TCP_name
             elif joints_chain[-1].type == 'simple_ee':
                 tip_link = joints_chain[-1].name
         probdesc['EE']['distal_link'] = tip_link
@@ -2397,6 +2693,8 @@ class UrdfWriter:
                     name = joint_module.name + '_fixed_joint'
                 elif joint_module.type == 'simple_ee':
                     continue
+                elif joint_module.type == 'gripper':
+                    name = 'gripper'
                 else:
                     name = joint_module.name
                 i += 1
@@ -2453,6 +2751,9 @@ class UrdfWriter:
                 if joints_chain[-1].type == 'tool_exchanger':
                     # tip_link = joints_chain[-1].name
                     tip_link = joints_chain[-1].pen_name
+                if joints_chain[-1].type == 'gripper':
+                    # tip_link = joints_chain[-1].name
+                    tip_link = joints_chain[-1].TCP_name
                 elif joints_chain[-1].type == 'simple_ee':
                     tip_link = joints_chain[-1].name
             chains.append(ET.SubElement(groups[i], 'chain', base_link=base_link, tip_link=tip_link))

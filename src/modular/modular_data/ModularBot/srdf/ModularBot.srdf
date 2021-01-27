@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <robot name="ModularBot">
    <group name="chain_1">
-      <chain base_link="base_link" tip_link="pen_A"/>
+      <chain base_link="base_link" tip_link="TCP_gripper_A"/>
    </group>
    <group name="arms">
       <group name="chain_1"/>
@@ -17,7 +17,5 @@
       <joint name="J5_A" value="0.0"/>
       <joint name="J6_A" value="0.5"/>
    </group_state>
-   <group name="ToolExchanger">
-      <joint name="tool_exchanger_A_fixed_joint"/>
-   </group>
+   <group name="ToolExchanger"/>
 </robot>
