@@ -1760,7 +1760,7 @@ class UrdfWriter:
                           tag=new_Link.tag,
                           filename=new_Link.filename)
             self.add_to_chain(new_Link)
-            # HACK: add pen after gripper
+            # HACK: add tcp after gripper
             setattr(new_Link, 'TCP_name', 'TCP_' + new_Link.name)
         else:
             if new_Link.size > 1:
@@ -1988,7 +1988,7 @@ class UrdfWriter:
                 elif joint_module.type == 'simple_ee':
                     continue
                 elif joint_module.type == 'gripper':
-                    continue
+                    name = 'gripper'
                 else:
                     name = joint_module.name
                 if use_robot_id:

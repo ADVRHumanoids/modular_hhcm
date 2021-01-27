@@ -110,5 +110,9 @@ control:
 
 urdf: "urdf/joint_module.urdf"
 
-AinMsp432ESC:
-  analog_sample_freq_HZ: 1000
+LpESC_19:
+  sign: 1
+  pos_offset: 0
+  control_mode : pos_3b
+  pid :
+    position: [100000.0 , 0.0 , 1.0]
