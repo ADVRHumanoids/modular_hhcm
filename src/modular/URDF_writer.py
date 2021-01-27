@@ -790,7 +790,7 @@ class UrdfWriter:
                 # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string.
                 string = self.process_urdf()
 
-            # Update the EtherCAT port connected to the electro-mechanical interface where the new module/slave will be added 
+            # Update the EtherCAT port connected to the electro-mechanical interface where the new module/slave will be added
             #    1           2           3           4
             #    o           o           o           o
             #    |           |           |           |
@@ -1106,7 +1106,7 @@ class UrdfWriter:
         print(self.parent_module)
         print(self.parent_module.type)
 
-        # Update the EtherCAT port connected to the electro-mechanical interface where the new module/slave will be added 
+        # Update the EtherCAT port connected to the electro-mechanical interface where the new module/slave will be added
         #    1           2           3           4
         #    o           o           o           o
         #    |           |           |           |
@@ -1419,7 +1419,7 @@ class UrdfWriter:
         name: str
             String with the name of the module to select or the name of the mesh clicked on the GUI. It will be used to call the access_module method.
             The corresponding object module data is then put in a dictionary and returned.
-        
+
         selected_port: int
             Represent the port selected if the module is a hub/box
 
@@ -1434,7 +1434,7 @@ class UrdfWriter:
 
         # If the selected module is the stator of a joint modify the string so to select the joint itself.
         # This is needed because from the GUI when you select a joint by clicking, the mesh corresponding to the stator
-        # is selected, while the module we want to access is the joint (the stator is not part of the tree, only urdf).    
+        # is selected, while the module we want to access is the joint (the stator is not part of the tree, only urdf).
         if name.endswith('_stator'):
             # Take the joint when the mesh of the joint stator is selected
             selected_module_name = name[:-7]
