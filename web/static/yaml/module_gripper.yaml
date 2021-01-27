@@ -110,7 +110,7 @@ control:
 
 urdf: "urdf/joint_module.urdf"
 
-LpESC_19:
+LpESC:
   sign: 1
   pos_offset: 0
   control_mode : pos_3b

@@ -1759,6 +1759,7 @@ class UrdfWriter:
                           name=new_Link.name,
                           tag=new_Link.tag,
                           filename=new_Link.filename)
+            # the end-effector gets added to the chain although it's not a joint. it's needed in the joint map and in the config!
             self.add_to_chain(new_Link)
             # HACK: add tcp after gripper
             setattr(new_Link, 'TCP_name', 'TCP_' + new_Link.name)
@@ -1929,7 +1930,6 @@ class UrdfWriter:
                 print(lowlevel_config.items()[0])
             except yaml.YAMLError as exc:
                 print(exc)
-
         print(lowlevel_config.items())
         print(lowlevel_config['GazeboXBotPlugin'])
         lowlevel_config['GazeboXBotPlugin']['gains'] = OrderedDict([])
@@ -1954,6 +1954,16 @@ class UrdfWriter:
                         xbot_ecat_interface = [[int(i)], "libXBotEcat_ToolExchanger"]
                     value = joint_module.AinMsp432ESC
                     print(yaml.dump(joint_module.AinMsp432ESC))
+                    lowlevel_config['HALInterface']['IEndEffectors'].append(xbot_ecat_interface)
+                elif joint_module.type == 'gripper':
+                    if use_robot_id:
+                        key = 'LpESC_' + str(joint_module.robot_id)
+                        xbot_ecat_interface = [[int(joint_module.robot_id)], "libXBotEcat_Gripper"]
+                    else:
+                        key = 'LpESC_' + str(i)
+                        xbot_ecat_interface = [[int(i)], "libXBotEcat_Gripper"]
+                    value = joint_module.LpESC
+                    print(yaml.dump(joint_module.LpESC))
                     lowlevel_config['HALInterface']['IEndEffectors'].append(xbot_ecat_interface)
                 lowlevel_config[key] = value
                 print(joint_module.kinematics.__dict__.items())
@@ -1988,7 +1998,7 @@ class UrdfWriter:
                 elif joint_module.type == 'simple_ee':
                     continue
                 elif joint_module.type == 'gripper':
-                    name = 'gripper'
+                    name = joint_module.name + '_fixed_joint'
                 else:
                     name = joint_module.name
                 if use_robot_id:
@@ -2069,6 +2079,8 @@ class UrdfWriter:
                     joints.append(ET.SubElement(group_state, 'joint', name=joint_module.name, value=str(homing_value)))
                 elif joint_module.type == 'tool_exchanger':
                     end_effectors.append(ET.SubElement(tool_exchanger_group, 'joint', name=joint_module.name+'_fixed_joint'))
+                elif joint_module.type == 'gripper':
+                    continue
 
             i += 1
 
