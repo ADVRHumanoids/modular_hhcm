@@ -674,6 +674,83 @@
         </joint>
     </xacro:macro>
 
+    <xacro:macro name="add_gripper" params="type name filename">
+        
+        <xacro:property name="module" value="${load_yaml(filename)}"/>
+        <!-- <xacro:property name="visual" value="${module['visual']['mesh_body_1']}"/> -->
+        
+        <xacro:property name="mesh_bool" value="false"/>
+        <xacro:unless value="${ module['visual']['mesh_body_1'] == '' }">
+            <xacro:property name="mesh_bool" value="true"/>
+        </xacro:unless>
+
+        <link name="${name}">
+            <xacro:if value="${ mesh_bool }">
+                <visual>
+                    <!-- Load mesh. Rotate the origin frame (this is because of how the .stl was saved) -->
+                    <origin 
+                        rpy="${module['visual']['tf_mesh_1']['roll']} ${module['visual']['tf_mesh_1']['pitch']} ${module['visual']['tf_mesh_1']['yaw']}" 
+                        xyz="${module['visual']['tf_mesh_1']['x']} ${module['visual']['tf_mesh_1']['y']} ${module['visual']['tf_mesh_1']['z']}"/>
+                    <geometry>
+                        <mesh filename="${module['visual']['mesh_body_1']}" scale="0.001 0.001 0.001"/>
+                    </geometry>
+                    <material name="tree_green"/>
+                </visual>
+                <collision>
+                    <origin 
+                        rpy="${module['visual']['tf_mesh_1']['roll']} ${module['visual']['tf_mesh_1']['pitch']} ${module['visual']['tf_mesh_1']['yaw']}" 
+                        xyz="${module['visual']['tf_mesh_1']['x']} ${module['visual']['tf_mesh_1']['y']} ${module['visual']['tf_mesh_1']['z']}"/>
+                    <geometry>
+                        <mesh filename="${module['visual']['mesh_collision_1']}" scale="0.001 0.001 0.001"/>
+                    </geometry>
+                </collision>
+            </xacro:if>
+            <!--inertial parameters for ORANGE rotating part. wrt a point on one end of the rod-->
+            <!-- <inertial>
+                <origin xyz="0 0 -0.002265" rpy="0 0 0"/>
+                <mass value="0.153466"/>
+                <inertia
+                        ixx="0.000034763" ixy="0.0" ixz="0.0"
+                        iyy="0.000034827" iyz="0.0"
+                        izz="0.000031822"/>
+            </inertial> -->
+            <inertial>
+                <origin 
+                    xyz="${module['dynamics']['body_1']['CoM']['x']} ${module['dynamics']['body_1']['CoM']['y']} ${module['dynamics']['body_1']['CoM']['z']}" 
+                    rpy="0 0 0"/>
+                <mass value="${module['dynamics']['body_1']['mass']}"/>
+                <inertia
+                    ixx="${module['dynamics']['body_1']['inertia_tensor']['I_xx']}" 
+                    ixy="${module['dynamics']['body_1']['inertia_tensor']['I_xy']}" 
+                    ixz="${module['dynamics']['body_1']['inertia_tensor']['I_xz']}"
+                    iyy="${module['dynamics']['body_1']['inertia_tensor']['I_yy']}" 
+                    iyz="${module['dynamics']['body_1']['inertia_tensor']['I_yz']}"
+                    izz="${module['dynamics']['body_1']['inertia_tensor']['I_zz']}"/>
+            </inertial>
+        </link>
+        <link name="TCP_${name}"/>
+        <joint name="fixed_TCP_${name}" type="fixed">
+            <axis xyz="0 0 1" rpy="0 0 0" />
+            <parent link="${name}"/>
+            <child link="TCP_${name}"/>
+            <origin xyz="0.0 0.0 0.1985" rpy="0.0 0.0 0.0"/>
+        </joint>
+    </xacro:macro>
+
+    <!-- Add a simple frame ("end-effector") for simulation purposes -->
+    <xacro:macro name="add_simple_ee" params="type name size_z">
+        <link name="${name}">
+            <inertial>
+                <origin xyz="0 0 ${size_z/2}" rpy="0 0 0"/>
+                <mass value="0.848"/>
+                <inertia
+                        ixx="1.1564566e-03" ixy="0.0" ixz="0.0"
+                        iyy="1.2469918e-03" iyz="0.0"
+                        izz="5.7388903e-04"/>
+            </inertial>
+        </link>
+    </xacro:macro>
+
     <!-- Macro for adding the physical module housing the actuator -->
     <xacro:macro name="add_joint_stator" params="type name filename size_y size_z size">
 

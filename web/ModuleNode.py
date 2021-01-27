@@ -246,6 +246,7 @@ class Module(object):
             'elbow': self.get_homogeneous_matrix,
             'size_adapter': self.get_homogeneous_matrix,
             'tool_exchanger': self.get_homogeneous_matrix,
+            'gripper': self.get_homogeneous_matrix,
             'cube': self.get_cube_connections_tf,
             'base_link': tf.transformations.identity_matrix()
         }
