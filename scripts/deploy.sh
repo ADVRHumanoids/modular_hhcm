@@ -93,7 +93,7 @@ MasterCommunicationInterface:
   framework_name: "ROS"
 
 XBotRTPlugins:
-  plugins: ["HomingExample", "CartesianImpedancePlugin", "ToolExchangerPlugin"]
+  plugins: ["HomingExample", "CartesianImpedancePlugin", "ToolExchangerPlugin", "GripperPlugin"]
   io_plugins: ["CartesianImpedanceIO"]
   
 NRTPlugins:
@@ -178,7 +178,7 @@ cd ..
 mkdir launch
 cd launch
 
-cat >> ${package_name}_sliders.launch << EOF
+cat > ${package_name}_sliders.launch << EOF
 <launch>
     <arg name="gui" default="true" />
     <arg name="pkg_name"  default="$package_name"/>
