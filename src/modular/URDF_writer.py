@@ -2510,8 +2510,9 @@ class UrdfWriter:
     def write_problem_description_multi(self):
         basic_probdesc_filename = self.resource_finder.get_filename('cartesio/ModularBot_cartesio_multichain_config.yaml',
                                                                     'data_path')
-        probdesc_filename = self.resource_finder.get_filename('cartesio/ModularBot_cartesio_multichain_config.yaml',
-                                                              'modularbot_path')
+        probdesc_filename = "/tmp/modular/cartesio/ModularBot_cartesio_multichain_config.yaml"
+        # probdesc_filename = self.resource_finder.get_filename('cartesio/ModularBot_cartesio_multichain_config.yaml',
+        #                                                       'modularbot_path')
         probdesc = OrderedDict([])
 
         with open(basic_probdesc_filename, 'r') as stream:
@@ -2576,8 +2577,9 @@ class UrdfWriter:
     def write_problem_description(self):
         basic_probdesc_filename = self.resource_finder.get_filename('cartesio/ModularBot_cartesio_config.yaml',
                                                                     'data_path')
-        probdesc_filename = self.resource_finder.get_filename('cartesio/ModularBot_cartesio_config.yaml',
-                                                              'modularbot_path')
+        #probdesc_filename = self.resource_finder.get_filename('cartesio/ModularBot_cartesio_config.yaml',
+        #                                                      'modularbot_path')
+        probdesc_filename = "/tmp/modular/cartesio/ModularBot_cartesio_config.yaml"
         probdesc = OrderedDict([])
 
         with open(basic_probdesc_filename, 'r') as stream:
@@ -2624,7 +2626,8 @@ class UrdfWriter:
     def write_lowlevel_config(self, use_robot_id=False):
         """Creates the low level config file needed by XBotCore """
         basic_config_filename = self.resource_finder.get_filename('configs/ModularBot.yaml', 'data_path')
-        lowlevel_config_filename = self.resource_finder.get_filename('configs/ModularBot.yaml', 'modularbot_path')
+        # lowlevel_config_filename = self.resource_finder.get_filename('configs/ModularBot.yaml', 'modularbot_path')
+        lowlevel_config_filename = "/tmp/modular/configs/ModularBot.yaml"
         lowlevel_config = OrderedDict([])
 
         with open(basic_config_filename, 'r') as stream:
@@ -2683,8 +2686,9 @@ class UrdfWriter:
 
     def write_joint_map(self, use_robot_id=False):
         """Creates the joint map needed by XBotCore """
-        jointmap_filename = self.resource_finder.get_filename('joint_map/ModularBot_joint_map.yaml',
-                                                              'modularbot_path')
+        # jointmap_filename = self.resource_finder.get_filename('joint_map/ModularBot_joint_map.yaml',
+        #                                                       'modularbot_path')
+        jointmap_filename="/tmp/modular/joint_map/ModularBot_joint_map.yaml"
         i = 0
         joint_map = {'joint_map': {}}
         for joints_chain in self.listofchains:
@@ -2719,7 +2723,8 @@ class UrdfWriter:
 
     def write_srdf(self, builder_joint_map):
         """Generates a basic srdf so that the model can be used right away with XBotCore"""
-        srdf_filename = self.resource_finder.get_filename('srdf/ModularBot.srdf', 'modularbot_path')
+        # srdf_filename = self.resource_finder.get_filename('srdf/ModularBot.srdf', 'modularbot_path')
+        srdf_filename = "/tmp/modular/srdf/ModularBot.srdf"
 
         root = ET.Element('robot', name="ModularBot")
 
@@ -2794,11 +2799,12 @@ class UrdfWriter:
     # Function writin the urdf file after converting from .xacro (See xacro/__init__.py for reference)
     def write_urdf(self):
         """Returns the string with the URDF, after writing it to file"""
-        urdf_filename = self.resource_finder.get_filename('urdf/ModularBot.urdf', 'modularbot_path')
-
+        # urdf_filename = self.resource_finder.get_filename('urdf/ModularBot.urdf', 'modularbot_path')
+        urdf_filename= '/tmp/modular/urdf/ModularBot.urdf'
         out = xacro.open_output(urdf_filename)
 
-        urdf_xacro_filename = self.resource_finder.get_filename('urdf/ModularBot.urdf.xacro', 'modularbot_path')
+        # urdf_xacro_filename = self.resource_finder.get_filename('urdf/ModularBot.urdf.xacro', 'modularbot_path')
+        urdf_xacro_filename = '/tmp/modular/urdf/ModularBot.urdf.xacro'
 
         # Create folder if doesen't exist
         if not os.path.exists(os.path.dirname(urdf_xacro_filename)):
