@@ -8,16 +8,20 @@ YELLOW='\033[1;33m'
 NC='\033[0m'
 
 if [ "$#" -lt 1 ]; then
-       printf "${RED}No package name argument passed!${NC}" 
-       echo 
-       echo "Try something like:"
-       echo "./deply.sh modular_ros_pkg"
+       printf "${RED}No package name argument passed!${NC}"
+       echo
+       echo "Try something like:                         ./deply.sh modular_ros_pkg"
+       echo "you can also add a destination folder like: ./deply.sh modular_ros_pkg ~/catkin_ws/src"
        exit
 fi
-
-
 package_name="$1"
-printf "Deploying package ${GREEN}${package_name}${NC} into ${RED}$ROBOTOLOGY_ROOT/robots${NC}"
+
+if [ $# -lt 2 ]; then
+    export DESTINATION_FOLDER=$ROBOTOLOGY_ROOT/robots
+else
+    export DESTINATION_FOLDER="$2"
+fi
+printf "Deploying package ${GREEN}${package_name}${NC} into ${RED}$DESTINATION_FOLDER${NC}"
 echo
 
 # this way the script can be called from any directory
@@ -25,9 +29,9 @@ SCRIPT_ROOT=$(dirname $(readlink --canonicalize --no-newline $BASH_SOURCE))
 
 cd $SCRIPT_ROOT
 
-cp -TRfv ModularBot $ROBOTOLOGY_ROOT/robots/${package_name}
+cp -TRfv ModularBot $DESTINATION_FOLDER/${package_name}
 
-cd $ROBOTOLOGY_ROOT/robots/${package_name}
+cd $DESTINATION_FOLDER/${package_name}
 
 cat > package.xml << EOF
 <package>
@@ -63,10 +67,10 @@ if(CATKIN_ENABLE_TESTING)
 endif()
 
 install(DIRECTORY urdf srdf launch
-  DESTINATION 
+  DESTINATION
 EOF
 
-cat >> CMakeLists.txt << 'EOF' 
+cat >> CMakeLists.txt << 'EOF'
 ${CATKIN_PACKAGE_SHARE_DESTINATION})
 EOF
 
@@ -88,17 +92,17 @@ ModelInterface:
 
 RobotInterfaceROS:
   publish_tf: true
-  
+
 MasterCommunicationInterface:
   framework_name: "ROS"
 
 XBotRTPlugins:
   plugins: ["HomingExample", "CartesianImpedancePlugin", "ToolExchangerPlugin"]
   io_plugins: ["CartesianImpedanceIO"]
-  
+
 NRTPlugins:
   plugins: []
- 
+
 #WebServer:
   #enable: "true"
   #address: "10.24.7.100"
@@ -120,7 +124,7 @@ cat >> cartesio.launch << 'EOF'
     <param name="robot_description" textfile="$(eval find(pkg_name) + '/urdf/ModularBot.urdf')"/>
     <param name="robot_description_semantic" textfile="$(eval find(pkg_name) + '/srdf/ModularBot.srdf')"/>
     <param name="cartesian/problem_description" textfile="$(eval find(pkg_name) + '/cartesio/stack.yaml')"/>
-    
+
     <arg name="solver" default="OpenSot"/>
     <arg name="prefix" default=""/>
     <arg name="use_xbot_config" default="false"/>
@@ -131,14 +135,14 @@ cat >> cartesio.launch << 'EOF'
     <arg name="namespace" default=""/> <!-- dummy argument avoids pass_all_args error in parent launch file -->
     <arg name="robot" default=""/>
     <arg name="is_model_floating_base" default="true"/>
-       
-    
-    <node pkg="cartesian_interface" type="ros_server_node" 
-                                    name="ros_server_node" 
-                                    required="true" 
-                                    output="screen" 
+
+
+    <node pkg="cartesian_interface" type="ros_server_node"
+                                    name="ros_server_node"
+                                    required="true"
+                                    output="screen"
                                     launch-prefix="$(arg prefix)">
-                                    
+
         <param name="is_model_floating_base" value="$(arg is_model_floating_base)"/>
         <param name="model_type" value="RBDL"/>
         <param name="solver" value="$(arg solver)"/>
@@ -146,7 +150,7 @@ cat >> cartesio.launch << 'EOF'
         <param name="verbosity" value="$(arg verbosity)"/>
         <param name="rate" value="$(arg rate)"/>
         <param name="tf_prefix" value="$(arg tf_prefix)"/>
-        
+
     </node>
 
     <node if="$(arg markers)" pkg="cartesian_interface" type="marker_spawner" name="interactive_markers" output="screen">
@@ -239,11 +243,11 @@ EOF
 cat >> ModularBot_sliders.launch << 'EOF'
     <param name="robot_description" textfile="$(eval find(pkg_name) + '/urdf/ModularBot.urdf')"/>
     <param name="robot_description_semantic" textfile="$(eval find(pkg_name) + '/srdf/ModularBot.srdf')"/>
-    
+
     <param name="use_gui" value="$(arg gui)"/>
     <param name="rate" value="50.0"/>
-     
-        
+
+
     <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
     <param name="publish_default_efforts" value="True"/>
     </node>
@@ -251,7 +255,7 @@ cat >> ModularBot_sliders.launch << 'EOF'
     <!-- start robot state publisher -->
     <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen" >
         <param name="publish_frequency" type="double" value="250.0" />
-    </node> 
+    </node>
 
 </launch>
 EOF
@@ -259,8 +263,8 @@ cd ..
 
 mkdir database
 # cd $SCRIPT_ROOT/../web/static/
-cp -TRfv $SCRIPT_ROOT/../web/static/models $ROBOTOLOGY_ROOT/robots/${package_name}/database
-#cd $ROBOTOLOGY_ROOT/robots/${package_name}
+cp -TRfv $SCRIPT_ROOT/../web/static/models $DESTINATION_FOLDER/${package_name}/database
+#cd $DESTINATION_FOLDER/${package_name}
 cd urdf
 gz sdf --print ModularBot.urdf > ModularBot.sdf
 cd ..
