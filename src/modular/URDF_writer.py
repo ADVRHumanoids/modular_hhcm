@@ -1243,9 +1243,9 @@ class UrdfWriter:
             father = selected_module.parent
 
             # Generate names of the stator link and fixed joint to be removed from the xml tree
-            stator_name = selected_module.name + '_stator'
+            #stator_name = selected_module.name + '_stator'
             joint_stator_name = "fixed_" + selected_module.name
-            distal_link_name = 'L_' + str(selected_module.i) + selected_module.tag
+            #distal_link_name = 'L_' + str(selected_module.i) + selected_module.tag
 
             # From the list of xml elements find the ones with name corresponding to the relative joint, stator link
             # and fixed joint before the stator link and remove them from the xml tree
@@ -1253,13 +1253,13 @@ class UrdfWriter:
                 if node.attrib['name'] == selected_module.name:
                     self.root.remove(node)
                     # gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
-                elif node.attrib['name'] == stator_name:
+                elif node.attrib['name'] == selected_module.stator_name:
                     self.root.remove(node)
                     # gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
                 elif node.attrib['name'] == joint_stator_name:
                     self.root.remove(node)
                     # gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
-                elif node.attrib['name'] == distal_link_name:
+                elif node.attrib['name'] == selected_module.distal_link_name:
                     self.root.remove(node)
                     # gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
             
@@ -1672,15 +1672,13 @@ class UrdfWriter:
         setattr(new_Joint, 'p', 0)
 
         setattr(new_Joint, 'name', 'J' + str(new_Joint.i) + new_Joint.tag)
-        stator_name = new_Joint.name + '_stator'
+        setattr(new_Joint, 'stator_name', new_Joint.name + '_stator')
         joint_stator_name = "fixed_" + new_Joint.name
-        print('stator_name: ', stator_name)
-        print('joint_stator_name: ', joint_stator_name)
         ET.SubElement(self.root, "xacro:add_fixed_joint",
                       type="fixed_joint_stator",
                       name=joint_stator_name,
                       father=past_Cube.name,  # TODO: check!
-                      child=stator_name,
+                      child=new_Joint.stator_name,
                       x=x,
                       y=y,
                       z=z,
@@ -1709,7 +1707,7 @@ class UrdfWriter:
         ET.SubElement(self.root,
                       "xacro:add_joint_stator",
                       type="joint_stator",
-                      name=stator_name,
+                      name=new_Joint.stator_name,
                       filename=new_Joint.filename,
                       size_y=new_Joint.joint_size_y,
                       size_z=new_Joint.joint_size_z,
@@ -1729,7 +1727,7 @@ class UrdfWriter:
                       "xacro:add_joint",
                       type="joint",
                       name=new_Joint.name,
-                      father=stator_name,
+                      father=new_Joint.stator_name,
                       child='L_' + str(new_Joint.i) + new_Joint.tag,
                       x=x,
                       y=y,
@@ -1752,10 +1750,11 @@ class UrdfWriter:
 
         x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(dist_mesh_transform)
 
+        setattr(new_Joint, 'distal_link_name', 'L_' + str(new_Joint.i) + new_Joint.tag)
         ET.SubElement(self.root,
                       "xacro:add_distal",
                       type="add_distal",
-                      name='L_' + str(new_Joint.i) + new_Joint.tag,
+                      name=new_Joint.distal_link_name,
                       filename=new_Joint.filename)
 
         if reverse:
@@ -1944,15 +1943,13 @@ class UrdfWriter:
         setattr(new_Joint, 'p', 0)
 
         setattr(new_Joint, 'name', 'J' + str(new_Joint.i) + new_Joint.tag)
-        stator_name = new_Joint.name + '_stator'
+        setattr(new_Joint, 'stator_name', new_Joint.name + '_stator')
         joint_stator_name = "fixed_" + new_Joint.name
-        print('stator_name: ', stator_name)
-        print('joint_stator_name: ', joint_stator_name)
         ET.SubElement(self.root, "xacro:add_fixed_joint",
                       type="fixed_joint_stator",
                       name=joint_stator_name,
                       father=past_Cube.name,  # TODO: check!
-                      child=stator_name,
+                      child=new_Joint.stator_name,
                       x=x,
                       y=y,
                       z=z,
@@ -1981,7 +1978,7 @@ class UrdfWriter:
         ET.SubElement(self.root,
                       "xacro:add_joint_stator",
                       type="joint_stator",
-                      name=stator_name,
+                      name=new_Joint.stator_name,
                       filename=new_Joint.filename,
                       size_y=new_Joint.joint_size_y,
                       size_z=new_Joint.joint_size_z,
@@ -2001,7 +1998,7 @@ class UrdfWriter:
                       "xacro:add_joint",
                       type="joint",
                       name=new_Joint.name,
-                      father=stator_name,
+                      father=new_Joint.stator_name,
                       child='L_' + str(new_Joint.i) + new_Joint.tag,
                       x=x,
                       y=y,
@@ -2025,10 +2022,11 @@ class UrdfWriter:
 
         x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(dist_mesh_transform)
 
+        setattr(new_Joint, 'distal_link_name', 'L_' + str(new_Joint.i) + new_Joint.tag)
         ET.SubElement(self.root,
                       "xacro:add_distal",
                       type="add_distal",
-                      name='L_' + str(new_Joint.i) + new_Joint.tag,
+                      name=new_Joint.distal_link_name,
                       filename=new_Joint.filename)
 
         if reverse:
@@ -2185,7 +2183,7 @@ class UrdfWriter:
         setattr(new_Joint, 'p', 0)
 
         setattr(new_Joint, 'name', 'J' + str(new_Joint.i) + new_Joint.tag)
-        stator_name = new_Joint.name + '_stator'
+        setattr(new_Joint, 'stator_name', new_Joint.name + '_stator')
         joint_stator_name = "fixed_" + new_Joint.name
         father_name = 'L_' + str(past_Joint.i) + past_Joint.tag
         ET.SubElement(self.root,
@@ -2193,7 +2191,7 @@ class UrdfWriter:
                       type="fixed_joint_stator",
                       name=joint_stator_name,
                       father=father_name,
-                      child=stator_name,
+                      child=new_Joint.stator_name,
                       x=x,
                       y=y,
                       z=z,
@@ -2210,7 +2208,7 @@ class UrdfWriter:
         ET.SubElement(self.root,
                       "xacro:add_joint_stator",
                       type="joint_stator",
-                      name=stator_name,
+                      name=new_Joint.stator_name,
                       filename=new_Joint.filename,
                       size_y=new_Joint.joint_size_y,
                       size_z=new_Joint.joint_size_z,
@@ -2230,7 +2228,7 @@ class UrdfWriter:
                       "xacro:add_joint",
                       type="joint",
                       name=new_Joint.name,
-                      father=stator_name,
+                      father=new_Joint.stator_name,
                       child='L_' + str(new_Joint.i) + new_Joint.tag,
                       x=x,
                       y=y,
@@ -2249,10 +2247,11 @@ class UrdfWriter:
 
         x, y, z, roll, pitch, yaw = '0', '0', '0', '0', '0', '0'
 
+        setattr(new_Joint, 'distal_link_name', 'L_' + str(new_Joint.i) + new_Joint.tag)
         ET.SubElement(self.root,
                       "xacro:add_distal",
                       type="add_distal",
-                      name='L_' + str(new_Joint.i) + new_Joint.tag,
+                      name=new_Joint.distal_link_name,
                       filename=new_Joint.filename)
 
         # add the fast rotor part to the inertia of the link/rotor part as a new link. NOTE: right now this is
@@ -2309,13 +2308,13 @@ class UrdfWriter:
         setattr(new_Joint, 'p', 0)
 
         setattr(new_Joint, 'name', 'J' + str(new_Joint.i) + new_Joint.tag)
-        stator_name = new_Joint.name + '_stator'
+        setattr(new_Joint, 'stator_name', new_Joint.name + '_stator')
         joint_stator_name = "fixed_" + new_Joint.name
         ET.SubElement(self.root, "xacro:add_fixed_joint",
                       type="fixed_joint_stator",
                       name=joint_stator_name,
                       father=past_Link.name,  # TODO: check!
-                      child=stator_name,
+                      child=new_Joint.stator_name,
                       x=x,
                       y=y,
                       z=z,
@@ -2345,7 +2344,7 @@ class UrdfWriter:
         ET.SubElement(self.root,
                       "xacro:add_joint_stator",
                       type="joint_stator",
-                      name=stator_name,
+                      name=new_Joint.stator_name,
                       filename=new_Joint.filename,
                       size_y=new_Joint.joint_size_y,
                       size_z=new_Joint.joint_size_z,
@@ -2365,7 +2364,7 @@ class UrdfWriter:
                       "xacro:add_joint",
                       type="joint",
                       name=new_Joint.name,
-                      father=stator_name,
+                      father=new_Joint.stator_name,
                       child='L_' + str(new_Joint.i) + new_Joint.tag,
                       x=x,
                       y=y,
@@ -2389,10 +2388,11 @@ class UrdfWriter:
 
         x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(dist_mesh_transform)
 
+        setattr(new_Joint, 'distal_link_name', 'L_' + str(new_Joint.i) + new_Joint.tag)
         ET.SubElement(self.root,
                       "xacro:add_distal",
                       type="add_distal",
-                      name='L_' + str(new_Joint.i) + new_Joint.tag,
+                      name=new_Joint.distal_link_name,
                       filename=new_Joint.filename)
 
         if reverse:
@@ -2743,7 +2743,7 @@ class UrdfWriter:
             yaml.dump(joint_map, outfile, default_flow_style=False)
         return joint_map
 
-    def write_srdf(self, builder_joint_map):
+    def write_srdf(self, builder_joint_map=None):
         """Generates a basic srdf so that the model can be used right away with XBotCore"""
         # srdf_filename = self.resource_finder.get_filename('srdf/ModularBot.srdf', 'modularbot_path')
         srdf_filename = "/tmp/modular/srdf/ModularBot.srdf"
@@ -2796,9 +2796,17 @@ class UrdfWriter:
             groups_in_arms_group.append(ET.SubElement(arms_group, 'group', name=group_name))
             for joint_module in joints_chain:
                 if joint_module.type == 'joint':
-                    homing_value = float(builder_joint_map[joint_module.name]['angle'])
+                    # Homing state
+                    if builder_joint_map is not None:
+                        homing_value = float(builder_joint_map[joint_module.name]['angle'])
+                    else:
+                        homing_value = 0.3
                     print(homing_value)
                     joints.append(ET.SubElement(group_state, 'joint', name=joint_module.name, value=str(homing_value)))
+                    # Disable collision
+                    print(joint_module.stator_name)
+                    print(joint_module.distal_link_name)
+                    disable_collision = ET.SubElement(root, 'disable_collisions', link1=joint_module.stator_name, link2=joint_module.distal_link_name, reason='Adjacent')
                 elif joint_module.type == 'tool_exchanger':
                     end_effectors.append(ET.SubElement(tool_exchanger_group, 'joint',
                                                        name=joint_module.name + '_fixed_joint'))
