@@ -107,6 +107,9 @@ class UrdfWriter:
             self.root = elementree
             self.urdf_tree = ET.ElementTree(self.root)
 
+        for plugin in self.root.findall("./gazebo/plugin"):
+            self.xbot2_pid = plugin.find("./pid")
+
         self.tag_num = 1
         self.branch_switcher = {
             1: '_A',
@@ -1259,6 +1262,10 @@ class UrdfWriter:
                 elif node.attrib['name'] == distal_link_name:
                     self.root.remove(node)
                     # gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
+            
+            for pid in self.xbot2_pid.findall('./pid'):
+                if pid.attrib['name'] == selected_module.name:
+                    self.xbot2_pid.remove(pid)
 
         # TODO: This is not working in the urdf. The ModuleNode obj is removed but the elment from the tree is not
         elif selected_module.type == 'cube':
@@ -1735,6 +1742,9 @@ class UrdfWriter:
                       effort=effort,
                       velocity=velocity)
 
+        ####
+        ET.SubElement(self.xbot2_pid, "xacro:add_xbot2_pid", name=new_Joint.name,profile="small_mot")
+        ####
         if reverse:
             dist_mesh_transform = ModuleNode.get_rototranslation(new_Joint.Distal_tf, mesh_transform)
         else:
@@ -2004,6 +2014,10 @@ class UrdfWriter:
                       effort=effort,
                       velocity=velocity)
 
+        ####
+        ET.SubElement(self.xbot2_pid, "xacro:add_xbot2_pid", name=new_Joint.name,profile="small_mot")
+        ####
+
         if reverse:
             dist_mesh_transform = ModuleNode.get_rototranslation(new_Joint.Distal_tf, mesh_transform)
         else:
@@ -2229,6 +2243,10 @@ class UrdfWriter:
                       effort=effort,
                       velocity=velocity)
 
+        ####
+        ET.SubElement(self.xbot2_pid, "xacro:add_xbot2_pid", name=new_Joint.name,profile="small_mot")
+        ####
+
         x, y, z, roll, pitch, yaw = '0', '0', '0', '0', '0', '0'
 
         ET.SubElement(self.root,
@@ -2359,6 +2377,10 @@ class UrdfWriter:
                       lower_lim=lower_lim,
                       effort=effort,
                       velocity=velocity)
+
+        ####
+        ET.SubElement(self.xbot2_pid, "xacro:add_xbot2_pid", name=new_Joint.name, profile="small_mot")
+        ####
 
         if reverse:
             dist_mesh_transform = ModuleNode.get_rototranslation(new_Joint.Distal_tf, mesh_transform)
