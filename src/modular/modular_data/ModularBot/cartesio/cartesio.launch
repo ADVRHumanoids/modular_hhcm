@@ -1,7 +1,7 @@
 <launch>
-    <arg name="pkg_name"  default="[package_name]"/>
-    <param name="robot_description" textfile="$(eval find(pkg_name) + '/urdf/[package_name].urdf')"/>
-    <param name="robot_description_semantic" textfile="$(eval find(pkg_name) + '/srdf/[package_name].srdf')"/>
+    <arg name="pkg_name"  default="PACKAGE_NAME"/>
+    <param name="robot_description" textfile="$(eval find(pkg_name) + '/urdf/PACKAGE_NAME.urdf')"/>
+    <param name="robot_description_semantic" textfile="$(eval find(pkg_name) + '/srdf/PACKAGE_NAME.srdf')"/>
     <param name="cartesian/problem_description" textfile="$(eval find(pkg_name) + '/cartesio/stack.yaml')"/>
 
     <arg name="solver" default="OpenSot"/>

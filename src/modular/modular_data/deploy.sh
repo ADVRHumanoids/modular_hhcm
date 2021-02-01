@@ -84,10 +84,10 @@ SCRIPT_ROOT=$(dirname $(readlink --canonicalize --no-newline $BASH_SOURCE))
 # Deploy ROS package info
 # - package.xml
 cp $SCRIPT_ROOT/ModularBot/package.xml ./package.xml $VERBOSITY || end_exec
-sed -i -e "s+[package_name]+${package_name}+g" ./package.xml
+sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./package.xml
 # - CMakeLists.txt
 cp $SCRIPT_ROOT/ModularBot/CMakeLists.txt ./CMakeLists.txt $VERBOSITY || end_exec
-sed -i -e "s+[package_name]+${package_name}+g" ./CMakeLists.txt
+sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./CMakeLists.txt
 printf "${GREEN}[1/9] Deployed ROS package config files${NC}\n"
 
 # Deploy Xbot2 configs
@@ -97,14 +97,14 @@ cp /tmp/modular/configs/ModularBot.yaml ./configs/${package_name}.yaml $VERBOSIT
 sed -i -e "s+ModularBot+${package_name}+g" ./configs/${package_name}.yaml
 # - High level config
 cp $SCRIPT_ROOT/ModularBot/ModularBot_basic.yaml ./${package_name}_basic.yaml $VERBOSITY || end_exec
-sed -i -e "s+[package_name]+${package_name}+g" ./${package_name}_basic.yaml
+sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./${package_name}_basic.yaml
 printf "${GREEN}[2/9] Deployed XBot2 configs${NC}\n"
 
 # Deploy cartesio config
 mkdir -p ./cartesio
 # - cartesio.launch
 cp $SCRIPT_ROOT/ModularBot/cartesio/cartesio.launch ./cartesio/cartesio.launch $VERBOSITY || end_exec
-sed -i -e "s+[package_name]+${package_name}+g" ./cartesio/cartesio.launch
+sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./cartesio/cartesio.launch
 # - /ModularBot_cartesio_config.yaml
 cp /tmp/modular/cartesio/ModularBot_cartesio_config.yaml ./cartesio/${package_name}_cartesio_config.yaml $VERBOSITY || end_exec
 sed -i -e "s+ModularBot+${package_name}+g" ./cartesio/${package_name}_cartesio_config.yaml
@@ -114,10 +114,10 @@ printf "${GREEN}[3/9] Deployed cartesio configs${NC}\n"
 mkdir -p ./launch
 # - ModularBot_ik.launch
 cp $SCRIPT_ROOT/ModularBot/launch/ModularBot_ik.launch ./launch/${package_name}_ik.launch $VERBOSITY || end_exec
-sed -i -e "s+[package_name]+${package_name}+g" ./launch/${package_name}_ik.launch
+sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./launch/${package_name}_ik.launch
 # - ModularBot_sliders.launch
 cp $SCRIPT_ROOT/ModularBot/launch/ModularBot_sliders.launch ./launch/${package_name}_sliders.launch $VERBOSITY || end_exec
-sed -i -e "s+[package_name]+${package_name}+g" ./launch/${package_name}_sliders.launch
+sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./launch/${package_name}_sliders.launch
 printf "${GREEN}[4/9] Deployed ${package_name}_ik.launch and ${package_name}_sliders.launch${NC}\n"
 
 # Deply meshes
@@ -150,10 +150,10 @@ printf "${GREEN}[8/9] Deployed URDF${NC}\n"
 cp $SCRIPT_ROOT/ModularBot/database/ModularBot_fixed_base/ModularBot_world.sdf ./database/${package_name}_fixed_base/${package_name}_world.sdf $VERBOSITY || end_exec
 # - manifest.xml
 cp $SCRIPT_ROOT/ModularBot/database/ModularBot_fixed_base/manifest.xml ./database/${package_name}_fixed_base/manifest.xml $VERBOSITY || end_exec
-sed -i -e "s+[package_name]+${package_name}+g" ./database/${package_name}_fixed_base/manifest.xml
+sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./database/${package_name}_fixed_base/manifest.xml
 # - model.config
 cp $SCRIPT_ROOT/ModularBot/database/ModularBot_fixed_base/model.config ./database/${package_name}_fixed_base/model.config $VERBOSITY || end_exec
-sed -i -e "s+[package_name]+${package_name}+g" ./database/${package_name}_fixed_base/model.config
+sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./database/${package_name}_fixed_base/model.config
 # - ModularBot.sdf
 gz sdf --print \
     $DESTINATION_FOLDER/${package_name}/urdf/${package_name}.urdf > \

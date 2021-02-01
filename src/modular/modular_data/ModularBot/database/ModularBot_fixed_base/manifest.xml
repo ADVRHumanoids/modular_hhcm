@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <model>
-  <name>[package_name]</name>
+  <name>PACKAGE_NAME</name>
   <version>0.1</version>
-  <sdf version='1.6'>[package_name].sdf</sdf>
+  <sdf version='1.6'>PACKAGE_NAME.sdf</sdf>
 
   <author>
    <name>Edoardo Romiti</name>
@@ -10,6 +10,6 @@
   </author>
 
   <description>
-    Simulation of the Alberobotics's [package_name].
+    Simulation of the Alberobotics's PACKAGE_NAME.
   </description>
 </model>
