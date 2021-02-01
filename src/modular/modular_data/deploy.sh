@@ -141,6 +141,8 @@ printf "${GREEN}[7/9] Deployed SRDF${NC}\n"
 mkdir -p ./urdf
 cp /tmp/modular/urdf/ModularBot.urdf ./urdf/${package_name}.urdf $VERBOSITY || end_exec
 sed -i -e "s+ModularBot+${package_name}+g" ./urdf/${package_name}.urdf
+sed -i -e "s+/tmp/modular+package://${package_name}+g" ./urdf/${package_name}.urdf
+sed -i -e "s+package://modular/src/modular/web/static/models/modular/meshes+package://${package_name}/database/modular/meshes+g" ./urdf/${package_name}.urdf
 printf "${GREEN}[8/9] Deployed URDF${NC}\n"
 
 # Deploy gazebo model
