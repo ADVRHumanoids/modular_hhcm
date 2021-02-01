@@ -3,6 +3,10 @@
 
     <!-- <xacro:include filename="$(find modular)/urdf/config.xacro" />
     <xacro:include filename="$(find modular)/urdf/modular.gazebo" /> -->
+    <xacro:macro name="add_xbot2_pid" params="name profile">
+        <pid name="${name}" profile="${profile}"/>
+    </xacro:macro>
+
     <gazebo>
         <plugin name="xbot2_gz_joint_server" filename="libxbot2_gz_joint_server.so">
 	        <pid>
@@ -12,10 +16,6 @@
 	        </pid>
 	    </plugin>
     </gazebo>
-
-    <xacro:macro name="add_xbot2_pid" params="name profile">
-        <pid name="${name}" profile="${profile}"/>
-    </xacro:macro>
 
     <xacro:property name="size1" value="0.05" />
     <xacro:property name="size2" value="0.055" />

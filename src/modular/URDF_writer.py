@@ -1262,7 +1262,7 @@ class UrdfWriter:
                 elif node.attrib['name'] == selected_module.distal_link_name:
                     self.root.remove(node)
                     # gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
-            
+
             for pid in self.xbot2_pid.findall('./pid'):
                 if pid.attrib['name'] == selected_module.name:
                     self.xbot2_pid.remove(pid)
