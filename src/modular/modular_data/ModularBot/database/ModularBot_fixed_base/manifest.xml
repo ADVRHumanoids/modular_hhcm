@@ -1,15 +1,15 @@
 <?xml version="1.0"?>
 <model>
-  <name>IIT MODULARBOT</name>
+  <name>[package_name]</name>
   <version>0.1</version>
-  <sdf version='1.4'>ModularBot.sdf</sdf>
+  <sdf version='1.6'>[package_name].sdf</sdf>
 
   <author>
-   <name>Enrico Mingo</name>
-   <email>enrico.mingo@iit.it</email>
+   <name>Edoardo Romiti</name>
+   <email>edoardo.romiti@iit.it</email>
   </author>
 
   <description>
-    Simulation of the teleop Humanoid Robot from IIT.
+    Simulation of the Alberobotics's [package_name].
   </description>
 </model>
