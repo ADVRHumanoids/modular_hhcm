@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(ModularBot)
+project(PACKAGE_NAME)
 
 find_package(catkin REQUIRED)
 catkin_package()
@@ -10,5 +10,5 @@ if(CATKIN_ENABLE_TESTING)
 endif()
 
 install(DIRECTORY urdf srdf launch
-  DESTINATION 
+  DESTINATION
 ${CATKIN_PACKAGE_SHARE_DESTINATION})

@@ -3,11 +3,18 @@
 
     <!-- <xacro:include filename="$(find modular)/urdf/config.xacro" />
     <xacro:include filename="$(find modular)/urdf/modular.gazebo" /> -->
+    <xacro:macro name="add_xbot2_pid" params="name profile">
+        <pid name="${name}" profile="${profile}"/>
+    </xacro:macro>
+
     <gazebo>
-        <plugin name="gazebo_xbot_plugin" filename="libGazeboXBotPlugin.so">
-            <!-- <path_to_config_file>${xbot_config_file}</path_to_config_file> -->
-            <path_to_config_file>configs/ADVR_shared/ModularBot/configs/config_ModularBot.yaml</path_to_config_file>
-        </plugin>
+        <plugin name="xbot2_gz_joint_server" filename="libxbot2_gz_joint_server.so">
+	        <pid>
+                <gain name="small_mot"  p="100"  d="5"/>
+
+                <!-- <pid name="J1_A" profile="small_mot"/> -->
+	        </pid>
+	    </plugin>
     </gazebo>
 
     <xacro:property name="size1" value="0.05" />
@@ -101,7 +108,7 @@
     </xacro:macro>
 
     <!-- Macro for adding a fixed joint (rigid interconnection between links) -->
-    <xacro:macro name="add_fixed_joint" params="type name father child x y z roll pitch yaw">    
+    <xacro:macro name="add_fixed_joint" params="type name father child x y z roll pitch yaw">
         <joint name="${name}" type="fixed">
             <axis xyz="0 0 1" rpy="0 0 0" />
             <parent link="${father}"/>
@@ -112,7 +119,7 @@
 
     <!-- Macro for adding a master cube -->
     <xacro:macro name="add_master_cube" params="name filename type">
-        
+
         <xacro:property name="module" value="${load_yaml(filename)}"/>
 
         <joint name="fixed" type="fixed">
@@ -144,7 +151,7 @@
     </xacro:macro>
 
     <xacro:macro name="add_connectors" params="name filename type">
-        
+
         <xacro:property name="module" value="${load_yaml(filename)}"/>
 
         <xacro:if value="${'connector_1' in module['kinematics']}">
@@ -162,7 +169,7 @@
                 <parent link="${name}"/>
                 <child link="${name}_con1"/>
                 <axis rpy="0 0 0" xyz="0 0 1"/>
-                <origin rpy="${module['kinematics']['connector_1']['roll']} ${module['kinematics']['connector_1']['pitch']} ${module['kinematics']['connector_1']['yaw']}" 
+                <origin rpy="${module['kinematics']['connector_1']['roll']} ${module['kinematics']['connector_1']['pitch']} ${module['kinematics']['connector_1']['yaw']}"
                         xyz="${module['kinematics']['connector_1']['x']} ${module['kinematics']['connector_1']['y']} ${module['kinematics']['connector_1']['z']}"/>
             </joint>
         </xacro:if>
@@ -233,7 +240,7 @@
     <xacro:macro name="add_slave_cube" params="name filename type">
 
         <xacro:property name="module" value="${load_yaml(filename)}"/>
-        
+
         <link name="${name}">
             <visual>
                 <origin rpy="0 0 0" xyz="0 0 0.17"/>
@@ -268,7 +275,7 @@
             <joint name="${name}_fixed_1" type="fixed">
                 <parent link="${name}_con1"/>
                 <child link="${name}"/>
-                <origin rpy="${module['kinematics']['connector_1']['roll']} ${module['kinematics']['connector_1']['pitch']} ${module['kinematics']['connector_1']['yaw']}" 
+                <origin rpy="${module['kinematics']['connector_1']['roll']} ${module['kinematics']['connector_1']['pitch']} ${module['kinematics']['connector_1']['yaw']}"
                         xyz="${module['kinematics']['connector_1']['x']} ${module['kinematics']['connector_1']['y']} ${module['kinematics']['connector_1']['z']}"/>
             </joint> -->
         <!-- </xacro:if> -->
@@ -287,10 +294,10 @@
             <parent link="${name}"/>
             <child link="${name}_con2"/>
             <axis rpy="0 0 0" xyz="0 0 1"/>
-            <origin rpy="${module['kinematics']['connector_2']['roll']} ${module['kinematics']['connector_2']['pitch']} ${module['kinematics']['connector_2']['yaw']}" 
+            <origin rpy="${module['kinematics']['connector_2']['roll']} ${module['kinematics']['connector_2']['pitch']} ${module['kinematics']['connector_2']['yaw']}"
                     xyz="${module['kinematics']['connector_2']['x']} ${module['kinematics']['connector_2']['y']} ${module['kinematics']['connector_2']['z']}"/>
         </joint>
-        
+
         <link name="${name}_con3">
             <visual>
                 <origin rpy="0 0 0" xyz="0 0 0.05"/>
@@ -305,7 +312,7 @@
             <parent link="${name}"/>
             <child link="${name}_con3"/>
             <axis rpy="0 0 0" xyz="0 0 1"/>
-            <origin rpy="${module['kinematics']['connector_3']['roll']} ${module['kinematics']['connector_3']['pitch']} ${module['kinematics']['connector_3']['yaw']}" 
+            <origin rpy="${module['kinematics']['connector_3']['roll']} ${module['kinematics']['connector_3']['pitch']} ${module['kinematics']['connector_3']['yaw']}"
                     xyz="${module['kinematics']['connector_3']['x']} ${module['kinematics']['connector_3']['y']} ${module['kinematics']['connector_3']['z']}"/>
         </joint> -->
 
@@ -318,12 +325,12 @@
                 <material name="green"/>
             </visual>
         </link> -->
-        
+
         <!-- <joint name="${name}_fixed_4" type="fixed">
             <parent link="${name}"/>
             <child link="${name}_con4"/>
             <axis rpy="0 0 0" xyz="0 0 1"/>
-            <origin rpy="${module['kinematics']['connector_4']['roll']} ${module['kinematics']['connector_4']['pitch']} ${module['kinematics']['connector_4']['yaw']}" 
+            <origin rpy="${module['kinematics']['connector_4']['roll']} ${module['kinematics']['connector_4']['pitch']} ${module['kinematics']['connector_4']['yaw']}"
                     xyz="${module['kinematics']['connector_4']['x']} ${module['kinematics']['connector_4']['y']} ${module['kinematics']['connector_4']['z']}"/>
         </joint> -->
 
@@ -331,7 +338,7 @@
 
     <!-- Macro for adding a straight link -->
     <xacro:macro name="add_link" params="name type size_z size">
-        
+
         <xacro:if value="${size==1}">
             <xacro:property name="radius" value="${size1}" />
         </xacro:if>
@@ -341,7 +348,7 @@
             </xacro:if>
             <xacro:unless value="${size==2}">
                 <xacro:property name="radius" value="${size3}" />
-            </xacro:unless>  
+            </xacro:unless>
         </xacro:unless>
 
         <link name="${name}">
@@ -381,7 +388,7 @@
 
     <!-- Macro for adding a size adapter -->
     <xacro:macro name="add_size_adapter" params="type name size_z size_in size_out">
-        
+
         <xacro:if value="${size_in==3}">
             <xacro:property name="radius1" value="${size3}" />
         </xacro:if>
@@ -391,7 +398,7 @@
             </xacro:if>
             <xacro:unless value="${size_in==2}">
                 <!-- ERROR! -->
-            </xacro:unless>  
+            </xacro:unless>
         </xacro:unless>
 
         <xacro:if value="${size_out==3}">
@@ -403,7 +410,7 @@
             </xacro:if>
             <xacro:unless value="${size_out==2}">
                 <xacro:property name="radius2" value="${size1}" />
-            </xacro:unless>  
+            </xacro:unless>
         </xacro:unless>
 
         <link name="${name}">
@@ -466,7 +473,7 @@
             </xacro:if>
             <xacro:unless value="${size==2}">
                 <xacro:property name="radius" value="${size3}" />
-            </xacro:unless>  
+            </xacro:unless>
         </xacro:unless>
 
         <link name="${name}">
@@ -531,7 +538,7 @@
     </xacro:macro>
 
     <!-- Macro for adding the joint. A dummy link is also added with no visual tag, but with inertial parameters corresponding to the rotating part -->
-    <xacro:macro name="add_joint" params="type name father child x y z roll pitch yaw upper_lim lower_lim effort velocity">    
+    <xacro:macro name="add_joint" params="type name father child x y z roll pitch yaw upper_lim lower_lim effort velocity">
         <joint name="${name}" type="revolute">
             <axis xyz="0 0 1" rpy="0 0 0" />
             <parent link="${father}"/>
@@ -571,17 +578,17 @@
 
         <xacro:property name="module" value="${load_yaml(filename)}"/>
         <xacro:property name="gear_ratio" value="${module['control']['nu']}"/>
-        
+
         <link name="${name}">
             <inertial>
-                <origin 
-                        xyz="${module['dynamics']['body_2_fast']['CoM']['x']} ${module['dynamics']['body_2_fast']['CoM']['y']} ${module['dynamics']['body_2_fast']['CoM']['z']}" 
+                <origin
+                        xyz="${module['dynamics']['body_2_fast']['CoM']['x']} ${module['dynamics']['body_2_fast']['CoM']['y']} ${module['dynamics']['body_2_fast']['CoM']['z']}"
                         rpy="0 0 0"/>
                     <mass value="${module['dynamics']['body_2_fast']['mass']}"/>
                     <inertia
-                        ixx="${module['dynamics']['body_2_fast']['inertia_tensor']['I_xx']}" 
-                        ixy="${module['dynamics']['body_2_fast']['inertia_tensor']['I_xy']}" 
-                        iyy="${module['dynamics']['body_2_fast']['inertia_tensor']['I_yy']}" 
+                        ixx="${module['dynamics']['body_2_fast']['inertia_tensor']['I_xx']}"
+                        ixy="${module['dynamics']['body_2_fast']['inertia_tensor']['I_xy']}"
+                        iyy="${module['dynamics']['body_2_fast']['inertia_tensor']['I_yy']}"
                         ixz="${module['dynamics']['body_2_fast']['inertia_tensor']['I_xz'] }"
                         iyz="${module['dynamics']['body_2_fast']['inertia_tensor']['I_yz'] }"
                         izz="${module['dynamics']['body_2_fast']['inertia_tensor']['I_zz'] }"/>
@@ -594,10 +601,10 @@
     </xacro:macro>
 
     <xacro:macro name="add_distal" params="type name filename">
-        
+
         <xacro:property name="module" value="${load_yaml(filename)}"/>
         <!-- <xacro:property name="visual" value="${module['visual']['mesh_body_1']}"/> -->
-        
+
         <xacro:property name="mesh_bool" value="false"/>
         <xacro:unless value="${ module['visual']['mesh_body_1'] == '' }">
             <xacro:property name="mesh_bool" value="true"/>
@@ -607,8 +614,8 @@
             <xacro:if value="${ mesh_bool }">
                 <visual>
                     <!-- Load mesh. Rotate the origin frame (this is because of how the .stl was saved) -->
-                    <origin 
-                        rpy="${module['visual']['tf_mesh_2']['roll']} ${module['visual']['tf_mesh_2']['pitch']} ${module['visual']['tf_mesh_2']['yaw']}" 
+                    <origin
+                        rpy="${module['visual']['tf_mesh_2']['roll']} ${module['visual']['tf_mesh_2']['pitch']} ${module['visual']['tf_mesh_2']['yaw']}"
                         xyz="${module['visual']['tf_mesh_2']['x']} ${module['visual']['tf_mesh_2']['y']} ${module['visual']['tf_mesh_2']['z']}"/>
                     <geometry>
                         <mesh filename="${module['visual']['mesh_body_2']}" scale="0.001 0.001 0.001"/>
@@ -616,8 +623,8 @@
                     <material name="tree_green"/>
                 </visual>
                 <collision>
-                    <origin 
-                        rpy="${module['visual']['tf_mesh_2']['roll']} ${module['visual']['tf_mesh_2']['pitch']} ${module['visual']['tf_mesh_2']['yaw']}" 
+                    <origin
+                        rpy="${module['visual']['tf_mesh_2']['roll']} ${module['visual']['tf_mesh_2']['pitch']} ${module['visual']['tf_mesh_2']['yaw']}"
                         xyz="${module['visual']['tf_mesh_2']['x']} ${module['visual']['tf_mesh_2']['y']} ${module['visual']['tf_mesh_2']['z']}"/>
                     <geometry>
                         <mesh filename="${module['visual']['mesh_collision_2']}" scale="0.001 0.001 0.001"/>
@@ -634,15 +641,15 @@
                         izz="0.000031822"/>
             </inertial> -->
             <inertial>
-                <origin 
-                    xyz="${module['dynamics']['body_2']['CoM']['x']} ${module['dynamics']['body_2']['CoM']['y']} ${module['dynamics']['body_2']['CoM']['z']}" 
+                <origin
+                    xyz="${module['dynamics']['body_2']['CoM']['x']} ${module['dynamics']['body_2']['CoM']['y']} ${module['dynamics']['body_2']['CoM']['z']}"
                     rpy="0 0 0"/>
                 <mass value="${module['dynamics']['body_2']['mass']}"/>
                 <inertia
-                    ixx="${module['dynamics']['body_2']['inertia_tensor']['I_xx']}" 
-                    ixy="${module['dynamics']['body_2']['inertia_tensor']['I_xy']}" 
+                    ixx="${module['dynamics']['body_2']['inertia_tensor']['I_xx']}"
+                    ixy="${module['dynamics']['body_2']['inertia_tensor']['I_xy']}"
                     ixz="${module['dynamics']['body_2']['inertia_tensor']['I_xz']}"
-                    iyy="${module['dynamics']['body_2']['inertia_tensor']['I_yy']}" 
+                    iyy="${module['dynamics']['body_2']['inertia_tensor']['I_yy']}"
                     iyz="${module['dynamics']['body_2']['inertia_tensor']['I_yz']}"
                     izz="${module['dynamics']['body_2']['inertia_tensor']['I_zz']}"/>
             </inertial>
@@ -650,10 +657,10 @@
     </xacro:macro>
 
     <xacro:macro name="add_tool_exchanger" params="type name filename">
-        
+
         <xacro:property name="module" value="${load_yaml(filename)}"/>
         <!-- <xacro:property name="visual" value="${module['visual']['mesh_body_1']}"/> -->
-        
+
         <xacro:property name="mesh_bool" value="false"/>
         <xacro:unless value="${ module['visual']['mesh_body_1'] == '' }">
             <xacro:property name="mesh_bool" value="true"/>
@@ -663,8 +670,8 @@
             <xacro:if value="${ mesh_bool }">
                 <visual>
                     <!-- Load mesh. Rotate the origin frame (this is because of how the .stl was saved) -->
-                    <origin 
-                        rpy="${module['visual']['tf_mesh_1']['roll']} ${module['visual']['tf_mesh_1']['pitch']} ${module['visual']['tf_mesh_1']['yaw']}" 
+                    <origin
+                        rpy="${module['visual']['tf_mesh_1']['roll']} ${module['visual']['tf_mesh_1']['pitch']} ${module['visual']['tf_mesh_1']['yaw']}"
                         xyz="${module['visual']['tf_mesh_1']['x']} ${module['visual']['tf_mesh_1']['y']} ${module['visual']['tf_mesh_1']['z']}"/>
                     <geometry>
                         <mesh filename="${module['visual']['mesh_body_1']}" scale="0.001 0.001 0.001"/>
@@ -672,8 +679,8 @@
                     <material name="tree_green"/>
                 </visual>
                 <collision>
-                    <origin 
-                        rpy="${module['visual']['tf_mesh_1']['roll']} ${module['visual']['tf_mesh_1']['pitch']} ${module['visual']['tf_mesh_1']['yaw']}" 
+                    <origin
+                        rpy="${module['visual']['tf_mesh_1']['roll']} ${module['visual']['tf_mesh_1']['pitch']} ${module['visual']['tf_mesh_1']['yaw']}"
                         xyz="${module['visual']['tf_mesh_1']['x']} ${module['visual']['tf_mesh_1']['y']} ${module['visual']['tf_mesh_1']['z']}"/>
                     <geometry>
                         <mesh filename="${module['visual']['mesh_collision_1']}" scale="0.001 0.001 0.001"/>
@@ -690,15 +697,15 @@
                         izz="0.000031822"/>
             </inertial> -->
             <inertial>
-                <origin 
-                    xyz="${module['dynamics']['body_1']['CoM']['x']} ${module['dynamics']['body_1']['CoM']['y']} ${module['dynamics']['body_1']['CoM']['z']}" 
+                <origin
+                    xyz="${module['dynamics']['body_1']['CoM']['x']} ${module['dynamics']['body_1']['CoM']['y']} ${module['dynamics']['body_1']['CoM']['z']}"
                     rpy="0 0 0"/>
                 <mass value="${module['dynamics']['body_1']['mass']}"/>
                 <inertia
-                    ixx="${module['dynamics']['body_1']['inertia_tensor']['I_xx']}" 
-                    ixy="${module['dynamics']['body_1']['inertia_tensor']['I_xy']}" 
+                    ixx="${module['dynamics']['body_1']['inertia_tensor']['I_xx']}"
+                    ixy="${module['dynamics']['body_1']['inertia_tensor']['I_xy']}"
                     ixz="${module['dynamics']['body_1']['inertia_tensor']['I_xz']}"
-                    iyy="${module['dynamics']['body_1']['inertia_tensor']['I_yy']}" 
+                    iyy="${module['dynamics']['body_1']['inertia_tensor']['I_yy']}"
                     iyz="${module['dynamics']['body_1']['inertia_tensor']['I_yz']}"
                     izz="${module['dynamics']['body_1']['inertia_tensor']['I_zz']}"/>
             </inertial>
@@ -713,6 +720,147 @@
             <parent link="${father}"/>
             <child link="${name}"/>
             <origin xyz="0.0 0.0 0.222" rpy="0.0 0.0 0.0"/>
+        </joint>
+    </xacro:macro>
+
+    <xacro:macro name="add_gripper" params="type name filename">
+        <xacro:property name="module" value="${load_yaml(filename)}"/>
+        <xacro:property name="mesh_bool" value="false"/>
+        <xacro:unless value="${ module['visual']['mesh_body_1'] == '' }">
+            <xacro:property name="mesh_bool" value="true"/>
+        </xacro:unless>
+
+        <link name="${name}">
+            <xacro:if value="${ mesh_bool }">
+                <visual>
+                    <!-- Load mesh. Rotate the origin frame (this is because of how the .stl was saved) -->
+                    <origin
+                        rpy="${module['visual']['tf_mesh_1']['roll']} ${module['visual']['tf_mesh_1']['pitch']} ${module['visual']['tf_mesh_1']['yaw']}"
+                        xyz="${module['visual']['tf_mesh_1']['x']} ${module['visual']['tf_mesh_1']['y']} ${module['visual']['tf_mesh_1']['z']}"/>
+                    <geometry>
+                        <mesh filename="${module['visual']['mesh_body_1']}" scale="0.001 0.001 0.001"/>
+                    </geometry>
+                    <material name="tree_green"/>
+                </visual>
+                <collision>
+                    <origin
+                        rpy="${module['visual']['tf_mesh_1']['roll']} ${module['visual']['tf_mesh_1']['pitch']} ${module['visual']['tf_mesh_1']['yaw']}"
+                        xyz="${module['visual']['tf_mesh_1']['x']} ${module['visual']['tf_mesh_1']['y']} ${module['visual']['tf_mesh_1']['z']}"/>
+                    <geometry>
+                        <mesh filename="${module['visual']['mesh_collision_1']}" scale="0.001 0.001 0.001"/>
+                    </geometry>
+                </collision>
+            </xacro:if>
+
+            <inertial>
+                <origin
+                    xyz="${module['dynamics']['body_1']['CoM']['x']} ${module['dynamics']['body_1']['CoM']['y']} ${module['dynamics']['body_1']['CoM']['z']}"
+                    rpy="0 0 0"/>
+                <mass value="${module['dynamics']['body_1']['mass']}"/>
+                <inertia
+                    ixx="${module['dynamics']['body_1']['inertia_tensor']['I_xx']}"
+                    ixy="${module['dynamics']['body_1']['inertia_tensor']['I_xy']}"
+                    ixz="${module['dynamics']['body_1']['inertia_tensor']['I_xz']}"
+                    iyy="${module['dynamics']['body_1']['inertia_tensor']['I_yy']}"
+                    iyz="${module['dynamics']['body_1']['inertia_tensor']['I_yz']}"
+                    izz="${module['dynamics']['body_1']['inertia_tensor']['I_zz']}"/>
+            </inertial>
+        </link>
+
+        <!-- add fingers -->
+        <link name="${name}_leftfinger">
+            <xacro:if value="${ mesh_bool }">
+                <visual>
+                    <geometry>
+                    <mesh filename="${module['visual']['mesh_body_2']}" scale="0.001 0.001 0.001"/>
+                    </geometry>
+                    <material name="grey"/>
+                </visual>
+                <collision>
+                    <geometry>
+                    <mesh filename="${module['visual']['mesh_collision_2']}" scale="0.001 0.001 0.001"/>
+                    </geometry>
+                </collision>
+            </xacro:if>
+
+            <!-- for simulation -->
+            <inertial>
+                <origin
+                    xyz="${module['dynamics']['body_2']['CoM']['x']} ${module['dynamics']['body_2']['CoM']['y']} ${module['dynamics']['body_2']['CoM']['z']}"
+                    rpy="0 0 0"/>
+                <mass value="${module['dynamics']['body_2']['mass']}"/>
+                <inertia
+                    ixx="${module['dynamics']['body_2']['inertia_tensor']['I_xx']}"
+                    ixy="${module['dynamics']['body_2']['inertia_tensor']['I_xy']}"
+                    ixz="${module['dynamics']['body_2']['inertia_tensor']['I_xz']}"
+                    iyy="${module['dynamics']['body_2']['inertia_tensor']['I_yy']}"
+                    iyz="${module['dynamics']['body_2']['inertia_tensor']['I_yz']}"
+                    izz="${module['dynamics']['body_2']['inertia_tensor']['I_zz']}"/>
+            </inertial>
+        </link>
+        <link name="${name}_rightfinger">
+            <xacro:if value="${ mesh_bool }">
+                <visual>
+                    <origin xyz="0 0 0" rpy="0 0 ${pi}"/>
+                    <geometry>
+                    <mesh filename="${module['visual']['mesh_body_2']}" scale="0.001 0.001 0.001"/>
+                    </geometry>
+                    <material name="grey"/>
+                </visual>
+                <collision>
+                    <origin xyz="0 0 0" rpy="0 0 ${pi}"/>
+                    <geometry>
+                    <mesh filename="${module['visual']['mesh_collision_2']}" scale="0.001 0.001 0.001"/>
+                    </geometry>
+                </collision>
+            </xacro:if>
+            <!-- for simulation -->
+            <inertial>
+                <origin
+                    xyz="${module['dynamics']['body_2']['CoM']['x']} ${module['dynamics']['body_2']['CoM']['y']} ${module['dynamics']['body_2']['CoM']['z']}"
+                    rpy="0 0 0"/>
+                <mass value="${module['dynamics']['body_2']['mass']}"/>
+                <inertia
+                    ixx="${module['dynamics']['body_2']['inertia_tensor']['I_xx']}"
+                    ixy="${module['dynamics']['body_2']['inertia_tensor']['I_xy']}"
+                    ixz="${module['dynamics']['body_2']['inertia_tensor']['I_xz']}"
+                    iyy="${module['dynamics']['body_2']['inertia_tensor']['I_yy']}"
+                    iyz="${module['dynamics']['body_2']['inertia_tensor']['I_yz']}"
+                    izz="${module['dynamics']['body_2']['inertia_tensor']['I_zz']}"/>
+            </inertial>
+        </link>
+
+        <!-- Add joints -->
+        <joint name="${name}_finger_joint1" type="${module['kinematics']['joint']['joint']['type']}">
+            <parent link="${name}"/>
+            <child link="${name}_leftfinger"/>
+            <origin xyz="0 0 ${module['kinematics']['joint']['proximal']['p_pl']}" rpy="0 0 0"/>
+            <axis xyz="0 -1 0"/>
+            <limit effort="${module['kinematics']['joint']['joint']['effort']}"
+                lower="${module['kinematics']['joint']['joint']['lower_limit']}"
+                upper="${module['kinematics']['joint']['joint']['upper_limit']}"
+                velocity="${module['kinematics']['joint']['joint']['velocity']}"
+            />
+        </joint>
+        <joint name="${name}_finger_joint2" type="${module['kinematics']['joint']['joint']['type']}">
+            <parent link="${name}"/>
+            <child link="${name}_rightfinger"/>
+            <origin xyz="0 0 ${module['kinematics']['joint']['proximal']['p_pl']}" rpy="0 0 0"/>
+            <limit effort="${module['kinematics']['joint']['joint']['effort']}"
+                lower="${module['kinematics']['joint']['joint']['lower_limit']}"
+                upper="${module['kinematics']['joint']['joint']['upper_limit']}"
+                velocity="${module['kinematics']['joint']['joint']['velocity']}"
+            />
+            <axis xyz="0 1 0"/>
+        </joint>
+
+        <!-- Add TCP -->
+        <link name="TCP_${name}"/>
+        <joint name="fixed_TCP_${name}" type="fixed">
+            <axis xyz="0 0 1" rpy="0 0 0" />
+            <parent link="${name}"/>
+            <child link="TCP_${name}"/>
+            <origin xyz="0.0 0.0 0.1985" rpy="0.0 0.0 0.0"/>
         </joint>
     </xacro:macro>
 
@@ -751,7 +899,7 @@
                 <xacro:property name="radius" value="${size3}" />
             </xacro:unless>
         </xacro:unless>
-        
+
         <xacro:if value="${mesh_bool==0}">
             <link name="${name}">
                 <visual>
@@ -776,13 +924,13 @@
                             izz="${mass / 2.0 * (radius*radius)}"/>
                 </inertial>
             </link>
-        </xacro:if> 
+        </xacro:if>
         <xacro:unless value="${mesh_bool == 0}">
             <link name="${name}">
                 <visual>
                     <!-- Load mesh. Rotate the origin frame (this is because of how the .stl was saved) -->
                     <origin
-                        rpy="${module['visual']['tf_mesh_1']['roll']} ${module['visual']['tf_mesh_1']['pitch']} ${module['visual']['tf_mesh_1']['yaw']}" 
+                        rpy="${module['visual']['tf_mesh_1']['roll']} ${module['visual']['tf_mesh_1']['pitch']} ${module['visual']['tf_mesh_1']['yaw']}"
                         xyz="${module['visual']['tf_mesh_1']['x']} ${module['visual']['tf_mesh_1']['y']} ${module['visual']['tf_mesh_1']['z']}"/>
                     <geometry>
                         <mesh filename="${module['visual']['mesh_body_1']}" scale="0.001 0.001 0.001"/>
@@ -790,8 +938,8 @@
                     <material name="tree_green"/>
                 </visual>
                 <collision>
-                    <origin 
-                        rpy="${module['visual']['tf_mesh_1']['roll']} ${module['visual']['tf_mesh_1']['pitch']} ${module['visual']['tf_mesh_1']['yaw']}" 
+                    <origin
+                        rpy="${module['visual']['tf_mesh_1']['roll']} ${module['visual']['tf_mesh_1']['pitch']} ${module['visual']['tf_mesh_1']['yaw']}"
                         xyz="${module['visual']['tf_mesh_1']['x']} ${module['visual']['tf_mesh_1']['y']} ${module['visual']['tf_mesh_1']['z']}"/>
                     <geometry>
                         <mesh filename="${module['visual']['mesh_collision_1']}" scale="0.001 0.001 0.001"/>
@@ -799,15 +947,15 @@
                 </collision>
                 <!-- TODO: change inertial parameters with the one from CAD. This will be the inertia tensor of only the housing/stator part -->
                 <inertial>
-                    <origin 
-                        xyz="${module['dynamics']['body_1']['CoM']['x']} ${module['dynamics']['body_1']['CoM']['y']} ${module['dynamics']['body_1']['CoM']['z']}" 
+                    <origin
+                        xyz="${module['dynamics']['body_1']['CoM']['x']} ${module['dynamics']['body_1']['CoM']['y']} ${module['dynamics']['body_1']['CoM']['z']}"
                         rpy="0 0 0"/>
                     <mass value="${module['dynamics']['body_1']['mass']}"/>
                     <inertia
-                        ixx="${module['dynamics']['body_1']['inertia_tensor']['I_xx']}" 
-                        ixy="${module['dynamics']['body_1']['inertia_tensor']['I_xy']}" 
+                        ixx="${module['dynamics']['body_1']['inertia_tensor']['I_xx']}"
+                        ixy="${module['dynamics']['body_1']['inertia_tensor']['I_xy']}"
                         ixz="${module['dynamics']['body_1']['inertia_tensor']['I_xz']}"
-                        iyy="${module['dynamics']['body_1']['inertia_tensor']['I_yy']}" 
+                        iyy="${module['dynamics']['body_1']['inertia_tensor']['I_yy']}"
                         iyz="${module['dynamics']['body_1']['inertia_tensor']['I_yz']}"
                         izz="${module['dynamics']['body_1']['inertia_tensor']['I_zz']}"/>
                 </inertial>

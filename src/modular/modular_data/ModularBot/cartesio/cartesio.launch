@@ -1,9 +1,9 @@
 <launch>
-    <arg name="pkg_name"  default="ModularBot"/>
-    <param name="robot_description" textfile="$(eval find(pkg_name) + '/urdf/ModularBot.urdf')"/>
-    <param name="robot_description_semantic" textfile="$(eval find(pkg_name) + '/srdf/ModularBot.srdf')"/>
+    <arg name="pkg_name"  default="PACKAGE_NAME"/>
+    <param name="robot_description" textfile="$(eval find(pkg_name) + '/urdf/PACKAGE_NAME.urdf')"/>
+    <param name="robot_description_semantic" textfile="$(eval find(pkg_name) + '/srdf/PACKAGE_NAME.srdf')"/>
     <param name="cartesian/problem_description" textfile="$(eval find(pkg_name) + '/cartesio/stack.yaml')"/>
-    
+
     <arg name="solver" default="OpenSot"/>
     <arg name="prefix" default=""/>
     <arg name="use_xbot_config" default="false"/>
@@ -14,14 +14,13 @@
     <arg name="namespace" default=""/> <!-- dummy argument avoids pass_all_args error in parent launch file -->
     <arg name="robot" default=""/>
     <arg name="is_model_floating_base" default="true"/>
-       
-    
-    <node pkg="cartesian_interface" type="ros_server_node" 
-                                    name="ros_server_node" 
-                                    required="true" 
-                                    output="screen" 
+
+    <node pkg="cartesian_interface" type="ros_server_node"
+                                    name="ros_server_node"
+                                    required="true"
+                                    output="screen"
                                     launch-prefix="$(arg prefix)">
-                                    
+
         <param name="is_model_floating_base" value="$(arg is_model_floating_base)"/>
         <param name="model_type" value="RBDL"/>
         <param name="solver" value="$(arg solver)"/>
@@ -29,13 +28,9 @@
         <param name="verbosity" value="$(arg verbosity)"/>
         <param name="rate" value="$(arg rate)"/>
         <param name="tf_prefix" value="$(arg tf_prefix)"/>
-        
     </node>
 
     <node if="$(arg markers)" pkg="cartesian_interface" type="marker_spawner" name="interactive_markers" output="screen">
         <param name="tf_prefix" value="$(arg tf_prefix)"/>
     </node>
-
-
-
 </launch>
