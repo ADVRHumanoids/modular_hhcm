@@ -25,6 +25,7 @@
     <!--        <path_to_config_file>configs/ADVR_shared/ModularBot/configs/config_ModularBot.yaml</path_to_config_file>-->
         </plugin>
     </xacro:macro>
+</robot>
 
 <!--    XBOT 2-->
 <!--    <xacro:macro name="plugin_xbot2">-->
@@ -42,6 +43,3 @@
 <!--    <xacro:macro name="add_xbot2_pid" params="name profile">-->
 <!--        <pid name="${name}" profile="${profile}"/>-->
 <!--    </xacro:macro>-->
-
-
-</robot>

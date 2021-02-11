@@ -1426,6 +1426,27 @@ class UrdfWriter:
 
             # delete object father_module
             del father_module
+        elif selected_module.type == 'gripper':
+            # save parent of the module to remove. This will be the last element of the chain after removal,
+            # and its data will be returned by the function
+            father = selected_module.parent
+
+            # Generate te name of the fixed joint connecting the module with its parent
+            fixed_joint_name = str(selected_module.name) + '_fixed_joint'
+
+            for node in self.gen:
+                try:
+                    if node.attrib['name'] == fixed_joint_name:
+                        self.root.remove(node)
+                    elif node.attrib['name'] == selected_module.name:
+                        self.root.remove(node)
+                except KeyError:
+                    pass
+
+            # TO BE FIXED: ok for ros_control. How will it be for xbot2?
+            self.control_plugin.remove_joint(selected_module.name+'_finger_joint1')
+            self.control_plugin.remove_joint(selected_module.name+'_finger_joint2')
+
         else:
             # save parent of the module to remove. This will be the last element of the chain after removal,
             # and its data will be returned by the function
@@ -1965,6 +1986,9 @@ class UrdfWriter:
             self.add_to_chain(new_Link)
             # HACK: add pen after gripper
             setattr(new_Link, 'TCP_name', 'TCP_' + new_Link.name)
+            # TO BE FIXED: ok for ros_control. How will it be for xbot2?
+            self.control_plugin.add_joint(new_Link.name + '_finger_joint1')
+            self.control_plugin.add_joint(new_Link.name + '_finger_joint2')
         else:
             if new_Link.size > 1:
                 setattr(new_Link, 'name', 'L_' + str(new_Link.i) + '_size_adapter_' + str(new_Link.p) + new_Link.tag)
@@ -2239,6 +2263,9 @@ class UrdfWriter:
             self.add_to_chain(new_Link)
             # HACK: add pen after gripper
             setattr(new_Link, 'TCP_name', 'TCP_' + new_Link.name)
+            # TO BE FIXED: ok for ros_control. How will it be for xbot2?
+            self.control_plugin.add_joint(new_Link.name + '_finger_joint1')
+            self.control_plugin.add_joint(new_Link.name + '_finger_joint2')
         else:
             if new_Link.size > 1:
                 setattr(new_Link, 'name', 'L_' + str(new_Link.i) + '_size_adapter_' + str(new_Link.p) + new_Link.tag)
@@ -2608,6 +2635,9 @@ class UrdfWriter:
             self.add_to_chain(new_Link)
             # HACK: add tcp after gripper
             setattr(new_Link, 'TCP_name', 'TCP_' + new_Link.name)
+            # TO BE FIXED: ok for ros_control. How will it be for xbot2?
+            self.control_plugin.add_joint(new_Link.name + '_finger_joint1')
+            self.control_plugin.add_joint(new_Link.name + '_finger_joint2')
         else:
             if new_Link.size > 1:
                 setattr(new_Link, 'name', 'L_' + str(new_Link.i) + '_size_adapter_' + str(new_Link.p) + new_Link.tag)
