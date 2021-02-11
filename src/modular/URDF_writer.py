@@ -1,7 +1,18 @@
 from __future__ import print_function
 from future.utils import iteritems
+from abc import ABCMeta, abstractmethod
 
-import xml.etree.ElementTree as ET
+
+# try:
+#     from lxml import etree as ET
+#     print("running with lxml.etree")
+# except ImportError:
+try:
+    import xml.etree.ElementTree as ET
+    print("running with ElementTree on Python 2.5+")
+except ImportError:
+    print("Failed to import ElementTree from any known place")
+
 import xacro
 import xml.dom.minidom
 import yaml
@@ -22,11 +33,12 @@ import subprocess
 import os
 import errno
 
-ET.register_namespace('xacro', 'http://ros.org/wiki/xacro')
-ns = {'xacro': 'http://ros.org/wiki/xacro'}
+NS_XACRO = "http://www.ros.org/wiki/xacro"
+ET.register_namespace("xacro", NS_XACRO)
+ns = {"xacro": NS_XACRO}
 
 # #obtaining tree from base file
-# resource_path = '/'.join(('modular_data', 'urdf/ModularBot_library.urdf.xacro'))
+# resource_path = '/'.join(('modular_data', 'urdf/ModularBot.library.urdf.xacro'))
 # basefile_name = pkg_resources.resource_string(resource_package, resource_path)
 # urdf_tree = ET.parse(basefile_name)
 
@@ -85,30 +97,116 @@ def repl_option():
     return dict_opt
 
 
+class Plugin:
+    __metaclass__ = ABCMeta
+
+    @property
+    def urdf_writer(self):
+        return self._urdf_writer
+
+    @urdf_writer.setter
+    def urdf_writer(self, writer):
+        self._urdf_writer = writer
+
+    @abstractmethod
+    def add_plugin(self):
+        pass
+
+    @abstractmethod
+    def add_joint(self):
+        pass
+
+    @abstractmethod
+    def remove_joint(self):
+        pass
+
+
+class RosControlPlugin(Plugin):
+    def add_plugin(self):
+        return ET.SubElement(self.urdf_writer.root, "xacro:plugin_ros_control")
+
+    def add_joint(self, joint_name):
+        ET.SubElement(self.urdf_writer.root, "xacro:ros_control_transmission",
+                      transmission=joint_name+'_tran',
+                      joint=joint_name,
+                      motor=joint_name+'_mot')
+
+    def remove_joint(self, joint_name):
+        for transmission in self.urdf_writer.root.findall('*[@transmission]', ns):
+            if transmission.attrib['joint'] == joint_name:
+                self.urdf_writer.root.remove(transmission)
+
+
+class XBotCorePlugin(Plugin):
+    def add_plugin(self):
+        return ET.SubElement(self.urdf_writer.root, "xacro:plugin_xbotcore")
+
+    def add_joint(self, joint_name):
+        pass
+
+    def remove_joint(self, joint_name):
+        pass
+
+
+class XBot2Plugin(Plugin):
+    def add_plugin(self):
+        #self.plugin_element = ET.SubElement(self.urdf_writer.root, "xacro:plugin_xbot2")
+        self.gazebo_node = ET.SubElement(self.urdf_writer.root, "gazebo")
+        self.plugin_node = ET.SubElement(self.gazebo_node, "plugin",
+                                         name="xbot2_gz_joint_server",
+                                         filename="libxbot2_gz_joint_server.so")
+        self.pid_node = ET.SubElement(self.plugin_node, "pid")
+        self.gain_node = ET.SubElement(self.plugin_node, "gain", name='small_mot', p='100', d='5')
+        return self.pid_node
+
+    def add_joint(self, joint_name):
+        #return ET.SubElement(self.pid_node, "xacro:add_xbot2_pid", name=joint_name, profile="small_mot")
+        return ET.SubElement(self.pid_node, "pid", name=joint_name, profile="small_mot")
+
+    def remove_joint(self, joint_name):
+        for pid in self.pid_node.findall('./pid'):
+            if pid.attrib['name'] == joint_name:
+                self.pid_node.remove(pid)
+
 # noinspection PyUnresolvedReferences
 class UrdfWriter:
-    def __init__(self, config_file='config_file.yaml', elementree=None, speedup=False, parent=None):
+    def __init__(self, config_file='config_file.yaml', control_plugin='ros_control', elementree=None, speedup=False, parent=None):
 
         # Setting this variable to True, speed up the robot building.
         # To be used when the urdf does not need to be shown at every iteration
         self.speedup = speedup
-        # self.root = 0
-        # self.urdf_tree = 0
 
         self.resource_finder = ResourceFinder(config_file)
 
+        # Plugin class attribute. Can be XBot2Plugin, XBotCorePlugin or RosControlPlugin
+        if control_plugin == 'ros_control':
+            self.control_plugin = RosControlPlugin()
+        elif control_plugin == 'xbotcore':
+            self.control_plugin = XBotCorePlugin()
+        elif control_plugin == 'xbot2':
+            self.control_plugin = XBot2Plugin()
+        self.control_plugin.urdf_writer = self
+
         if elementree is None:
-            # Open the base xacro file
-            string = self.resource_finder.get_string('urdf/ModularBot_library.urdf.xacro', 'data_path')
-            self.root = ET.fromstring(string)
+            # Open the template xacro file
+            template = self.resource_finder.get_string('urdf/template.urdf.xacro', 'data_path')
+            self.root = ET.fromstring(template)
             self.urdf_tree = ET.ElementTree(self.root)
-            # print(ET.tostring(self.urdf_tree.getroot()))
+            # change path to xacro library
+            library_filename = self.resource_finder.get_filename('urdf/ModularBot.library.urdf.xacro', 'data_path')
+            control_filename = self.resource_finder.get_filename('urdf/ModularBot.control.urdf.xacro', 'data_path')
+            for include in self.root.findall('xacro:include', ns):
+                if include.attrib['filename'] == 'ModularBot.library.urdf.xacro':
+                    include.attrib['filename'] = library_filename
+                elif include.attrib['filename'] == 'ModularBot.control.urdf.xacro':
+                    include.attrib['filename'] = control_filename
+            #ET.SubElement(self.root, "xacro:include", filename=library_filename
+
+            self.control_plugin.add_plugin()
+
         else:
             self.root = elementree
             self.urdf_tree = ET.ElementTree(self.root)
-
-        for plugin in self.root.findall("./gazebo/plugin"):
-            self.xbot2_pid = plugin.find("./pid")
 
         self.tag_num = 1
         self.branch_switcher = {
@@ -841,6 +939,16 @@ class UrdfWriter:
     def get_parent_module(self):
         return self.parent_module
 
+    def update_generator(self):
+        # Generator expression for list of urdf elements without the gazebo tag.
+        # This is needed because of the change in the xacro file, as gazebo simulation tags
+        # are now added from the start and this creates problems with the search
+        nodes = set(self.root.findall("*"))
+        gazebo_nodes = set(self.root.findall("./gazebo"))
+        xacro_include_nodes = set(self.root.findall('./xacro:include', ns))
+        filtered_nodes = nodes.difference(gazebo_nodes).difference(xacro_include_nodes)
+        self.gen = (node for node in filtered_nodes)
+
     # Adds a table for simulation purposes
     def add_table(self):
         data = {'type': "link", 'name': "table"}
@@ -881,19 +989,20 @@ class UrdfWriter:
         socket = self.access_module(socket_name)
         fixed_joint_name = 'L_' + str(socket.i) + socket.tag + '_fixed_joint_' + str(socket.p)
 
-        # Generator expression for list of urdf elements without the gazebo tag.
-        # This is needed because of the change in the xacro file, as gazebo simulation tags
-        # are now added from the start and this creates problems with the search
-        gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
+        # Update generator expression
+        self.update_generator()
 
         # From the list of xml elements find the ones with name corresponding to the relative joint, stator link
         # and fixed joint before the stator link and remove them from the xml tree
-        for node in gen:
-            if node.attrib['name'] == fixed_joint_name:
-                node.set('x', str(x_offset))
-                node.set('y', str(y_offset))
-                node.set('z', str(z_offset))
-                node.set('yaw', str(angle_offset))
+        for node in self.gen:
+            try:
+                if node.attrib['name'] == fixed_joint_name:
+                    node.set('x', str(x_offset))
+                    node.set('y', str(y_offset))
+                    node.set('z', str(z_offset))
+                    node.set('yaw', str(angle_offset))
+            except KeyError:
+                pass
 
     def add_socket(self, x_offset=0.0, y_offset=0.0, z_offset=0.0, angle_offset=0.0):
         # Generate the path to the required YAML file
@@ -1228,10 +1337,9 @@ class UrdfWriter:
         print(selected_module.children)
         print(selected_module.parent.name)
 
-        # Generator expression for list of urdf elements without the gazebo tag.
-        # This is needed because of the change in the xacro file, as gazebo simulation tags
-        # are now added from the start and this creates problems with the search
-        gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
+        # update generator expression
+        self.update_generator()
+        #self.gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
 
         # switch depending on module type
         if selected_module.type == 'joint':
@@ -1249,23 +1357,24 @@ class UrdfWriter:
 
             # From the list of xml elements find the ones with name corresponding to the relative joint, stator link
             # and fixed joint before the stator link and remove them from the xml tree
-            for node in gen:
-                if node.attrib['name'] == selected_module.name:
-                    self.root.remove(node)
-                    # gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
-                elif node.attrib['name'] == selected_module.stator_name:
-                    self.root.remove(node)
-                    # gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
-                elif node.attrib['name'] == joint_stator_name:
-                    self.root.remove(node)
-                    # gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
-                elif node.attrib['name'] == selected_module.distal_link_name:
-                    self.root.remove(node)
-                    # gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
+            for node in self.gen:
+                try:
+                    if node.attrib['name'] == selected_module.name:
+                        self.root.remove(node)
+                    elif node.attrib['name'] == selected_module.stator_name:
+                        self.root.remove(node)
+                    elif node.attrib['name'] == joint_stator_name:
+                        self.root.remove(node)
+                    elif node.attrib['name'] == selected_module.distal_link_name:
+                        self.root.remove(node)
+                    elif node.attrib['name'] == selected_module.distal_link_name + '_rotor_fast':
+                        self.root.remove(node)
+                    elif node.attrib['name'] == 'fixed_' + selected_module.distal_link_name + '_rotor_fast':
+                        self.root.remove(node)
+                except KeyError:
+                    pass
 
-            for pid in self.xbot2_pid.findall('./pid'):
-                if pid.attrib['name'] == selected_module.name:
-                    self.xbot2_pid.remove(pid)
+            self.control_plugin.remove_joint(selected_module.name)
 
         # TODO: This is not working in the urdf. The ModuleNode obj is removed but the elment from the tree is not
         elif selected_module.type == 'cube':
@@ -1279,16 +1388,20 @@ class UrdfWriter:
 
             # Remove childs of the cube (so connectors!)
             for child in selected_module.children:
-                for node in gen:
-                    if node.attrib['name'] == child.name:
-                        self.root.remove(node)
-                        # gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
+                for node in self.gen:
+                    try:
+                        if node.attrib['name'] == child.name:
+                            self.root.remove(node)
+                    except KeyError:
+                        pass
 
-            # Remove the cube module from the xml tree
-            for node in gen:
-                if node.attrib['name'] == selected_module.name:
-                    self.root.remove(node)
-                    # gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
+                        # Remove the cube module from the xml tree
+            for node in self.gen:
+                try:
+                    if node.attrib['name'] == selected_module.name:
+                        self.root.remove(node)
+                except KeyError:
+                    pass
 
             # selected_module.parent = None
 
@@ -1300,11 +1413,13 @@ class UrdfWriter:
             print(joint_name)
 
             # Remove the fixed joint
-            for node in gen:
-                if node.attrib['name'] == joint_name:
-                    print(joint_name)
-                    self.root.remove(node)
-                    # gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
+            for node in self.gen:
+                try:
+                    if node.attrib['name'] == joint_name:
+                        print(joint_name)
+                        self.root.remove(node)
+                except KeyError:
+                    pass
 
             # before deleting father_module set his parent property to None. Otherwise this will mess up the obj tree
             father_module.parent = None
@@ -1320,32 +1435,33 @@ class UrdfWriter:
             fixed_joint_name = 'L_' + str(selected_module.i) + '_fixed_joint_' + str(
                 selected_module.p) + selected_module.tag
 
-            for node in gen:
-                if node.attrib['name'] == fixed_joint_name:
-                    self.root.remove(node)
-                    # gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
-                elif node.attrib['name'] == selected_module.name:
-                    self.root.remove(node)
-                    # gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
+            for node in self.gen:
+                try:
+                    if node.attrib['name'] == fixed_joint_name:
+                        self.root.remove(node)
+                    elif node.attrib['name'] == selected_module.name:
+                        self.root.remove(node)
+                except KeyError:
+                    pass
 
             # if selected_module.type == 'link':
             #     #root.remove(root.findall("*[@name=selected_module.name]", ns)[-1])
-            #     for node in gen:
+            #     for node in self.gen:
             #         if node.attrib['name'] == selected_module.name:
             #             self.root.remove(node)
-            #             gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
+            #             self.gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
             # elif selected_module.type == 'elbow':
             #     #root.remove(root.findall("*[@name=selected_module.name]", ns)[-1])
-            #     for node in gen:
+            #     for node in self.gen:
             #         if node.attrib['name'] == selected_module.name:
             #             self.root.remove(node)
-            #             gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
+            #             self.gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
             # elif selected_module.type == 'size_adapter':
             #     #root.remove(root.findall("*[@name=selected_module.name]", ns)[-1])
-            #     for node in gen:
+            #     for node in self.gen:
             #         if node.attrib['name'] == selected_module.name:
             #             self.root.remove(node)
-            #             gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
+            #             self.gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
 
         if self.speedup:
             string = ""
@@ -1741,7 +1857,8 @@ class UrdfWriter:
                       velocity=velocity)
 
         ####
-        ET.SubElement(self.xbot2_pid, "xacro:add_xbot2_pid", name=new_Joint.name,profile="small_mot")
+        #ET.SubElement(self.xbot2_pid, "xacro:add_xbot2_pid", name=new_Joint.name,profile="small_mot")
+        self.control_plugin.add_joint(new_Joint.name)
         ####
         if reverse:
             dist_mesh_transform = ModuleNode.get_rototranslation(new_Joint.Distal_tf, mesh_transform)
@@ -2012,7 +2129,8 @@ class UrdfWriter:
                       velocity=velocity)
 
         ####
-        ET.SubElement(self.xbot2_pid, "xacro:add_xbot2_pid", name=new_Joint.name,profile="small_mot")
+        #ET.SubElement(self.xbot2_pid, "xacro:add_xbot2_pid", name=new_Joint.name,profile="small_mot")
+        self.control_plugin.add_joint(new_Joint.name)
         ####
 
         if reverse:
@@ -2242,7 +2360,8 @@ class UrdfWriter:
                       velocity=velocity)
 
         ####
-        ET.SubElement(self.xbot2_pid, "xacro:add_xbot2_pid", name=new_Joint.name,profile="small_mot")
+        #ET.SubElement(self.xbot2_pid, "xacro:add_xbot2_pid", name=new_Joint.name,profile="small_mot")
+        self.control_plugin.add_joint(new_Joint.name)
         ####
 
         x, y, z, roll, pitch, yaw = '0', '0', '0', '0', '0', '0'
@@ -2378,7 +2497,8 @@ class UrdfWriter:
                       velocity=velocity)
 
         ####
-        ET.SubElement(self.xbot2_pid, "xacro:add_xbot2_pid", name=new_Joint.name, profile="small_mot")
+        #ET.SubElement(self.xbot2_pid, "xacro:add_xbot2_pid", name=new_Joint.name, profile="small_mot")
+        self.control_plugin.add_joint(new_Joint.name)
         ####
 
         if reverse:
@@ -2887,14 +3007,12 @@ class UrdfWriter:
     # Remove connectors when deploying the robot
     def remove_connectors(self):
 
-        # Generator expression for list of urdf elements without the gazebo tag.
-        # This is needed because of the change in the xacro file, as gazebo simulation tags
-        # are now added from the start and this creates problems with the search
-        gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
+        # update generator expression
+        self.update_generator()
 
         # Remove the fixed joints that join the connectors to the boxes (by checking if 'con' is in the name of the child)
         # Catch KeyError when the node has no child element and continue with the loop.
-        for node in gen:
+        for node in self.gen:
             try:
                 node_type = node.attrib['type']
                 if node_type == 'connectors':
@@ -2916,12 +3034,10 @@ class UrdfWriter:
 
     def add_connectors(self):
 
-        # Generator expression for list of urdf elements without the gazebo tag.
-        # This is needed because of the change in the xacro file, as gazebo simulation tags
-        # are now added from the start and this creates problems with the search
-        gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
+        # update generator expression
+        self.update_generator()
 
-        for node in gen:
+        for node in self.gen:
             try:
                 node_type = node.attrib['type']
                 if node_type == 'cube':

@@ -106,9 +106,9 @@ mkdir -p ./cartesio
 cp $SCRIPT_ROOT/ModularBot/cartesio/cartesio.launch ./cartesio/cartesio.launch $VERBOSITY || end_exec
 sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./cartesio/cartesio.launch
 # - /ModularBot_cartesio_config.yaml
-cp /tmp/modular/cartesio/ModularBot_cartesio_config.yaml ./cartesio/${package_name}_cartesio_config.yaml $VERBOSITY || end_exec
-sed -i -e "s+ModularBot+${package_name}+g" ./cartesio/${package_name}_cartesio_config.yaml
-printf "${GREEN}[3/9] Deployed cartesio configs${NC}\n"
+#cp /tmp/modular/cartesio/ModularBot_cartesio_config.yaml ./cartesio/${package_name}_cartesio_config.yaml $VERBOSITY || end_exec
+#sed -i -e "s+ModularBot+${package_name}+g" ./cartesio/${package_name}_cartesio_config.yaml
+#printf "${GREEN}[3/9] Deployed cartesio configs${NC}\n"
 
 # Deploy launch files
 mkdir -p ./launch

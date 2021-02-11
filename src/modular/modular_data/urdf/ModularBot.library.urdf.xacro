@@ -1,21 +1,8 @@
 <?xml version="1.0"?>
-<robot name="ModularBot" xmlns:xacro="http://ros.org/wiki/xacro">
-
+<robot name="ModularBot" xmlns:xacro="http://www.ros.org/wiki/xacro">
     <!-- <xacro:include filename="$(find modular)/urdf/config.xacro" />
     <xacro:include filename="$(find modular)/urdf/modular.gazebo" /> -->
-    <xacro:macro name="add_xbot2_pid" params="name profile">
-        <pid name="${name}" profile="${profile}"/>
-    </xacro:macro>
 
-    <gazebo>
-        <plugin name="xbot2_gz_joint_server" filename="libxbot2_gz_joint_server.so">
-	        <pid>
-                <gain name="small_mot"  p="100"  d="5"/>
-
-                <!-- <pid name="J1_A" profile="small_mot"/> -->
-	        </pid>
-	    </plugin>
-    </gazebo>
 
     <xacro:property name="size1" value="0.05" />
     <xacro:property name="size2" value="0.055" />
@@ -546,32 +533,6 @@
             <origin xyz="${x} ${y} ${z}" rpy="${roll} ${pitch} ${yaw}"/>
             <limit lower="${lower_lim}" upper="${upper_lim}" effort="${effort}" velocity="${velocity}"/>
         </joint>
-        <!--<link name="${child}">-->
-            <!--<xacro:if value="${type==joint_mesh}">-->
-                <!--<visual>-->
-                    <!--&lt;!&ndash; Load mesh. Rotate the origin frame (this is because of how the .stl was saved) &ndash;&gt;-->
-                    <!--<origin rpy="${roll} ${pitch} ${yaw}" xyz="${x} ${y} ${z}"/>-->
-                    <!--<geometry>-->
-                        <!--<mesh filename="package://modular/meshes/asm0001.stl" scale="0.001 0.001 0.001"/>-->
-                    <!--</geometry>-->
-                <!--</visual>-->
-                <!--<collision>-->
-                    <!--<origin rpy="${roll} ${pitch} ${yaw}" xyz="${x} ${y} ${z}"/>-->
-                    <!--<geometry>-->
-                        <!--<mesh filename="package://modular/meshes/asm0001.stl" scale="0.001 0.001 0.001"/>-->
-                    <!--</geometry>-->
-                <!--</collision>-->
-            <!--</xacro:if>-->
-            <!--&lt;!&ndash; inertial parameters for ORANGE rotating part. wrt a point on one end of the rod &ndash;&gt;-->
-            <!--<inertial>-->
-                <!--<origin xyz="0 0 -0.0635" rpy="0 0 0"/>-->
-                <!--<mass value="${mass}"/>-->
-                <!--<inertia-->
-                <!--ixx="${mass / 3.0 * (0.127*0.127)}" ixy="0.0" ixz="0.0"-->
-                <!--iyy="${mass / 3.0 * (0.127*0.127)}" iyz="0.0"-->
-                <!--izz="0.0000148"/>-->
-            <!--</inertial>-->
-        <!--</link>-->
     </xacro:macro>
 
     <xacro:macro name="add_rotor_fast" params="type name filename x y z roll pitch yaw">
