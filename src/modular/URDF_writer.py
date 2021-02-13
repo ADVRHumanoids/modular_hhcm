@@ -17,6 +17,7 @@ import xacro
 import xml.dom.minidom
 import yaml
 import json
+import copy
 from collections import OrderedDict
 
 from utils import ResourceFinder
@@ -120,6 +121,14 @@ class Plugin:
     def remove_joint(self):
         pass
 
+    @abstractmethod
+    def add_gripper(self):
+        None
+
+    @abstractmethod
+    def add_hand_group(self):
+        pass
+
 
 class RosControlPlugin(Plugin):
     def add_plugin(self):
@@ -136,6 +145,36 @@ class RosControlPlugin(Plugin):
             if transmission.attrib['joint'] == joint_name:
                 self.urdf_writer.root.remove(transmission)
 
+    def add_gripper(self, root, gripper_name, hand_name, parent_group_name):
+        ET.SubElement(root, "end-effector", name="TCP", parent_link="TCP_"+gripper_name,
+                      group=hand_name, parent_group=parent_group_name)
+        # add arm_hand group
+        arm_hand_group = ET.SubElement(root, "group", name="arm_" + hand_name)
+        ET.SubElement(arm_hand_group, "group", name=parent_group_name)
+        ET.SubElement(arm_hand_group, "group", name=hand_name)
+
+    def add_hand_group(self, root, gripper_name, hand_name):
+        hand_group = ET.SubElement(root, "group", name=hand_name)
+        ET.SubElement(hand_group, "link", name=gripper_name)
+        ET.SubElement(hand_group, "link", name=gripper_name+"_leftfinger")
+        ET.SubElement(hand_group, "link", name=gripper_name+"_rightfinger")
+        ET.SubElement(hand_group, "joint", name=gripper_name+"_finger_joint1")
+        ET.SubElement(hand_group, "passive_joint", name=gripper_name+"_finger_joint2")
+        open_state = ET.SubElement(root, "group_state", name="open", group=hand_name)
+        ET.SubElement(open_state, "joint", name=gripper_name+"_finger_joint1", value="0.05")
+        ET.SubElement(open_state, "joint", name=gripper_name+"_finger_joint2", value="0.05")
+        close_state = ET.SubElement(root, "group_state", name="close", group=hand_name)
+        ET.SubElement(close_state, "joint", name=gripper_name+"_finger_joint1", value="0.0")
+        ET.SubElement(close_state, "joint", name=gripper_name+"_finger_joint2", value="0.0")
+        # remove collisions
+        ET.SubElement(root, "disable_collisions", link1=gripper_name, link2="TCP_"+gripper_name, reason="Adjacent")
+        ET.SubElement(root, "disable_collisions", link1=gripper_name, link2=gripper_name+"_leftfinger", reason="Adjacent")
+        ET.SubElement(root, "disable_collisions", link1=gripper_name, link2=gripper_name+"_rightfinger", reason="Adjacent")
+        ET.SubElement(root, "disable_collisions", link1="TCP_"+gripper_name, link2=gripper_name+"_rightfinger", reason="Default")
+        ET.SubElement(root, "disable_collisions", link1="TCP_"+gripper_name, link2=gripper_name+"_leftfinger",reason="Default")
+        ET.SubElement(root, "disable_collisions", link1=gripper_name + "_rightfinger", link2=gripper_name+"_leftfinger", reason="Default")
+
+        return hand_group
 
 class XBotCorePlugin(Plugin):
     def add_plugin(self):
@@ -2806,12 +2845,12 @@ class UrdfWriter:
             try:
                 lowlevel_config = ordered_load(stream, yaml.SafeLoader)
                 # cartesio_stack['EE']['base_link'] = self.listofchains[0]
-                print(lowlevel_config.items()[0])
+                #print(lowlevel_config.items()[0])
             except yaml.YAMLError as exc:
                 print(exc)
 
-        print(lowlevel_config.items())
-        print(lowlevel_config['GazeboXBotPlugin'])
+        #print(lowlevel_config.items())
+        #print(lowlevel_config['GazeboXBotPlugin'])
         lowlevel_config['GazeboXBotPlugin']['gains'] = OrderedDict([])
         i = 0
         for joints_chain in self.listofchains:
@@ -2904,15 +2943,44 @@ class UrdfWriter:
         chains = []
         joints = []
         end_effectors = []
-        groups_in_chains_group = []
+        #groups_in_chains_group = []
         groups_in_arms_group = []
+        groups_in_hands_group = []
         # base_link = ""
         # tip_link = ""
         i = 0
 
+        # MoveIt
+        controller_list = []
+        initial_poses = []
+        hardware_interface_joints = []
+
+        #kinematics.yaml
+        template_kinematics_filename = self.resource_finder.get_filename('configs/kinematics.yaml', 'data_path')
+        kinematics_filename = "/tmp/modular/moveit_config/kinematics.yaml"
+        tmp_kinematics = OrderedDict([])
+        kinematics = OrderedDict([])
+        with open(template_kinematics_filename, 'r') as stream:
+            try:
+                tmp_kinematics = ordered_load(stream, yaml.SafeLoader)
+            except yaml.YAMLError as exc:
+                print(exc)
+
+        #ompl_planning.yaml
+        template_ompl_filename = self.resource_finder.get_filename('configs/ompl_planning.yaml', 'data_path')
+        ompl_filename = "/tmp/modular/moveit_config/ompl_planning.yaml"
+        tmp_ompl = OrderedDict([])
+        ompl = OrderedDict([])
+        with open(template_ompl_filename, 'r') as stream:
+            try:
+                tmp_ompl = ordered_load(stream, yaml.SafeLoader)
+            except yaml.YAMLError as exc:
+                print(exc)
+        ompl.update([('planner_configs', copy.deepcopy(tmp_ompl['planner_configs']))])
+
         print(self.listofchains)
         for joints_chain in self.listofchains:
-            group_name = "chain_" + str(i + 1)
+            group_name = "arm" + self.branch_switcher.get(i + 1)
             groups.append(ET.SubElement(root, 'group', name=group_name))
             if "con" in joints_chain[0].parent.name:
                 base_link = joints_chain[0].parent.parent.name
@@ -2937,30 +3005,52 @@ class UrdfWriter:
             i += 1
         i = 0
         arms_group = ET.SubElement(root, 'group', name="arms")
-        chains_group = ET.SubElement(root, 'group', name="chains")
-        group_state = ET.SubElement(root, 'group_state', name="home", group="chains")
-        tool_exchanger_group = ET.SubElement(root, 'group', name="ToolExchanger")
+        hands_group = ET.SubElement(root, 'group', name="hands")
+        group_state = ET.SubElement(root, 'group_state', name="home", group="arms")
+        # MoveIt
+        initial_poses.append(OrderedDict([('group', 'arms'), ('pose', 'home')]))
         for joints_chain in self.listofchains:
-            group_name = "chain_" + str(i + 1)
-            groups_in_chains_group.append(ET.SubElement(chains_group, 'group', name=group_name))
+            group_name = "arm" + self.branch_switcher.get(i + 1)
+            hand_name = "hand" + self.branch_switcher.get(i + 1)
+            #groups_in_chains_group.append(ET.SubElement(chains_group, 'group', name=group_name))
             groups_in_arms_group.append(ET.SubElement(arms_group, 'group', name=group_name))
+            # MoveIt: create controller list
+            controller_list.append(OrderedDict([('name', 'fake_'+group_name+'_controller'), ('joints', [])]))
+            kinematics.update([(group_name, copy.deepcopy(tmp_kinematics['group_name']))])
+            ompl.update([(group_name, copy.deepcopy(tmp_ompl['group_name']))])
             for joint_module in joints_chain:
                 if joint_module.type == 'joint':
                     # Homing state
                     if builder_joint_map is not None:
                         homing_value = float(builder_joint_map[joint_module.name]['angle'])
                     else:
-                        homing_value = 0.3
+                        homing_value = 0.1
                     print(homing_value)
                     joints.append(ET.SubElement(group_state, 'joint', name=joint_module.name, value=str(homing_value)))
                     # Disable collision
-                    print(joint_module.stator_name)
-                    print(joint_module.distal_link_name)
                     disable_collision = ET.SubElement(root, 'disable_collisions', link1=joint_module.stator_name, link2=joint_module.distal_link_name, reason='Adjacent')
+                    # MoveIt: add joints to controller
+                    controller_list[i*2]['joints'].append(joint_module.name)
+                    hardware_interface_joints.append(joint_module.name)
                 elif joint_module.type == 'tool_exchanger':
+                    tool_exchanger_group = ET.SubElement(root, 'group', name="ToolExchanger")
                     end_effectors.append(ET.SubElement(tool_exchanger_group, 'joint',
                                                        name=joint_module.name + '_fixed_joint'))
+                elif joint_module.type == 'gripper':
+                    self.control_plugin.add_hand_group(root, joint_module.name, hand_name)
+                    groups_in_hands_group.append(ET.SubElement(hands_group, 'group', name=hand_name))
+                    end_effectors += filter(None, [self.control_plugin.add_gripper(root, joint_module.name, hand_name, group_name)])
+                    controller_list.append(OrderedDict([('name', 'fake_' + hand_name + '_controller'), ('joints', [])]))
+                    controller_list[i*2+1]['joints'].append(joint_module.name+'_finger_joint1')
+                    controller_list[i*2+1]['joints'].append(joint_module.name + '_finger_joint2')
+                    hardware_interface_joints.append(joint_module.name + '_finger_joint1')
+                    initial_poses.append(OrderedDict([('group', hand_name), ('pose', 'open')]))
+                    ompl.update([(hand_name, copy.deepcopy(tmp_ompl['group_name']))])
+                    ompl.update([('arm_'+hand_name, copy.deepcopy(tmp_ompl['group_name']))])
             i += 1
+
+        # MoveIt: add virtual joint
+        ET.SubElement(root, "virtual_joint", name="virtual_joint", type="floating", parent_frame="world", child_link="base_link")
 
         # Create folder if doesen't exist
         if not os.path.exists(os.path.dirname(srdf_filename)):
@@ -2973,6 +3063,58 @@ class UrdfWriter:
         xmlstr = xml.dom.minidom.parseString(ET.tostring(root)).toprettyxml(indent="   ")
         with open(srdf_filename, 'w+') as f:
             f.write(xmlstr)
+
+        ###################################
+        # Moveit configs: TO BE FIXED
+        # ros_controllers_template_filename = self.resource_finder.get_filename(
+        #     'ModularBot/configs/ros_controllers.yaml', 'data_path')
+        # ros_controllers_filename = "/tmp/modular/moveit_config/ros_controllers.yaml"
+        # ros_controllers = OrderedDict([])
+
+        fake_controllers_filename = "/tmp/modular/moveit_config/fake_controllers.yaml"
+        fake_controllers = OrderedDict([('controller_list', controller_list)])
+        fake_controllers.update({'initial': initial_poses})
+
+        # Create folder if doesen't exist
+        if not os.path.exists(os.path.dirname(fake_controllers_filename)):
+            try:
+                os.makedirs(os.path.dirname(fake_controllers_filename))
+            except OSError as exc:  # Guard against race condition
+                if exc.errno != errno.EEXIST:
+                    raise
+
+        with open(fake_controllers_filename, 'w') as outfile:
+            ordered_dump(fake_controllers, stream=outfile, default_flow_style=False, line_break='\n\n', indent=4,
+                         canonical=False)
+
+        with open(kinematics_filename, 'w') as outfile:
+            ordered_dump(kinematics, stream=outfile, default_flow_style=False, line_break='\n\n', indent=4,
+                         canonical=False)
+
+        with open(ompl_filename, 'w') as outfile:
+            ordered_dump(ompl, stream=outfile, default_flow_style=False, line_break='\n\n', indent=4,
+                         canonical=False)
+
+        # ros_controllers.launch
+        ros_controllers_launch = "/tmp/modular/launch/ros_controllers.launch"
+        launch_root = ET.Element('launch')
+        ET.SubElement(launch_root, "rosparam", file="$(find pino_moveit)/moveit_config/ros_controllers.yaml",
+                      command="load")
+        controller_list_str = ' '.join((ctrl['name'].replace('fake_', '') for ctrl in controller_list))
+        ET.SubElement(launch_root, "node", name="controller_spawner", pkg="controller_manager", type="spawner",
+                      respawn="false", output="screen", args="joint_state_controller "+controller_list_str)
+
+        # Create folder if doesen't exist
+        if not os.path.exists(os.path.dirname(ros_controllers_launch)):
+            try:
+                os.makedirs(os.path.dirname(ros_controllers_launch))
+            except OSError as exc:  # Guard against race condition
+                if exc.errno != errno.EEXIST:
+                    raise
+
+        xmlstr_launch = xml.dom.minidom.parseString(ET.tostring(launch_root)).toprettyxml(indent="   ")
+        with open(ros_controllers_launch, 'w+') as f:
+            f.write(xmlstr_launch)
 
         return xmlstr
 

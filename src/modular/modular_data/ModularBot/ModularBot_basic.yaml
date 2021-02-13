@@ -1,9 +1,9 @@
 ## XBotInterface related configs
 
 XBotInterface:
-  urdf_path: "$(rospack find PACKAGE_NAME)/urdf/PACKAGE_NAME.urdf"
-  srdf_path: "$(rospack find PACKAGE_NAME)/srdf/PACKAGE_NAME.srdf"
-  joint_map_path: "$(rospack find PACKAGE_NAME)/joint_map/PACKAGE_NAME_joint_map.yaml"
+  urdf_path: "$(rospack find PACKAGE_NAME)/urdf/ModularBot.urdf"
+  srdf_path: "$(rospack find PACKAGE_NAME)/srdf/ModularBot.srdf"
+  joint_map_path: "$(rospack find PACKAGE_NAME)/joint_map/ModularBot_joint_map.yaml"
 
 ModelInterface:
   model_type: "RBDL"

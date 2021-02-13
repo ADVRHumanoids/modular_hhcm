@@ -70,20 +70,20 @@
             <axis rpy="0 0 0" xyz="0 0 1"/>
             <parent link="${father}"/>
             <child link="${name}"/>
-            <origin rpy="0.0 -0.0 0.0" xyz="0.0 0.0 0.0"/>
+            <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.01"/>
         </joint>
         <link name="${name}">
             <visual>
-                <origin rpy="0 0 0" xyz="0.3 0 -0.005"/>
+                <origin rpy="0 0 0" xyz="0.6 0 -0.005"/>
                 <geometry>
-                    <box size="0.6 0.6 0.01"/>
+                    <box size="1.2 0.6 0.01"/>
                 </geometry>
                 <material name="gray"/>
             </visual>
             <collision>
-                <origin rpy="0 0 0" xyz="0.25 0 -0.005"/>
+                <origin rpy="0 0 0" xyz="0.6 0 -0.005"/>
                 <geometry>
-                    <box size="0.6 0.6 0.01"/>
+                    <box size="1.2 0.6 0.01"/>
                 </geometry>
             </collision>
             <inertial>
