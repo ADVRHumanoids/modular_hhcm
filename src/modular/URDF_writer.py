@@ -24,6 +24,8 @@ from utils import ResourceFinder
 import ModuleNode  # import module_from_yaml, ModuleNode, mastercube_from_yaml, slavecube_from_yaml
 import argparse
 
+import rospy
+import roslaunch
 import tf
 
 # from anytree import NodeMixin, RenderTree, Node, AsciiStyle
@@ -2669,7 +2671,6 @@ class UrdfWriter:
                           "xacro:add_gripper",
                           type="gripper",
                           name=new_Link.name,
-                          tag=new_Link.tag,
                           filename=new_Link.filename)
             self.add_to_chain(new_Link)
             # HACK: add tcp after gripper
@@ -3116,6 +3117,20 @@ class UrdfWriter:
         with open(ros_controllers_launch, 'w+') as f:
             f.write(xmlstr_launch)
 
+        #########################
+        # Remove collisions from SRDF by using Moveit collisions_updater
+        # THIS WILL BE DONE AFTER DEPLOY FOR NOW
+
+        # rospy.init_node('collisions_node', anonymous=True)
+        # uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
+        # roslaunch.configure_logging(uuid)
+        # # find launch filename
+        # update_collisions_launch = self.resource_finder.get_filename('launch/update_collision.launch', 'data_path')
+        # launch = roslaunch.parent.ROSLaunchParent(uuid, [update_collisions_launch])
+        # launch.start()
+        # rospy.loginfo("started")
+        # launch.spin()
+
         return xmlstr
 
     # Function writin the urdf file after converting from .xacro (See xacro/__init__.py for reference)
@@ -3170,7 +3185,8 @@ class UrdfWriter:
         script = self.resource_finder.get_filename('deploy.sh', 'data_path')
         print(script)
         print(robot_name)
-        subprocess.check_call([script, robot_name])
+        output = subprocess.check_output([script, robot_name, "-d", "/home/tree/moveit_ws/src", "-v"])
+        print(output)
 
         self.add_connectors()
 
