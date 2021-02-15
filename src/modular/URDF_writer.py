@@ -1066,10 +1066,6 @@ class UrdfWriter:
         setattr(new_socket, 'robot_id', 0)
 
         # Update the EtherCAT port connected to the electro-mechanical interface where the new module/slave will be added
-        #    1           2           3           4
-        #    o           o           o           o
-        #    |           |           |           |
-        # com-exp   upper port  front port    nothing
         setattr(new_socket, 'selected_port', 2)
         print('selected_port :', new_socket.selected_port)
 
@@ -1086,6 +1082,7 @@ class UrdfWriter:
                       "xacro:add_link",
                       type="link",
                       name=new_socket.name,
+                      filename=new_socket.filename,
                       size_z=new_socket.link_size_z,
                       size=str(new_socket.size))
 
@@ -1729,6 +1726,7 @@ class UrdfWriter:
                           "xacro:add_link",
                           type="link",
                           name=new_Link.name,
+                          filename=new_Link.filename,
                           size_z=new_Link.link_size_z,
                           size=str(new_Link.size))
         elif new_Link.type == 'elbow':
@@ -1990,6 +1988,7 @@ class UrdfWriter:
                           "xacro:add_link",
                           type="link",
                           name=new_Link.name,
+                          filename=new_Link.filename,
                           size_z=new_Link.link_size_z,
                           size=str(new_Link.size))
         elif new_Link.type == 'elbow':
@@ -2022,7 +2021,6 @@ class UrdfWriter:
                           "xacro:add_gripper",
                           type="gripper",
                           name=new_Link.name,
-                          tag=new_Link.tag,
                           filename=new_Link.filename)
             self.add_to_chain(new_Link)
             # HACK: add pen after gripper
@@ -2266,6 +2264,7 @@ class UrdfWriter:
                           "xacro:add_link",
                           type="link",
                           name=new_Link.name,
+                          filename=new_Link.filename,
                           size_z=new_Link.link_size_z,
                           size=str(new_Link.size))
         elif new_Link.type == 'elbow':
@@ -2637,6 +2636,7 @@ class UrdfWriter:
                           "xacro:add_link",
                           type="link",
                           name=new_Link.name,
+                          filename=new_Link.filename,
                           size_z=new_Link.link_size_z,
                           size=str(new_Link.size))
         elif new_Link.type == 'elbow':
