@@ -147,7 +147,7 @@ def evaluate_robot(robot, xy, angle_offset):
     urdf_writer.add_table()
 
     # Add 1st chain base
-    urdf_writer.add_socket(0.0, 0.0, 0.0, 0.0)
+    urdf_writer.add_socket(0.150, 0.225, 0.0, 0.0)
 
     # Add 1st chain
     for module in robot[0]:
@@ -158,8 +158,9 @@ def evaluate_robot(robot, xy, angle_offset):
         # set an homing value for the joint
         homing_joint_map[data['lastModule_name']] = {'angle': 0.1}
 
+    data = urdf_writer.add_module('module_link_elbow_90_B.yaml', 0, False)
+
     # Add a simple virtual end-effector
-    # urdf_writer.add_simple_ee(0.0, 0.0, 0.189, 0.0)
     # urdf_writer.add_simple_ee(0.0, 0.0, 0.189, 0.0)
     # urdf_writer.select_module_from_name(parent)
     # gripper
@@ -196,8 +197,8 @@ def evaluate_robot(robot, xy, angle_offset):
 
     urdf_writer.deploy_robot("pino_moveit")
 
+    rospy.init_node('moveit_client', anonymous=True)
     
-    rospy.init_node('moveit_planning', anonymous=True)
     uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
     roslaunch.configure_logging(uuid)
     # find launch filename
@@ -223,13 +224,22 @@ def evaluate_robot(robot, xy, angle_offset):
     robot = moveit_commander.RobotCommander()
     scene = moveit_commander.PlanningSceneInterface()
     group = moveit_commander.MoveGroupCommander("arm_A")
+
+    rospy.sleep(2)
+
+    # plane_pose = geometry_msgs.msg.PoseStamped()
+    # plane_pose.header.frame_id = robot.get_planning_frame()
+    # plane_pose.pose.orientation.x = 1.0
+    # plane_pose.pose.orientation.w = 1.0
+    # plane_pose.pose.position.y = -0.01
+    # scene.add_plane('vertical_plane', plane_pose)       
     
     print "============ Reference frame: %s" % group.get_planning_frame()
     print "============ Reference frame: %s" % group.get_end_effector_link()
     print "============ Robot Groups:"
     print robot.get_group_names()
     print "============ Group current Pose:"
-    print group.get_current_pose
+    print group.get_current_pose()
 
     waypoints = []
 
@@ -498,4 +508,4 @@ if __name__ == "__main__":
     # optimize()
     # optimize2ndtask()
     #evaluate_robot(((0, 1, 1, 1), (0, 1)), (0.4, 0.4), 3.14)
-    evaluate_robot(((0, 1, 0, 1, 0, 1), ()), (0.6, 0.0), 3.14)
+    evaluate_robot(((0, 1, 0, 1, 1), ()), (0.6, 0.0), 3.14)
