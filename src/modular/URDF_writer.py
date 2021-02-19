@@ -1141,13 +1141,18 @@ class UrdfWriter:
         return data
 
     def add_simple_ee(self, x_offset=0.0, y_offset=0.0, z_offset=0.0, angle_offset=0.0):
+        # TODO: treat this as a link in the link_after_* methods!
         data = {'type': "simple_ee", 'name': "simple_ee"}
+
+        print("Parent module:")
+        print(self.parent_module.name)
+        print(self.parent_module.type)
 
         simple_ee = ModuleNode.ModuleNode(data, "simple_ee", parent=self.parent_module)
         setattr(simple_ee, 'tag', self.parent_module.tag)
         setattr(simple_ee, 'size', self.parent_module.size)
         setattr(simple_ee, 'i', self.parent_module.i)
-        setattr(simple_ee, 'p', self.parent_module.p)
+        setattr(simple_ee, 'p', self.parent_module.p+1)
         setattr(simple_ee, 'robot_id', 0)
         setattr(simple_ee, 'name', 'ee' + self.parent_module.tag)
 
@@ -1171,12 +1176,17 @@ class UrdfWriter:
         x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(transform)
 
         fixed_joint_name = 'L_' + str(simple_ee.i) + '_fixed_joint_' + str(simple_ee.p) + simple_ee.tag
+        
+        if self.parent_module.type == 'joint':
+            father_name = 'L_' + str(self.parent_module.i) + self.parent_module.tag
+        else:
+            father_name = self.parent_module.name
 
         ET.SubElement(self.root,
                       "xacro:add_fixed_joint",
                       type="fixed_joint",
                       name=fixed_joint_name,
-                      father='L_' + str(simple_ee.i) + simple_ee.tag,
+                      father=father_name,
                       child=simple_ee.name,
                       x=x,
                       y=y,
@@ -1186,6 +1196,7 @@ class UrdfWriter:
                       yaw=yaw)
 
         self.parent_module = simple_ee
+        self.add_to_chain(simple_ee)
 
         if self.speedup:
             string = ""
@@ -1253,7 +1264,7 @@ class UrdfWriter:
         setattr(new_module, 'robot_id', robot_id)
 
         print("parent module:")
-        print(self.parent_module)
+        print(self.parent_module.name)
         print(self.parent_module.type)
 
         # Update the EtherCAT port connected to the electro-mechanical interface where the new module/slave will be added

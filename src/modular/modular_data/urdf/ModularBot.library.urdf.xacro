@@ -74,14 +74,14 @@
         </joint>
         <link name="${name}">
             <visual>
-                <origin rpy="0 0 0" xyz="0.6 0 -0.005"/>
+                <origin rpy="0 0 0" xyz="0.6 0.3 -0.005"/>
                 <geometry>
                     <box size="1.2 0.6 0.01"/>
                 </geometry>
                 <material name="gray"/>
             </visual>
             <collision>
-                <origin rpy="0 0 0" xyz="0.6 0 -0.005"/>
+                <origin rpy="0 0 0" xyz="0.6 0.3 -0.005"/>
                 <geometry>
                     <box size="1.2 0.6 0.01"/>
                 </geometry>
@@ -345,32 +345,8 @@
             </xacro:unless>
         </xacro:unless>
 
-        <xacro:if value="${mesh_bool == 'false' }">
-            <link name="${name}">
-                <visual>
-                    <origin xyz="0 0 ${size_z/2}" rpy="0 0 0" />
-                    <geometry>
-                        <cylinder radius="${radius}" length="${size_z}"/>
-                    </geometry>
-                    <material name="white"/>
-                </visual>
-                <collision>
-                    <origin xyz="0 0 ${size_z/2}" rpy="0 0 0" />
-                    <geometry>
-                        <cylinder radius="${radius}" length="${size_z}"/>
-                    </geometry>
-                </collision>
-                <inertial>
-                    <origin xyz="0 0 ${size_z/2}" rpy="0 0 0"/>
-                    <mass value="${mass}"/>
-                    <inertia
-                    ixx="${mass / 12.0 * (3*radius*radius + size_z*size_z)}" ixy="0.0" ixz="0.0"
-                    iyy="${mass / 12.0 * (size_z*size_z + 3*radius*radius)}" iyz="0.0"
-                    izz="${mass / 2.0 * (radius*radius)}"/>
-                </inertial>
-            </link>
-        </xacro:if>
-        <xacro:unless value="${mesh_bool == 'false'}">
+        <xacro:if value="${mesh_bool}">
+
             <link name="${name}">
                 <visual>
                     <!-- Load mesh. Rotate the origin frame (this is because of how the .stl was saved) -->
@@ -403,8 +379,35 @@
                         iyz="${module['dynamics']['body_1']['inertia_tensor']['I_yz']}"
                         izz="${module['dynamics']['body_1']['inertia_tensor']['I_zz']}"/>
                 </inertial>
-
             </link>
+
+        </xacro:if>
+        <xacro:unless value="${mesh_bool}">
+
+            <link name="${name}">
+                <visual>
+                    <origin xyz="0 0 ${size_z/2}" rpy="0 0 0" />
+                    <geometry>
+                        <cylinder radius="${radius}" length="${size_z}"/>
+                    </geometry>
+                    <material name="white"/>
+                </visual>
+                <collision>
+                    <origin xyz="0 0 ${size_z/2}" rpy="0 0 0" />
+                    <geometry>
+                        <cylinder radius="${radius}" length="${size_z}"/>
+                    </geometry>
+                </collision>
+                <inertial>
+                    <origin xyz="0 0 ${size_z/2}" rpy="0 0 0"/>
+                    <mass value="${mass}"/>
+                    <inertia
+                    ixx="${mass / 12.0 * (3*radius*radius + size_z*size_z)}" ixy="0.0" ixz="0.0"
+                    iyy="${mass / 12.0 * (size_z*size_z + 3*radius*radius)}" iyz="0.0"
+                    izz="${mass / 2.0 * (radius*radius)}"/>
+                </inertial>
+            </link>
+        
         </xacro:unless>
 
         <gazebo reference="${name}">
@@ -874,6 +877,19 @@
     <!-- Add a simple frame ("end-effector") for simulation purposes -->
     <xacro:macro name="add_simple_ee" params="type name size_z">
         <link name="${name}">
+            <visual>
+                <origin xyz="0 0 ${size_z/2}" rpy="0 0 0" />
+                <geometry>
+                    <cylinder radius="0.05" length="${size_z}"/>
+                </geometry>
+                <material name="blue"/>
+            </visual>
+            <collision>
+                <origin xyz="0 0 ${size_z/2}" rpy="0 0 0" />
+                <geometry>
+                    <cylinder radius="0.05" length="${size_z}"/>
+                </geometry>
+            </collision>
             <inertial>
                 <origin xyz="0 0 ${size_z/2}" rpy="0 0 0"/>
                 <mass value="0.848"/>
