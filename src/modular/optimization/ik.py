@@ -17,7 +17,7 @@ import PyKDL as kdl
 
 from modular.optimization.pickle_utilities import load_pickle, dump_pickle
 
-pickle_path = '/home/edoardo/Documents/Papers/ICRA2021_task_based_optimization/pickles'
+pickle_path = '/home/tree/pickles'
 
 def tf_subscriber(ci, caller_id=""):
     poses = []
