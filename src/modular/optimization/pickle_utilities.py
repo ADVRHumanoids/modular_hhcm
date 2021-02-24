@@ -13,6 +13,10 @@ def load_pickle(filename):
 
     return obj_list
 
+def load_pickle2(filename):
+    with open(filename, 'rb') as input:
+        obj = pickle.load(input)
+    return obj
 
 def dump_pickle(filename, obj_list):
     # 'list_of_candidates.pkl'

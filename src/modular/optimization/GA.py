@@ -10,12 +10,20 @@ from bitstring import BitArray
 
 import itertools
 import copy
+import pickle
+import time
+import matplotlib.pyplot as plt
+
+import multiprocessing
 
 from modular.URDF_writer import UrdfWriter
 from modular.optimization.test import iacobelli_IK
+from modular.optimization.test_class import test
+from modular.optimization.pickle_utilities import load_pickle
 
 # Create grid
-x = list(numpy.linspace(0.0, 1.4, 8))
+# x = list(numpy.linspace(0.0, 1.4, 8))
+x = list(numpy.linspace(0.0, 0.6, 4))
 y = list(numpy.linspace(0.0, 0.6, 4))
 coordinates = list(itertools.product(x, y))
 angles =  [0.0, 1.57, 3.14, -1.57]
@@ -24,7 +32,10 @@ TYPES_OF_MODULES = 4
 MIN_NUM_OF_MODULES = 4
 MAX_NUM_OF_MODULES = 8
 
-n_dofs = 5
+INVALID_RESULT = 9999
+
+n_dofs = 6 #5
+max_modules_after_links = 2
 module_encoding_length = 2
 final_index = n_dofs*module_encoding_length
 
@@ -41,6 +52,18 @@ def generate_robot_set(n):
     # 3 Yaws, 3 Elbows, 1 straight link, 1 elbow link
     elements = [0, 1, 1, 1, 2, 2]#, 0, 0] #[1, 1, 0, 0, 0, 2, 3]
     modules_combinations = set(itertools.permutations(elements, n))
+    # We remove from the robot set all the combinations that have the link modules (0 or 3) in the first (n-2) positions
+    # Equivalent to a constraint on the max weight the link can withstand of ~6kg  
+    for comb in modules_combinations:
+        if comb.index(0) < (n-max_modules_after_links-1):
+            modules_combinations.remove(comb)
+    # we make a copy of the set to have the same combinations also with module 3 (substituting 0)
+    # TODO: This is ugly. Generate all and remove the ones with both 0 and 3
+    modules_combinations_2 = set()
+    for module_comb in modules_combinations:
+        module_comb2 = tuple([i if i != 0 else 3 for i in module_comb])
+        modules_combinations_2.add(module_comb2)
+    modules_combinations = modules_combinations.union(modules_combinations_2)
     # Convert integer representing modules to bit strings
     expanded_modules_combinations = []
     for comb in modules_combinations:
@@ -54,10 +77,15 @@ def generate_robot_set(n):
 def generate_random_robot():
     # n_dofs = random.randint(MIN_NUM_OF_MODULES,MAX_NUM_OF_MODULES)
     angle_offset = [random.randint(0,1), random.randint(0,1)]
-    xy = [random.randint(0,1), random.randint(0,1), random.randint(0,1), random.randint(0,1), random.randint(0,1)]
-    robot = list(random.choice(generate_robot_set(n_dofs)))
-    # flat_robot_list = [item for sublist in robot_list for item in sublist]
-    robot_config = robot + angle_offset + xy
+    xy = [random.randint(0,1), random.randint(0,1), random.randint(0,1), random.randint(0,1)] #, random.randint(0,1)]
+    robot_allowed = False
+    while not robot_allowed:    
+        robot = list(random.choice(generate_robot_set(n_dofs)))
+        # flat_robot_list = [item for sublist in robot_list for item in sublist]
+        robot_config = robot + angle_offset + xy
+        robot_allowed = check_robot_is_allowed(robot_config)
+        if not robot_allowed:
+            print("There must be a bug in the robot generation!!!!!!!!!!!!")
     return robot_config
 
 # this is the function used by the algorithm for evaluation
@@ -72,9 +100,16 @@ def check_robot_is_allowed(individual):
     robot_structure, xy, angle = chunk_individual(individual)
     chunked_robot_structure = [robot_structure[i:i + module_encoding_length] for i in range(0, len(robot_structure), module_encoding_length)]  
     robot_structure = [BitArray(l).uint for l in chunked_robot_structure]
-    # 0 can appear only once
-    contains_duplicates = robot_structure.count(0) > 1
-    return not contains_duplicates
+    # 0 and 3 can appear only once
+    contains_duplicates = (robot_structure.count(0) + robot_structure.count(3))  > 1
+    # constraint on max weight holdable by links (max two modules after)
+    violates_weight_constraint = False
+    if 0 in robot_structure:
+        violates_weight_constraint = robot_structure.index(0) < (n_dofs-max_modules_after_links-1) or violates_weight_constraint
+    if 3 in robot_structure:
+        violates_weight_constraint = robot_structure.index(3) < (n_dofs-max_modules_after_links-1) or violates_weight_constraint
+
+    return not contains_duplicates and not violates_weight_constraint
 
 def MYmutFlipBit(individual, indpb):
     """Flip the value of the attributes of the input individual and return the
@@ -135,6 +170,10 @@ def MYcxTwoPoint(ind1, ind2):
 
 
 def evaluate_robot(robot_structure, xy, angle_offset):
+    print("Evaluating:")
+    print(robot_structure)
+    print(angle_offset)
+    print(xy)
     # Create joint map to store homing values
     homing_joint_map = {}
     # homing_value = float(builder_joint_map[joint_module.name]['angle'])
@@ -160,19 +199,19 @@ def evaluate_robot(robot_structure, xy, angle_offset):
             # set an homing value for the joint
             homing_joint_map[data['lastModule_name']] = {'angle': 0.0}
         elif module == 3:
-            data = urdf_writer.add_module('module_joint_double_elbow_ORANGE_B.yaml', 0, False)
-            homing_joint_map[data['lastModule_name']] = {'angle': 0.0}
-            # data = urdf_writer.add_module('module_link_elbow_90_B.yaml', 0, False)
+            # data = urdf_writer.add_module('module_joint_double_elbow_ORANGE_B.yaml', 0, False)
+            # homing_joint_map[data['lastModule_name']] = {'angle': 0.0}
+            data = urdf_writer.add_module('module_link_elbow_90_B.yaml', 0, False)
+            # data = urdf_writer.add_module('module_link_straight_140_B.yaml', 0, False)
         else:
-            continue
-        # elif module == 3:
-        #     data = urdf_writer.add_module('module_link_straight_140_B.yaml', 0, False)
+            # continue
+            data = urdf_writer.add_module('module_link_straight_140_B.yaml', 0, False)
 
     # Add a simple virtual end-effector
     urdf_writer.add_simple_ee(0.0, 0.0, 0.189, 0.0)
 
-    # string = urdf_writer.process_urdf()
-    urdf = urdf_writer.write_urdf()
+    string = urdf_writer.process_urdf()
+    # urdf = urdf_writer.write_urdf()
     # srdf = urdf_writer.write_srdf(homing_joint_map)
     # joint_map = urdf_writer.write_joint_map()
     # lowlevel_config = urdf_writer.write_lowlevel_config()
@@ -184,26 +223,29 @@ def evaluate_robot(robot_structure, xy, angle_offset):
     if angle_offset == -1.57 and robot_structure == ((0, 1, 0), (0, 1)):
         return
 
-    result, q, pose, n_dofs = iacobelli_IK()
+    # result, q, pose, n_dofs = iacobelli_IK()
+    result, q, pose, n_dofs = test(string)
 
     if result is None:
-        result = 999999999999999999
+        result = INVALID_RESULT
 
     return result, q, pose, n_dofs
 
 def chunk_individual(individual):
     # individual = individual[0]
     robot_structure = individual[:final_index]
-    print(robot_structure)
     angle_offset = angles[BitArray(individual[final_index:final_index+2]).uint]
-    print(angle_offset)
-    xy = coordinates[BitArray(individual[final_index+2:final_index+4]).uint]
-    print(xy)
+    xy = coordinates[BitArray(individual[final_index+2:final_index+6]).uint] # 7
+    
     return robot_structure, xy, angle_offset
 
 def test_robot(individual):
     individual = individual[0]
     robot_structure, xy, angle_offset = chunk_individual(individual)
+    print("Testing:")
+    print(robot_structure)
+    print(angle_offset)
+    print(xy)
 
     # Create joint map to store homing values
     homing_joint_map = {}
@@ -230,79 +272,273 @@ def test_robot(individual):
             # set an homing value for the joint
             homing_joint_map[data['lastModule_name']] = {'angle': 0.0}
         elif module == 3:
-            data = urdf_writer.add_module('module_joint_double_elbow_ORANGE_B.yaml', 0, False)
-            homing_joint_map[data['lastModule_name']] = {'angle': 0.0}
-            # data = urdf_writer.add_module('module_link_elbow_90_B.yaml', 0, False)
+            # data = urdf_writer.add_module('module_joint_double_elbow_ORANGE_B.yaml', 0, False)
+            # homing_joint_map[data['lastModule_name']] = {'angle': 0.0}
+            data = urdf_writer.add_module('module_link_elbow_90_B.yaml', 0, False)
+            # data = urdf_writer.add_module('module_link_straight_140_B.yaml', 0, False)
         else:
-            continue
-        # elif module == 3:
-        #     data = urdf_writer.add_module('module_link_straight_140_B.yaml', 0, False)
+            # continue
+            data = urdf_writer.add_module('module_link_straight_140_B.yaml', 0, False)
 
     # Add a simple virtual end-effector
     urdf_writer.add_simple_ee(0.0, 0.0, 0.189, 0.0)
 
-    # string = urdf_writer.process_urdf()
-    urdf = urdf_writer.write_urdf()
-    srdf = urdf_writer.write_srdf(homing_joint_map)
-    joint_map = urdf_writer.write_joint_map()
-    lowlevel_config = urdf_writer.write_lowlevel_config()
+    string = urdf_writer.process_urdf()
+    # urdf = urdf_writer.write_urdf()
+    # srdf = urdf_writer.write_srdf(homing_joint_map)
+    # joint_map = urdf_writer.write_joint_map()
+    # lowlevel_config = urdf_writer.write_lowlevel_config()
     # probdesc = urdf_writer.write_hardcodedproblem_description("ee_B", "ee_A")
 
-    urdf_writer.deploy_robot("pino_moveit")
+    # urdf_writer.deploy_robot("pino_moveit")
 
     # This robot breaks Opensot for some reason. skip it
     if angle_offset == -1.57 and robot_structure == ((0, 1, 0), (0, 1)):
         return
 
-    result, q, pose, n_dofs = iacobelli_IK()
+    x_target, y_target, z_target = 0.3, 0.0, 0.0
+    # result, q, pose, n_dofs = iacobelli_IK()
+    result, q, pose, n_dofs = test(string, x_target, y_target, z_target)
 
     if result is None:
-        result = 999999999999999999
+        result = INVALID_RESULT
 
     return result, q, pose, n_dofs
 
-# this is the setup of the deap library: registering the different function into the toolbox
-creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
-creator.create("Individual", list, fitness=creator.FitnessMin, ik_solution=None, pose=None, dofs=None)
 
-toolbox = base.Toolbox()
+# # this is the definition of the total genetic algorithm is executed, it is almost literally copied from the deap library
+# def main_2objectives(verbose):
+#     # this is the setup of the deap library: registering the different function into the toolbox
+#     creator.create("FitnessMin", base.Fitness, weights=(-1.0, -1.0))
+#     creator.create("Individual", list, fitness=creator.FitnessMin, ik_solution=None, pose=None, dofs=None)
 
-toolbox.register("generate_random_robot", generate_random_robot)
+#     toolbox = base.Toolbox()
 
-toolbox.register("individual", tools.initRepeat, creator.Individual, toolbox.generate_random_robot, n=1)
-toolbox.register("population", tools.initRepeat, list, toolbox.individual)
+#     toolbox.register("generate_random_robot", generate_random_robot)
 
-toolbox.register("evaluate", evaluate)
-toolbox.register("mate", MYcxTwoPoint)
-toolbox.register("mutate", MYmutFlipBit, indpb=0.1)
-toolbox.register("select", tools.selTournament, tournsize=2)
+#     toolbox.register("individual", tools.initRepeat, creator.Individual, toolbox.generate_random_robot, n=1)
+#     toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
-# as an example, this is what a population of 10 shopping lists looks like
-# toolbox.population(n=10)
+#     toolbox.register("evaluate", evaluate)
+#     toolbox.register("mate", MYcxTwoPoint)
+#     toolbox.register("mutate", MYmutFlipBit, indpb=0.1)
+#     toolbox.register("select", tools.selTournament, tournsize=2)
 
-stats_fit = tools.Statistics(lambda ind: ind.fitness.values)
-stats_size = tools.Statistics(key=lambda ind: ind.dofs)
-mstats = tools.MultiStatistics(fitness=stats_fit, size=stats_size)
+#     # as an example, this is what a population of 10 shopping lists looks like
+#     # toolbox.population(n=10)
 
-mstats.register("avg", np.mean)
-mstats.register("std", np.std)
-mstats.register("min", np.min)
-mstats.register("max", np.max)
+#     stats_fit = tools.Statistics(lambda ind: ind.fitness.values)
+#     stats_size = tools.Statistics(key=lambda ind: ind.dofs)
+#     mstats = tools.MultiStatistics(fitness=stats_fit, size=stats_size)
 
-logbook = tools.Logbook()
-hof = tools.HallOfFame(1)
+#     mstats.register("avg", np.mean)
+#     mstats.register("std", np.std)
+#     mstats.register("min", np.min)
+#     mstats.register("max", np.max)
+
+#     logbook = tools.Logbook()
+#     hof = tools.HallOfFame(1)
+
+#     pool = multiprocessing.Pool(processes=10)
+#     toolbox.register("map", pool.map)
+
+#     pop_size = 20 # 20
+#     pop = toolbox.population(n=pop_size) 
+    
+#     # Evaluate the entire population
+#     fitnesses = list(toolbox.map(toolbox.evaluate, pop))
+#     for ind, fit in zip(pop, fitnesses):
+#         ind.fitness.values = fit[0],
+#         ind.ik_solution = fit[1]
+#         ind.pose = fit[2]
+#         ind.dofs = fit[3]
+
+#     hof.update(pop)
+
+#     # CXPB  is the probability with which two individuals
+#     #       are crossed
+#     #
+#     # MUTPB is the probability for mutating an individual
+#     CXPB, MUTPB = 0.5, 0.25
+
+#     # Extracting all the fitnesses of
+#     fits = [ind.fitness.values[0] for ind in pop]
+
+#     # Variable keeping track of the number of generations
+#     g = 0
+
+#     record = mstats.compile(pop)
+#     logbook.record(gen=g, evals=pop_size, **record) #pop=pop, 
+#     if verbose:
+#         print("Statistics")
+#         # print(record)
+#         print(logbook.stream)
+
+#     # Begin the evolution
+#     while g < 50: # 100
+#         # A new generation
+#         g = g + 1
+#         print("-- Generation %i --" % g)
+#         for ind in pop:
+#             ind = ind[0]
+#             print(ind)
+#             # r, xy, angle = chunk_individual(ind)
+#             # print(r, xy, angle)
+
+#         # Select the next generation individuals
+#         offspring = toolbox.select(pop, len(pop))
+#         # Clone the selected individuals
+#         offspring = list(toolbox.map(toolbox.clone, offspring))
+
+#         # Apply crossover and mutation on the offspring
+#         for child1, child2 in zip(offspring[::2], offspring[1::2]):
+#             if random.random() < CXPB:
+#                 toolbox.mate(child1[0], child2[0])
+#                 del child1.fitness.values
+#                 del child2.fitness.values
+
+#         for mutant in offspring:
+#             if random.random() < MUTPB:
+#                 toolbox.mutate(mutant[0])
+#                 del mutant.fitness.values
+
+#         # Evaluate the individuals with an invalid fitness
+#         invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
+#         fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
+#         for ind, fit in zip(invalid_ind, fitnesses):
+#             ind.fitness.values = fit[0],
+#             ind.ik_solution = fit[1]
+#             ind.pose = fit[2]
+#             ind.dofs = fit[3]
+
+#         hof.update(offspring)
+
+#         pop[:] = offspring
+
+#         record = mstats.compile(pop)
+#         logbook.record(gen=g, evals=pop_size, **record) #pop=pop, 
+#         if verbose:
+#             print("Statistics")
+#             # print(record)
+#             print(logbook.stream)
+
+#         # Gather all the fitnesses in one list and print the stats
+#         # fits = [ind.fitness.values[0] for ind in pop]
+
+#         # length = len(pop)
+#         # mean = sum(fits) / length
+#         # sum2 = sum(x * x for x in fits)
+#         # std = abs(sum2 / length - mean ** 2) ** 0.5
+
+#         # print(min(fits), max(fits), mean, std)
+
+#     best = pop[np.argmin([toolbox.evaluate(x)[0] for x in pop])]
+
+#     print(logbook)
+
+#     # gen = logbook.select("gen")
+#     # fit_mins = logbook.chapters["fitness"].select("min")
+#     # size_avgs = logbook.chapters["size"].select("avg")
+
+#     # fig, ax1 = plt.subplots()
+#     # line1 = ax1.plot(gen, fit_mins, "b-", label="Minimum Fitness")
+#     # ax1.set_xlabel("Generation")
+#     # ax1.set_ylabel("Fitness", color="b")
+#     # for tl in ax1.get_yticklabels():
+#     #     tl.set_color("b")
+
+#     # ax2 = ax1.twinx()
+#     # line2 = ax2.plot(gen, size_avgs, "r-", label="Average Size")
+#     # ax2.set_ylabel("Size", color="r")
+#     # for tl in ax2.get_yticklabels():
+#     #     tl.set_color("r")
+
+#     # lns = line1 + line2
+#     # labs = [l.get_label() for l in lns]
+#     # ax1.legend(lns, labs, loc="center right")
+
+#     # plt.show()
+
+#     print("ZIO CAGNACCIO!!!!!!!!!!!!!!!!!!!")
+#     print(best)
+#     print("IK solution:")
+#     print(best.ik_solution)
+#     print("final pose:")
+#     print(best.pose)
+#     print("DOFs:")
+#     print(best.dofs)
+#     print("best fitness value:")
+#     print(best.fitness.values[0])
+#     print("best_population:")
+#     for p in pop:
+#         p = p[0]
+#         print(p)
+#         # r, xy, angle = chunk_individual(p)
+#         # print(r, xy, angle)
+
+#     pickle_path = "/home/tree/pickles/logbooks/"
+#     date = time.strftime("%Y%m%d-%H%M%S")
+#     filename = pickle_path + date + '_logbook.pkl'
+#     with open(filename, 'wb') as output:
+#         pickle.dump(logbook, output)
+#     filename = pickle_path + date + '_population.pkl'
+#     with open(filename, 'wb') as output:
+#         pickle.dump(pop, output)
+#     filename = pickle_path + date + '_hof.pkl'
+#     with open(filename, 'wb') as output:
+#         pickle.dump(hof, output)
+
+#     return best
+
 
 # this is the definition of the total genetic algorithm is executed, it is almost literally copied from the deap library
-def main():
-    pop = toolbox.population(n=20)
+def main(verbose):
+    # this is the setup of the deap library: registering the different function into the toolbox
+    creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
+    creator.create("Individual", list, fitness=creator.FitnessMin, ik_solution=None, pose=None, dofs=None)
+
+    toolbox = base.Toolbox()
+
+    toolbox.register("generate_random_robot", generate_random_robot)
+
+    toolbox.register("individual", tools.initRepeat, creator.Individual, toolbox.generate_random_robot, n=1)
+    toolbox.register("population", tools.initRepeat, list, toolbox.individual)
+
+    toolbox.register("evaluate", evaluate)
+    toolbox.register("mate", MYcxTwoPoint)
+    toolbox.register("mutate", MYmutFlipBit, indpb=0.1)
+    toolbox.register("select", tools.selTournament, tournsize=2)
+
+    # as an example, this is what a population of 10 shopping lists looks like
+    # toolbox.population(n=10)
+
+    stats_fit = tools.Statistics(lambda ind: ind.fitness.values)
+    stats_size = tools.Statistics(key=lambda ind: ind.dofs)
+    mstats = tools.MultiStatistics(fitness=stats_fit, size=stats_size)
+
+    mstats.register("avg", np.mean)
+    mstats.register("std", np.std)
+    mstats.register("min", np.min)
+    mstats.register("max", np.max)
+
+    logbook = tools.Logbook()
+    hof = tools.HallOfFame(1)
+
+    pool = multiprocessing.Pool(processes=10)
+    toolbox.register("map", pool.map)
+
+    pop_size = 20 # 20
+    pop = toolbox.population(n=pop_size) 
     
     # Evaluate the entire population
-    fitnesses = list(map(toolbox.evaluate, pop))
+    fitnesses = list(toolbox.map(toolbox.evaluate, pop))
     for ind, fit in zip(pop, fitnesses):
         ind.fitness.values = fit[0],
         ind.ik_solution = fit[1]
         ind.pose = fit[2]
         ind.dofs = fit[3]
+
+    hof.update(pop)
 
     # CXPB  is the probability with which two individuals
     #       are crossed
@@ -317,59 +553,59 @@ def main():
     g = 0
 
     record = mstats.compile(pop)
-    print("Statistics")
-    print(record)
-    logbook.record(gen=g, evals=30, **record)
+    logbook.record(gen=g, evals=pop_size, **record) #pop=pop, 
+    if verbose:
+        print("Statistics")
+        # print(record)
+        print(logbook.stream)
 
     # Begin the evolution
-    while g < 100:
+    while g < 50: # 100
         # A new generation
         g = g + 1
         print("-- Generation %i --" % g)
         for ind in pop:
+            ind = ind[0]
             print(ind)
+            # r, xy, angle = chunk_individual(ind)
+            # print(r, xy, angle)
 
         # Select the next generation individuals
         offspring = toolbox.select(pop, len(pop))
         # Clone the selected individuals
-        offspring = list(map(toolbox.clone, offspring))
+        offspring = list(toolbox.map(toolbox.clone, offspring))
 
         # Apply crossover and mutation on the offspring
         for child1, child2 in zip(offspring[::2], offspring[1::2]):
             if random.random() < CXPB:
                 toolbox.mate(child1[0], child2[0])
-                if not check_robot_is_allowed(child1[0]) or not check_robot_is_allowed(child2[0]):
-                    print("LA MERDAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA!!!!!!!!!!!!!!!!!!!")
-                    print("LA MERDAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA!!!!!!!!!!!!!!!!!!!")
-                    print("LA MERDAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA!!!!!!!!!!!!!!!!!!!")
                 del child1.fitness.values
                 del child2.fitness.values
 
         for mutant in offspring:
             if random.random() < MUTPB:
                 toolbox.mutate(mutant[0])
-                if not check_robot_is_allowed(mutant[0]):
-                    print("LA MERDAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA!!!!!!!!!!!!!!!!!!!")
-                    print("LA MERDAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA!!!!!!!!!!!!!!!!!!!")
-                    print("LA MERDAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA!!!!!!!!!!!!!!!!!!!")
                 del mutant.fitness.values
 
         # Evaluate the individuals with an invalid fitness
         invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-        fitnesses = map(toolbox.evaluate, invalid_ind)
+        fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
         for ind, fit in zip(invalid_ind, fitnesses):
             ind.fitness.values = fit[0],
             ind.ik_solution = fit[1]
             ind.pose = fit[2]
             ind.dofs = fit[3]
 
+        hof.update(offspring)
+
         pop[:] = offspring
 
         record = mstats.compile(pop)
-        print("Statistics")
-        print(record)
-        logbook.record(gen=g, evals=30, **record)
-
+        logbook.record(gen=g, evals=pop_size, **record) #pop=pop, 
+        if verbose:
+            print("Statistics")
+            # print(record)
+            print(logbook.stream)
 
         # Gather all the fitnesses in one list and print the stats
         fits = [ind.fitness.values[0] for ind in pop]
@@ -379,9 +615,35 @@ def main():
         sum2 = sum(x * x for x in fits)
         std = abs(sum2 / length - mean ** 2) ** 0.5
 
-        print(min(fits), max(fits), mean, std)
+        # print(min(fits), max(fits), mean, std)
 
     best = pop[np.argmin([toolbox.evaluate(x)[0] for x in pop])]
+
+    print(logbook)
+    print(hof)
+
+    # gen = logbook.select("gen")
+    # fit_mins = logbook.chapters["fitness"].select("min")
+    # size_avgs = logbook.chapters["size"].select("avg")
+
+    # fig, ax1 = plt.subplots()
+    # line1 = ax1.plot(gen, fit_mins, "b-", label="Minimum Fitness")
+    # ax1.set_xlabel("Generation")
+    # ax1.set_ylabel("Fitness", color="b")
+    # for tl in ax1.get_yticklabels():
+    #     tl.set_color("b")
+
+    # ax2 = ax1.twinx()
+    # line2 = ax2.plot(gen, size_avgs, "r-", label="Average Size")
+    # ax2.set_ylabel("Size", color="r")
+    # for tl in ax2.get_yticklabels():
+    #     tl.set_color("r")
+
+    # lns = line1 + line2
+    # labs = [l.get_label() for l in lns]
+    # ax1.legend(lns, labs, loc="center right")
+
+    # plt.show()
 
     print("ZIO CAGNACCIO!!!!!!!!!!!!!!!!!!!")
     print(best)
@@ -395,10 +657,31 @@ def main():
     print(best.fitness.values[0])
     print("best_population:")
     for p in pop:
+        p = p[0]
         print(p)
+        # r, xy, angle = chunk_individual(p)
+        # print(r, xy, angle)
+
+    pickle_path = "/home/tree/pickles/logbooks/"
+    date = time.strftime("%Y%m%d-%H%M%S")
+    filename = pickle_path + date + '_logbook.pkl'
+    with open(filename, 'wb') as output:
+        pickle.dump(logbook, output)
+    filename = pickle_path + date + '_population.pkl'
+    with open(filename, 'wb') as output:
+        pickle.dump(pop, output)
+    filename = pickle_path + date + '_hof.pkl'
+    with open(filename, 'wb') as output:
+        pickle.dump(hof, output)
+
     return best
+
 
 if __name__ == '__main__':
 
-    # best_solution = main()
-    test_robot([[0,0, 1,0, 0,1, 1,1, 0,1, 0,0, 0,0,0,1,1]])
+    best_solution = main(True)
+    # test_robot([[1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 0, 1]])
+    
+    # a = load_pickle("/home/tree/pickles/logbooks/4-5DOFs_02_02_no_link/20210224-152627_population.pkl")
+    # print(a[0][0])
+    # test_robot(a[0][0])

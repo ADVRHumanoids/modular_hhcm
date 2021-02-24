@@ -180,7 +180,8 @@ class RosControlPlugin(Plugin):
 
 class XBotCorePlugin(Plugin):
     def add_plugin(self):
-        return ET.SubElement(self.urdf_writer.root, "xacro:plugin_xbotcore")
+        # return ET.SubElement(self.urdf_writer.root, "xacro:plugin_xbotcore")
+        pass
 
     def add_joint(self, joint_name):
         pass
@@ -188,6 +189,11 @@ class XBotCorePlugin(Plugin):
     def remove_joint(self, joint_name):
         pass
 
+    def add_gripper(self):
+        pass
+
+    def add_hand_group(self):
+        pass
 
 class XBot2Plugin(Plugin):
     def add_plugin(self):
@@ -211,7 +217,7 @@ class XBot2Plugin(Plugin):
 
 # noinspection PyUnresolvedReferences
 class UrdfWriter:
-    def __init__(self, config_file='config_file.yaml', control_plugin='ros_control', elementree=None, speedup=False, parent=None):
+    def __init__(self, config_file='config_file.yaml', control_plugin='xbotcore', elementree=None, speedup=False, parent=None):
 
         # Setting this variable to True, speed up the robot building.
         # To be used when the urdf does not need to be shown at every iteration
