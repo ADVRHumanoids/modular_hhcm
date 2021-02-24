@@ -62,12 +62,12 @@ class Module(object):
                 'big': '3',
             }
         if mod.type == "size_adapter":
-            print(mod.size_in)
+            #print(mod.size_in)
             setattr(self, 'size_in', switcher.get(mod.size_in, "Invalid size"))
-            print(mod.size_out)
+            #print(mod.size_out)
             setattr(self, 'size_out', switcher.get(mod.size_out, "Invalid size"))
         else:
-            print(mod.size)
+            #print(mod.size)
             setattr(self, 'size', switcher.get(mod.size, "Invalid size"))
 
     #
@@ -240,7 +240,7 @@ class Module(object):
     def get_transform(self, reverse):
         """Computes the correct transformation depending on the module type"""
         x = self.type
-        print('module_type', x)
+        #print('module_type', x)
         switcher = {
             'joint_mesh': self.get_proximal_distal_matrices,
             'joint': self.get_proximal_distal_matrices,
@@ -297,7 +297,7 @@ def get_rototranslation(distal_previous, proximal):
 
 
 def get_xyzrpy(transform):
-    print(transform)
+    #print(transform)
     scale, shear, angles, trans, persp = tf.transformations.decompose_matrix(transform)
 
     x = str(trans[0])

@@ -17,6 +17,7 @@ import moveit_msgs.msg
 import geometry_msgs.msg
 import actionlib_msgs.msg
 import tf2_msgs.msg 
+import sensor_msgs.msg
 
 
 from trac_ik_python.trac_ik import IK
@@ -28,6 +29,8 @@ from modular.optimization.generator import generate_robot_set
 # from modular.optimization.ik import cartesio_ik, cartesio_ik2, get_manipulability, compute_error_norm
 
 from modular.URDF_writer import UrdfWriter
+
+# from modular.ros_objects import RosNode
 
 list_of_candidates = []
 
@@ -225,6 +228,9 @@ def evaluate_robot(robot_structure, coordinates, angle_offsets):
     rospy.set_param("robot_description", robot_description)
     rospy.set_param("robot_description_semantic", robot_description_semantic)
 
+    # rosnode.kill_nodes(['/joint_state_desired_publisher'])
+    # rosnode.kill_nodes(['/robot_state_publisher'])
+
     # # Launch MoveIt simulation
     # uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
     # roslaunch.configure_logging(uuid)
@@ -252,6 +258,7 @@ def evaluate_robot(robot_structure, coordinates, angle_offsets):
             # This robot breaks Opensot for some reason. skip it
             if angle_offset == -1.57 and robot_structure == ((0, 1, 0), (0, 1)):
                 continue
+            
             urdf_writer.move_socket("L_0_A", xy[0], xy[1], 0.0, angle_offset)
             print("Moving socket!!!!!!!!!!!!", xy[0], xy[1])
             urdf = urdf_writer.write_urdf()
@@ -259,10 +266,21 @@ def evaluate_robot(robot_structure, coordinates, angle_offsets):
             urdf_writer.deploy_robot("pino_moveit")
             robot_description = open(urdf_path).read()
             rospy.set_param("robot_description", robot_description)
+            
             rosnode.kill_nodes(['/joint_state_publisher'])  # Node will be re-spawned
+            rospy.wait_for_message("/joint_states", sensor_msgs.msg.JointState)
+            # joint_state_desired_publisher = RosNode(package='topic_tools',
+            #         node='relay',
+            #         arg_string='args="joint_states joint_states_desired"',
+            #         wait_timeout=1.0) #,
+                    # shell=shell,
+                    # stdin=std_io, stdout=std_io, stderr=std_io,
+                    # preexec_fn=os.setsid)
             rosnode.kill_nodes(['/joint_state_desired_publisher'])  # Node will be re-spawned
+            rospy.wait_for_message("/joint_states_desired", sensor_msgs.msg.JointState)
             rosnode.kill_nodes(['/robot_state_publisher'])  # Node will be re-spawned 
             rospy.wait_for_message("/tf", tf2_msgs.msg.TFMessage)
+            
             # Instance of RobotCommander and MoveGroupCommander
             robot = moveit_commander.RobotCommander()
             scene = moveit_commander.PlanningSceneInterface()
@@ -287,10 +305,6 @@ def evaluate_robot(robot_structure, coordinates, angle_offsets):
                 list_of_candidates.append(Candidate(robot_structure, xy, angle_offset, result))
 
     return
-    # if result['success']:
-    #     return Candidate(robot, xy, angle_offset, result)
-    # else:
-    #     return None
 
 
 def run_mission(robot, group_A):
@@ -589,12 +603,12 @@ def optimize():
     # urdf_writer = UrdfWriter(speedup=True)
 
     required_dofs = 5
-    first_set = generate_robot_set(required_dofs + 1)
-    second_set = generate_robot_set(required_dofs + 2)
-    robot_set = first_set.union(second_set)
+    robot_set = generate_robot_set(required_dofs + 1)
+    # second_set = generate_robot_set(required_dofs + 2)
+    # robot_set = first_set.union(second_set)
 
     # Create grid
-    x = list(numpy.linspace(0.0, 1.2, 7))
+    x = list(numpy.linspace(0.0, 1.4, 8))
     y = list(numpy.linspace(0.0, 0.6, 4))
     coordinates = list(product(x, y))
     # coordinates.remove((0.0, 0.0))
@@ -602,8 +616,8 @@ def optimize():
     # coordinates = [xy for xy in coordinates if xy[1] <= xy[0]]
     print(coordinates)
     print(len(coordinates))
-    angle_offsets = [0.0, 1.57, -1.57, 3.14]
-    # coordinates = [(0.0, 0.0), (0.2, 0.2)]
+    angle_offsets = [0.0]#, 1.57, -1.57, 3.14]
+    coordinates = [(0.2, 0.2)]
 
     for robot in robot_set:  # [((1, 0, 1, 0, 1), ()), ((0, 1, 1, 1, 0), ())]
         print("Evaluating", robot)
