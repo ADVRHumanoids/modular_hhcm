@@ -225,6 +225,8 @@ class UrdfWriter:
 
         self.resource_finder = ResourceFinder(config_file)
 
+        self.collision_elements = []
+
         # Plugin class attribute. Can be XBot2Plugin, XBotCorePlugin or RosControlPlugin
         if control_plugin == 'ros_control':
             self.control_plugin = RosControlPlugin()
@@ -1015,6 +1017,8 @@ class UrdfWriter:
                       name="table",
                       father=self.parent_module.name)
 
+        self.collision_elements.append((self.parent_module.name, "table"))
+
         self.parent_module = table
 
         if self.speedup:
@@ -1115,6 +1119,8 @@ class UrdfWriter:
                       pitch=pitch,
                       yaw=yaw)
 
+        self.collision_elements.append((self.parent_module.name, new_socket.name))
+
         if self.speedup:
             string = ""
         else:
@@ -1200,6 +1206,8 @@ class UrdfWriter:
                       roll=roll,
                       pitch=pitch,
                       yaw=yaw)
+
+        self.collision_elements.append((father_name, simple_ee.name))
 
         self.parent_module = simple_ee
         self.add_to_chain(simple_ee)
@@ -2361,6 +2369,8 @@ class UrdfWriter:
                       pitch=pitch,
                       yaw=yaw)
 
+        self.collision_elements.append(('L_' + str(new_Link.i) + new_Link.tag, new_Link.name))
+
     # noinspection PyPep8Naming
     def joint_after_joint(self, new_Joint, past_Joint, offset, reverse):
         """Adds to the URDF tree a joint module as a child of a joint module
@@ -2400,6 +2410,8 @@ class UrdfWriter:
                       roll=roll,
                       pitch=pitch,
                       yaw=yaw)
+
+        self.collision_elements.append((father_name, new_Joint.stator_name))
 
         # mesh_transform = ModuleNode.get_rototranslation(tf.transformations.rotation_matrix(-1.57, self.zaxis),
         #                                                 tf.transformations.rotation_matrix(3.14, self.xaxis))
@@ -2456,6 +2468,8 @@ class UrdfWriter:
                       type="add_distal",
                       name=new_Joint.distal_link_name,
                       filename=new_Joint.filename)
+
+        self.collision_elements.append((new_Joint.stator_name, new_Joint.distal_link_name))
 
         # add the fast rotor part to the inertia of the link/rotor part as a new link. NOTE: right now this is
         # attached at the rotating part not to the fixed one (change it so to follow Pholus robot approach)
@@ -2524,6 +2538,8 @@ class UrdfWriter:
                       roll=roll,
                       pitch=pitch,
                       yaw=yaw)
+
+        self.collision_elements.append((past_Link.name, new_Joint.stator_name))
 
         # mesh_transform = ModuleNode.get_rototranslation(tf.transformations.rotation_matrix(-1.57, self.zaxis),
         #                                            tf.transformations.rotation_matrix(3.14, self.xaxis))
@@ -2598,6 +2614,8 @@ class UrdfWriter:
                       type="add_distal",
                       name=new_Joint.distal_link_name,
                       filename=new_Joint.filename)
+
+        self.collision_elements.append((new_Joint.stator_name, new_Joint.distal_link_name))
 
         if reverse:
             new_Joint.Distal_tf = ModuleNode.get_rototranslation(new_Joint.Distal_tf,
@@ -2732,6 +2750,8 @@ class UrdfWriter:
                       roll=roll,
                       pitch=pitch,
                       yaw=yaw)
+
+        self.collision_elements.append((past_Link.name, new_Link.name))
 
     # TODO: remove hard-coded values
     # temporary solution for multi chain robots
@@ -2963,7 +2983,7 @@ class UrdfWriter:
         end_effectors = []
         #groups_in_chains_group = []
         groups_in_arms_group = []
-        groups_in_hands_group = []
+        # groups_in_hands_group = []
         # base_link = ""
         # tip_link = ""
         i = 0
@@ -3023,7 +3043,7 @@ class UrdfWriter:
             i += 1
         i = 0
         arms_group = ET.SubElement(root, 'group', name="arms")
-        hands_group = ET.SubElement(root, 'group', name="hands")
+        # hands_group = ET.SubElement(root, 'group', name="hands")
         group_state = ET.SubElement(root, 'group_state', name="home", group="arms")
         # MoveIt
         initial_poses.append(OrderedDict([('group', 'arms'), ('pose', 'home')]))
@@ -3046,7 +3066,7 @@ class UrdfWriter:
                     #print(homing_value)
                     joints.append(ET.SubElement(group_state, 'joint', name=joint_module.name, value=str(homing_value)))
                     # Disable collision
-                    disable_collision = ET.SubElement(root, 'disable_collisions', link1=joint_module.stator_name, link2=joint_module.distal_link_name, reason='Adjacent')
+                    # disable_collision = ET.SubElement(root, 'disable_collisions', link1=joint_module.stator_name, link2=joint_module.distal_link_name, reason='Adjacent')
                     # MoveIt: add joints to controller
                     controller_list[i*2]['joints'].append(joint_module.name)
                     hardware_interface_joints.append(joint_module.name)
@@ -3056,7 +3076,7 @@ class UrdfWriter:
                                                        name=joint_module.name + '_fixed_joint'))
                 elif joint_module.type == 'gripper':
                     self.control_plugin.add_hand_group(root, joint_module.name, hand_name)
-                    groups_in_hands_group.append(ET.SubElement(hands_group, 'group', name=hand_name))
+                    # groups_in_hands_group.append(ET.SubElement(hands_group, 'group', name=hand_name))
                     end_effectors += filter(None, [self.control_plugin.add_gripper(root, joint_module.name, hand_name, group_name)])
                     controller_list.append(OrderedDict([('name', 'fake_' + hand_name + '_controller'), ('joints', [])]))
                     controller_list[i*2+1]['joints'].append(joint_module.name+'_finger_joint1')
@@ -3068,7 +3088,11 @@ class UrdfWriter:
             i += 1
 
         # MoveIt: add virtual joint
-        ET.SubElement(root, "virtual_joint", name="virtual_joint", type="floating", parent_frame="world", child_link="base_link")
+        # ET.SubElement(root, "virtual_joint", name="virtual_joint", type="floating", parent_frame="world", child_link="base_link")
+
+        # MoveIt disable collisions
+        for coll_elem in self.collision_elements:
+            ET.SubElement(root, 'disable_collisions', link1=coll_elem[0], link2=coll_elem[1], reason='Adjacent')
 
         # Create folder if doesen't exist
         if not os.path.exists(os.path.dirname(srdf_filename)):

@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<launch>
+
+<!-- Load the controllers -->
+  <node name="collisions_updater" pkg="moveit_setup_assistant" type="collisions_updater" respawn="false" required="true" output="screen" 
+    args="--urdf /tmp/modular/urdf/ModularBot.urdf --srdf /tmp/modular/srdf/ModularBot.srdf --output /tmp/modular/srdf/ModularBot_collisions.srdf --verbose --always --default --min-collision-fraction 0.95 --trials 1000"/>
+
+</launch>

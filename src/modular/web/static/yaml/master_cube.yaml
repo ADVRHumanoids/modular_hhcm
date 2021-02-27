@@ -39,8 +39,8 @@ dynamics:
 size: big
 type: cube
 visual:
-  mesh_body_1: "package://modular/src/modular/web/static/models/modular/meshes/space_cube.stl"
-  mesh_collision_1: "package://modular/src/modular/web/static/models/modular/meshes/space_cube.stl"
+  mesh_body_1: "package://pino_moveit/database/modular/meshes/space_cube.stl"
+  mesh_collision_1: "package://pino_moveit/database/modular/meshes/space_cube.stl"
   tf_mesh_1:
     x: 0.0
     y: 0.0

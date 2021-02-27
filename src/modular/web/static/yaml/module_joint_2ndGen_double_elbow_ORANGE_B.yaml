@@ -74,8 +74,8 @@ dynamics:
       z: -0.0978986 #0.132
 
 visual:
-  mesh_body_1: "package://modular/src/modular/web/static/models/modular/meshes/mesh_pitch-base.stl"
-  mesh_collision_1: "package://modular/src/modular/web/static/models/modular/meshes/mesh_pitch-base.stl"
+  mesh_body_1: "package://pino_moveit/database/modular/meshes/mesh_pitch-base.stl"
+  mesh_collision_1: "package://pino_moveit/database/modular/meshes/mesh_pitch-base.stl"
   tf_mesh_1:
     x: 0.0
     y: 0.11391
@@ -83,8 +83,8 @@ visual:
     roll: 0.0
     pitch: 0.0
     yaw: 3.14
-  mesh_body_2: "package://modular/src/modular/web/static/models/modular/meshes/mesh_pitch-link.stl"
-  mesh_collision_2: "package://modular/src/modular/web/static/models/modular/meshes/mesh_pitch-link.stl"
+  mesh_body_2: "package://pino_moveit/database/modular/meshes/mesh_pitch-link.stl"
+  mesh_collision_2: "package://pino_moveit/database/modular/meshes/mesh_pitch-link.stl"
   tf_mesh_2:
     x: 0.0
     y: -0.080

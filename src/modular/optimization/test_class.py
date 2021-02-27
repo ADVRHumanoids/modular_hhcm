@@ -335,7 +335,7 @@ def test(urdf_string, x_target, y_target, z_target):
     robot = URDF.from_xml_string(urdf_string)
     # robot = URDF.from_xml_file("/tmp/modular/urdf/ModularBot.urdf")
 
-    print 'HERE WE START!'
+    # print 'HERE WE START!'
 
     base = 'base_link'
     target = 'ee_A'
@@ -353,14 +353,14 @@ def test(urdf_string, x_target, y_target, z_target):
     kdl_kin = KDLKinematics(robot, base, target)
     kdl_dyn = ChainDynParam(chain, gravity)
 
-    print 'number of joints:', tree.getNrOfJoints()
+    # print 'number of joints:', tree.getNrOfJoints()
 
     dof = tree.getNrOfJoints()
 
     x = Position((1, 0, 0), kdl_kin)
     y = Position((0, 1, 0), kdl_kin)
     z = Position((0, 0, 1), kdl_kin)
-    n = Projection((0, 0, 1), (0, 1, 0), kdl_kin)
+    n = Projection((0, 0, 1), (0, -1, 0), kdl_kin)
     # n = Projection((0, 0, 1), (0, 0, -1), kdl_kin)
 
     bounds = Bounds(dof, 2.0, -2.0)
