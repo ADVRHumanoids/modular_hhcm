@@ -117,8 +117,8 @@ def check_robot_is_allowed(individual):
     if 3 in robot_structure:
         violates_weight_constraint = robot_structure.index(3) < (n_modules-max_modules_after_links-1) or violates_weight_constraint
     # check there is not too many dofs
-    contains_too_many_DOFs = (robot_structure.count(1) + robot_structure.count(2))  > n_DOFs
-    # contains_too_many_DOFs = False
+    # contains_too_many_DOFs = (robot_structure.count(1) + robot_structure.count(2))  > n_DOFs
+    contains_too_many_DOFs = False
     # check we don't go over the limit of 3 module for each type
     # too_many_elbows = robot_structure.count(1) > 3
     too_many_elbows = False
@@ -248,14 +248,14 @@ def evaluate_robot(robot_structure, xy, angle_offset):
 
     tot_result = 0.0
 
-    poses_to_reach = [  [0.5,         0.0,        0.1],
-                        [0.5,         0.0-0.1,    0.1],
-                        [0.5+0.12,    0.0,        0.1],
-                        [0.5+0.12,    0.0-0.1,    0.1],
-                        [0.5+0.12,    0.0,        0.1+0.12],
-                        [0.5+0.12,    0.0-0.1,    0.1+0.12],
-                        [0.5,         0.0,        0.1+0.12],
-                        [0.5,         0.0-0.1,    0.1+0.12]]
+    poses_to_reach = [  [0.45,         0.0,        0.15],
+                        [0.45,         0.0-0.1,    0.15],
+                        [0.45+0.12,    0.0,        0.15],
+                        [0.45+0.12,    0.0-0.1,    0.15],
+                        [0.45+0.12,    0.0,        0.15+0.12],
+                        [0.45+0.12,    0.0-0.1,    0.15+0.12],
+                        [0.45,         0.0,        0.15+0.12],
+                        [0.45,         0.0-0.1,    0.15+0.12]]
     q_sol = []
     final_poses = []
 
@@ -580,7 +580,7 @@ def main(verbose):
 
     toolbox.register("evaluate", evaluate)
     toolbox.register("mate", MYcxTwoPoint)
-    toolbox.register("mutate", MYmutFlipBit, indpb=0.2)
+    toolbox.register("mutate", MYmutFlipBit, indpb=0.25)
     toolbox.register("select", tools.selTournament, tournsize=5)
 
     # as an example, this is what a population of 10 shopping lists looks like
@@ -601,7 +601,7 @@ def main(verbose):
     pool = multiprocessing.Pool(processes=10)
     toolbox.register("map", pool.map)
 
-    pop_size = 60 # 50
+    pop_size = 100 # 50
     pop = toolbox.population(n=pop_size) 
     
     # Evaluate the entire population
@@ -618,7 +618,7 @@ def main(verbose):
     #       are crossed
     #
     # MUTPB is the probability for mutating an individual
-    CXPB, MUTPB = 0.5, 0.25
+    CXPB, MUTPB = 0.55, 0.25
 
     # Extracting all the fitnesses of
     fits = [ind.fitness.values[0] for ind in pop]
@@ -634,7 +634,7 @@ def main(verbose):
         print(logbook.stream)
 
     # Begin the evolution
-    while g < 100: # 100
+    while g < 80: # 100
         # A new generation
         g = g + 1
         print("-- Generation %i --" % g)
@@ -754,8 +754,8 @@ def main(verbose):
 if __name__ == '__main__':
 
     best_solution = main(True) 
-    # check_robot_is_allowed([1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, 0])
-    # a, b, c, d = test_robot([[1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, 0]])
+    # check_robot_is_allowed([0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1])
+    # a, b, c, d = test_robot([[0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1]])
     # check_robot_is_allowed([1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0])
     # a, b, c, d = test_robot([[1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0]])
     # print("Fitness:")

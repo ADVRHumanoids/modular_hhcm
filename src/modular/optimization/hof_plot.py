@@ -18,7 +18,8 @@ INVALID_RESULT = 99999999
 creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
 creator.create("Individual", list, fitness=creator.FitnessMin, ik_solution=None, pose=None, dofs=None)
 
-hof = load_pickle2("/home/tree/pickles/logbooks/5.5DOFs_only/20210225-182605_hof.pkl")
+hof = load_pickle2("/home/tree/pickles/logbooks/9.buona/20210228-033204_hof.pkl")
+print(hof)
 
 i=0
 for ind in hof:
