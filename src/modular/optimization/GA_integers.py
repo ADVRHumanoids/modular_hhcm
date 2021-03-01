@@ -8,6 +8,11 @@ from deap import tools
 import numpy
 from bitstring import BitArray
 
+try:
+    from collections.abc import Sequence
+except ImportError:
+    from collections import Sequence
+
 import itertools
 import copy
 import pickle
@@ -24,9 +29,13 @@ from modular.optimization.pickle_utilities import load_pickle
 from romity_collides import pyromiti_collision as pyrom
 
 # Create grid
+max_x = 0.6
+max_y = 0.6
+x_samples = 4
+y_samples = 4
 # x = list(numpy.linspace(0.0, 1.4, 8))
-x = list(numpy.linspace(0.0, 0.6, 4))
-y = list(numpy.linspace(0.0, 0.6, 4))
+x = list(numpy.linspace(0.0, max_x, x_samples))
+y = list(numpy.linspace(0.0, max_y, y_samples))
 coordinates = list(itertools.product(x, y))
 angles =  [0.0, 1.57] #, 3.14, -1.57]
 
@@ -39,19 +48,17 @@ INVALID_RESULT = 99999999
 n_DOFs = 5
 n_modules = 6 #5
 max_modules_after_links = 2
-module_encoding_length = 2
+module_encoding_length = 1
 final_index = n_modules*module_encoding_length
 bits_for_angle_offset = 1
-bits_for_xy = 4
+bits_for_xy = 2
 
-def from_bitlist_to_int(bitlist):
-    out = 0
-    for bit in bitlist:
-        out = (out << 1) | bit
-        return out
+# Lists needed for mutation
+indp_prob = 0.2
+indp_probs =    [indp_prob]*n_modules +  [indp_prob]*bits_for_angle_offset +     [indp_prob] +       [indp_prob]
+lower_bounds =  [0]*n_modules +          [0]*bits_for_angle_offset +             [0] +               [0]
+upper_bounds =  [3]*n_modules +          [1]*bits_for_angle_offset +             [x_samples-1] +     [y_samples-1]
 
-def from_int_to_bitlist(n):
-    return [int(x) for x in '{:02b}'.format(n)] # {:02b} to represent the number in 2-bits string
 
 def generate_robot_set(n):
     # 3 Yaws, 3 Elbows, 1 straight link, 1 elbow link
@@ -72,20 +79,13 @@ def generate_robot_set(n):
         module_comb2 = tuple([i if i != 0 else 3 for i in module_comb])
         modules_combinations_2.add(module_comb2)
     modules_combinations = modules_combinations.union(modules_combinations_2)
-    # Convert integer representing modules to bit strings
-    expanded_modules_combinations = []
-    for comb in modules_combinations:
-        expanded_comb =[]
-        for module in comb:
-            expanded_comb += from_int_to_bitlist(module)
-        expanded_modules_combinations.append(expanded_comb)
-    return expanded_modules_combinations
+    return list(modules_combinations)
 
 # the random initialization of the genetic algorithm is done here
 def generate_random_robot():
     # n_modules = random.randint(MIN_NUM_OF_MODULES,MAX_NUM_OF_MODULES)
     angle_offset = [random.randint(0,1) for i in range(bits_for_angle_offset)]
-    xy = [random.randint(0,1) for i in range(bits_for_xy)] #, random.randint(0,1)]
+    xy = [random.randint(0,3) for i in range(bits_for_xy)] #, random.randint(0,1)]
     robot_allowed = False
     while not robot_allowed:    
         robot = list(random.choice(generate_robot_set(n_modules)))
@@ -106,8 +106,6 @@ def evaluate(individual):
 
 def check_robot_is_allowed(individual):
     robot_structure, xy, angle = chunk_individual(individual)
-    chunked_robot_structure = [robot_structure[i:i + module_encoding_length] for i in range(0, len(robot_structure), module_encoding_length)]  
-    robot_structure = [BitArray(l).uint for l in chunked_robot_structure]
     # 0 and 3 can appear only once
     contains_duplicates = (robot_structure.count(0) + robot_structure.count(3))  > 2
     # constraint on max weight holdable by links (max two modules after)
@@ -127,6 +125,44 @@ def check_robot_is_allowed(individual):
     is_allowed = not too_many_elbows and not too_many_yaws and not contains_duplicates and not violates_weight_constraint and not contains_too_many_DOFs
 
     return is_allowed
+
+def MYmutUniformInt(individual, low, up, indpb):
+    """Mutate an individual by replacing attributes, with probability *indpb*,
+    by a integer uniformly drawn between *low* and *up* inclusively.
+
+    :param individual: :term:`Sequence <sequence>` individual to be mutated.
+    :param low: The lower bound or a :term:`python:sequence` of
+                of lower bounds of the range from wich to draw the new
+                integer.
+    :param up: The upper bound or a :term:`python:sequence` of
+               of upper bounds of the range from wich to draw the new
+               integer.
+    :param indpb: Independent probability for each attribute to be mutated.
+    :returns: A tuple of one individual.
+    """
+    size = len(individual)
+    if not isinstance(low, Sequence):
+        low = itertools.repeat(low, size)
+    elif len(low) < size:
+        raise IndexError("low must be at least the size of individual: %d < %d" % (len(low), size))
+    if not isinstance(up, Sequence):
+        up = itertools.repeat(up, size)
+    elif len(up) < size:
+        raise IndexError("up must be at least the size of individual: %d < %d" % (len(up), size))
+
+    test = copy.deepcopy(individual)
+    for i, xl, xu in zip(xrange(size), low, up):
+        if random.random() < indpb:
+            test[i] = random.randint(xl, xu)
+    
+    if check_robot_is_allowed(test):
+        # for i in range(size):
+        #     individual[i] = test[i]
+        individual[:] = test
+        return individual,
+    else:
+        print("Retrying Mutation.......")
+        return MYmutUniformInt(individual, low, up, indpb)
 
 def MYmutFlipBit(individual, indpb):
     """Flip the value of the attributes of the input individual and return the
@@ -151,6 +187,32 @@ def MYmutFlipBit(individual, indpb):
                 individual[i] = test[i]
 
     return individual,
+
+
+def MYcxOnePoint(ind1, ind2):
+    """Executes a one point crossover on the input :term:`sequence` individuals.
+    The two individuals are modified in place. The resulting individuals will
+    respectively have the length of the other.
+
+    :param ind1: The first individual participating in the crossover.
+    :param ind2: The second individual participating in the crossover.
+    :returns: A tuple of two individuals.
+
+    This function uses the :func:`~random.randint` function from the
+    python base :mod:`random` module.
+    """
+    copy1 = copy.deepcopy(ind1)
+    copy2 = copy.deepcopy(ind2)
+    size = min(len(ind1), len(ind2))
+    cxpoint = random.randint(1, size - 1)
+    copy1[cxpoint:], copy2[cxpoint:] = copy2[cxpoint:], copy1[cxpoint:]
+
+    if check_robot_is_allowed(copy1) and check_robot_is_allowed(copy2):
+        ind1[:] = copy1
+        ind2[:] = copy2
+        return ind1, ind2
+    else:
+        return MYcxOnePoint(ind1, ind2)
 
 
 def MYcxTwoPoint(ind1, ind2):
@@ -202,9 +264,6 @@ def evaluate_robot(robot_structure, xy, angle_offset):
 
     # Add 1st chain base
     urdf_writer.add_socket(xy[0], xy[1], 0.0, angle_offset)
-
-    chunked_robot_structure = [robot_structure[i:i + module_encoding_length] for i in range(0, len(robot_structure), module_encoding_length)]  
-    robot_structure = [BitArray(l).uint for l in chunked_robot_structure]
 
     # Add 1st chain
     for module in robot_structure:
@@ -284,8 +343,10 @@ def evaluate_robot(robot_structure, xy, angle_offset):
 def chunk_individual(individual):
     # individual = individual[0]
     robot_structure = individual[:final_index]
-    angle_offset = angles[BitArray(individual[final_index:final_index+bits_for_angle_offset]).uint]
-    xy = coordinates[BitArray(individual[final_index+bits_for_angle_offset:final_index+bits_for_angle_offset+bits_for_xy]).uint] # 7
+    angle_index = individual[final_index:final_index+bits_for_angle_offset]
+    angle_offset = angles[angle_index]
+    xy_index = individual[final_index+bits_for_angle_offset:final_index+bits_for_angle_offset+bits_for_xy]
+    xy = (x[xy_index[0]], y[xy_index[1]])
     
     return robot_structure, xy, angle_offset
 
@@ -308,9 +369,6 @@ def test_robot(individual):
 
     # Add 1st chain base
     urdf_writer.add_socket(xy[0], xy[1], 0.0, angle_offset)
-
-    chunked_robot_structure = [robot_structure[i:i + module_encoding_length] for i in range(0, len(robot_structure), module_encoding_length)]  
-    robot_structure = [BitArray(l).uint for l in chunked_robot_structure]
 
     # Add 1st chain
     for module in robot_structure:
@@ -394,7 +452,7 @@ def test_robot(individual):
 #     toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
 #     toolbox.register("evaluate", evaluate)
-#     toolbox.register("mate", MYcxTwoPoint)
+#     toolbox.register("mate", MYcxOnePoint)
 #     toolbox.register("mutate", MYmutFlipBit, indpb=0.1)
 #     toolbox.register("select", tools.selTournament, tournsize=2)
 
@@ -579,8 +637,8 @@ def main(verbose):
     toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
     toolbox.register("evaluate", evaluate)
-    toolbox.register("mate", MYcxTwoPoint)
-    toolbox.register("mutate", MYmutFlipBit, indpb=0.25)
+    toolbox.register("mate", MYcxOnePoint)
+    toolbox.register("mutate", MYmutUniformInt, low=lower_bounds, up=upper_bounds, indpb=0.25)
     toolbox.register("select", tools.selTournament, tournsize=5)
 
     # as an example, this is what a population of 10 shopping lists looks like
@@ -618,7 +676,7 @@ def main(verbose):
     #       are crossed
     #
     # MUTPB is the probability for mutating an individual
-    CXPB, MUTPB = 0.55, 0.25
+    CXPB, MUTPB = 0.6, 0.1
 
     # Extracting all the fitnesses of
     fits = [ind.fitness.values[0] for ind in pop]
