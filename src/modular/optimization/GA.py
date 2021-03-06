@@ -753,19 +753,19 @@ def main(verbose):
 
 if __name__ == '__main__':
 
-    best_solution = main(True) 
+    # best_solution = main(True) 
     # check_robot_is_allowed([0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1])
     # a, b, c, d = test_robot([[0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1]])
-    # check_robot_is_allowed([1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0])
-    # a, b, c, d = test_robot([[1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0]])
-    # print("Fitness:")
-    # print a
-    # print("IK Solutions:")
-    # print b
-    # print("Final poses:")
-    # print c
-    # print("# of DOFs:")
-    # print d
+    check_robot_is_allowed([1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0])
+    a, b, c, d = test_robot([[1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0]])
+    print("Fitness:")
+    print a
+    print("IK Solutions:")
+    print b
+    print("Final poses:")
+    print c
+    print("# of DOFs:")
+    print d
     # a, b, c, d = test_robot([[1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1]]) #[[0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1]]
     # a = load_pickle("/home/tree/pickles/logbooks/4-5DOFs_02_02_no_link/20210224-152627_population.pkl")
     # print(a[0][0])

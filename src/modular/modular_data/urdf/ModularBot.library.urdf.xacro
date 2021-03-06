@@ -878,25 +878,25 @@
     <xacro:macro name="add_simple_ee" params="type name size_z">
         <link name="${name}">
             <visual>
-                <origin xyz="0 0 ${size_z/2}" rpy="0 0 0" />
+                <origin xyz="0 0 -${size_z/2}" rpy="0 0 0" />
                 <geometry>
-                    <cylinder radius="0.05" length="${size_z}"/>
+                    <cylinder radius="0.02" length="${size_z}"/>
                 </geometry>
                 <material name="blue"/>
             </visual>
             <collision>
-                <origin xyz="0 0 ${size_z/2}" rpy="0 0 0" />
+                <origin xyz="0 0 -${size_z/2}" rpy="0 0 0" />
                 <geometry>
-                    <cylinder radius="0.05" length="${size_z}"/>
+                    <cylinder radius="0.02" length="${size_z}"/>
                 </geometry>
             </collision>
             <inertial>
-                <origin xyz="0 0 ${size_z/2}" rpy="0 0 0"/>
-                <mass value="0.848"/>
+                <origin xyz="-0.007 0 0.044" rpy="0 0 0"/>
+                <mass value="1.305"/>
                 <inertia
-                        ixx="1.1564566e-03" ixy="0.0" ixz="0.0"
-                        iyy="1.2469918e-03" iyz="0.0"
-                        izz="5.7388903e-04"/>
+                        ixx="1.8769887e-03" ixy="0.0" ixz="0.0"
+                        iyy="2.2629779e-03" iyz="0.0"
+                        izz="1.8887550e-03"/>
             </inertial>
         </link>
     </xacro:macro>

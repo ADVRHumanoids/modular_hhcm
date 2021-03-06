@@ -54,8 +54,8 @@ bits_for_angle_offset = 1
 bits_for_xy = 2
 
 # Lists needed for mutation
-indp_prob = 0.2
-indp_probs =    [indp_prob]*n_modules +  [indp_prob]*bits_for_angle_offset +     [indp_prob] +       [indp_prob]
+indep_prob = 0.2
+indep_probs =   [indep_prob]*n_modules + [indep_prob]*bits_for_angle_offset +    [indep_prob] +      [indep_prob]
 lower_bounds =  [0]*n_modules +          [0]*bits_for_angle_offset +             [0] +               [0]
 upper_bounds =  [3]*n_modules +          [1]*bits_for_angle_offset +             [x_samples-1] +     [y_samples-1]
 
@@ -149,10 +149,14 @@ def MYmutUniformInt(individual, low, up, indpb):
         up = itertools.repeat(up, size)
     elif len(up) < size:
         raise IndexError("up must be at least the size of individual: %d < %d" % (len(up), size))
+    if not isinstance(indpb, Sequence):
+        indpb = itertools.repeat(indpb, size)
+    elif len(indpb) < size:
+        raise IndexError("indpb must be at least the size of individual: %d < %d" % (len(indpb), size))
 
     test = copy.deepcopy(individual)
-    for i, xl, xu in zip(xrange(size), low, up):
-        if random.random() < indpb:
+    for i, xl, xu, pb in zip(xrange(size), low, up, indpb):
+        if random.random() < pb:
             test[i] = random.randint(xl, xu)
     
     if check_robot_is_allowed(test):
@@ -279,12 +283,14 @@ def evaluate_robot(robot_structure, xy, angle_offset):
             # homing_joint_map[data['lastModule_name']] = {'angle': 0.0}
             data = urdf_writer.add_module('module_link_elbow_90_B.yaml', 3.14, False)
             # data = urdf_writer.add_module('module_link_straight_140_B.yaml', 0, False)
-        else:
+        elif module == 0:
             # continue
             data = urdf_writer.add_module('module_link_straight_140_B.yaml', 0, False)
-
+        else:
+            continue
     # Add a simple virtual end-effector
-    urdf_writer.add_simple_ee(0.0, 0.0, 0.189, 0.0)
+    # urdf_writer.add_simple_ee(0.0, 0.0, 0.26, 0.0)
+    urdf_writer.add_module('module_tool_exchanger_heavy_B.yaml', 0, False)
 
     urdf = urdf_writer.process_urdf()
     # urdf = urdf_writer.write_urdf()
@@ -307,14 +313,14 @@ def evaluate_robot(robot_structure, xy, angle_offset):
 
     tot_result = 0.0
 
-    poses_to_reach = [  [0.45,         0.0,        0.15],
-                        [0.45,         0.0-0.1,    0.15],
-                        [0.45+0.12,    0.0,        0.15],
-                        [0.45+0.12,    0.0-0.1,    0.15],
-                        [0.45+0.12,    0.0,        0.15+0.12],
-                        [0.45+0.12,    0.0-0.1,    0.15+0.12],
-                        [0.45,         0.0,        0.15+0.12],
-                        [0.45,         0.0-0.1,    0.15+0.12]]
+    poses_to_reach = [  [0.47+0.12,    0.12,        0.13+0.12],
+                        [0.47+0.12,    0.12-0.1,    0.13+0.12],
+                        [0.47+0.12,    0.12,        0.13],
+                        [0.47+0.12,    0.12-0.1,    0.13],
+                        [0.47,         0.12,        0.13],
+                        [0.47,         0.12-0.1,    0.13],
+                        [0.47,         0.12,        0.13+0.12],
+                        [0.47,         0.12-0.1,    0.13+0.12]]
     q_sol = []
     final_poses = []
 
@@ -323,14 +329,9 @@ def evaluate_robot(robot_structure, xy, angle_offset):
 
     # result, q, pose, n_dofs = iacobelli_IK()
     for pose in poses_to_reach:
-        result, q, pose, n_dofs = test(urdf, pose[0], pose[1], pose[2])
+        result, q, pose, n_dofs = test(urdf, pose[0], pose[1], pose[2], lambda q: not cm.collides(q))
         if result is not None:
-            links_in_collision = cm.collides(q.tolist())
-            if links_in_collision:    
-                print(links_in_collision)
-                tot_result = INVALID_RESULT
-                break
-            tot_result+= result
+            tot_result+= (2*result)*5.0
             q_sol.append(q)
             final_poses.append(pose)
         else:    
@@ -344,7 +345,7 @@ def chunk_individual(individual):
     # individual = individual[0]
     robot_structure = individual[:final_index]
     angle_index = individual[final_index:final_index+bits_for_angle_offset]
-    angle_offset = angles[angle_index]
+    angle_offset = angles[angle_index[0]]
     xy_index = individual[final_index+bits_for_angle_offset:final_index+bits_for_angle_offset+bits_for_xy]
     xy = (x[xy_index[0]], y[xy_index[1]])
     
@@ -384,12 +385,15 @@ def test_robot(individual):
             # homing_joint_map[data['lastModule_name']] = {'angle': 0.0}
             data = urdf_writer.add_module('module_link_elbow_90_B.yaml', 3.14, False)
             # data = urdf_writer.add_module('module_link_straight_140_B.yaml', 0, False)
-        else:
+        elif module == 0:
             # continue
             data = urdf_writer.add_module('module_link_straight_140_B.yaml', 0, False)
+        else:
+            continue
 
     # Add a simple virtual end-effector
-    urdf_writer.add_simple_ee(0.0, 0.0, 0.189, 0.0)
+    # urdf_writer.add_simple_ee(0.0, 0.0, 0.26, 0.0)
+    urdf_writer.add_module('module_tool_exchanger_heavy_B.yaml', 0, False)
 
     string = urdf_writer.process_urdf()
     urdf = urdf_writer.write_urdf()
@@ -405,14 +409,14 @@ def test_robot(individual):
 
     tot_result = 0.0
 
-    poses_to_reach = [  [0.45,         0.0,        0.15],
-                        [0.45,         0.0-0.1,    0.15],
-                        [0.45+0.12,    0.0,        0.15],
-                        [0.45+0.12,    0.0-0.1,    0.15],
-                        [0.45+0.12,    0.0,        0.15+0.12],
-                        [0.45+0.12,    0.0-0.1,    0.15+0.12],
-                        [0.45,         0.0,        0.15+0.12],
-                        [0.45,         0.0-0.1,    0.15+0.12]]
+    poses_to_reach = [  [0.47+0.12,    0.12,        0.13+0.12],
+                        [0.47+0.12,    0.12-0.1,    0.13+0.12],
+                        [0.47+0.12,    0.12,        0.13],
+                        [0.47+0.12,    0.12-0.1,    0.13],
+                        [0.47,         0.12,        0.13],
+                        [0.47,         0.12-0.1,    0.13],
+                        [0.47,         0.12,        0.13+0.12],
+                        [0.47,         0.12-0.1,    0.13+0.12]]
     q_sol = []
     final_poses = []
 
@@ -421,14 +425,9 @@ def test_robot(individual):
 
     # result, q, pose, n_dofs = iacobelli_IK()
     for pose in poses_to_reach:
-        result, q, pose, n_dofs = test(string, pose[0], pose[1], pose[2])
+        result, q, pose, n_dofs = test(string, pose[0], pose[1], pose[2], lambda q: not cm.collides(q))
         if result is not None:
-            links_in_collision = cm.collides(q.tolist())
-            if links_in_collision:
-                print(links_in_collision)
-                tot_result = INVALID_RESULT
-                break
-            tot_result+= result
+            tot_result+= (2*result)*5.0
             q_sol.append(q)
             final_poses.append(pose)
         else:    
@@ -453,7 +452,7 @@ def test_robot(individual):
 
 #     toolbox.register("evaluate", evaluate)
 #     toolbox.register("mate", MYcxOnePoint)
-#     toolbox.register("mutate", MYmutFlipBit, indpb=0.1)
+#     toolbox.register("mutate", MYmutUniformInt, low=lower_bounds, up=upper_bounds, indpb=0.2) # indpb = indep_probs
 #     toolbox.register("select", tools.selTournament, tournsize=2)
 
 #     # as an example, this is what a population of 10 shopping lists looks like
@@ -638,7 +637,7 @@ def main(verbose):
 
     toolbox.register("evaluate", evaluate)
     toolbox.register("mate", MYcxOnePoint)
-    toolbox.register("mutate", MYmutUniformInt, low=lower_bounds, up=upper_bounds, indpb=0.25)
+    toolbox.register("mutate", MYmutUniformInt, low=lower_bounds, up=upper_bounds, indpb=0.2) # indpb = indep_probs
     toolbox.register("select", tools.selTournament, tournsize=5)
 
     # as an example, this is what a population of 10 shopping lists looks like
@@ -659,7 +658,7 @@ def main(verbose):
     pool = multiprocessing.Pool(processes=10)
     toolbox.register("map", pool.map)
 
-    pop_size = 100 # 50
+    pop_size = 80 # 100
     pop = toolbox.population(n=pop_size) 
     
     # Evaluate the entire population
@@ -676,7 +675,7 @@ def main(verbose):
     #       are crossed
     #
     # MUTPB is the probability for mutating an individual
-    CXPB, MUTPB = 0.6, 0.1
+    CXPB, MUTPB = 0.5, 0.3
 
     # Extracting all the fitnesses of
     fits = [ind.fitness.values[0] for ind in pop]
@@ -692,7 +691,7 @@ def main(verbose):
         print(logbook.stream)
 
     # Begin the evolution
-    while g < 80: # 100
+    while g < 80: # 80
         # A new generation
         g = g + 1
         print("-- Generation %i --" % g)
@@ -811,19 +810,21 @@ def main(verbose):
 
 if __name__ == '__main__':
 
-    best_solution = main(True) 
-    # check_robot_is_allowed([0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1])
-    # a, b, c, d = test_robot([[0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1]])
-    # check_robot_is_allowed([1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0])
-    # a, b, c, d = test_robot([[1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0]])
-    # print("Fitness:")
-    # print a
-    # print("IK Solutions:")
-    # print b
-    # print("Final poses:")
-    # print c
-    # print("# of DOFs:")
-    # print d
+    # best_solution = main(True) 
+    # a, b, c, d = test_robot([[2, 1, 1, 2, 1, 4, 0, 0, 2]])
+    # a, b, c, d = test_robot([[1, 2, 1, 1, 2, 3, 1, 1, 1]])
+    # a, b, c, d = test_robot([[2, 1, 1, 1, 2, 3, 0, 1, 1]])
+    # a, b, c, d = test_robot([[2, 1, 1, 1, 2, 3, 0, 1, 2]])
+    a, b, c, d = test_robot([[2, 1, 1, 3, 1, 1, 0, 1, 2]])
+    # a, b, c, d = test_robot([[1, 2, 1, 1, 2, 1, 1, 1, 1]])
+    print("Fitness:")
+    print a
+    print("IK Solutions:")
+    print b
+    print("Final poses:")
+    print c
+    print("# of DOFs:")
+    print d
     # a, b, c, d = test_robot([[1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1]]) #[[0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1]]
     # a = load_pickle("/home/tree/pickles/logbooks/4-5DOFs_02_02_no_link/20210224-152627_population.pkl")
     # print(a[0][0])
