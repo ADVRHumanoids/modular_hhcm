@@ -1,0 +1,27 @@
+kinematics:
+  joint:
+
+  link:
+    a_l: 0.0
+    alpha_l: 0.0
+    p_l: 0.0
+    n_l: 0.0 #0.06
+    delta_l_in: 0.0
+    delta_l_out: 0.0
+
+visual:
+  mesh_body_1: ""
+  mesh_collision_1: ""
+  tf_mesh_1:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    roll: 0.0
+    pitch: 0.0
+    yaw: 0.0
+
+size: "big"
+size_in:
+size_out:
+
+type: 'link'
