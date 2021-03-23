@@ -89,6 +89,10 @@
 			height:10%;
 		}
 
+		/* #resetButtons {
+			height:10%;
+		} */
+
 		.btn-1-in-subgroup {
 			height:100%;
 		}
@@ -371,13 +375,15 @@
 					</button>	
 				</div>
 			</div>	
+			<!-- <div id="resetButtons" class="btn-group-vertical btn-subgroup">
+			</div> -->
 			<div id="drawButtons" class="btn-group-vertical btn-subgroup">
-				<button type="button" id="draw" class="button btn btn-dark btn-1-in-subgroup">
+				<button type="button" id="sudoReset" class="button btn btn-dark btn-2-in-subgroup">
+					<div>Reset</div>
+				</button>	
+				<button type="button" id="draw" class="button btn btn-dark btn-2-in-subgroup">
 					<div>Draw</div>
 				</button>
-				<!-- <button type="button" id="zeroG1" class="button btn btn-dark" data-text-swap="Resume" data-text-original="Zero gravity">
-					<p id="zeroGText">Zero gravity</p>
-				</button> -->
 			</div>				
 		</div>
 	</div>
@@ -566,6 +572,7 @@
 				var pauseBtn = document.getElementById("pause");
 				var zeroGBtn = document.getElementById("zeroG");
 				var holdToolBtn = document.getElementById("holdTool");
+				var sudoResetBtn = document.getElementById("sudoReset");
 
 				var start_stop = document.getElementById('start_stop');
                 var start_stop_text = document.getElementById('start_stop_text');
@@ -584,6 +591,7 @@
 				pauseBtn.onclick = function () {pauseResume()};
 				zeroGBtn.onclick = function () {zeroGResume()};
 				holdToolBtn.onclick = function () {holdReleaseTool()};
+				sudoResetBtn.onclick = function () {resetRobot()};
 
 				start_stop.onclick = function() {startStop()};
 
@@ -1542,6 +1550,28 @@
 					sessionStorage.setItem("magnet_on", JSON.stringify(releaseTool_cmd.data));
 					tool_exchanger_control.publish(releaseTool_cmd);
                 }   
+			}
+
+			function resetRobot() {
+                var commandData = {
+					'type': "CMD",
+					'action': "sudo",
+					'target': [],
+					'name': [],
+					'descriptors': []
+				};
+				$.ajax({
+					url: $SCRIPT_ROOT + 'sendCommands/',
+					data: JSON.stringify(commandData),
+					contentType: "application/json; charset=utf-8",
+					dataType: 'json',
+					method: 'POST',
+					success: function (data) {
+						console.log(data)
+						//callback()           
+					},
+					async: true //async_bool
+				})
 			}
 
 			function addPath() {
