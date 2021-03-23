@@ -989,20 +989,24 @@ class UrdfWriter:
         if self.parent_module.type == 'joint':
             if new_module.type == 'joint':
                 # joint + joint
+                print("joint + joint")
                 self.joint_after_joint(new_module, self.parent_module, angle_offset, reverse=reverse)
                 # Add the joint to the list of chains
                 self.add_to_chain(new_module)
             else:
                 # joint + link
+                print("joint + link")
                 self.link_after_joint(new_module, self.parent_module, angle_offset, reverse=reverse)
         else:
             if new_module.type == 'joint':
                 # link + joint
+                print("link + joint")
                 self.joint_after_link(new_module, self.parent_module, angle_offset, reverse=reverse)
                 # Add the joint to the list of chains
                 self.add_to_chain(new_module)
             else:
                 # link + link
+                print("link + link")
                 self.link_after_link(new_module, self.parent_module, angle_offset, reverse=reverse)
 
         # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string

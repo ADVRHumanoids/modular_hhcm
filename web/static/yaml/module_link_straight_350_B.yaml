@@ -25,8 +25,8 @@ dynamics:
       z: 0.175
 
 visual:
-  mesh_body_1: "package://modular/src/modular/web/static/models/modular/meshes/passive_link_straight_350.stl"
-  mesh_collision_1: "package://modular/src/modular/web/static/models/modular/meshes/passive_link_straight_350.stl"
+  mesh_body_1: "package://modular/meshes/passive_link_straight_350.stl"
+  mesh_collision_1: "package://modular/meshes/passive_link_straight_350.stl"
   tf_mesh_1:
     x: 0.0
     y: 0.0

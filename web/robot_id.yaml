@@ -1,3 +1,4 @@
+# joints
 1: module_joint_elbow_B.yaml
 2: module_joint_elbow_B.yaml
 3: module_joint_elbow_B.yaml
@@ -7,7 +8,11 @@
 11: module_joint_yaw_AVOCADO_B.yaml
 13: module_joint_double_elbow_AVOCADO_B.yaml
 14: module_joint_double_elbow_AVOCADO_B.yaml
+# end-effectors
 19: module_gripper.yaml
 321: module_tool_exchanger_B.yaml
 315: module_tool_exchanger_heavy.yaml
+# Links
+500: module_link_elbow_90_B.yaml
+501: module_link_straight_140_B.yaml
 -1 : master_cube.yaml
