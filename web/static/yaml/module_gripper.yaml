@@ -32,7 +32,10 @@ kinematics:
 
 dynamics:
   body_1:
-    mass: 1.028 
+    mass: 1.182 #  gripper + calmps + fingers for vials
+    # mass: 1.139 # gripper + calmps
+    # mass: 1.040 # gripper
+    # mass: 1.028 # old electronics
     inertia_tensor:
       I_xx: 2.5968127e-03
       I_yy: 2.0344466e-03
