@@ -2251,7 +2251,6 @@ class UrdfWriter:
                           "xacro:add_gripper",
                           type="gripper",
                           name=new_Link.name,
-                          tag=new_Link.tag,
                           filename=new_Link.filename)
             # the end-effector gets added to the chain although it's not a joint. it's needed in the joint map and in the config!
             self.add_to_chain(new_Link)
