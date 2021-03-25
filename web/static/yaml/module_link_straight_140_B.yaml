@@ -7,7 +7,7 @@ kinematics:
     p_l: 0
     n_l: 0.140
     delta_l_in: 0
-    delta_l_out: 0
+    delta_l_out: 3.14
 
 dynamics:
   body_1:
