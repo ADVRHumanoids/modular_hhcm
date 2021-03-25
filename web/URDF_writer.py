@@ -8,6 +8,7 @@ import xml.dom.minidom
 import codecs
 import yaml
 import json
+import copy
 from collections import OrderedDict
 
 import ModuleNode # import module_from_yaml, ModuleNode, mastercube_from_yaml, slavecube_from_yaml
@@ -17,6 +18,7 @@ import tf
 
 # from anytree import NodeMixin, RenderTree, Node, AsciiStyle
 import anytree
+from anytree import RenderTree
 
 import subprocess
 from shutil import copyfile
@@ -161,6 +163,7 @@ class UrdfWriter:
         setattr(self.base_link, 'i', 0)
         setattr(self.base_link, 'p', 0)
         setattr(self.base_link, 'Homogeneous_tf', tf.transformations.identity_matrix())
+        setattr(self.base_link, 'robot_id', 0)
         
         self.parent_module = self.base_link
 
@@ -215,20 +218,113 @@ class UrdfWriter:
         # self.urdf_tree = ET.ElementTree(self.root)
         # print(ET.tostring(self.urdf_tree.getroot()))
 
-        # Process the modules described in the json to create the tree
-        modules = json_data['modules']
-        for module in modules:
+        # Load the robot_id dictionary from yaml file
+        opts = repl_option()
+        # d = yaml.load(open(opts["esc_type_yaml"], 'r'))
+        d = yaml.load(open(opts["robot_id_yaml"], 'r'))
 
-            if module['connections'][0] == 0:
-                print('\n Module: \n')
-                print(module['id'], module['type'])
-                if module['type'] == 'master_cube':
-                    data = self.add_slave_cube(0)
-                else:
-                    data = self.add_module(module['type'], 0)
-                module_name = data['lastModule_name']
-                module_type = data['lastModule_type']
-                self.process_connections(module['connections'], modules, module_name, module_type)
+        # Process the modules described in the json to create the tree
+        modules_list = json.loads(json_data)
+        print("modules_list:", modules_list, type(modules_list))
+        
+        for module in modules_list:
+
+            module_id = next(iter(module))
+            print('Now processing module', module_id)
+            module_position = module[module_id]['poistion']
+            module_topology = module[module_id]['topology']
+
+            parent_position = None
+
+            #find parent (from OpenEtherCATsociety)
+            if(module_position > 1):
+                topo_counter = 0
+                candidate_position = module_position - 1
+
+                while candidate_position > 0:
+                    candidate_parent = modules_list[candidate_position - 1]
+                    candidate_parent_id = next(iter(candidate_parent))
+                    topology = candidate_parent[candidate_parent_id]['topology']
+
+                    if topology == 1 :
+                        topo_counter -= 1
+                    elif topology == 3:
+                        topo_counter += 1
+                    elif topology == 4:
+                        topo_counter += 2
+                    
+                    if (topo_counter >= 0 and topology > 1) or candidate_position == 1 :
+                        #parent found
+                        parent_position = candidate_position
+                        candidate_position = 1
+
+                    candidate_position -= 1
+
+            print("module and parent:", module_id, parent_position)
+
+            #select the correct parent module
+            if parent_position :
+                print
+                parent = modules_list[parent_position -1]
+                print('parent:', parent)
+                
+                parent_id = next(iter(candidate_parent))
+                print('parent_id:', parent_id)
+                
+                parent_active_ports = candidate_parent[candidate_parent_id]['active_ports']
+                print('parent_active_ports:', parent_active_ports)
+
+                parent_topology = candidate_parent[candidate_parent_id]['topology']
+                print('parent_topology:', parent_topology)
+
+                # Render tree
+                print(RenderTree(self.base_link))
+                for pre, _, node in RenderTree(self.base_link):
+                    print(pre, node, node.name, node.robot_id)
+                    # treestr = u"%s%s" % (pre, node.name)
+                    # print(treestr.ljust(8), node.name, node.robot_id)
+                parent_module = anytree.search.findall_by_attr(self.base_link, parent_id, name='robot_id')[0]
+                print('parent_module:', parent_module, '\nparent name:', parent_module.name)
+                self.select_module(parent_module.name)
+                print(self.parent_module.name)
+                #TODO:replace with select_module_from_id
+
+                # set the selected_port as occupied
+                mask = 1 << parent_module.selected_port - 1
+                print(mask)
+                print(parent_module.occupied_ports)
+                parent_module.occupied_ports = "{0:04b}".format(int(parent_module.occupied_ports, 2) | mask)
+                print(parent_module.occupied_ports)
+                #parent_module.occupied_ports[-selected_port] = 1
+
+                #add the module
+                module_filename = d.get(module[module_id]['robot_id'])
+                data = self.add_module(module_filename, 0, robot_id=module_id)
+            
+            else:
+                cube_active_ports = module[module_id]['active_ports']
+                print('cube_active_ports:', cube_active_ports)
+
+                data = self.add_slave_cube(0, robot_id=module_id, active_ports=cube_active_ports)
+
+                for pre, _, node in RenderTree(self.base_link):
+                    print(pre, node, node.name, node.robot_id)
+
+            #TODO: remove this shit
+
+            module_name = data['lastModule_name']
+            module_type = data['lastModule_type']
+
+            # if module['connections'][0] == 0:
+            #     print('\n Module: \n')
+            #     print(module['id'], module['type'])
+            #     if module['type'] == 'master_cube':
+            #         data = self.add_slave_cube(0)
+            #     else:
+            #         data = self.add_module(module['type'], 0)
+            #     module_name = data['lastModule_name']
+            #     module_type = data['lastModule_type']
+            #     self.process_connections(module['connections'], modules, module_name, module_type)
 
         # doc = xacro.parse(string)
         # xacro.process_doc(doc, in_order=True)
@@ -237,6 +333,12 @@ class UrdfWriter:
 
         data = {'string': string}
         return data
+
+    def render_tree(self):
+        for pre, _, node in RenderTree(self.base_link):
+            print(pre, node, node.name, node.robot_id)
+        
+        return 0
 
     # Until the robot can be only an unbranched robot this function needs to be called. No "connections" in json msg
     def read_from_json_alt(self, json_data):
@@ -483,7 +585,7 @@ class UrdfWriter:
 
 
     # noinspection PyPep8Naming
-    def add_slave_cube(self, angle_offset):
+    def add_slave_cube(self, angle_offset, robot_id=0, active_ports=None):
         """Method adding slave/master cube to the tree.
 
         Parameters
@@ -513,6 +615,7 @@ class UrdfWriter:
             # Generate name and dict for the 1st connector module
             name_con1 = name + '_con1'
             data1 = {'Homogeneous_tf': T_con_inv, 'type': "con", 'name': name_con1, 'i': 0, 'p': 0, 'size': 3}
+            print('T_con_inv:', T_con_inv)
 
             # Add the 1st connector module to the tree
             slavecube_con1 = ModuleNode.ModuleNode(data1, name_con1, parent=self.parent_module)
@@ -561,6 +664,8 @@ class UrdfWriter:
             setattr(slavecube, 'name', name)
             setattr(slavecube, 'i', 0)
             setattr(slavecube, 'p', 0)
+
+            setattr(slavecube, 'robot_id', robot_id)
 
             # add the slave cube to the xml tree
             ET.SubElement(self.root, "xacro:add_slave_cube", type='cube', name=name, filename=filename)
@@ -625,7 +730,7 @@ class UrdfWriter:
 
         else:
             # add master cube
-
+            print('add_master_cube')
             # Generate name according to the # of cubes already in the tree
             name = 'L_0' + self.cube_switcher.get(self.n_cubes)
             self.n_cubes += 1
@@ -643,29 +748,31 @@ class UrdfWriter:
             setattr(mastercube, 'i', 0)
             setattr(mastercube, 'p', 0)
 
+            setattr(mastercube, 'robot_id', robot_id)
+
             # add the master cube to the xml tree
             ET.SubElement(self.root, "xacro:add_master_cube", type='cube', name=name, filename=filename)
             ET.SubElement(self.root, "xacro:add_connectors", type='connectors', name=name, filename=filename)
 
-            # instantate a ModuleNode for branch 1 connector
-            name_con1 = name + '_con1'
-            data1 = {'Homogeneous_tf': mastercube.Con_1_tf, 'type': "con", 'name': name_con1, 'i': 0, 'p': 0, 'size': 3}
-            slavecube_con1 = ModuleNode.ModuleNode(data1, name_con1, parent=mastercube)
+            # # instantate a ModuleNode for branch 1 connector
+            # name_con1 = name + '_con1'
+            # data1 = {'Homogeneous_tf': mastercube.Con_1_tf, 'type': "con", 'name': name_con1, 'i': 0, 'p': 0, 'size': 3}
+            # slavecube_con1 = ModuleNode.ModuleNode(data1, name_con1, parent=mastercube)
 
-            # instantate a ModuleNode for branch 2 connector
-            name_con2 = name + '_con2'
-            data2 = {'Homogeneous_tf': mastercube.Con_2_tf, 'type': "con", 'name': name_con2, 'i': 0, 'p': 0, 'size': 3}
-            slavecube_con2 = ModuleNode.ModuleNode(data2, name_con2, parent=mastercube)
+            # # instantate a ModuleNode for branch 2 connector
+            # name_con2 = name + '_con2'
+            # data2 = {'Homogeneous_tf': mastercube.Con_2_tf, 'type': "con", 'name': name_con2, 'i': 0, 'p': 0, 'size': 3}
+            # slavecube_con2 = ModuleNode.ModuleNode(data2, name_con2, parent=mastercube)
 
-            # instantate a ModuleNode for branch 3 connector
-            name_con3 = name + '_con3'
-            data3 = {'Homogeneous_tf': mastercube.Con_3_tf, 'type': "con", 'name': name_con3, 'i': 0, 'p': 0, 'size': 3}
-            slavecube_con3 = ModuleNode.ModuleNode(data3, name_con3, parent=mastercube)
+            # # instantate a ModuleNode for branch 3 connector
+            # name_con3 = name + '_con3'
+            # data3 = {'Homogeneous_tf': mastercube.Con_3_tf, 'type': "con", 'name': name_con3, 'i': 0, 'p': 0, 'size': 3}
+            # slavecube_con3 = ModuleNode.ModuleNode(data3, name_con3, parent=mastercube)
 
-            # instantate a ModuleNode for branch 4 connector
-            name_con4 = name + '_con4'
-            data4 = {'Homogeneous_tf': mastercube.Con_4_tf, 'type': "con", 'name': name_con4, 'i': 0, 'p': 0, 'size': 3}
-            slavecube_con4 = ModuleNode.ModuleNode(data4, name_con4, parent=mastercube)
+            # # instantate a ModuleNode for branch 4 connector
+            # name_con4 = name + '_con4'
+            # data4 = {'Homogeneous_tf': mastercube.Con_4_tf, 'type': "con", 'name': name_con4, 'i': 0, 'p': 0, 'size': 3}
+            # slavecube_con4 = ModuleNode.ModuleNode(data4, name_con4, parent=mastercube)
 
             # Render tree
             for pre, _, node in anytree.render.RenderTree(self.base_link):
@@ -698,8 +805,38 @@ class UrdfWriter:
             # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string.
             string = self.process_urdf()
 
+            # Update the EtherCAT port connected to the electro-mechanical interface where the new module/slave will be added 
+            #    1           2           3           4
+            #    o           o           o           o
+            #    |           |           |           |
+            # com-exp   upper port  front port    nothing
+            setattr(mastercube, 'selected_port', 2)
+            print('mastercube.selected_port :', mastercube.selected_port)
+
+            # save the active ports as a binary string
+            setattr(mastercube, 'active_ports', "{0:04b}".format(active_ports))
+            print('active_ports: ', mastercube.active_ports)
+
+            # save the occupied ports as a binary string
+            setattr(mastercube, 'occupied_ports', "0001")
+            print('occupied_ports: ', mastercube.occupied_ports)
+
+            # # If parent topology is greater than 2 the parent is a switch/hub so we need to find the right port where the module is connected
+            # if active_ports >= 3:
+            #     for port_idx in range(2, len(mastercube.active_ports) - 1)
+            #         if mastercube.active_ports[-port_idx] == 1:
+            #             mastercube.selected_port = port_idx
+            #             break
+            
+            # if parent_active_ports == 3:
+            #     self.parent_module.selected_port = 3
+            # elif parent_active_ports == 5:
+            #     self.parent_module.selected_port = 4
+            # print('self.parent_module.selected_port: ', self.parent_module.selected_port)
+
             # Update the parent_module attribute of the URDF_writer class. A default connection is chosen.
-            self.parent_module = slavecube_con3
+            #self.parent_module = slavecube_con3
+            self.parent_module = mastercube
 
             # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
             data = {'result': string,
@@ -962,12 +1099,14 @@ class UrdfWriter:
         # Then assign the correct tag (A, B, C, ...) to the new module (and therefore start a new branch)
         # by looking at the current tag_num (1, 2, 3, ...) and so at how many branches are already present in the robot.
         # If the parent is any other kind of module, assign as tag the same of his parent.
-        if '_con' in self.parent_module.name:
+        if self.parent_module.type == 'cube' :
             tag_letter = self.branch_switcher.get(self.tag_num)
             setattr(new_module, 'tag', tag_letter)
             self.tag_num += 1
         else:
             setattr(new_module, 'tag', self.parent_module.tag)
+
+        print('new_module.tag:', new_module.tag)
 
         # Set attributes of the newly added module object
         setattr(new_module, 'size', self.parent_module.size)
@@ -978,8 +1117,25 @@ class UrdfWriter:
         setattr(new_module, 'reverse', reverse)
         setattr(new_module, 'robot_id', robot_id)
 
-        # print("parent module:")
-        # print(self.parent_module.type)
+        print("parent module:")
+        print(self.parent_module)
+        print(self.parent_module.type)
+
+        # Update the EtherCAT port connected to the electro-mechanical interface where the new module/slave will be added 
+        #    1           2           3           4
+        #    o           o           o           o
+        #    |           |           |           |
+        # com-exp   upper port  front port    nothing
+        setattr(new_module, 'selected_port', 2)
+        print('mastercube.selected_port :', new_module.selected_port)
+
+        # save the active ports as a binary string
+        setattr(new_module, 'active_ports', "{0:04b}".format(3)) # TODO:change this
+        print('active_ports: ', new_module.active_ports)
+
+        # save the occupied ports as a binary string
+        setattr(new_module, 'occupied_ports', "0001")
+        print('occupied_ports: ', new_module.occupied_ports)
 
         # Depending on the type of the parent module and the new module, call the right method to add the new module.
         # If the new module is a joint add it to the correct chain via the 'add_to_chain' method.
@@ -997,6 +1153,15 @@ class UrdfWriter:
                 # joint + link
                 print("joint + link")
                 self.link_after_joint(new_module, self.parent_module, angle_offset, reverse=reverse)
+        elif self.parent_module.type == 'cube':
+            if new_module.type == 'joint':
+                # cube + joint
+                self.joint_after_cube(new_module, self.parent_module, angle_offset, reverse=reverse)
+                # Add the joint to the list of chains
+                self.add_to_chain(new_module)
+            else:
+                # cube + link
+                self.link_after_cube(new_module, self.parent_module, angle_offset, reverse=reverse)
         else:
             if new_module.type == 'joint':
                 # link + joint
@@ -1058,7 +1223,7 @@ class UrdfWriter:
         # If no selected_module argument was passed to the method,
         # select the current parent module to be the one to remove
         if selected_module == 0:
-            selected_module = self.parent_module
+            selected_module = (self.parent_module)
 
         # If the selected module is a connector module, select his parent (the cube) instead
         if '_con' in selected_module.name:
@@ -1229,12 +1394,12 @@ class UrdfWriter:
 
         return data
 
-    def access_module(self, selected_module):
+    def access_module(self, queried_module_name):
         """Find the selected module object in the tree and returns it. Moreover, sets it as the current parent_module.
 
         Parameters
         ----------
-        selected_module: str
+        queried_module_name: str
             String with the name of the module to access. It will be used to search the tree and find
             the relative ModuleNode object
 
@@ -1245,30 +1410,30 @@ class UrdfWriter:
 
         """
         # global parent_module
-
-        # If the selected module is the stator of a joint modify the string so to select the joint itself.
-        # This is needed because from the GUI when you select a joint by clicking, the mesh corresponding to the stator
-        # is selected, while the module we want to access is the joint (the stator is not part of the tree, only urdf).
-        if selected_module.endswith('_stator'):
-            selected_module = selected_module[:-7]
+        print('queried_module_name: ', queried_module_name)
 
         # Serch the tree by name for the selected module
-        module = anytree.search.findall_by_attr(self.base_link, selected_module)[0]
+        queried_module = anytree.search.findall_by_attr(self.base_link, queried_module_name)[0]
 
+        print('queried_module.type: ', queried_module.type)
+        
         # Update parent_module attribute
-        self.parent_module = module
+        self.parent_module = queried_module
 
-        return module
+        return queried_module
 
-    def select_module(self, module):
+    def select_module(self, module_name, selected_port=None):
         """Allows to select a module from the tree. An inner call to access_module sets the selected module as the
         current parent module. Returns info on the selected module, so that the GUI can display it.
 
         Parameters
         ----------
-        module: str
+        module_name: str
             String with the name of the module to select. It will be used to call the access_module method.
             The corresponding object module data is then put in a dictionary and returned.
+        
+        selected_port: int
+            Represent the port selected if the module is a hub/box
 
         Returns
         -------
@@ -1276,23 +1441,79 @@ class UrdfWriter:
             The dictionary containing all necessary data about the selected module.
 
         """
+
+        print(module_name)
+
+        # If the selected module is the stator of a joint modify the string so to select the joint itself.
+        # This is needed because from the GUI when you select a joint by clicking, the mesh corresponding to the stator
+        # is selected, while the module we want to access is the joint (the stator is not part of the tree, only urdf).
+        
+        if module_name.endswith('_stator'):
+            # Take the joint when the mesh of the joint stator is selected
+            selected_module_name = module_name[:-7]
+        elif '_con' in module_name:
+            # Take the box as parent when a connector is selected
+            selected_module_name = module_name[:-5]
+            # Save the selected port
+            selected_port = int(module_name[-1])
+            print(selected_port)
+        else:
+            selected_module_name = module_name
+
+        print(selected_module_name)
+
         # Call access_module to get the object with the requested name and sets it as parent.
         # The method doing the real work is actually access_module
-        last_module = self.access_module(module)
+        selected_module = self.access_module(selected_module_name)
+        print(selected_module.type)
+        print(selected_module.name)
+        print(selected_module.robot_id)
+        print(selected_module.active_ports)
+        print(selected_module.occupied_ports)
+        # binary XOR
+        free_ports = int(selected_module.active_ports, 2) ^ int(selected_module.occupied_ports, 2)
+        print("{0:04b}".format(free_ports))
+
+        selected_module.selected_port = self.ffs(free_ports)
+        print('selected_module.selected_port :', selected_module.selected_port)
+        
+        # # If parent topology is greater than 2 the parent is a switch/hub so we need to find the right port where the module is connected
+        # if active_ports >= 3:
+        #     for port_idx in range(2, len(mastercube.active_ports) - 1)
+        #         if mastercube.active_ports[-port_idx] == 1:
+        #             mastercube.selected_port = port_idx
+        #             break
+        
+        # if parent_active_ports == 3:
+        #     self.parent_module.selected_port = 3
+        # elif parent_active_ports == 5:
+        #     self.parent_module.selected_port = 4
+        # print('self.parent_module.selected_port: ', self.parent_module.selected_port)
+
+        # Select the correct port where to add the module to
+        if '_con' in module_name:
+            selected_module.selected_port = selected_port
 
         # Create the dictionary with the relevant info on the selected module, so that the GUI can dispaly it.
-        if last_module.type == 'cube':
-            data = {'lastModule_type': last_module.type,
-                    'lastModule_name': last_module.name,
-                    'size': last_module.size,
+        if selected_module.type == 'cube':
+            data = {'lastModule_type': selected_module.type,
+                    'lastModule_name': selected_module.name,
+                    'size': selected_module.size,
                     'count': self.n_cubes}
         else:
-            data = {'lastModule_type': last_module.type,
-                    'lastModule_name': last_module.name,
-                    'size': last_module.size,
-                    'count': last_module.i}
+            data = {'lastModule_type': selected_module.type,
+                    'lastModule_name': selected_module.name,
+                    'size': selected_module.size,
+                    'count': selected_module.i}
 
         return data
+
+    @staticmethod
+    def ffs(x):
+        """Returns the index, counting from 0, of the
+        least significant set bit in `x`.
+        """
+        return (x&-x).bit_length()
 
     # noinspection PyPep8Naming
     def link_after_cube(self, new_Link, past_Cube, offset, reverse):
@@ -1409,6 +1630,7 @@ class UrdfWriter:
                       pitch=pitch,
                       yaw=yaw)
 
+
     # noinspection PyPep8Naming
     def joint_after_cube(self, new_Joint, past_Cube, offset, reverse):
         """Adds to the URDF tree a joint module as a child of a cube module
@@ -1473,16 +1695,15 @@ class UrdfWriter:
 
         # If the module is mounted in the opposite direction rotate the final frame by 180 deg., as per convention
         if reverse:
-            prox_mesh_transform = ModuleNode.get_rototranslation(mesh_transform,
-                                                                 tf.transformations.rotation_matrix(-3.14, self.yaxis))
-            prox_mesh_transform = ModuleNode.get_rototranslation(prox_mesh_transform, tf.transformations.inverse_matrix(
-                new_Joint.Proximal_tf))
+            prox_mesh_transform = ModuleNode.get_rototranslation(mesh_transform, tf.transformations.rotation_matrix(-3.14, self.yaxis))
+            prox_mesh_transform = ModuleNode.get_rototranslation(prox_mesh_transform, tf.transformations.inverse_matrix(new_Joint.Proximal_tf))
             # prox_mesh_transform = ModuleNode.get_rototranslation(mesh_transform, tf.transformations.translation_matrix((-0.0591857,0,-0.095508)))#tf.transformations.inverse_matrix(new_Joint.Proximal_tf))
             # prox_mesh_transform = ModuleNode.get_rototranslation(prox_mesh_transform, tf.transformations.rotation_matrix(3.14, self.xaxis))
             # prox_mesh_transform = ModuleNode.get_rototranslation(prox_mesh_transform,
             #                                                      tf.transformations.rotation_matrix(1.57, self.zaxis))
         else:
             prox_mesh_transform = mesh_transform
+
         x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(prox_mesh_transform)
 
         ET.SubElement(self.root,
@@ -1538,8 +1759,8 @@ class UrdfWriter:
             new_Joint.Distal_tf = ModuleNode.get_rototranslation(new_Joint.Distal_tf,
                                                                  tf.transformations.rotation_matrix(3.14, self.yaxis))
 
-        # add the fast rotor part to the inertia of the link/rotor part as a new link. NOTE: right now this is
-        # attached at the rotating part not to the fixed one (change it so to follow Pholus robot approach)
+        # add the fast rotor part to the inertia of the link/rotor part as a new link
+        #NOTE: right now this is attached at the rotating part not to the fixed one (change it so to follow Pholus robot approach)
         ET.SubElement(self.root,
                       "xacro:add_fixed_joint",
                       type="fixed_joint",
@@ -1563,6 +1784,7 @@ class UrdfWriter:
                       roll=roll,
                       pitch=pitch,
                       yaw=yaw)
+
 
     # noinspection PyPep8Naming
     def link_after_cube(self, new_Link, past_Cube, offset, reverse):
@@ -1939,7 +2161,6 @@ class UrdfWriter:
                       pitch=pitch,
                       yaw=yaw)
 
-    # TODO: put a check to avoid attach 2 normal joints together, only elbow joints are allowed
     # noinspection PyPep8Naming
     def joint_after_joint(self, new_Joint, past_Joint, offset, reverse):
         """Adds to the URDF tree a joint module as a child of a joint module

@@ -228,10 +228,10 @@ def syncHW():
 
     print("Exit")
 
-    # data = urdf_writer_fromHW.read_from_json(message)
-    data = urdf_writer_fromHW.read_from_json_alt(reply)
-
-    #print('data:', data)
+    data = urdf_writer_fromHW.read_from_json(reply)
+    # data = urdf_writer_fromHW.read_from_json_alt(reply)
+    urdf_writer_fromHW.render_tree()
+    print('data:', data)
     data = jsonify(data)
     return data
 
