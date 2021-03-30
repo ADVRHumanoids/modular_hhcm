@@ -99,6 +99,7 @@ class UrdfWriter:
 
         # self.root = 0
         # self.urdf_tree = 0
+        self.speedup = False
 
         if elementree is None:
             # Open the base xacro file
@@ -297,15 +298,19 @@ class UrdfWriter:
                 print(parent_module.occupied_ports)
                 #parent_module.occupied_ports[-selected_port] = 1
 
+                #If the parent is a cube to support non-structural box we add a socket
+                if parent_module.type == 'cube':
+                    if parent_module.is_structural == False:
+                        self.add_socket()
                 #add the module
                 module_filename = d.get(module[module_id]['robot_id'])
                 data = self.add_module(module_filename, 0, robot_id=module_id)
-            
+             
             else:
                 cube_active_ports = module[module_id]['active_ports']
                 print('cube_active_ports:', cube_active_ports)
 
-                data = self.add_slave_cube(0, robot_id=module_id, active_ports=cube_active_ports)
+                data = self.add_slave_cube(0, is_structural=False, robot_id=module_id, active_ports=cube_active_ports)
 
                 for pre, _, node in RenderTree(self.base_link):
                     print(pre, node, node.name, node.robot_id)
@@ -585,13 +590,26 @@ class UrdfWriter:
 
 
     # noinspection PyPep8Naming
-    def add_slave_cube(self, angle_offset, robot_id=0, active_ports=None):
+    def add_slave_cube(self, angle_offset, is_structural=True, robot_id=0, active_ports=None):
         """Method adding slave/master cube to the tree.
 
         Parameters
         ----------
         angle_offset: float
             Value of the angle between the parent module output frame and the cube input frame
+
+        is_structural: float
+            Bool variable indicating if the box is a structural part of the robot or it's just used as computation unit away from the robot.
+            In the second case the different chains are placed in default locations in a xy plane 
+            (the user will then be queried to specify their actual location once the robot model is recontructed)
+
+        robot_id: int
+            Value of the robot_id set in the firmware of the module. 
+            This is obtained in Discovery Mode when reading the JSON from the EtherCAT master. This is not used when in Bulding Mode.
+
+        active_ports: int
+            The number of active ports of the cube (how many ports have established a connection to a module). 
+            The value is the conversion to int of the 4-bit binary string where each bit represent one port (1 if port is active, 0 if port is unactive)
 
         Returns
         -------
@@ -601,6 +619,10 @@ class UrdfWriter:
 
         """
         # global T_con, L_0a, n_cubes, parent_module
+
+        # TODO: This part below the "if" is deprecated. It still uses "connectors" separate module. 
+        # It was made to handle creating robots with multiple "boxes", which will be probably never done.
+        # If important should be reviewed and modify it as the part below the "else".
 
         if self.n_cubes > 0:
             # add slave cube
@@ -750,9 +772,16 @@ class UrdfWriter:
 
             setattr(mastercube, 'robot_id', robot_id)
 
-            # add the master cube to the xml tree
-            ET.SubElement(self.root, "xacro:add_master_cube", type='cube', name=name, filename=filename)
-            ET.SubElement(self.root, "xacro:add_connectors", type='connectors', name=name, filename=filename)
+            setattr(mastercube, 'is_structural', is_structural)
+            if is_structural:
+                # add the master cube to the xml tree
+                ET.SubElement(self.root, "xacro:add_master_cube", type='cube', name=name, filename=filename)
+                ET.SubElement(self.root, "xacro:add_connectors", type='connectors', name=name, filename=filename)
+            else:
+                # add the master cube to the xml tree
+                #ET.SubElement(self.root, "xacro:add_master_cube", type='cube', name=name, filename=filename)
+                #ET.SubElement(self.root, "xacro:add_connectors", type='connectors', name=name, filename=filename)
+                pass
 
             # # instantate a ModuleNode for branch 1 connector
             # name_con1 = name + '_con1'
@@ -774,10 +803,7 @@ class UrdfWriter:
             # data4 = {'Homogeneous_tf': mastercube.Con_4_tf, 'type': "con", 'name': name_con4, 'i': 0, 'p': 0, 'size': 3}
             # slavecube_con4 = ModuleNode.ModuleNode(data4, name_con4, parent=mastercube)
 
-            # Render tree
-            for pre, _, node in anytree.render.RenderTree(self.base_link):
-                print("%s%s" % (pre, node.name))
-
+            # Render treeself.resource_finder.get_filename(, 'yaml_path')
             # new_Link = slavecube_con1
             # past_Link = parent_module
             # new_Link.get_rototranslation(past_Link.Homogeneous_tf, tf.transformations.identity_matrix())
@@ -908,8 +934,9 @@ class UrdfWriter:
                 node.set('yaw', str(angle_offset))
 
     def add_socket(self, x_offset=0.0, y_offset=0.0, z_offset=0.0, angle_offset=0.0):
+        filename = 'socket.yaml'
         # Generate the path to the required YAML file
-        module_name = self.resource_finder.get_filename('socket.yaml', 'yaml_path')
+        module_name = path_name + '/web/static/yaml/' + filename
 
         # create a ModuleNode instance for the socket
         new_socket = ModuleNode.module_from_yaml(module_name, self.parent_module, reverse=0)
@@ -948,7 +975,19 @@ class UrdfWriter:
                       size_z=new_socket.link_size_z,
                       size=str(new_socket.size))
 
-        transform = ModuleNode.get_rototranslation(self.parent_module.Homogeneous_tf,
+        if self.parent_module.type == 'cube':
+            if self.parent_module.selected_port == 1:
+                interface_transform = self.parent_module.Con_1_tf
+            elif self.parent_module.selected_port == 2:
+                interface_transform = self.parent_module.Con_2_tf
+            elif self.parent_module.selected_port == 3:
+                interface_transform = self.parent_module.Con_3_tf
+            elif self.parent_module.selected_port == 4:
+                interface_transform = self.parent_module.Con_4_tf
+        else:
+            interface_transform = self.parent_module.Homogeneous_tf
+
+        transform = ModuleNode.get_rototranslation(interface_transform,
                                                    tf.transformations.rotation_matrix(angle_offset,
                                                                                       self.zaxis))
         x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(transform)
