@@ -933,6 +933,28 @@ class UrdfWriter:
                 node.set('z', str(z_offset))
                 node.set('yaw', str(angle_offset))
 
+        if self.speedup:
+            string = ""
+        else:
+            # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string
+            string = self.process_urdf()
+
+        # Render tree
+        for pre, _, node in anytree.render.RenderTree(self.base_link):
+            print("%s%s" % (pre, node.name))
+
+        # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
+        data = {'result': string,
+                'lastModule_type': socket.type,
+                'lastModule_name': socket.name,
+                'size': socket.size,
+                'count': socket.i}
+
+        # Update the parent_module attribute of the URDF_writer class
+        self.parent_module = socket
+
+        return data
+
     def add_socket(self, x_offset=0.0, y_offset=0.0, z_offset=0.0, angle_offset=0.0):
         filename = 'socket.yaml'
         # Generate the path to the required YAML file
@@ -976,15 +998,21 @@ class UrdfWriter:
                       size=str(new_socket.size))
 
         if self.parent_module.type == 'cube':
-            if self.parent_module.selected_port == 1:
-                interface_transform = self.parent_module.Con_1_tf
-            elif self.parent_module.selected_port == 2:
-                interface_transform = self.parent_module.Con_2_tf
-            elif self.parent_module.selected_port == 3:
-                interface_transform = self.parent_module.Con_3_tf
-            elif self.parent_module.selected_port == 4:
-                interface_transform = self.parent_module.Con_4_tf
+            if self.parent_module.is_structural:
+                parent_name = self.parent_module.name
+                if self.parent_module.selected_port == 1:
+                    interface_transform = self.parent_module.Con_1_tf
+                elif self.parent_module.selected_port == 2:
+                    interface_transform = self.parent_module.Con_2_tf
+                elif self.parent_module.selected_port == 3:
+                    interface_transform = self.parent_module.Con_3_tf
+                elif self.parent_module.selected_port == 4:
+                    interface_transform = self.parent_module.Con_4_tf
+            else:
+                parent_name = self.parent_module.parent.name
+                interface_transform = tf.transformations.identity_matrix()
         else:
+            parent_name = self.parent_module.name
             interface_transform = self.parent_module.Homogeneous_tf
 
         transform = ModuleNode.get_rototranslation(interface_transform,
@@ -1001,7 +1029,7 @@ class UrdfWriter:
                       "xacro:add_fixed_joint",
                       name=fixed_joint_name,
                       type="fixed_joint",
-                      father=self.parent_module.name,
+                      father=parent_name,
                       child=new_socket.name,
                       x=x,
                       y=y,
@@ -1636,14 +1664,21 @@ class UrdfWriter:
         print('past_Cube: ', past_Cube)
         print('past_Cube.selected_port: ', past_Cube.selected_port)
 
-        if past_Cube.selected_port == 1:
-            interface_transform = past_Cube.Con_1_tf
-        elif past_Cube.selected_port == 2:
-            interface_transform = past_Cube.Con_2_tf
-        elif past_Cube.selected_port == 3:
-            interface_transform = past_Cube.Con_3_tf
-        elif past_Cube.selected_port == 4:
-            interface_transform = past_Cube.Con_4_tf
+        if past_Cube.is_structural:
+            parent_name = past_Cube.name
+
+            if past_Cube.selected_port == 1:
+                interface_transform = past_Cube.Con_1_tf
+            elif past_Cube.selected_port == 2:
+                interface_transform = past_Cube.Con_2_tf
+            elif past_Cube.selected_port == 3:
+                interface_transform = past_Cube.Con_3_tf
+            elif past_Cube.selected_port == 4:
+                interface_transform = past_Cube.Con_4_tf
+        else:
+            parent_name = past_Cube.parent.name
+
+            interface_transform = tf.transformations.identity_matrix()
 
         print('past_Cube.selected_port:', past_Cube.selected_port)
         print('interface_transform: ', interface_transform)
@@ -1662,7 +1697,7 @@ class UrdfWriter:
                       "xacro:add_fixed_joint",
                       name=fixed_joint_name,
                       type="fixed_joint",
-                      father=past_Cube.name,
+                      father=parent_name,
                       child=new_Link.name,
                       x=x,
                       y=y,
@@ -1688,14 +1723,22 @@ class UrdfWriter:
         """
 
         print('past_Cube')
-        if past_Cube.selected_port == 1:
-            interface_transform = past_Cube.Con_1_tf
-        elif past_Cube.selected_port == 2:
-            interface_transform = past_Cube.Con_2_tf
-        elif past_Cube.selected_port == 3:
-            interface_transform = past_Cube.Con_3_tf
-        elif past_Cube.selected_port == 4:
-            interface_transform = past_Cube.Con_4_tf
+
+        if past_Cube.is_structural:
+            parent_name = past_Cube.name
+
+            if past_Cube.selected_port == 1:
+                interface_transform = past_Cube.Con_1_tf
+            elif past_Cube.selected_port == 2:
+                interface_transform = past_Cube.Con_2_tf
+            elif past_Cube.selected_port == 3:
+                interface_transform = past_Cube.Con_3_tf
+            elif past_Cube.selected_port == 4:
+                interface_transform = past_Cube.Con_4_tf
+        else:
+            parent_name = past_Cube.parent.name
+
+            interface_transform = tf.transformations.identity_matrix()
 
         print('past_Cube.selected_port:', past_Cube.selected_port)
         print('interface_transform: ', interface_transform)

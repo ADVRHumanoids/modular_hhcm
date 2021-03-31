@@ -119,6 +119,21 @@ def addCube():
     return data 
 
 
+# call URDF_writer.py to move socket. TODO: remeve hard-code of L_0_B socket for AutomationWare demo
+@app.route('/moveSocket/', methods=['POST'])
+def addSocket():
+    values = json.loads(request.form.get('values'))
+    print(values)
+    offset = values['offset']
+    print(offset)
+    angle_offset = values['angle_offset']
+    print(angle_offset)
+    data = urdf_writer_fromHW.move_socket("L_0_B", float(offset.get('x_offset')), float(offset.get('y_offset')),
+                                  float(offset.get('z_offset')), float(angle_offset))
+    data = jsonify(data)
+    return data
+
+
 # call URDF_writer.py to remove the last module
 @app.route('/removeModule/', methods=['POST'])
 def remove():
