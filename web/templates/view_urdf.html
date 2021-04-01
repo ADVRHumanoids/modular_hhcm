@@ -902,7 +902,7 @@
                                 var x_offset = parseFloat(prompt("Please set manually the position of the 2nd base then?\nEnter the x offset for the socket:", "0.4"));
                                 var y_offset = parseFloat(prompt("Enter the y offset for the socket:", "0.4"));
                                 var z_offset = 0.0
-                                var angle_offset = parseFloat(prompt("Enter the angle offset for the socket:", "0.0"))
+                                var angle_offset = parseFloat(prompt("Enter the angle offset for the socket:", "1.57"))
                                 var values= {'offset': {x_offset, y_offset, z_offset}, 'angle_offset': angle_offset}
 
                                 $.ajax({
@@ -912,10 +912,8 @@
                                     success: function(data) {
                                         console.log(data)
                                         urdfViewer.removeLastURDF()
-                                        prompt()
                                         console.log(data['result'])
                                         robots = urdfViewer.showURDF(data['result']);
-                                        prompt()
                                         //write the file
                                         writeRequest(data['result'], true, function(){})
                                     },

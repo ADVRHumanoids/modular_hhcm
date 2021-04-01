@@ -2330,10 +2330,8 @@ class UrdfWriter:
     # temporary solution for multi chain robots
     # not used!
     def write_problem_description_multi(self):
-        basic_probdesc_filename = self.resource_finder.get_filename('cartesio/ModularBot_cartesio_multichain_config.yaml',
-                                                                    'data_path')
-        probdesc_filename = self.resource_finder.get_filename('cartesio/ModularBot_cartesio_multichain_config.yaml',
-                                                              'modularbot_path')
+        basic_probdesc_filename = path_name + '/cartesio/ModularBot_cartesio_config.yaml'
+        probdesc_filename = path_name + '/ModularBot/cartesio/ModularBot_cartesio_config.yaml'
         probdesc = OrderedDict([])
 
         with open(basic_probdesc_filename, 'r') as stream:
@@ -2352,6 +2350,7 @@ class UrdfWriter:
             ee_name = "EE_" + str(i + 1)
             tasks.append(ee_name)
             probdesc['stack'] = stack
+            probdesc[ee_name] = copy.deepcopy(probdesc['EE'])
 
             if joints_chain[-1].children:
                 if "con" in joints_chain[-1].children[0].name:
@@ -2378,6 +2377,8 @@ class UrdfWriter:
             probdesc[ee_name]['type'] = "Cartesian"
 
             i += 1
+
+        probdesc.pop('EE', None)
 
         # Create folder if doesen't exist
         if not os.path.exists(os.path.dirname(probdesc_filename)):
