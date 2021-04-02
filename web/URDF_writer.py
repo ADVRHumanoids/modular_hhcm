@@ -2374,7 +2374,7 @@ class UrdfWriter:
             else:
                 base_link = joints_chain[0].parent.name
             probdesc[ee_name]['base_link'] = base_link
-            probdesc[ee_name]['type'] = "Cartesian"
+            probdesc[ee_name]['type'] = "Interaction"
 
             i += 1
 
