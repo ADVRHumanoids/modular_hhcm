@@ -2460,7 +2460,10 @@ class UrdfWriter:
         print(lowlevel_config['GazeboXBotPlugin'])
         lowlevel_config['GazeboXBotPlugin']['gains'] = OrderedDict([])
         i=0
+        p=0
         for joints_chain in self.listofchains:
+            # HACK
+            p+=1
             for joint_module in joints_chain:
                 if joint_module.type == 'joint':
                     i += 1
@@ -2471,6 +2474,12 @@ class UrdfWriter:
                         key = 'CentAcESC_' + str(i)
                     value = joint_module.CentAcESC
                     print(yaml.dump(joint_module.CentAcESC))
+                    # HACK: Every joint on 2nd, 3rd, etc. chains have the torque loop damping set very low.
+                    # This is to handle chains with only one joint and low inertia after it. 
+                    # If we build two big robots this could have catastrophic effects 
+                    # TODO: fix this
+                    if p > 1:
+                        value.pid.impedance = [500.0, 20.0, 1.0, 0.003, 0.99]
                 elif joint_module.type == 'tool_exchanger':
                     if use_robot_id:
                         key = 'AinMsp432ESC_' + str(joint_module.robot_id)
