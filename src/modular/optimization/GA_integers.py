@@ -424,18 +424,18 @@ def test_robot(individual):
     cm.load(urdf, srdf)
 
     # result, q, pose, n_dofs = iacobelli_IK()
-    for pose in poses_to_reach:
-        result, q, pose, n_dofs = test(string, pose[0], pose[1], pose[2], lambda q: not cm.collides(q))
-        if result is not None:
-            tot_result+= (2*result)*5.0
-            q_sol.append(q)
-            final_poses.append(pose)
-        else:    
-            tot_result = INVALID_RESULT
-            break
+    # for pose in poses_to_reach:
+    #     result, q, pose, n_dofs = test(string, pose[0], pose[1], pose[2], lambda q: not cm.collides(q))
+    #     if result is not None:
+    #         tot_result+= (2*result)*5.0
+    #         q_sol.append(q)
+    #         final_poses.append(pose)
+    #     else:    
+    #         tot_result = INVALID_RESULT
+    #         break
 
-    return tot_result, q_sol, final_poses, n_dofs
-
+    # return tot_result, q_sol, final_poses, n_dofs
+    return 0, 0 ,0, 0
 
 # # this is the definition of the total genetic algorithm is executed, it is almost literally copied from the deap library
 # def main_2objectives(verbose):
