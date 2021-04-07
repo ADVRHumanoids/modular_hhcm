@@ -1,6 +1,6 @@
 from urdf_parser_py.urdf import URDF
 from pykdl_utils.kdl_parser import kdl_tree_from_urdf_model
-from pykdl_utils.kdl_kinematics import KDLKinematics
+from pykdl_utils.kdl_kinematics import KDLKinematics, kdl_to_mat
 from PyKDL import ChainDynParam, Vector, JntArray
 import nlopt
 import numpy as np
@@ -146,8 +146,8 @@ class Position(MyFunction):
         return position.dot(self._axis)
 
     def get_gradient(self, q):
-
-        j_pos = np.array(self._kinematic.jacobian(q)[0:3])
+        jac = kdl_to_mat(self._kinematic.jacobian(q))
+        j_pos = np.array(jac[0:3])
         return self._axis.dot(j_pos)
 
 
@@ -179,7 +179,8 @@ class Projection(MyFunction):
                       [axis[2], 0.0, -axis[0]],
                       [-axis[1], axis[0], 0.0]])
 
-        j_rot = np.array(self._kinematic.jacobian(q)[3:6])
+        jac = kdl_to_mat(self._kinematic.jacobian(q))
+        j_rot = np.array(jac[3:6])
         j_axis = - s.dot(j_rot)
 
         return self._gaxis.dot(j_axis)
@@ -251,7 +252,8 @@ class Manipulability(MyFunction):
 
     def get_value(self, q):
 
-        j = np.array(self._kinematic.jacobian(q)[3:6]) if self._type is Manipulability.ROTATION else np.array(self._kinematic.jacobian(q)[0:3])
+        jac = kdl_to_mat(self._kinematic.jacobian(q))
+        j = np.array(jac[3:6]) if self._type is Manipulability.ROTATION else np.array(jac[0:3])
         
         jjt = j.dot(j.transpose())
         m = np.linalg.det(jjt)
@@ -286,7 +288,8 @@ class ForceTransmission(MyFunction):
 
     def get_value(self, q):
 
-        j = np.array(self._kinematic.jacobian(q)[3:6]) if self._type is Manipulability.ROTATION else np.array(self._kinematic.jacobian(q)[0:3])
+        jac = kdl_to_mat(self._kinematic.jacobian(q))
+        j = np.array(jac[3:6]) if self._type is Manipulability.ROTATION else np.array(jac[0:3])
         jtu = j.transpose().dot(self._axis)
 
         return np.sqrt(jtu.dot(jtu))
@@ -595,13 +598,16 @@ def find_max_reach(urdf_string, check_cb=None, base_link=None, distal_link=None)
 
     if q_opt is not None:
         print 'here is the q at max reach:\n', q_opt
-        print 'here is the max gravity norm:\n', f_opt
 
         pose_f = kdl_kin.forward(q_opt)
         print 'here is the optimal pose:\n', pose_f
 
         print 'here is the max reach:\n', get_reach(kdl_kin, q_opt)
         print 'here is the gravity vector:\n', get_gravity(rbdlm, q_opt)
+
+        print 'here is the max gravity norm:\n', f_opt
+
+        compute_payload(kdl_kin, rbdlm, q_opt)
 
         # kman = Manipulability(kdl_kin, Manipulability.TRANSLATION).get_value(q_opt)
         # fman = ForceTransmission(kdl_kin, [0., 1., 0.], ForceTransmission.TRANSLATION).get_value(q_opt)
@@ -653,13 +659,18 @@ def find_max_reach2(urdf_string, check_cb=None, base_link=None, distal_link=None
 
     if q_opt is not None:
         print 'here is the q at max reach:\n', q_opt
-        print 'here is the max reach^2 norm:\n', f_opt
+        # print 'here is the max reach^2/2 norm:\n', f_opt
 
         pose_f = kdl_kin.forward(q_opt)
         print 'here is the optimal pose:\n', pose_f
 
         print 'here is the max reach:\n', get_reach(kdl_kin, q_opt)
-        print 'here is the gravity vector:\n', get_gravity(rbdlm, q_opt)
+        g = get_gravity(rbdlm, q_opt)
+        print 'here is the gravity vector:\n', g
+
+        print 'here is the max gravity norm:\n', get_norm(g)
+
+        compute_payload(kdl_kin, rbdlm, q_opt)
 
         # kman = Manipulability(kdl_kin, Manipulability.TRANSLATION).get_value(q_opt)
         # fman = ForceTransmission(kdl_kin, [0., 1., 0.], ForceTransmission.TRANSLATION).get_value(q_opt)
@@ -676,6 +687,9 @@ def get_gravity(mdl, q):
     rbdl.InverseDynamics(mdl, q, zeros, zeros, tau)
     return tau
 
+def get_norm(vec):
+    norm = np.linalg.norm(vec)
+    return 0.5 * np.square(norm)
 
 def get_reach(kin_mdl, q):
 
@@ -684,12 +698,23 @@ def get_reach(kin_mdl, q):
     return distance
 
 
-def compute_payload(mdl, q):
+def compute_payload(kin_mdl, dyn_mdl, q):
 
     tau_rated = np.array([81.0]*len(q))
     zeros, tau = np.zeros(len(q)), np.zeros(len(q))
-    rbdl.InverseDynamics(mdl, q, zeros, zeros, tau)
-    tau_available = tau_rated - math.copysign()
+    rbdl.InverseDynamics(dyn_mdl, q, zeros, zeros, tau)
+    tau_available = tau_rated - np.absolute(tau)
+    print("Torque available on each joint", tau_available)
+    jac = kdl_to_mat(kin_mdl.jacobian(q))
+    j_z = np.array(jac[2:3])
+    print("Jacobian along z axis", j_z)
+    j_z_g = j_z * 9.81
+    available_payloads = np.divide(tau_available, np.absolute(j_z_g))
+    print("available payloads on each joint", available_payloads)
+    real_payload = np.amin(available_payloads)
+    print("The Payload: ", real_payload)
+    # silly_attempt = j_z.dot(np.transpose(tau_available))
+    # print("Silly attempt: ", silly_attempt/9.81)
 
 from romity_collides import pyromiti_collision as pyrom
 
@@ -748,18 +773,34 @@ if __name__ == '__main__':
     f_opt, q_opt, pose_f, dof = find_max_reach(urdf, check_cb=lambda q: not cm.collides(q), base_link=base, distal_link=target)
     print '#######################################'
     f_opt, q_opt, pose_f, dof = find_max_reach2(urdf, check_cb=lambda q: not cm.collides(q), base_link=base, distal_link=target)
+    print '#######################################'
 
-    # rbdlm = rbdl.loadModelFromString(urdf)
-    # f_supposed_max = Quadratic(Gravity2(lambda q, mdl=rbdlm: get_gravity(mdl, q)), np.zeros((5,)))
-    # supposed_max = f_supposed_max.get_value(np.array([0.0, 1.57, 0.0, 0.0, 0.0]))
-    # print 'here is the supposed max gravity norm:\n', supposed_max
+    q = [0.0, 1.57, 0.0, 0.0, 0.0]
+    print 'here is the q at supposed max reach:\n', q
+    rbdlm = rbdl.loadModelFromString(urdf)
+    f_supposed_max = Quadratic(Gravity2(lambda q, mdl=rbdlm: get_gravity(mdl, q)), np.zeros((5,)))
+    supposed_max = f_supposed_max.get_value(np.array(q))
+    print 'here is the supposed max gravity norm:\n', supposed_max
 
-    # robot = URDF.from_xml_string(urdf)
-    # tree = kdl_tree_from_urdf_model(robot)
-    # chain = tree.getChain(base, target)
+    robot = URDF.from_xml_string(urdf)
+    tree = kdl_tree_from_urdf_model(robot)
+    chain = tree.getChain(base, target)
 
-    # kdl_kin = KDLKinematics(robot, base, target)
-    
+    kdl_kin = KDLKinematics(robot, base, target)
+
+    pose_f = kdl_kin.forward(np.array(q))
+    print 'here is the optimal pose:\n', pose_f
+    reach = get_reach(kdl_kin, np.array(q))
+    print 'here is the supposed max reach:\n', reach
+
+    g = get_gravity(rbdlm, np.array(q))
+    print 'here is the gravity vector:\n', g
+
+    print 'here is the max gravity norm:\n', get_norm(g)
+
+
+    compute_payload(kdl_kin, rbdlm, np.array([0.0, 1.57, 0.0, 0.0, 0.0]))
+
     # kman = Manipulability(kdl_kin, Manipulability.TRANSLATION).get_value(q_opt)
     # fman = ForceTransmission(kdl_kin, [0., 1., 0.], ForceTransmission.TRANSLATION).get_value(q_opt)
 
