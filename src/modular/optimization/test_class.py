@@ -372,7 +372,7 @@ class Problem(object):
 
         self._optimizer.set_min_objective(lambda q, g, t=target: Problem._compute(q, g, t))
 
-    def solve(self, initial_guess=None, max_efforts=1, max_effort_time=0.1, check_cb=None):
+    def solve(self, initial_guess=None, max_efforts=1, max_effort_time=0.1, check_cb=None, cm=None):
 
         # This function tries to solve the problem for `max_effort` times.
         # If solutions are found, the best one (i.e. the one with the least cost)
@@ -402,10 +402,11 @@ class Problem(object):
 
                 retval = self._optimizer.last_optimize_result()
 
+                # print "Colliding links: ", cm.collides(q)
                 if retval in accepted and all([c.check(q) for c in self._constraints]) and check_cb(q):
                     if best.cost > f or best.cost is None:
-                        print 'solution found:\n', q
-                        print 'optimum value:\n', f
+                        # print 'solution found:\n', q
+                        # print 'optimum value:\n', f
                         best = output(q, f)
                         # initial_guess = q
 
@@ -557,7 +558,7 @@ def test(urdf_string, x_target, y_target, z_target, check_cb=None, base_link=Non
     return f_opt, q_opt, pose_f, dof
 
 
-def find_max_reach(urdf_string, check_cb=None, base_link=None, distal_link=None):
+def find_max_gravity_norm(urdf_string, check_cb=None, base_link=None, distal_link=None, cm=None):
 
     # get_chain()
 
@@ -594,31 +595,33 @@ def find_max_reach(urdf_string, check_cb=None, base_link=None, distal_link=None)
     problem.set_target(trg)
 
     pose_f = None
-    q_opt, f_opt = problem.solve(check_cb=check_cb)
+    q_opt, f_opt = problem.solve(check_cb=check_cb, cm=cm)
 
     if q_opt is not None:
-        print 'here is the q at max reach:\n', q_opt
+        # print 'here is the q at max reach:\n', q_opt
 
-        pose_f = kdl_kin.forward(q_opt)
-        print 'here is the optimal pose:\n', pose_f
+        # pose_f = kdl_kin.forward(q_opt)
+        # print 'here is the optimal pose:\n', pose_f
 
-        print 'here is the max reach:\n', get_reach(kdl_kin, q_opt)
-        print 'here is the gravity vector:\n', get_gravity(rbdlm, q_opt)
+        # print 'here is the max reach:\n', get_reach(kdl_kin, q_opt)
+        # print 'here is the gravity vector:\n', get_gravity(rbdlm, q_opt)
 
-        print 'here is the max gravity norm:\n', f_opt
+        # print 'here is the max gravity norm:\n', f_opt
 
-        compute_payload(kdl_kin, rbdlm, q_opt)
+        payload = compute_payload(kdl_kin, rbdlm, q_opt)
 
+        if not payload > 0.0:
+            payload = None
         # kman = Manipulability(kdl_kin, Manipulability.TRANSLATION).get_value(q_opt)
         # fman = ForceTransmission(kdl_kin, [0., 1., 0.], ForceTransmission.TRANSLATION).get_value(q_opt)
 
         # print("manipulability: {}".format(kman))
         # print("force transmission: {}".format(fman))
 
-    return f_opt, q_opt, pose_f, dof
+    return payload or None
 
 
-def find_max_reach2(urdf_string, check_cb=None, base_link=None, distal_link=None):
+def find_max_reach(urdf_string, check_cb=None, base_link=None, distal_link=None, cm=None):
 
     # get_chain()
 
@@ -655,22 +658,24 @@ def find_max_reach2(urdf_string, check_cb=None, base_link=None, distal_link=None
     problem.set_target(trg)
 
     pose_f = None
-    q_opt, f_opt = problem.solve(check_cb=check_cb)
+    q_opt, f_opt = problem.solve(check_cb=check_cb, cm=cm)
 
     if q_opt is not None:
-        print 'here is the q at max reach:\n', q_opt
-        # print 'here is the max reach^2/2 norm:\n', f_opt
+        max_reach = get_reach(kdl_kin, q_opt)
 
-        pose_f = kdl_kin.forward(q_opt)
-        print 'here is the optimal pose:\n', pose_f
+        # print 'here is the q at max reach:\n', q_opt
+        # # print 'here is the max reach^2/2 norm:\n', f_opt
 
-        print 'here is the max reach:\n', get_reach(kdl_kin, q_opt)
-        g = get_gravity(rbdlm, q_opt)
-        print 'here is the gravity vector:\n', g
+        # pose_f = kdl_kin.forward(q_opt)
+        # print 'here is the optimal pose:\n', pose_f
 
-        print 'here is the max gravity norm:\n', get_norm(g)
+        print 'here is the max reach:\n', max_reach
+        # g = get_gravity(rbdlm, q_opt)
+        # print 'here is the gravity vector:\n', g
 
-        compute_payload(kdl_kin, rbdlm, q_opt)
+        # print 'here is the max gravity norm:\n', get_norm(g)
+
+        # compute_payload(kdl_kin, rbdlm, q_opt)
 
         # kman = Manipulability(kdl_kin, Manipulability.TRANSLATION).get_value(q_opt)
         # fman = ForceTransmission(kdl_kin, [0., 1., 0.], ForceTransmission.TRANSLATION).get_value(q_opt)
@@ -678,7 +683,7 @@ def find_max_reach2(urdf_string, check_cb=None, base_link=None, distal_link=None
         # print("manipulability: {}".format(kman))
         # print("force transmission: {}".format(fman))
 
-    return f_opt, q_opt, pose_f, dof
+    return max_reach or None
 
 
 def get_gravity(mdl, q):
@@ -700,21 +705,29 @@ def get_reach(kin_mdl, q):
 
 def compute_payload(kin_mdl, dyn_mdl, q):
 
-    tau_rated = np.array([81.0]*len(q))
+    tau_rated = 81.0 # np.array([81.0]*len(q))
     zeros, tau = np.zeros(len(q)), np.zeros(len(q))
     rbdl.InverseDynamics(dyn_mdl, q, zeros, zeros, tau)
-    tau_available = tau_rated - np.absolute(tau)
-    print("Torque available on each joint", tau_available)
+    tau_available = []
+    for torque in tau:
+        if torque <= tau_rated and torque >= 0.0:
+            tau_available.append(tau_rated - torque)
+        elif torque >= -tau_rated and torque < 0.0:
+            tau_available.append(-tau_rated - torque)
+        else:
+            tau_available.append(0.0)
+    # print("Torque available on each joint", tau_available)
     jac = kdl_to_mat(kin_mdl.jacobian(q))
     j_z = np.array(jac[2:3])
-    print("Jacobian along z axis", j_z)
+    # print("Jacobian along z axis", j_z)
     j_z_g = j_z * 9.81
-    available_payloads = np.divide(tau_available, np.absolute(j_z_g))
-    print("available payloads on each joint", available_payloads)
-    real_payload = np.amin(available_payloads)
+    available_payloads = np.divide(tau_available, j_z_g)
+    # print("available payloads on each joint", available_payloads)
+    # taking the absolute value should be redundant. only to avoid small values of J_z (numeric error) to make for huge payloads
+    real_payload = np.amin(np.absolute(available_payloads)) 
     print("The Payload: ", real_payload)
-    # silly_attempt = j_z.dot(np.transpose(tau_available))
-    # print("Silly attempt: ", silly_attempt/9.81)
+
+    return real_payload
 
 from romity_collides import pyromiti_collision as pyrom
 
@@ -768,11 +781,11 @@ if __name__ == '__main__':
     cm.load(urdf, srdf)
 
     base = "J1_A_stator"
-    target = 'pen_A'
+    target = 'TCP_gripper_A'
     
-    f_opt, q_opt, pose_f, dof = find_max_reach(urdf, check_cb=lambda q: not cm.collides(q), base_link=base, distal_link=target)
+    payload = find_max_gravity_norm(urdf, check_cb=lambda q: not cm.collides(q), base_link=base, distal_link=target, cm=cm)
     print '#######################################'
-    f_opt, q_opt, pose_f, dof = find_max_reach2(urdf, check_cb=lambda q: not cm.collides(q), base_link=base, distal_link=target)
+    max_reach = find_max_reach(urdf, check_cb=lambda q: not cm.collides(q), base_link=base, distal_link=target, cm=cm)
     print '#######################################'
 
     q = [0.0, 1.57, 0.0, 0.0, 0.0]

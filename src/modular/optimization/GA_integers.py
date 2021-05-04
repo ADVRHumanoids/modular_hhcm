@@ -23,7 +23,7 @@ import multiprocessing
 
 from modular.URDF_writer import UrdfWriter
 from modular.optimization.test import iacobelli_IK
-from modular.optimization.test_class import test
+from modular.optimization.test_class import test, find_max_gravity_norm, find_max_reach
 from modular.optimization.pickle_utilities import load_pickle
 
 from romity_collides import pyromiti_collision as pyrom
@@ -59,6 +59,41 @@ indep_probs =   [indep_prob]*n_modules + [indep_prob]*bits_for_angle_offset +   
 lower_bounds =  [0]*n_modules +          [0]*bits_for_angle_offset +             [0] +               [0]
 upper_bounds =  [3]*n_modules +          [1]*bits_for_angle_offset +             [x_samples-1] +     [y_samples-1]
 
+def reachVSpayload_generate_robot_set(n):
+    # 6 straight link 2u, 6 Elbows, 3 Yaws, 6 straight link 1u, 6 straight link 5u
+    elements = [1, 1, 1, 1, 1, 1, 2, 2, 2]
+    # links = [0, 0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6]
+    joints_combinations = set(itertools.permutations(elements, n))
+    # Skip robots with two consecutives Yaw modules
+    elements_to_remove = []
+    for comb in joints_combinations:
+        for i in range(len(comb)):
+            try:
+                if comb[i] == 2 and comb[i] == comb[i+1]:
+                    elements_to_remove.append(comb)
+                    break
+            except IndexError:
+                pass
+    print "elements to remove: ", elements_to_remove
+    for comb in elements_to_remove:    
+        joints_combinations.remove(comb)
+    print joints_combinations, len(joints_combinations)
+
+    # We consider one link after each joint (n)
+    # We can have: 0 -> no link, 4 -> 2u link, 5 -> 1u link, 6 -> 5u link
+    # links = [0,4,5,6]
+    # links_combinations = list(itertools.combinations_with_replacement(links, n))
+    links = [0, 4, 6]
+    links_combinations = list(itertools.product(links, repeat=n))
+    print len(links_combinations)
+    modules_combinations = []
+    for jcomb in joints_combinations:
+        for lcomb in links_combinations:
+            mcomb = [val for pair in zip(jcomb, lcomb) for val in pair]
+            # lcomb[0::1] = jcomb[0::1]
+            modules_combinations.append(mcomb)
+    print len(modules_combinations)
+    return modules_combinations
 
 def generate_robot_set(n):
     # 3 Yaws, 3 Elbows, 1 straight link, 1 elbow link
@@ -374,10 +409,10 @@ def test_robot(individual):
     # Add 1st chain
     for module in robot_structure:
         if module == 1:
-            data = urdf_writer.add_module('module_joint_double_elbow_ORANGE_B.yaml', 0, False)
+            data = urdf_writer.add_module('module_joint_2ndGen_double_elbow_ORANGE_B.yaml', 0, False)
             homing_joint_map[data['lastModule_name']] = {'angle': 0.0}
         elif module == 2:
-            data = urdf_writer.add_module('module_joint_yaw_ORANGE_B.yaml', 0, False)
+            data = urdf_writer.add_module('module_joint_2ndGen_yaw_ORANGE_B.yaml', 0, False)
             # set an homing value for the joint
             homing_joint_map[data['lastModule_name']] = {'angle': 0.0}
         elif module == 3:
@@ -393,7 +428,7 @@ def test_robot(individual):
 
     # Add a simple virtual end-effector
     # urdf_writer.add_simple_ee(0.0, 0.0, 0.26, 0.0)
-    urdf_writer.add_module('module_tool_exchanger_heavy_B.yaml', 0, False)
+    urdf_writer.add_module('module_gripper.yaml', 0, False)
 
     string = urdf_writer.process_urdf()
     urdf = urdf_writer.write_urdf()
@@ -808,23 +843,143 @@ def main(verbose):
     return best
 
 
+def reachVSpayload_test_robot(individual):
+    # Create joint map to store homing values
+    homing_joint_map = {}
+    # homing_value = float(builder_joint_map[joint_module.name]['angle'])
+
+    urdf_writer = UrdfWriter(speedup=True)
+
+    # Add 1st chain
+    for module in individual:
+        if module == 1:
+            data = urdf_writer.add_module('module_joint_2ndGen_double_elbow_ORANGE_B.yaml', 0, False)
+            homing_joint_map[data['lastModule_name']] = {'angle': 0.0}
+        elif module == 2:
+            data = urdf_writer.add_module('module_joint_2ndGen_yaw_ORANGE_B.yaml', 0, False)
+            # set an homing value for the joint
+            homing_joint_map[data['lastModule_name']] = {'angle': 0.0}
+        elif module == 3:
+            # data = urdf_writer.add_module('module_joint_double_elbow_ORANGE_B.yaml', 0, False)
+            # homing_joint_map[data['lastModule_name']] = {'angle': 0.0}
+            data = urdf_writer.add_module('module_link_elbow_90_B.yaml', 3.14, False)
+            # data = urdf_writer.add_module('module_link_straight_140_B.yaml', 0, False)
+        elif module == 4:
+            # continue
+            data = urdf_writer.add_module('module_link_straight_140_B.yaml', 0, False)
+        elif module == 5:
+            # continue
+            data = urdf_writer.add_module('module_link_straight_70_B.yaml', 0, False)
+        elif module == 6:
+            # continue
+            data = urdf_writer.add_module('module_link_straight_350_B.yaml', 0, False)
+        else:
+            continue
+
+    # Add a simple virtual end-effector
+    # urdf_writer.add_simple_ee(0.0, 0.0, 0.26, 0.0)
+    urdf_writer.add_module('module_gripper.yaml', 0, False)
+
+    urdf = urdf_writer.process_urdf()
+    # urdf = urdf_writer.write_urdf()
+    # srdf = urdf_writer.write_srdf(homing_joint_map)
+    # joint_map = urdf_writer.write_joint_map()
+    # lowlevel_config = urdf_writer.write_lowlevel_config()
+
+    # urdf_writer.deploy_robot("pino_moveit")
+
+    # cm = pyrom.CollisionManager()
+    # cm.load(urdf, srdf)
+
+    base = "J1_A_stator"
+    target = 'TCP_gripper_A'
+    
+    # payload = find_max_gravity_norm(urdf, check_cb=lambda q: not cm.collides(q), base_link=base, distal_link=target, cm=cm)
+    payload = find_max_gravity_norm(urdf, base_link=base, distal_link=target)
+    if payload is None:
+        return [individual, None, None]
+    # print '#######################################'
+    # max_reach = find_max_reach(urdf, check_cb=lambda q: not cm.collides(q), base_link=base, distal_link=target, cm=cm)
+    max_reach = find_max_reach(urdf, base_link=base, distal_link=target)
+    # print '#######################################'
+
+    return [individual, max_reach, payload]
+
+
+# reachVSpayload_list = []
+# i=<0
+def compute_and_add_to_list(rbt):
+    # global reachVSpayload_list
+    # global i 
+    # i+=1
+    # print("Iteration # ", i)
+    try:
+        robot_data = reachVSpayload_test_robot(rbt)
+    except:
+        print('Exception!!!!!!!!!!!!!!!!!!!!!!!!')
+    # if robot_data[2] is not None:
+    #     reachVSpayload_list.append(rbt)
+    return robot_data or [rbt, None, None]
+
+from pebble import ProcessPool
+from concurrent.futures import TimeoutError
+
+def reachVSpayload_enumerate():
+    reachVSpayload_list=[]
+    
+    robot_list = reachVSpayload_generate_robot_set(6)
+
+    # pool = multiprocessing.Pool()
+    # result = pool.map(compute_and_add_to_list, robot_list)
+
+    with ProcessPool() as pool:
+        future = pool.map(compute_and_add_to_list, robot_list, timeout=40)
+        iterator = future.result()
+
+    while True:
+        try:
+            result = next(iterator)
+            reachVSpayload_list.append(result)
+        except StopIteration:
+            break
+        except TimeoutError as error:
+            print("function took longer than %d seconds" % error.args[1])
+
+    # for robot in robot_list:
+    #     robot_data = reachVSpayload_test_robot(robot)
+    #     if robot_data[2] is not None:
+    #         reachVSpayload_list.append(robot_data)
+
+    pickle_path = "/home/edoardo/pickles/reachVSpayload/"
+    date = time.strftime("%Y%m%d-%H%M%S")
+    filename = pickle_path + date + 'reachVSpayload.pkl'
+    with open(filename, 'wb') as output:
+        pickle.dump(reachVSpayload_list, output)
+
+    return
+
+
 if __name__ == '__main__':
 
+    # reachVSpayload_enumerate()
+    robot_data = reachVSpayload_test_robot([2, 1, 1, 2, 0, 1])
+    print robot_data
     # best_solution = main(True) 
     # a, b, c, d = test_robot([[2, 1, 1, 2, 1, 4, 0, 0, 2]])
     # a, b, c, d = test_robot([[1, 2, 1, 1, 2, 3, 1, 1, 1]])
     # a, b, c, d = test_robot([[2, 1, 1, 1, 2, 3, 0, 1, 1]])
     # a, b, c, d = test_robot([[2, 1, 1, 1, 2, 3, 0, 1, 2]])
-    a, b, c, d = test_robot([[2, 1, 1, 3, 1, 1, 0, 1, 2]])
+    # a, b, c, d = test_robot([[2, 1, 1, 3, 1, 1, 0, 1, 2]])
     # a, b, c, d = test_robot([[1, 2, 1, 1, 2, 1, 1, 1, 1]])
-    print("Fitness:")
-    print a
-    print("IK Solutions:")
-    print b
-    print("Final poses:")
-    print c
-    print("# of DOFs:")
-    print d
+    
+    # print("Fitness:")
+    # print a
+    # print("IK Solutions:")
+    # print b
+    # print("Final poses:")
+    # print c
+    # print("# of DOFs:")
+    # print d
     # a, b, c, d = test_robot([[1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1]]) #[[0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1]]
     # a = load_pickle("/home/tree/pickles/logbooks/4-5DOFs_02_02_no_link/20210224-152627_population.pkl")
     # print(a[0][0])

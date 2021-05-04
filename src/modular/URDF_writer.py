@@ -189,10 +189,10 @@ class XBotCorePlugin(Plugin):
     def remove_joint(self, joint_name):
         pass
 
-    def add_gripper(self):
+    def add_gripper(self, root, gripper_name, hand_name, parent_group_name):
         pass
 
-    def add_hand_group(self):
+    def add_hand_group(self, root, gripper_name, hand_name):
         pass
 
 class XBot2Plugin(Plugin):
@@ -214,6 +214,12 @@ class XBot2Plugin(Plugin):
         for pid in self.pid_node.findall('./pid'):
             if pid.attrib['name'] == joint_name:
                 self.pid_node.remove(pid)
+                
+    def add_gripper(self, root, gripper_name, hand_name, parent_group_name):
+        pass
+
+    def add_hand_group(self, root, gripper_name, hand_name):
+        pass
 
 # noinspection PyUnresolvedReferences
 class UrdfWriter:
