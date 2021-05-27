@@ -201,6 +201,24 @@ class UrdfWriter:
             else:
                 continue
         return found_module, found_module_id
+    
+    def sort_modules(self, modules_dict):
+
+        ordered_chain = [None] * len(modules_dict)
+
+        for key, item in modules_dict.items():
+
+            module_position = int(item['poistion'])
+
+            try:
+                ordered_chain[module_position - 1] = item
+            
+            except IndexError:
+                print ('unexpected module position {}, modules number: {}'.format(module_position, len(modules_dict)))
+                return list()
+        
+        return ordered_chain
+
 
     # This method will be used when branches in the robot will be supported.
     def read_from_json(self, json_data):
@@ -225,15 +243,16 @@ class UrdfWriter:
         d = yaml.load(open(opts["robot_id_yaml"], 'r'))
 
         # Process the modules described in the json to create the tree
-        modules_list = json.loads(json_data)
-        print("modules_list:", modules_list, type(modules_list))
+        modules_dict = json.loads(json_data)
+        modules_list = self.sort_modules(modules_dict)
         
         for module in modules_list:
 
-            module_id = next(iter(module))
+            module_id = int(module['robot_id'])
+            module_position = int(module['poistion'])
+            module_topology = int(module['topology'])
+
             print('Now processing module', module_id)
-            module_position = module[module_id]['poistion']
-            module_topology = module[module_id]['topology']
 
             parent_position = None
 
@@ -244,8 +263,8 @@ class UrdfWriter:
 
                 while candidate_position > 0:
                     candidate_parent = modules_list[candidate_position - 1]
-                    candidate_parent_id = next(iter(candidate_parent))
-                    topology = candidate_parent[candidate_parent_id]['topology']
+                    candidate_parent_id = int(candidate_parent['robot_id'])
+                    topology = int(candidate_parent['topology'])
 
                     if topology == 1 :
                         topo_counter -= 1
@@ -269,13 +288,13 @@ class UrdfWriter:
                 parent = modules_list[parent_position -1]
                 print('parent:', parent)
                 
-                parent_id = next(iter(candidate_parent))
+                parent_id = int(parent['robot_id'])
                 print('parent_id:', parent_id)
                 
-                parent_active_ports = candidate_parent[candidate_parent_id]['active_ports']
+                parent_active_ports = int(parent['active_ports'])
                 print('parent_active_ports:', parent_active_ports)
 
-                parent_topology = candidate_parent[candidate_parent_id]['topology']
+                parent_topology = int(parent['topology'])
                 print('parent_topology:', parent_topology)
 
                 # Render tree
@@ -303,11 +322,11 @@ class UrdfWriter:
                     if parent_module.is_structural == False:
                         self.add_socket()
                 #add the module
-                module_filename = d.get(module[module_id]['robot_id'])
+                module_filename = d.get(int(module['robot_id']))
                 data = self.add_module(module_filename, 0, robot_id=module_id)
              
             else:
-                cube_active_ports = module[module_id]['active_ports']
+                cube_active_ports = int(module['active_ports'])
                 print('cube_active_ports:', cube_active_ports)
 
                 data = self.add_slave_cube(0, is_structural=False, robot_id=module_id, active_ports=cube_active_ports)
