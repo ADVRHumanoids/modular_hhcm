@@ -12,7 +12,10 @@ import zmq
 import yaml
 import json
 
+import rospy
 import zmq_requester
+
+from ec_srvs.srv import GetSlaveInfo, GetSlaveInfoRequest, GetSlaveInfoResponse
 
 app = Flask(__name__, static_folder='static', static_url_path='')
 
@@ -191,55 +194,19 @@ def pub_cmd():
 # send a request to the poller thread to get ECat topology and synchronize with hardware
 @app.route('/syncHW/', methods=['POST'])
 def syncHW():
-    ## Method using the poller
-    # zmq_poller.requester.send(b"Topology_REQ")
-    # message = zmq_poller.requester.recv_json()
-    # print("Received reply: %s" % (message))
-    # data = urdf_writer_fromHW.read_from_json(message)
-    # #print('data:', data)
-    # data = jsonify(data)
-    # return data
 
+    srv_name = '/ec_client/get_slaves_description'
 
-    # requester.send(b"Topology_REQ")
-    # message = requester.recv_json()
-    # print("Received reply: %s" % (message))
-    
-    # # data = urdf_writer_fromHW.read_from_json(message)
-    # data = urdf_writer_fromHW.read_from_json_alt(message)
+    rospy.wait_for_service(srv_name)
 
-    # #print('data:', data)
-    # data = jsonify(data)
-    # return data
+    try:
+        slave_description = rospy.ServiceProxy(srv_name, GetSlaveInfo)
 
-    opts = zmq_requester.repl_option()
-    d = yaml.load(open(opts["repl_yaml"], 'r'))
+    except rospy.ServiceException as e:
+        print("Service call failed: %s"%e)
 
-    io = zmq_requester.zmqIO(d['uri'])
-
-    cnt = opts["cmd_exec_cnt"]
-    while cnt:
-
-        print("cmd_exec_cnt", cnt)
-        cnt -= 1
-
-        test_dict = {"type": "ECAT_MASTER_CMD", "ecat_master_cmd": {"type": "GET_SLAVES_DESCR"}}
-        io.send_to(test_dict)
-        ''' wait reply ... blocking'''
-        reply = io.recv_from()
-
-        if not 'cmds' in d:
-            continue
-
-        for cmd_dict in gen_cmds(d['cmds']):
-            ''' send cmd '''
-            io.send_to(cmd_dict)
-            ''' wait reply ... blocking'''
-            reply = io.recv_from()
-
-            #time.sleep(0.01)
-
-        #time.sleep(0.05)
+    reply = slave_description()
+    reply = reply.cmd_info.msg
 
     print("Exit")
 
@@ -330,6 +297,9 @@ def byteify(input):
 
 
 if __name__ == '__main__':
+
+    # initialize ros node
+    rospy.init_node('robot_design_studio')
 
     # Start Flask web-server
     app.run(host='192.168.9.211', port=5000, debug=False, threaded=True)
