@@ -87,7 +87,7 @@ def ordered_dump(data, stream=None, Dumper=MyDumper, **kwds):
 def repl_option():
     parser = argparse.ArgumentParser()
     # parser.add_argument("-f", "--file_yaml", dest="esc_type_yaml", action="store", default="esc_type.yaml")
-    parser.add_argument("-f", "--file_yaml", dest="robot_id_yaml", action="store", default="/home/embedded/MultiDoF-superbuild/external/modular/web/robot_id.yaml")
+    parser.add_argument("-f", "--file_yaml", dest="robot_id_yaml", action="store", default="./robot_id.yaml")
     parser.add_argument("-c", dest="cmd_exec_cnt", action="store", type=int, default=1)
     args = parser.parse_args()
     dict_opt = vars(args)

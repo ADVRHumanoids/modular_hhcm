@@ -17,7 +17,9 @@ fi
 
 
 package_name="$1"
-printf "Deploying package ${GREEN}${package_name}${NC} into ${RED}$ROBOTOLOGY_ROOT/robots${NC}"
+export DESTINATION_FOLDER="$HOME/xbot2_ws/src"
+mkdir -p $DESTINATION_FOLDER
+printf "Deploying package ${GREEN}${package_name}${NC} into ${RED}$DESTINATION_FOLDER${NC}"
 echo
 
 # this way the script can be called from any directory
@@ -25,9 +27,9 @@ SCRIPT_ROOT=$(dirname $(readlink --canonicalize --no-newline $BASH_SOURCE))
 
 cd $SCRIPT_ROOT/..
 
-cp -TRfv ModularBot $ROBOTOLOGY_ROOT/robots/${package_name}
+cp -TRfv ModularBot $DESTINATION_FOLDER/${package_name}
 
-cd $ROBOTOLOGY_ROOT/robots/${package_name}
+cd $DESTINATION_FOLDER/${package_name}
 
 cat > package.xml << EOF
 <package>
@@ -207,7 +209,7 @@ cd ..
 
 mkdir database
 # cd $SCRIPT_ROOT/../web/static/
-cp -TRfv $SCRIPT_ROOT/../web/static/models $ROBOTOLOGY_ROOT/robots/${package_name}/database
+cp -TRfv $SCRIPT_ROOT/../web/static/models $DESTINATION_FOLDER/${package_name}/database
 #cd $ROBOTOLOGY_ROOT/robots/${package_name}
 cd urdf
 gz sdf --print ${package_name}.urdf > ${package_name}.sdf
