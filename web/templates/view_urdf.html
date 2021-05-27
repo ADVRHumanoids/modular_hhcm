@@ -733,16 +733,15 @@
 
                 syncModel.onclick = function() {
                     activateWaitOverlay();
-                    startMaster(false, function() {
-                        syncHW(true, function(){
-                            deactivateWaitOverlay();
-                            stopMaster(false, function() {})
-                            // URDFChangeEventHandler.addEventListener('urdf-change', function (event) {
-                            // console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
-                            // });
+                    // startMaster(false, function() {
+                    syncHW(true, function(){
+                        deactivateWaitOverlay();
+                        // stopMaster(false, function() {})
+                        // URDFChangeEventHandler.addEventListener('urdf-change', function (event) {
+                        // });
 
                         });
-                    });
+                    // });
                 };
 
                 addElbowJoint.onclick = function() {addModule("module_joint_elbow_AVOCADO", size)};
