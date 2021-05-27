@@ -127,6 +127,7 @@ celerybeat-schedule
 .venv
 env/
 venv/
+modular_venv/
 ENV/
 env.bak/
 venv.bak/
@@ -156,3 +157,4 @@ configs/*
 .idea/*
 ModularBot/*
 
+# Wheel files
