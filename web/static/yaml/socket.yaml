@@ -9,6 +9,21 @@ kinematics:
     delta_l_in: 0.0
     delta_l_out: 0.0
 
+dynamics:
+  body_1:
+    mass: 0.76
+    inertia_tensor:
+      I_xx: 0.005
+      I_yy: 0.005
+      I_zz: 0.002
+      I_xy: 0.000005
+      I_xz: 0.000005
+      I_yz: 0.000005
+    CoM:
+      x: 0.0 
+      y: 0.0
+      z: 0.035
+
 visual:
   mesh_body_1: ""
   mesh_collision_1: ""

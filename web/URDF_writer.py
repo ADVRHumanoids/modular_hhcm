@@ -1009,7 +1009,7 @@ class UrdfWriter:
 
         setattr(new_socket, 'name', 'L_' + str(new_socket.i) + new_socket.tag)
         ET.SubElement(self.root,
-                      "xacro:add_link",
+                      "xacro:add_socket",
                       type="link",
                       name=new_socket.name,
                       filename=new_socket.filename,
