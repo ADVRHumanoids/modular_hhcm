@@ -23,7 +23,10 @@ print_help () {
 
 if [ -n "$ROBOTOLOGY_ROOT" ]; then
     export DESTINATION_FOLDER=$ROBOTOLOGY_ROOT/robots
+else
+    export DESTINATION_FOLDER="$HOME/xbot2_ws/src"
 fi
+mkdir -p $DESTINATION_FOLDER
 
 # read arguments
 while test $# -gt 0
@@ -83,52 +86,53 @@ pushd $DESTINATION_FOLDER/${package_name} > /dev/null #hide print
 
 # Deploy ROS package info
 # - package.xml
-cp $SCRIPT_ROOT/ModularBot/package.xml ./package.xml $VERBOSITY || end_exec
+cp $SCRIPT_ROOT/package.xml ./package.xml $VERBOSITY || end_exec
 sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./package.xml
 # - CMakeLists.txt
-cp $SCRIPT_ROOT/ModularBot/CMakeLists.txt ./CMakeLists.txt $VERBOSITY || end_exec
+cp $SCRIPT_ROOT/CMakeLists.txt ./CMakeLists.txt $VERBOSITY || end_exec
 sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./CMakeLists.txt
 printf "${GREEN}[1/9] Deployed ROS package config files${NC}\n"
 
 # Deploy Xbot2 configs
 # - Low level config
 mkdir -p ./configs
-cp /tmp/modular/configs/ModularBot.yaml ./configs/ModularBot.yaml $VERBOSITY || end_exec
-#sed -i -e "s+ModularBot+${package_name}+g" ./configs/ModularBot.yaml
+mkdir -p ./configs/hal
+cp /tmp/ModularBot/configs/ModularBot.yaml ./configs/hal/ModularBot_xbot1.yaml $VERBOSITY || end_exec
+sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./configs/hal/ModularBot_xbot1.yaml
 # - High level config
-cp $SCRIPT_ROOT/ModularBot/ModularBot_basic.yaml ./ModularBot_basic.yaml $VERBOSITY || end_exec
-sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./ModularBot_basic.yaml
+cp $SCRIPT_ROOT/configs/ModularBot_xbot2.yaml ./configs/ModularBot.yaml $VERBOSITY || end_exec
+sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./configs/ModularBot.yaml
 printf "${GREEN}[2/9] Deployed XBot2 configs${NC}\n"
 
 # Deploy cartesio config
 mkdir -p ./cartesio
-# - cartesio.launch
-cp $SCRIPT_ROOT/ModularBot/cartesio/cartesio.launch ./cartesio/cartesio.launch $VERBOSITY || end_exec
-sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./cartesio/cartesio.launch
 # - /ModularBot_cartesio_config.yaml
-#cp /tmp/modular/cartesio/ModularBot_cartesio_config.yaml ./cartesio/ModularBot_cartesio_config.yaml $VERBOSITY || end_exec
-#sed -i -e "s+ModularBot+${package_name}+g" ./cartesio/${package_name}_cartesio_config.yaml
-#printf "${GREEN}[3/9] Deployed cartesio configs${NC}\n"
-
-# Deploy moveit_config
-mkdir -p ./moveit_config
-cp -TRf $SCRIPT_ROOT/moveit_config ./moveit_config $VERBOSITY || end_exec
-cp -TRf /tmp/modular/moveit_config ./moveit_config $VERBOSITY || end_exec
-printf "${GREEN}[3/9] Deployed configs${NC}\n"
+cp /tmp/ModularBot/cartesio/ModularBot_cartesio_config.yaml ./cartesio/ModularBot_cartesio_config.yaml $VERBOSITY || end_exec
+sed -i -e "s+ModularBot+${package_name}+g" ./cartesio/ModularBot_cartesio_config.yaml
+printf "${GREEN}[3/9] Deployed cartesio configs${NC}\n"
 
 # Deploy launch files
 mkdir -p ./launch
+# - cartesio.launch
+cp $SCRIPT_ROOT/launch/cartesio.launch ./launch/ModularBot_cartesio.launch $VERBOSITY || end_exec
+sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./launch/ModularBot_cartesio.launch
 # - ModularBot_ik.launch
-cp $SCRIPT_ROOT/ModularBot/launch/ModularBot_ik.launch ./launch/ModularBot_ik.launch $VERBOSITY || end_exec
+cp $SCRIPT_ROOT/launch/ModularBot_ik.launch ./launch/ModularBot_ik.launch $VERBOSITY || end_exec
 sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./launch/ModularBot_ik.launch
 # - ModularBot_sliders.launch
-cp $SCRIPT_ROOT/ModularBot/launch/ModularBot_sliders.launch ./launch/ModularBot_sliders.launch $VERBOSITY || end_exec
+cp $SCRIPT_ROOT/launch/ModularBot_sliders.launch ./launch/ModularBot_sliders.launch $VERBOSITY || end_exec
 sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./launch/ModularBot_sliders.launch
-printf "${GREEN}[4/9] Deployed ModularBot_ik.launch and ModularBot_sliders.launch${NC}\n"
-# MoveIt launch files
-cp /tmp/modular/launch/ros_controllers.launch ./launch/ros_controllers.launch $VERBOSITY || end_exec
-cp -TRf $SCRIPT_ROOT/moveit_launch ./launch $VERBOSITY || end_exec
+printf "${GREEN}[4/9] Deployed ModularBot launch files${NC}\n"
 
+# TODO: fix moveit deploy
+## Deploy moveit_config
+#mkdir -p ./moveit_config
+#cp -TRf $SCRIPT_ROOT/moveit_config ./moveit_config $VERBOSITY || end_exec
+#cp -TRf /tmp/ModularBot/moveit_config ./moveit_config $VERBOSITY || end_exec
+## MoveIt launch files
+#cp /tmp/ModularBot/launch/ros_controllers.launch ./launch/ros_controllers.launch $VERBOSITY || end_exec
+#cp -TRf $SCRIPT_ROOT/moveit_launch ./launch $VERBOSITY || end_exec
+#printf "${GREEN}[4.5/9] Deployed moveit configs and launch files${NC}\n"
 
 # Deply meshes
 mkdir -p -p ./database/${package_name}_fixed_base
@@ -137,32 +141,31 @@ printf "${GREEN}[5/9] Deployed meshes${NC}\n"
 
 # Deploy joint_map
 mkdir -p ./joint_map
-cp /tmp/modular/joint_map/ModularBot_joint_map.yaml ./joint_map/ModularBot_joint_map.yaml $VERBOSITY || end_exec
-#sed -i -e "s+ModularBot+${package_name}+g" ./joint_map/${package_name}_joint_map.yaml
+cp /tmp/ModularBot/joint_map/ModularBot_joint_map.yaml ./joint_map/ModularBot_joint_map.yaml $VERBOSITY || end_exec
 printf "${GREEN}[6/9] Deployed joint map${NC}\n"
 
 # Deploy SRDF
 mkdir -p ./srdf
-cp /tmp/modular/srdf/ModularBot.srdf ./srdf/ModularBot.srdf $VERBOSITY || end_exec
-#sed -i -e "s+ModularBot+${package_name}+g" ./srdf/${package_name}.srdf
+cp /tmp/ModularBot/srdf/ModularBot.srdf ./srdf/ModularBot.srdf $VERBOSITY || end_exec
+sed -i -e "s+ModularBot+${package_name}+g" ./srdf/ModularBot.srdf
 printf "${GREEN}[7/9] Deployed SRDF${NC}\n"
 
 # Deploy URDF
 mkdir -p ./urdf
-cp /tmp/modular/urdf/ModularBot.urdf ./urdf/ModularBot.urdf $VERBOSITY || end_exec
-#sed -i -e "s+ModularBot+${package_name}+g" ./urdf/${package_name}.urdf
-sed -i -e "s+/tmp/modular+package://${package_name}+g" ./urdf/ModularBot.urdf
+cp /tmp/ModularBot/urdf/ModularBot.urdf ./urdf/ModularBot.urdf $VERBOSITY || end_exec
+sed -i -e "s+ModularBot+${package_name}+g" ./urdf/ModularBot.urdf
+sed -i -e "s+/tmp/ModularBot+package://${package_name}+g" ./urdf/ModularBot.urdf
 sed -i -e "s+package://modular/src/modular/web/static/models/modular/meshes+package://${package_name}/database/modular/meshes+g" ./urdf/ModularBot.urdf
 printf "${GREEN}[8/9] Deployed URDF${NC}\n"
 
 # Deploy gazebo model
 # - modular_world.sdf
-cp $SCRIPT_ROOT/ModularBot/database/ModularBot_fixed_base/ModularBot_world.sdf ./database/${package_name}_fixed_base/${package_name}_world.sdf $VERBOSITY || end_exec
+cp $SCRIPT_ROOT/database/ModularBot_fixed_base/ModularBot_world.sdf ./database/${package_name}_fixed_base/${package_name}_world.sdf $VERBOSITY || end_exec
 # - manifest.xml
-cp $SCRIPT_ROOT/ModularBot/database/ModularBot_fixed_base/manifest.xml ./database/${package_name}_fixed_base/manifest.xml $VERBOSITY || end_exec
+cp $SCRIPT_ROOT/database/ModularBot_fixed_base/manifest.xml ./database/${package_name}_fixed_base/manifest.xml $VERBOSITY || end_exec
 sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./database/${package_name}_fixed_base/manifest.xml
 # - model.config
-cp $SCRIPT_ROOT/ModularBot/database/ModularBot_fixed_base/model.config ./database/${package_name}_fixed_base/model.config $VERBOSITY || end_exec
+cp $SCRIPT_ROOT/database/ModularBot_fixed_base/model.config ./database/${package_name}_fixed_base/model.config $VERBOSITY || end_exec
 sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./database/${package_name}_fixed_base/model.config
 # - ModularBot.sdf
 gz sdf --print \

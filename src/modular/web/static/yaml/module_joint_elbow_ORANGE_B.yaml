@@ -67,7 +67,7 @@ dynamics:
       y: 0.0
       z: 0.0
 visual:
-  mesh_body_1: package://pino_moveit/database/modular/meshes/fixed_parts.stl
+  mesh_body_1: package://modular/meshes/fixed_parts.stl
   tf_mesh_1:
     x: 0.0
     y: 0.0
@@ -75,7 +75,7 @@ visual:
     roll: 0.0
     pitch: 0.0
     yaw: 0.0
-  mesh_body_2: package://pino_moveit/database/modular/meshes/rotating_parts.stl
+  mesh_body_2: package://modular/meshes/rotating_parts.stl
   tf_mesh_2:
     x: 0.0
     y: 0.0
@@ -109,4 +109,5 @@ CentAcESC:
     position: [1000.0, 0.0, 30.0]
     # pos_Kp pos_Kd tor_Kp tor_Kd tor_Ki
     #  .... tor_K divided by 10000 to respect the int range [0..65536]
-    impedance: [500.0, 5.0, 1.0, 0.01, 0.99]
+    impedance: [500.0, 5.0, 1.0, 0.025, 0.99]
+    # impedance: [500.0, 5.0, 1.0, 0.01, 0.99]

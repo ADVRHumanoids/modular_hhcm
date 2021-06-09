@@ -2,7 +2,7 @@ import zmq
 import argparse
 import yaml
 import json
-import ec_boards_base_input_pb2 as repl_cmd
+import modular.protobuf.ec_boards_base_input_pb2 as repl_cmd
 import pkg_resources
 from protobuf_to_dict import protobuf_to_dict, dict_to_protobuf
 

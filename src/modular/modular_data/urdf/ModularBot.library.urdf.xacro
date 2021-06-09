@@ -601,11 +601,11 @@
                         iyy="${module['dynamics']['body_2_fast']['inertia_tensor']['I_yy']}"
                         ixz="${module['dynamics']['body_2_fast']['inertia_tensor']['I_xz'] }"
                         iyz="${module['dynamics']['body_2_fast']['inertia_tensor']['I_yz'] }"
-                        izz="${module['dynamics']['body_2_fast']['inertia_tensor']['I_zz'] }"/>
+                        izz="${ gear_ratio * gear_ratio * module['dynamics']['body_2_fast']['inertia_tensor']['I_zz'] }"/>
 
                         <!-- ixz="${ gear_ratio * module['dynamics']['body_2_fast']['inertia_tensor']['I_xz'] }" -->
                         <!-- iyz="${ gear_ratio * module['dynamics']['body_2_fast']['inertia_tensor']['I_yz'] }" -->
-                        <!-- izz="${ gear_ratio * gear_ratio * module['dynamics']['body_2_fast']['inertia_tensor']['I_zz'] }" -->
+                        <!-- izz="${module['dynamics']['body_2_fast']['inertia_tensor']['I_zz'] }" -->
             </inertial>
         </link>
     </xacro:macro>

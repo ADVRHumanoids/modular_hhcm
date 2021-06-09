@@ -12,9 +12,13 @@ import zmq
 import yaml
 import json
 
+import rospy
 import modular.zmq_requester
 
-app = Flask(__name__) #, static_folder='static', static_url_path='')
+from ec_srvs.srv import GetSlaveInfo, GetSlaveInfoRequest, GetSlaveInfoResponse
+
+app = Flask(__name__, static_folder='static', static_url_path='')
+# app = Flask(__name__)
 
 # Instance of ZMQ Poller class (create sockets, etc.)
 #zmq_poller = zmq_poller.ZmqPoller()
@@ -85,7 +89,8 @@ def writeURDF():
         print(srdf)
         joint_map = urdf_writer.write_joint_map()
         lowlevel_config = urdf_writer.write_lowlevel_config()
-#        probdesc = urdf_writer.write_problem_description()
+        #probdesc = urdf_writer.write_problem_description()
+        probdesc = urdf_writer.write_problem_description_multi()
         # cartesio_stack = urdf_writer.write_cartesio_stack()
     else:
         data = urdf_writer_fromHW.write_urdf()
@@ -93,7 +98,8 @@ def writeURDF():
         print(srdf)
         joint_map = urdf_writer_fromHW.write_joint_map(use_robot_id=True)
         lowlevel_config = urdf_writer_fromHW.write_lowlevel_config(use_robot_id=True)
-        probdesc = urdf_writer_fromHW.write_problem_description()
+        #probdesc = urdf_writer_fromHW.write_problem_description()
+        probdesc = urdf_writer.write_problem_description_multi()
         # cartesio_stack = urdf_writer_fromHW.write_cartesio_stack()
     # print("\nSRDF\n")
     # print(srdf)
@@ -127,8 +133,18 @@ def addSocket():
     print(offset)
     angle_offset = values['angle_offset']
     print(angle_offset)
-    data = urdf_writer.add_socket(float(offset.get('x_offset')), float(offset.get('y_offset')),
+
+    global building_mode_ON
+
+    building_mode_ON = True if request.form.get('buildingModeON', 0) == 'true' else False
+    
+    if building_mode_ON :
+        data = urdf_writer.add_socket(float(offset.get('x_offset')), float(offset.get('y_offset')),
                                   float(offset.get('z_offset')), float(angle_offset))
+    else:
+         data = urdf_writer_fromHW.move_socket("L_0_B", float(offset.get('x_offset')), float(offset.get('y_offset')),
+                                  float(offset.get('z_offset')), float(angle_offset))
+
     data = jsonify(data)
     return data
 
@@ -189,56 +205,68 @@ def pub_cmd():
 # send a request to the poller thread to get ECat topology and synchronize with hardware
 @app.route('/syncHW/', methods=['POST'])
 def syncHW():
-    ## Method using the poller
-    # zmq_poller.requester.send(b"Topology_REQ")
-    # message = zmq_poller.requester.recv_json()
-    # print("Received reply: %s" % (message))
-    # data = urdf_writer_fromHW.read_from_json(message)
-    # #print('data:', data)
-    # data = jsonify(data)
-    # return data
-
-
-    # requester.send(b"Topology_REQ")
-    # message = requester.recv_json()
-    # print("Received reply: %s" % (message))
-    
+    # ## Method using the poller
+    # # zmq_poller.requester.send(b"Topology_REQ")
+    # # message = zmq_poller.requester.recv_json()
+    # # print("Received reply: %s" % (message))
     # # data = urdf_writer_fromHW.read_from_json(message)
-    # data = urdf_writer_fromHW.read_from_json_alt(message)
+    # # #print('data:', data)
+    # # data = jsonify(data)
+    # # return data
 
-    # #print('data:', data)
-    # data = jsonify(data)
-    # return data
 
-    opts = modular.zmq_requester.repl_option()
-    d = yaml.load(open(opts["repl_yaml"], 'r'))
+    # # requester.send(b"Topology_REQ")
+    # # message = requester.recv_json()
+    # # print("Received reply: %s" % (message))
+    
+    # # # data = urdf_writer_fromHW.read_from_json(message)
+    # # data = urdf_writer_fromHW.read_from_json_alt(message)
 
-    io = modular.zmq_requester.zmqIO(d['uri'])
+    # # #print('data:', data)
+    # # data = jsonify(data)
+    # # return data
 
-    cnt = opts["cmd_exec_cnt"]
-    while cnt:
+    # opts = modular.zmq_requester.repl_option()
+    # d = yaml.load(open(opts["repl_yaml"], 'r'))
 
-        print("cmd_exec_cnt", cnt)
-        cnt -= 1
+    # io = modular.zmq_requester.zmqIO(d['uri'])
 
-        test_dict = {"type": "ECAT_MASTER_CMD", "ecat_master_cmd": {"type": "GET_SLAVES_DESCR"}}
-        io.send_to(test_dict)
-        ''' wait reply ... blocking'''
-        reply = io.recv_from()
+    # cnt = opts["cmd_exec_cnt"]
+    # while cnt:
 
-        if not 'cmds' in d:
-            continue
+    #     print("cmd_exec_cnt", cnt)
+    #     cnt -= 1
 
-        for cmd_dict in gen_cmds(d['cmds']):
-            ''' send cmd '''
-            io.send_to(cmd_dict)
-            ''' wait reply ... blocking'''
-            reply = io.recv_from()
+    #     test_dict = {"type": "ECAT_MASTER_CMD", "ecat_master_cmd": {"type": "GET_SLAVES_DESCR"}}
+    #     io.send_to(test_dict)
+    #     ''' wait reply ... blocking'''
+    #     reply = io.recv_from()
 
-            #time.sleep(0.01)
+    #     if not 'cmds' in d:
+    #         continue
 
-        #time.sleep(0.05)
+    #     for cmd_dict in gen_cmds(d['cmds']):
+    #         ''' send cmd '''
+    #         io.send_to(cmd_dict)
+    #         ''' wait reply ... blocking'''
+    #         reply = io.recv_from()
 
+    #         #time.sleep(0.01)
+
+    #     #time.sleep(0.05)
+
+    srv_name = '/ec_client/get_slaves_description'
+
+    rospy.wait_for_service(srv_name)
+
+    try:
+        slave_description = rospy.ServiceProxy(srv_name, GetSlaveInfo)
+
+    except rospy.ServiceException as e:
+        print("Service call failed: %s"%e)
+
+    reply = slave_description()
+    reply = reply.cmd_info.msg
     print("Exit")
 
     data = urdf_writer_fromHW.read_from_json(reply)
@@ -301,7 +329,9 @@ def sendCommands():
     jsonData = request.get_json()
     print(jsonData)
     print(byteify(jsonData))
-    res = manager.parse_json(jsonData)
+    # res = manager.parse_json(jsonData)
+    
+    res = 'if you read this something wrong is happening: fi commented out the hierarchy server!'
     print(res)
     # print jsonData['descriptors']
     # print jsonData['name']
@@ -327,9 +357,11 @@ def byteify(input):
 
 if __name__ == '__main__':
 
+    # initialize ros node
+    rospy.init_node('robot_design_studio')
     # Start Flask web-server
-    app.run(debug=True, threaded=True)
-    #host='10.24.8.100', port=5000, debug=False, 
+    app.run(host='192.168.9.211', port=5000, debug=False, threaded=True)
+    #app.run(debug=False, threaded=True)
 
     #main()
 
