@@ -1,0 +1,123 @@
+RobotName: ModularBot
+GazeboXBotPlugin:
+    control_rate: 0.001
+    gains:
+        J1_A:
+            p: 300
+            d: 20
+        J2_A:
+            p: 300
+            d: 20
+        J3_A:
+            p: 300
+            d: 20
+        J4_A:
+            p: 300
+            d: 20
+        J5_A:
+            p: 300
+            d: 20
+HALInterface:
+    lib_file: libXBotEcat
+    lib_name: ETHERCAT
+    IJoint: libXBotEcat_Joint
+    ISensors: null
+    IEndEffectors: []
+SCPLog:
+    remote_username: ModularBot
+    remote_ip_address: 10.24.4.77
+    remote_log_folder_path: /home/ModularBot/MODULARBOT_LOG
+x_bot_ecat:
+    name: XBotCore
+    sdo_xddp_prefix: null
+ec_board_ctrl:
+    eth_iface: rteth0
+    sync_cycle_time_ns: 1000000
+    sync_cycle_offset_ns: 1000000000
+    power_off_boards: false
+    use_pipes: false
+ec_boards_base:
+    use_pipes: false
+    log_level: 1
+ec_board_base:
+    use_pipes: false
+CentAcESC_1:
+    control_mode: impedance_d4
+    max_current_A: 30.0
+    pid:
+        impedance:
+            - 500.0
+            - 20.0
+            - 1.0
+            - 0.01
+            - 0.99
+        position:
+            - 1000.0
+            - 0.0
+            - 30.0
+    pos_offset: 0
+    sign: 1
+CentAcESC_2:
+    control_mode: impedance_d4
+    max_current_A: 20.0
+    pid:
+        impedance:
+            - 500.0
+            - 20.0
+            - 1.0
+            - 0.01
+            - 0.99
+        position:
+            - 1000.0
+            - 0.0
+            - 30.0
+    pos_offset: 0
+    sign: 1
+CentAcESC_3:
+    control_mode: impedance_d4
+    max_current_A: 30.0
+    pid:
+        impedance:
+            - 500.0
+            - 20.0
+            - 1.0
+            - 0.01
+            - 0.99
+        position:
+            - 1000.0
+            - 0.0
+            - 30.0
+    pos_offset: 0
+    sign: 1
+CentAcESC_4:
+    control_mode: impedance_d4
+    max_current_A: 20.0
+    pid:
+        impedance:
+            - 500.0
+            - 20.0
+            - 1.0
+            - 0.01
+            - 0.99
+        position:
+            - 1000.0
+            - 0.0
+            - 30.0
+    pos_offset: 0
+    sign: 1
+CentAcESC_5:
+    control_mode: impedance_d4
+    max_current_A: 30.0
+    pid:
+        impedance:
+            - 500.0
+            - 20.0
+            - 1.0
+            - 0.01
+            - 0.99
+        position:
+            - 1000.0
+            - 0.0
+            - 30.0
+    pos_offset: 0
+    sign: 1

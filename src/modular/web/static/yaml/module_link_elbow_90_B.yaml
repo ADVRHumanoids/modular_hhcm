@@ -2,7 +2,7 @@ kinematics:
   joint:
     
   link:
-    a_l: 0
+    a_l: 0.0
     alpha_l: -1.57
     p_l: 0.083
     n_l: 0.083

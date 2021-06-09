@@ -1,14 +1,25 @@
 import zmq
-import threading
 import argparse
 import yaml
 import json
 import ec_boards_base_input_pb2 as repl_cmd
+import pkg_resources
 from protobuf_to_dict import protobuf_to_dict, dict_to_protobuf
+
+#from modular.protobuf import ec_boards_base_input_pb2 as repl_cmd
+#
+## Could be any dot-separated package/module name or a "Requirement"
+#resource_package = __name__
+##resource_path = '/'.join(('templates', 'temp_file'))  # Do not use os.path.join()
+#repl_yaml = pkg_resources.resource_string(resource_package, 'repl.yaml')
+## or for a file-like stream:
+##template = pkg_resources.resource_stream(resource_package, resource_path)
+
+repl_yaml = "./repl.yaml"
 
 def repl_option():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-f", "--file_yaml", dest="repl_yaml", action="store", default="./repl.yaml")
+    parser.add_argument("-f", "--file_yaml", dest="repl_yaml", action="store", default=repl_yaml)
     parser.add_argument("-c", dest="cmd_exec_cnt", action="store", type=int, default=1)
     args = parser.parse_args()
     dict_opt = vars(args)

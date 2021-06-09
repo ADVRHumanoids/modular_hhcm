@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+<!--    ROS_CONTROL-->
+    <xacro:macro name="plugin_ros_control">
+        <gazebo>
+            <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so"/>
+        </gazebo>
+    </xacro:macro>
+    <xacro:macro name="ros_control_transmission" params="transmission joint motor">
+        <transmission name="${transmission}">
+            <type>transmission_interface/SimpleTransmission</type>
+            <joint name="${joint}">
+                <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+            </joint>
+            <actuator name="${motor}">
+                <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+                <mechanicalReduction>1</mechanicalReduction>
+            </actuator>
+        </transmission>
+    </xacro:macro>
+
+<!--    XBOTCORE-->
+    <xacro:macro name="plugin_xbotcore">
+        <plugin name="gazebo_xbot_plugin" filename="libGazeboXBotPlugin.so">
+    <!--        <path_to_config_file>configs/ADVR_shared/ModularBot/configs/config_ModularBot.yaml</path_to_config_file>-->
+        </plugin>
+    </xacro:macro>
+</robot>
+
+<!--    XBOT 2-->
+<!--    <xacro:macro name="plugin_xbot2">-->
+<!--        <gazebo>-->
+<!--            <plugin name="xbot2_gz_joint_server" filename="libxbot2_gz_joint_server.so">-->
+<!--                <pid>-->
+<!--                    <gain name="small_mot"  p="100"  d="5"/>-->
+
+<!--                    &lt;!&ndash; <pid name="J1_A" profile="small_mot"/> &ndash;&gt;-->
+<!--                </pid>-->
+<!--            </plugin>-->
+<!--        </gazebo>-->
+<!--    </xacro:macro>-->
+
+<!--    <xacro:macro name="add_xbot2_pid" params="name profile">-->
+<!--        <pid name="${name}" profile="${profile}"/>-->
+<!--    </xacro:macro>-->

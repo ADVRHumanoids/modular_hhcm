@@ -16,12 +16,12 @@ kinematics:
 
     joint:
       delta_j: 0.0
-      type: ''
+      type: "prismatic"
       lower_limit: 0.0
-      upper_limit: 0.0
-      effort: 0.0 
-      velocity: 0.0
-      
+      upper_limit: 0.05
+      effort: 20.0
+      velocity: 0.2
+
   link:
     a_l: 0.0
     alpha_l: 0.0
@@ -48,12 +48,13 @@ dynamics:
       y: 0.0
       z: 0.0798
 
+  # Finger (for simulation)
   body_2:
-    mass: 0.0
+    mass: 1.0e-03
     inertia_tensor:
-      I_xx: 0.0
-      I_yy: 0.0
-      I_zz: 0.0
+      I_xx: 1.0e-05
+      I_yy: 1.0e-05
+      I_zz: 1.0e-05
       I_xy: 0.0
       I_xz: 0.0
       I_yz: 0.0
@@ -79,6 +80,8 @@ dynamics:
 visual:
   mesh_body_1: 'package://modular/meshes/gripper_v62_simplified.stl'
   mesh_collision_1: 'package://modular/meshes/gripper_v62_simplified.stl'
+  #mesh_body_1: "package://pino_moveit/database/modular/meshes/gripper_outer_assembly_simplified.stl"
+  #mesh_collision_1: "package://pino_moveit/database/modular/meshes/simple/gripper_outer_assembly_simplified.stl"
   tf_mesh_1:
     x: 0.0
     y: 0.0
@@ -88,6 +91,8 @@ visual:
     yaw: 0.0
   mesh_body_2: ''
   mesh_collision_2: ''
+  #mesh_body_2: "package://pino_moveit/database/modular/meshes/fingerup_7_raised.stl"
+  #mesh_collision_2: "package://pino_moveit/database/modular/meshes/simple/fingerup_7_raised.stl"
   tf_mesh_2:
     x: 0.0
     y: 0.0

@@ -1,0 +1,114 @@
+kinematics:
+  joint:
+    proximal:
+      a_pl: 0.0
+      alpha_pl: 0.0
+      p_pl: 0.0
+      n_pl: 0.0
+      delta_pl: 0.0
+
+    distal:
+      a_dl: 0.0
+      alpha_dl: 0.0
+      p_dl: 0.0
+      n_dl: 0.0
+      delta_dl: 0.0
+
+    joint:
+      delta_j: 0.0
+      type: ""
+      lower_limit: 0.0
+      upper_limit: 0.0
+      effort: 0.0
+      velocity: 0.0
+
+  link:
+    a_l: 0.0
+    alpha_l: 0.0
+    p_l: 0.0
+    n_l: 0.233 # quick fix after iacobelli disaster = 0.24
+    delta_l_in: 0.0
+    delta_l_out: 0.0
+
+dynamics:
+  body_1:
+    mass: 1.305 #= 1.053 + 0.146 + 0.106
+    inertia_tensor:
+      I_xx: 1.8769887e-03
+      I_yy: 2.2629779e-03
+      I_zz: 1.8887550e-03
+      I_xy: 0.0
+      I_xz: 0.0
+      I_yz: 0.0
+    CoM:
+      x: -0.007
+      y: 0.0
+      z: 0.044 #0.044
+
+  body_2:
+    mass: 0.0
+    inertia_tensor:
+      I_xx: 0.0
+      I_yy: 0.0
+      I_zz: 0.0
+      I_xy: 0.0
+      I_xz: 0.0
+      I_yz: 0.0
+    CoM:
+      x: 0.0
+      y: 0.0
+      z: 0.0
+
+  body_2_fast:
+    mass: 0.0
+    inertia_tensor:
+      I_xx: 0.0
+      I_yy: 0.0
+      I_zz: 0.0
+      I_xy: 0.0
+      I_xz: 0.0
+      I_yz: 0.0
+    CoM:
+      x: 0.0
+      y: 0.0
+      z: 0.0
+
+visual:
+  mesh_body_1: "package://pino_moveit/database/modular/meshes/tool_exchanger.stl"
+  mesh_collision_1: "package://pino_moveit/database/modular/meshes/tool_exchanger.stl"
+  tf_mesh_1:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    roll: 0.0
+    pitch: 0.0
+    yaw: 3.14
+  mesh_body_2: ""
+  mesh_collision_2: ""
+  tf_mesh_2:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    roll: 0.0
+    pitch: 0.0
+    yaw: 3.14
+
+size: "big"
+size_in:
+size_out:
+
+type: "tool_exchanger"
+
+control:
+  K_theta: 500
+  D_theta: 70
+  B: 0.000031
+  K_s: 80000
+  D_s: 2
+  D_m: 0.0000578
+  nu: 100
+
+urdf: "urdf/joint_module.urdf"
+
+AinMsp432ESC:
+  analog_sample_freq_HZ: 1000

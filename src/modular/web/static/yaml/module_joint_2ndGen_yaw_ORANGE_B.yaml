@@ -1,0 +1,123 @@
+kinematics:
+  joint:
+    proximal:
+      a_pl: 0
+      alpha_pl: 0
+      p_pl: 0.0845
+      n_pl: 0.0
+      delta_pl: 0
+
+    distal:
+      a_dl: 0
+      alpha_dl: 0
+      p_dl: 0.063
+      n_dl: 0
+      delta_dl: 0
+
+    joint:
+      delta_j: 0
+      type: "revolute"
+      lower_limit: -2.8
+      upper_limit: 2.8
+      effort: 147
+      velocity: 3.9
+
+  link:
+    a_l: 0
+    alpha_l: 0
+    p_l: 0
+    n_l: 0
+    delta_l_in: 0
+    delta_l_out: 0
+
+dynamics:
+  body_1:
+    mass: 1.0118186e+00
+    inertia_tensor:
+      I_xx: 2.1515876e-03
+      I_yy: 2.1950960e-03
+      I_zz: 1.8894464e-03
+      I_xy: 0.0
+      I_xz: 0.0
+      I_yz: 0.0
+    CoM:
+      x: 0.0 
+      y: 0.0
+      z: 5.5744851e-02
+
+  body_2:
+    mass: 9.9915757e-01
+    inertia_tensor:
+      I_xx: 1.3055171e-03
+      I_yy: 1.3058972e-03
+      I_zz: 2.0557001e-03
+      I_xy: 0.0
+      I_xz: 0.0
+      I_yz: 0.0
+    CoM:
+      x: 0.0 
+      y: 0.0
+      z: 0.0275 # 1.120e-01 - 0.0845
+
+  body_2_fast:
+    mass: 0.19208493
+    inertia_tensor:
+      I_xx: 1.5011569e-04
+      I_yy: 1.5010030e-04
+      I_zz: 4.5591606e-05
+      I_xy: 0.0
+      I_xz: 0.0
+      I_yz: 0.0
+    CoM:
+      x: 0.0 #0.00081402
+      y: 0.0 #-0.00053746
+      z: -0.008842753 # 7.5657247e-02 - 0.0845
+
+visual:
+  mesh_body_1: "package://pino_moveit/database/modular/meshes/mesh_yaw_base.stl"
+  mesh_collision_1: "package://pino_moveit/database/modular/meshes/mesh_yaw_base.stl"
+  tf_mesh_1:
+    x: 0.0
+    y: 0.0
+    z: 0.0845
+    roll: 0.0
+    pitch: 0.0
+    yaw: 0.0
+  mesh_body_2: "package://pino_moveit/database/modular/meshes/mesh_yaw.stl"
+  mesh_collision_2: "package://pino_moveit/database/modular/meshes/mesh_yaw.stl"
+  tf_mesh_2:
+    x: 0.0
+    y: 0.0
+    z: 0.063
+    roll: 0.0
+    pitch: 0.0
+    yaw: 0.0
+
+size: "big"
+size_in:
+size_out:
+
+type: "joint"
+
+control:
+  K_theta: 500
+  D_theta: 70
+  B: 0.000031
+  K_s: 80000
+  D_s: 2
+  D_m: 0.0000578
+  nu: 100
+
+urdf: "urdf/joint_module.urdf"
+
+CentAcESC:
+  control_mode: impedance_d4 #pos_3b #impedance_d4 #idle
+  sign: 1
+  pos_offset: 0
+  max_current_A: 20.0
+  #ram_cmd: [38]
+  pid:
+    position: [1000.0, 0.0, 30.0]
+    # pos_Kp pos_Kd tor_Kp tor_Kd tor_Ki
+    #  .... tor_K divided by 10000 to respect the int range [0..65536]
+    impedance: [500.0, 20.0, 1.0, 0.01, 0.99]

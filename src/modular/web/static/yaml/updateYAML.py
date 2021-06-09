@@ -60,8 +60,8 @@ def listRecursive (d, key, path = None):
             found_bool = True
             yield path + [k], v, found_bool
 
-def get_from_dict(element, keys):    
-    for k in keys: 
+def get_from_dict(element, keys):
+    for k in keys:
         try:
             element = element[k]
         except KeyError:
@@ -86,12 +86,12 @@ def main():
                 continue
 
         if keys_exists(my_dict, sys.argv[1:-1]) : #(sys.argv[1]), (sys.argv[2])):
-                print((file, 'Nothing to update'))                    
+                print((file, 'Nothing to update'))
         else:
             new_dict = get_from_dict(my_dict, sys.argv[1:-2])
             new_dict[sys.argv[-2]] = sys.argv[-1]
             #print(new_dict)
-            print((file, 'missing field...updating YAML'))    
+            print((file, 'missing field...updating YAML'))
             with open(file, 'w') as stream:
                 ordered_dump(my_dict, stream=stream, Dumper=yaml.SafeDumper,  default_flow_style=False, line_break='\n\n', indent=4)
 
