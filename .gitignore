@@ -153,8 +153,7 @@ venv.bak/
 .pylintrc
 
 # Folders to ignore
-configs/*
 .idea/*
-ModularBot/*
+#src/modular/modular_data/ModularBot/*
 
 # Wheel files

@@ -1,0 +1,3 @@
+data_path: 'modular_data'
+yaml_path: 'web/static/yaml'
+modularbot_path: 'modular_data/ModularBot'

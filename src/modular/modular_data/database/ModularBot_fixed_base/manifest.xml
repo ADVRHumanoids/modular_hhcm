@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<model>
+  <name>PACKAGE_NAME</name>
+  <version>0.1</version>
+  <sdf version='1.6'>PACKAGE_NAME.sdf</sdf>
+
+  <author>
+   <name>Edoardo Romiti</name>
+   <email>edoardo.romiti@iit.it</email>
+  </author>
+
+  <description>
+    Simulation of the Alberobotics's PACKAGE_NAME.
+  </description>
+</model>

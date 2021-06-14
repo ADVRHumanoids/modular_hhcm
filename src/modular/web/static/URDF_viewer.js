@@ -948,6 +948,10 @@ class URDF_viewer extends HTMLElement {
             console.log(mesh_intersects.length)
             if ( mesh_intersects.length > 0 ) {                
                 self.current_parent = mesh_intersects[0].object.parent;
+                console.log(self.current_parent.matrixWorld)
+                var cartesian_position = new THREE.Vector3();
+                cartesian_position.setFromMatrixPosition(self.current_parent.matrixWorld);
+                console.log(cartesian_position)
                 self.highlightParent();
             }
         }

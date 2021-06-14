@@ -1,0 +1,57 @@
+## XBotInterface related configs
+
+XBotInterface:
+  urdf_path: "$(rospack find PACKAGE_NAME)/urdf/ModularBot.urdf"
+  srdf_path: "$(rospack find PACKAGE_NAME)/srdf/ModularBot.srdf"
+  joint_map_path: "$(rospack find PACKAGE_NAME)/joint_map/ModularBot_joint_map.yaml"
+
+ModelInterface:
+  model_type: "RBDL"
+  is_model_floating_base: "false"
+
+## XBot2 related configuration
+
+# describe the robot hardware in terms of devices
+xbotcore_devices:
+  joint_gz:
+    names: [] # take all joint ids from srdf/urdf
+    thread: rt_main # allocate this device on rt_main thread
+
+  joint_master:
+    master: true # this is a master device for all 'joint' devices
+    thread: rt_main
+
+# define threads to be created
+xbotcore_threads:
+  rt_main: { sched: fifo, prio: 60, period: 0.001, core_id: 2 }
+  nrt_main: { sched: other, prio: 0, period: 0.005 }
+
+# define plugins to be loaded
+xbotcore_plugins:
+  # this plugin is shipped with xbot2, and it generates the
+  # ROS api for the framework
+  # it is not designed to be real-time safe, so it must executed
+  # inside a thread with `other` priority
+  ros_io: { thread: nrt_main, type: ros_io }
+  ros_ctrl: { thread: nrt_main, type: ros_control }
+
+  # notice that you can reuse the same plugin, by providing
+  # different names and possibly different parameters
+  homing:
+    thread: rt_main
+    type: homing_example
+    params:
+      time: { value: 5, type: double }
+
+  # homing_slow:
+  #   thread: rt_main
+  #   type: homing_example
+  #   params:
+  #     time: { value: 10, type: double }
+
+# additional parameters that don't relate to any plugin
+xbotcore_param:
+  /jm/tx_filter_autostart: { value: true, type: bool } # autostart joint filter
+  /jm/tx_filter_cutoff: { value: 2.0, type: double } # set default filter bandwidth
+  /xbot_internal/ros_io/call_timeout: { value: 1.0, type: chrono }
+  /rt_slow/memory_hooks: { value: false, type: bool }

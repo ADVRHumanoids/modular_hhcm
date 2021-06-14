@@ -62,12 +62,12 @@ class Module(object):
                 'big': '3',
             }
         if mod.type == "size_adapter":
-            print(mod.size_in)
+            #print(mod.size_in)
             setattr(self, 'size_in', switcher.get(mod.size_in, "Invalid size"))
-            print(mod.size_out)
+            #print(mod.size_out)
             setattr(self, 'size_out', switcher.get(mod.size_out, "Invalid size"))
         else:
-            print(mod.size)
+            #print(mod.size)
             setattr(self, 'size', switcher.get(mod.size, "Invalid size"))
 
     #
@@ -198,47 +198,49 @@ class Module(object):
         """Computes the homogeneous transformation matrices for the 4 cube connections"""
         origin, xaxis, yaxis, zaxis = (0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1)
 
-        con_1 = self.kinematics.connector_1
-        con_2 = self.kinematics.connector_2
-        con_3 = self.kinematics.connector_3
-        con_4 = self.kinematics.connector_4
-
-        if not reverse:
-            # TO BE CHECKED!!!
-
+        if hasattr(self.kinematics, "connector_1"):
+            con_1 = self.kinematics.connector_1
             trasl_1 = tf.transformations.translation_matrix((con_1.x, con_1.y, con_1.z))
-            rot_1 = tf.transformations.euler_matrix(con_1.roll, con_1.pitch, con_1.yaw, 'rxyz')
+            rot_1 = tf.transformations.euler_matrix(con_1.roll, con_1.pitch, con_1.yaw, 'sxyz')
             tf_con_1 = tf.transformations.concatenate_matrices(trasl_1, rot_1)
             # Add the transformation matrix for the Proximal part as attribute of the class
             setattr(self, 'Con_1_tf', tf_con_1)
-            
+
+        if hasattr(self.kinematics, "connector_2"):
+            con_2 = self.kinematics.connector_2
             trasl_2 = tf.transformations.translation_matrix((con_2.x, con_2.y, con_2.z))
-            rot_2 = tf.transformations.euler_matrix(con_2.roll, con_2.pitch, con_2.yaw, 'rxyz')
+            rot_2 = tf.transformations.euler_matrix(con_2.roll, con_2.pitch, con_2.yaw, 'sxyz')
             tf_con_2 = tf.transformations.concatenate_matrices(trasl_2, rot_2)
             # Add the transformation matrix for the Proximal part as attribute of the class
             setattr(self, 'Con_2_tf', tf_con_2)
 
+        if hasattr(self.kinematics, "connector_3"):
+            con_3 = self.kinematics.connector_3
             trasl_3 = tf.transformations.translation_matrix((con_3.x, con_3.y, con_3.z))
-            rot_3 = tf.transformations.euler_matrix(con_3.roll, con_3.pitch, con_3.yaw, 'rxyz')
+            rot_3 = tf.transformations.euler_matrix(con_3.roll, con_3.pitch, con_3.yaw, 'sxyz')
             tf_con_3 = tf.transformations.concatenate_matrices(trasl_3, rot_3)
             # Add the transformation matrix for the Proximal part as attribute of the class
             setattr(self, 'Con_3_tf', tf_con_3)
 
+        if hasattr(self.kinematics, "connector_4"):
+            con_4 = self.kinematics.connector_4
             trasl_4 = tf.transformations.translation_matrix((con_4.x, con_4.y, con_4.z))
-            rot_4 = tf.transformations.euler_matrix(con_4.roll, con_4.pitch, con_4.yaw, 'rxyz')
+            rot_4 = tf.transformations.euler_matrix(con_4.roll, con_4.pitch, con_4.yaw, 'sxyz')
             tf_con_4 = tf.transformations.concatenate_matrices(trasl_4, rot_4)
             # Add the transformation matrix for the Proximal part as attribute of the class
             setattr(self, 'Con_4_tf', tf_con_4)
 
-        else:
-            # TBD!!!
-            pass
+        # if not reverse:
+        #     pass
+        # else:
+        #     # TBD!!!
+        #     pass
 
     # 
     def get_transform(self, reverse):
         """Computes the correct transformation depending on the module type"""
         x = self.type
-        print('module_type', x)
+        #print('module_type', x)
         switcher = {
             'joint_mesh': self.get_proximal_distal_matrices,
             'joint': self.get_proximal_distal_matrices,
@@ -295,7 +297,7 @@ def get_rototranslation(distal_previous, proximal):
 
 
 def get_xyzrpy(transform):
-    print(transform)
+    #print(transform)
     scale, shear, angles, trans, persp = tf.transformations.decompose_matrix(transform)
 
     x = str(trans[0])

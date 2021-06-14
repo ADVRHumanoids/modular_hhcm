@@ -16,12 +16,12 @@ kinematics:
 
     joint:
       delta_j: 0.0
-      type: ''
+      type: ""
       lower_limit: 0.0
       upper_limit: 0.0
-      effort: 0.0 
+      effort: 0.0
       velocity: 0.0
-      
+
   link:
     a_l: 0.0
     alpha_l: 0.0
@@ -74,8 +74,8 @@ dynamics:
       z: 0.0
 
 visual:
-  mesh_body_1: 'package://modular/meshes/tool_exchanger.stl'
-  mesh_collision_1: 'package://modular/meshes/tool_exchanger.stl'
+  mesh_body_1: "package://modular/meshes/tool_exchanger.stl"
+  mesh_collision_1: "package://modular/meshes/tool_exchanger.stl"
   tf_mesh_1:
     x: 0.0
     y: 0.0
@@ -83,8 +83,8 @@ visual:
     roll: 0.0
     pitch: 0.0
     yaw: 0.0
-  mesh_body_2: ''
-  mesh_collision_2: ''
+  mesh_body_2: ""
+  mesh_collision_2: ""
   tf_mesh_2:
     x: 0.0
     y: 0.0
@@ -93,11 +93,11 @@ visual:
     pitch: 0.0
     yaw: 0.0
 
-size: 'big'
+size: "big"
 size_in:
 size_out:
 
-type: 'tool_exchanger'
+type: "tool_exchanger"
 
 control:
   K_theta: 500
