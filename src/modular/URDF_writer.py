@@ -2961,7 +2961,7 @@ class UrdfWriter:
         hardware_interface_joints = []
 
         #kinematics.yaml
-        template_kinematics_filename = self.resource_finder.get_filename('configs/kinematics.yaml', 'data_path')
+        template_kinematics_filename = self.resource_finder.get_filename('moveit_config/kinematics.yaml', 'data_path')
         kinematics_filename = path_name + "/moveit_config/kinematics.yaml"
         # kinematics_filename = "/tmp/modular/moveit_config/kinematics.yaml"
         tmp_kinematics = OrderedDict([])
@@ -2973,7 +2973,7 @@ class UrdfWriter:
                 print(exc)
 
         #ompl_planning.yaml
-        template_ompl_filename = self.resource_finder.get_filename('configs/ompl_planning.yaml', 'data_path')
+        template_ompl_filename = self.resource_finder.get_filename('moveit_config/ompl_planning.yaml', 'data_path')
         ompl_filename = path_name + "/moveit_config/ompl_planning.yaml"
         # ompl_filename = "/tmp/modular/moveit_config/ompl_planning.yaml"
         tmp_ompl = OrderedDict([])
@@ -3082,7 +3082,7 @@ class UrdfWriter:
         ###################################
         # Moveit configs: TO BE FIXED
         # ros_controllers_template_filename = self.resource_finder.get_filename(
-        #     'ModularBot/configs/ros_controllers.yaml', 'data_path')
+        #     'ModularBot/moveit_config/ros_controllers.yaml', 'data_path')
         # ros_controllers_filename = "/tmp/modular/moveit_config/ros_controllers.yaml"
         # ros_controllers = OrderedDict([])
 
