@@ -16,6 +16,7 @@ print_help () {
     printf "${ORANGE}"
     echo "Try something like:                         ./deply.sh modular_ros_pkg"
     echo "You can choose the destination folder with: -d /path/to/destination/dir"
+    echo "You can choose the framework to use with: -f {ros_control} - {xbotcore} - {xbot2}"
     echo "You can add vebosity with:                  -v"
     printf "${NC}"
     end_exec
@@ -44,6 +45,17 @@ do
        		        print_help
                     ;;
                 *)  export DESTINATION_FOLDER=$1;
+                ;;
+            esac
+            ;;
+        -[fF] | --framework) # add destination folder
+            shift
+            case "$1" in
+                -*)
+		            printf "${RED}Path ('$1')  is not valid!${NC}\n"
+       		        print_help
+                    ;;
+                *)  export FRAMEWORK=$1;
                 ;;
             esac
             ;;
@@ -93,15 +105,39 @@ cp $SCRIPT_ROOT/CMakeLists.txt ./CMakeLists.txt $VERBOSITY || end_exec
 sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./CMakeLists.txt
 printf "${GREEN}[1/9] Deployed ROS package config files${NC}\n"
 
-# Deploy Xbot2 configs
-# - Low level config
-mkdir -p ./configs
-mkdir -p ./configs/hal
-cp /tmp/ModularBot/configs/ModularBot.yaml ./configs/hal/ModularBot_xbot1.yaml $VERBOSITY || end_exec
-sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./configs/hal/ModularBot_xbot1.yaml
+## Deploy XbotCore configs
+## - Low level config
+#mkdir -p ./configs
+#mkdir -p ./configs/hal
+#cp /tmp/ModularBot/configs/ModularBot.yaml ./configs/ModularBot.yaml $VERBOSITY || end_exec
+#sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./configs/ModularBot.yaml
 # - High level config
-cp $SCRIPT_ROOT/configs/ModularBot_xbot2.yaml ./configs/ModularBot.yaml $VERBOSITY || end_exec
-sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./configs/ModularBot.yaml
+#cp $SCRIPT_ROOT/configs/ModularBot_xbot1.yaml ./ModularBot_basic.yaml $VERBOSITY || end_exec
+#sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./ModularBot_basic.yaml
+#printf "${GREEN}[2/9] Deployed XBotCore configs${NC}\n"
+
+# Deploy Xbot2 configs
+mkdir -p ./config
+mkdir -p ./config/hal
+mkdir -p ./config/joint_config
+
+# - Low level hal configs
+#   - ec_all (modified)
+cp /tmp/ModularBot/config/hal/ModularBot_ec_all.yaml ./config/hal/ModularBot_ec_all.yaml $VERBOSITY || end_exec
+sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./config/hal/ModularBot_ec_all.yaml
+#   - gz (not modified)
+cp $SCRIPT_ROOT/configs/low_level/hal/ModularBot_gz.yaml ./config/hal/ModularBot_gz.yaml $VERBOSITY || end_exec
+sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./config/hal/ModularBot_gz.yaml
+#   - dummy (not modified)
+cp $SCRIPT_ROOT/configs/low_level/hal/ModularBot_dummy.yaml ./config/hal/ModularBot_dummy.yaml $VERBOSITY || end_exec
+sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./config/hal/ModularBot_dummy.yaml
+
+# - Low level joint configs
+cp -TRf /tmp/ModularBot/config/joint_config ./config/joint_config $VERBOSITY || end_exec
+
+# - High level config
+cp $SCRIPT_ROOT/configs/ModularBot_xbot2.yaml ./config/ModularBot.yaml $VERBOSITY || end_exec
+sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./config/ModularBot.yaml
 printf "${GREEN}[2/9] Deployed XBot2 configs${NC}\n"
 
 # Deploy cartesio config
@@ -122,6 +158,9 @@ sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./launch/ModularBot_ik.launch
 # - ModularBot_sliders.launch
 cp $SCRIPT_ROOT/launch/ModularBot_sliders.launch ./launch/ModularBot_sliders.launch $VERBOSITY || end_exec
 sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./launch/ModularBot_sliders.launch
+# - gazebo.launch
+cp $SCRIPT_ROOT/launch/ModularBot_gazebo.launch ./launch/ModularBot_gazebo.launch $VERBOSITY || end_exec
+sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./launch/ModularBot_gazebo.launch
 printf "${GREEN}[4/9] Deployed ModularBot launch files${NC}\n"
 
 # TODO: fix moveit deploy
