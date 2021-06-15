@@ -239,6 +239,10 @@ class Plugin:
 
         return xmlstr
 
+    # CONFIG
+    def write_lowlevel_config(self):
+        pass
+
 
 class RosControlPlugin(Plugin):
     def add_plugin(self):
@@ -514,15 +518,100 @@ class XBotCorePlugin(Plugin):
     def remove_joint(self, joint_name):
         pass
 
+    # SRDF
     def add_gripper_to_srdf(self, root, gripper_name, hand_name, parent_group_name):
         pass
 
     def add_hand_group_to_srdf(self, root, gripper_name, hand_name):
         pass
 
+    # CONFIG
+    def write_lowlevel_config(self, use_robot_id=False):
+        """Creates the low level config file needed by XBotCore """
+
+        # basic_config_filename = path_name + '/configs/ModularBot.yaml'
+        basic_config_filename = self.urdf_writer.resource_finder.get_filename('configs/ModularBot.yaml', 'data_path')
+        lowlevel_config_filename = path_name + '/ModularBot/configs/ModularBot.yaml'
+        ## lowlevel_config_filename = self.urdf_writer.resource_finder.get_filename('configs/ModularBot.yaml', 'modularbot_path')
+        # lowlevel_config_filename = "/tmp/modular/configs/ModularBot.yaml"
+        lowlevel_config = OrderedDict([])
+
+        with open(basic_config_filename, 'r') as stream:
+            try:
+                lowlevel_config = ordered_load(stream, yaml.SafeLoader)
+                # cartesio_stack['EE']['base_link'] = self.urdf_writer.listofchains[0]
+                print(lowlevel_config.items()[0])
+            except yaml.YAMLError as exc:
+                print(exc)
+
+        print(lowlevel_config.items())
+        print(lowlevel_config['GazeboXBotPlugin'])
+        lowlevel_config['GazeboXBotPlugin']['gains'] = OrderedDict([])
+        i = 0
+        p = 0
+        for joints_chain in self.urdf_writer.listofchains:
+            # HACK
+            p += 1
+            for joint_module in joints_chain:
+                if joint_module.type == 'joint':
+                    i += 1
+                    lowlevel_config['GazeboXBotPlugin']['gains'][joint_module.name] = OrderedDict(
+                        [('p', 300), ('d', 20)])
+                    if use_robot_id:
+                        key = 'CentAcESC_' + str(joint_module.robot_id)
+                    else:
+                        key = 'CentAcESC_' + str(i)
+                    value = joint_module.CentAcESC
+                    print(yaml.dump(joint_module.CentAcESC))
+                    # HACK: Every joint on 2nd, 3rd, etc. chains have the torque loop damping set very low.
+                    # This is to handle chains with only one joint and low inertia after it.
+                    # If we build two big robots this could have catastrophic effects
+                    # TODO: fix this
+                    if p > 1:
+                        value.pid.impedance = [500.0, 20.0, 1.0, 0.003, 0.99]
+                elif joint_module.type == 'tool_exchanger':
+                    if use_robot_id:
+                        key = 'AinMsp432ESC_' + str(joint_module.robot_id)
+                        xbot_ecat_interface = [[int(joint_module.robot_id)], "libXBotEcat_ToolExchanger"]
+                    else:
+                        key = 'AinMsp432ESC_' + str(i)
+                        xbot_ecat_interface = [[int(i)], "libXBotEcat_ToolExchanger"]
+                    value = joint_module.AinMsp432ESC
+                    print(yaml.dump(joint_module.AinMsp432ESC))
+                    lowlevel_config['HALInterface']['IEndEffectors'].append(xbot_ecat_interface)
+                elif joint_module.type == 'gripper':
+                    if use_robot_id:
+                        key = 'LpESC_' + str(joint_module.robot_id)
+                        xbot_ecat_interface = [[int(joint_module.robot_id)], "libXBotEcat_Gripper"]
+                    else:
+                        key = 'LpESC_' + str(i)
+                        xbot_ecat_interface = [[int(i)], "libXBotEcat_Gripper"]
+                    value = joint_module.LpESC
+                    print(yaml.dump(joint_module.LpESC))
+                    lowlevel_config['HALInterface']['IEndEffectors'].append(xbot_ecat_interface)
+                elif joint_module.type == 'simple_ee':
+                    continue
+                lowlevel_config[key] = value
+                print(joint_module.kinematics.__dict__.items())
+                print(lowlevel_config[key])
+
+        # Create folder if doesen't exist
+        if not os.path.exists(os.path.dirname(lowlevel_config_filename)):
+            try:
+                os.makedirs(os.path.dirname(lowlevel_config_filename))
+            except OSError as exc:  # Guard against race condition
+                if exc.errno != errno.EEXIST:
+                    raise
+
+        with open(lowlevel_config_filename, 'w') as outfile:
+            # ordered_dump(lowlevel_config, stream=outfile, Dumper=yaml.SafeDumper,  default_flow_style=False, line_break='\n\n', indent=4)
+            ordered_dump(lowlevel_config, stream=outfile, default_flow_style=False, line_break='\n\n', indent=4,
+                         canonical=False)
+        return lowlevel_config
+
 class XBot2Plugin(Plugin):
     def add_plugin(self):
-        #self.plugin_element = ET.SubElement(self.urdf_writer.root, "xacro:plugin_xbot2")
+        #self.urdf_writer.plugin_element = ET.SubElement(self.urdf_writer.root, "xacro:plugin_xbot2")
         self.gazebo_node = ET.SubElement(self.urdf_writer.root, "gazebo")
         self.plugin_node = ET.SubElement(self.gazebo_node, "plugin",
                                          name="xbot2_gz_joint_server",
@@ -546,9 +635,133 @@ class XBot2Plugin(Plugin):
     def add_hand_group_to_srdf(self, root, gripper_name, hand_name):
         pass
 
+    def write_lowlevel_config(self, use_robot_id=False):
+        """Creates the low level config file needed by XBotCore """
+        # HAL config ModularBot_ec_all
+        hal_config_template = self.urdf_writer.resource_finder.get_filename('configs/low_level/hal/ModularBot_ec_all.yaml', 'data_path')
+        hal_config_filename = path_name + '/ModularBot/config/hal/ModularBot_ec_all.yaml'
+        # hal_config_filename = self.urdf_writer.resource_finder.get_filename('config/hal/ModularBot_ec_all.yaml', 'modularbot_path')
+        # hal_config_filename = "/tmp/modular/config/hal/ModularBot_ec_all.yaml"
+        hal_config = OrderedDict([])
+
+        with open(hal_config_template, 'r') as stream:
+            try:
+                hal_config = ordered_load(stream, yaml.SafeLoader)
+                print(hal_config.items()[0])
+            except yaml.YAMLError as exc:
+                print(exc)
+
+        print(hal_config['xbotcore_devices']['joint_ec']['params'].items())
+        ids = []
+        i = 0
+        for joints_chain in self.urdf_writer.listofchains:
+            for joint_module in joints_chain:
+                i += 1
+                if joint_module.type in ('tool_exchanger', 'gripper'):
+                    if use_robot_id:
+                        mod_id = str(joint_module.robot_id)
+                    else:
+                        mod_id = str(i)
+                    ids.append(mod_id)
+        ignore_id = OrderedDict({'ignore_id': {'type': 'vector<int>', 'value': ids}})
+        hal_config['xbotcore_devices']['joint_ec']['params'].update(ignore_id)
+
+        # Create folder if doesen't exist
+        if not os.path.exists(os.path.dirname(hal_config_filename)):
+            try:
+                os.makedirs(os.path.dirname(hal_config_filename))
+            except OSError as exc:  # Guard against race condition
+                if exc.errno != errno.EEXIST:
+                    raise
+
+        with open(hal_config_filename, 'w') as outfile:
+            # ordered_dump(hal_config, stream=outfile, Dumper=yaml.SafeDumper,  default_flow_style=False, line_break='\n\n', indent=4)
+            ordered_dump(hal_config, stream=outfile, default_flow_style=False, line_break='\n\n', indent=4,
+                         canonical=False)
+
+        # HAL config ModularBot_idle
+        idle_joint_config_template = self.urdf_writer.resource_finder.get_filename(
+            'configs/low_level/joint_config/ModularBot_idle.yaml', 'data_path')
+        idle_joint_config_filename = path_name + '/ModularBot/config/joint_config/ModularBot_idle.yaml'
+        # HAL config ModularBot_impd4
+        impd4_joint_config_template = self.urdf_writer.resource_finder.get_filename(
+            'configs/low_level/joint_config/ModularBot_impd4.yaml', 'data_path')
+        impd4_joint_config_filename = path_name + '/ModularBot/config/joint_config/ModularBot_impd4.yaml'
+
+        idle_joint_config = OrderedDict([])
+        impd4_joint_config = OrderedDict([])
+
+        with open(idle_joint_config_template, 'r') as stream:
+            try:
+                idle_joint_config = ordered_load(stream, yaml.SafeLoader)
+                print(idle_joint_config.items()[0])
+            except yaml.YAMLError as exc:
+                print(exc)
+        with open(impd4_joint_config_template, 'r') as stream:
+            try:
+                impd4_joint_config = ordered_load(stream, yaml.SafeLoader)
+                print(impd4_joint_config.items()[0])
+            except yaml.YAMLError as exc:
+                print(exc)
+
+        i = 0
+        p = 0
+        for joints_chain in self.urdf_writer.listofchains:
+            # HACK
+            p += 1
+            for joint_module in joints_chain:
+                if joint_module.type == 'joint':
+                    i += 1
+                    key = joint_module.name
+                    value = joint_module.CentAcESC
+                    # HACK: Every joint on 2nd, 3rd, etc. chains have the torque loop damping set very low.
+                    # This is to handle chains with only one joint and low inertia after it.
+                    # If we build two big robots this could have catastrophic effects
+                    # TODO: fix this
+                    if p > 1:
+                        value.pid.impedance = [500.0, 20.0, 1.0, 0.003, 0.99]
+                elif joint_module.type == 'tool_exchanger':
+                    key = joint_module.name
+                    value = joint_module.AinMsp432ESC
+                elif joint_module.type == 'gripper':
+                    key = joint_module.name + '_motor'
+                    value = joint_module.LpESC
+                elif joint_module.type == 'simple_ee':
+                    continue
+                idle_joint_config[key] = copy.deepcopy(value)
+                idle_joint_config[key].control_mode = 'idle'
+                impd4_joint_config[key] = copy.deepcopy(value)
+                impd4_joint_config[key].control_mode = 'impedance_d4'
+
+        # Create folder if doesen't exist
+        if not os.path.exists(os.path.dirname(idle_joint_config_filename)):
+            try:
+                os.makedirs(os.path.dirname(idle_joint_config_filename))
+            except OSError as exc:  # Guard against race condition
+                if exc.errno != errno.EEXIST:
+                    raise
+        if not os.path.exists(os.path.dirname(impd4_joint_config_filename)):
+            try:
+                os.makedirs(os.path.dirname(impd4_joint_config_filename))
+            except OSError as exc:  # Guard against race condition
+                if exc.errno != errno.EEXIST:
+                    raise
+
+        with open(idle_joint_config_filename, 'w') as outfile:
+            # ordered_dump(idle_joint_config, stream=outfile, Dumper=yaml.SafeDumper,  default_flow_style=False, line_break='\n\n', indent=4)
+            ordered_dump(idle_joint_config, stream=outfile, default_flow_style=False, line_break='\n\n', indent=4,
+                         canonical=False)
+
+        with open(impd4_joint_config_filename, 'w') as outfile:
+            # ordered_dump(impd4_joint_config, stream=outfile, Dumper=yaml.SafeDumper,  default_flow_style=False, line_break='\n\n', indent=4)
+            ordered_dump(impd4_joint_config, stream=outfile, default_flow_style=False, line_break='\n\n', indent=4,
+                         canonical=False)
+        return hal_config
+
+
 # noinspection PyUnresolvedReferences
 class UrdfWriter:
-    def __init__(self, config_file='config_file.yaml', control_plugin='xbotcore', elementree=None, speedup=False, parent=None):
+    def __init__(self, config_file='config_file.yaml', control_plugin='xbot2', elementree=None, speedup=False, parent=None):
 
         # Setting this variable to True, speed up the robot building.
         # To be used when the urdf does not need to be shown at every iteration
@@ -3123,83 +3336,7 @@ class UrdfWriter:
 
     def write_lowlevel_config(self, use_robot_id=False):
         """Creates the low level config file needed by XBotCore """
-
-        # basic_config_filename = path_name + '/configs/ModularBot.yaml'
-        basic_config_filename = self.resource_finder.get_filename('configs/ModularBot.yaml', 'data_path')
-        lowlevel_config_filename = path_name + '/ModularBot/configs/ModularBot.yaml'
-        ## lowlevel_config_filename = self.resource_finder.get_filename('configs/ModularBot.yaml', 'modularbot_path')
-        #lowlevel_config_filename = "/tmp/modular/configs/ModularBot.yaml"
-        lowlevel_config = OrderedDict([])
-
-        with open(basic_config_filename, 'r') as stream:
-            try:
-                lowlevel_config = ordered_load(stream, yaml.SafeLoader)
-                # cartesio_stack['EE']['base_link'] = self.listofchains[0]
-                print(lowlevel_config.items()[0])
-            except yaml.YAMLError as exc:
-                print(exc)
-
-        print(lowlevel_config.items())
-        print(lowlevel_config['GazeboXBotPlugin'])
-        lowlevel_config['GazeboXBotPlugin']['gains'] = OrderedDict([])
-        i=0
-        p=0
-        for joints_chain in self.listofchains:
-            # HACK
-            p+=1
-            for joint_module in joints_chain:
-                if joint_module.type == 'joint':
-                    i += 1
-                    lowlevel_config['GazeboXBotPlugin']['gains'][joint_module.name] = OrderedDict([('p', 300), ('d', 20)])
-                    if use_robot_id:
-                        key = 'CentAcESC_' + str(joint_module.robot_id)
-                    else:
-                        key = 'CentAcESC_' + str(i)
-                    value = joint_module.CentAcESC
-                    print(yaml.dump(joint_module.CentAcESC))
-                    # HACK: Every joint on 2nd, 3rd, etc. chains have the torque loop damping set very low.
-                    # This is to handle chains with only one joint and low inertia after it. 
-                    # If we build two big robots this could have catastrophic effects 
-                    # TODO: fix this
-                    if p > 1:
-                        value.pid.impedance = [500.0, 20.0, 1.0, 0.003, 0.99]
-                elif joint_module.type == 'tool_exchanger':
-                    if use_robot_id:
-                        key = 'AinMsp432ESC_' + str(joint_module.robot_id)
-                        xbot_ecat_interface = [[int(joint_module.robot_id)], "libXBotEcat_ToolExchanger"]
-                    else:
-                        key = 'AinMsp432ESC_' + str(i)
-                        xbot_ecat_interface = [[int(i)], "libXBotEcat_ToolExchanger"]
-                    value = joint_module.AinMsp432ESC
-                    print(yaml.dump(joint_module.AinMsp432ESC))
-                    lowlevel_config['HALInterface']['IEndEffectors'].append(xbot_ecat_interface)
-                elif joint_module.type == 'gripper':
-                    if use_robot_id:
-                        key = 'LpESC_' + str(joint_module.robot_id)
-                        xbot_ecat_interface = [[int(joint_module.robot_id)], "libXBotEcat_Gripper"]
-                    else:
-                        key = 'LpESC_' + str(i)
-                        xbot_ecat_interface = [[int(i)], "libXBotEcat_Gripper"]
-                    value = joint_module.LpESC
-                    print(yaml.dump(joint_module.LpESC))
-                    lowlevel_config['HALInterface']['IEndEffectors'].append(xbot_ecat_interface)
-                elif joint_module.type == 'simple_ee':
-                    continue
-                lowlevel_config[key] = value
-                print(joint_module.kinematics.__dict__.items())
-                print(lowlevel_config[key])
-                
-        # Create folder if doesen't exist
-        if not os.path.exists(os.path.dirname(lowlevel_config_filename)):
-            try:
-                os.makedirs(os.path.dirname(lowlevel_config_filename))
-            except OSError as exc: # Guard against race condition
-                if exc.errno != errno.EEXIST:
-                    raise
-
-        with open(lowlevel_config_filename, 'w') as outfile:
-            #ordered_dump(lowlevel_config, stream=outfile, Dumper=yaml.SafeDumper,  default_flow_style=False, line_break='\n\n', indent=4)
-            ordered_dump(lowlevel_config, stream=outfile, default_flow_style=False, line_break='\n\n', indent=4, canonical = False)
+        lowlevel_config = self.control_plugin.write_lowlevel_config(use_robot_id)
         return lowlevel_config
 
     def write_joint_map(self, use_robot_id=False):
