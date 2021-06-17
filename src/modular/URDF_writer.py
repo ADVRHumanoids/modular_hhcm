@@ -171,8 +171,8 @@ class Plugin:
 
         print(self.urdf_writer.listofchains)
         for joints_chain in self.urdf_writer.listofchains:
-            group_name = "arm" + self.urdf_writer.branch_switcher.get(i + 1)
-            # group_name = "chain_"+str(i+1)
+            group_name = "chain" + self.urdf_writer.branch_switcher.get(i + 1)
+            # group_name = "arm" + self.urdf_writer.branch_switcher.get(i + 1)
             groups.append(ET.SubElement(root, 'group', name=group_name))
             if "con" in joints_chain[0].parent.name:
                 base_link = joints_chain[0].parent.parent.name

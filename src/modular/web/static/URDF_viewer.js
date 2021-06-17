@@ -1440,8 +1440,9 @@ class URDF_viewer extends HTMLElement {
                         mesh.position.set(xyz[0], xyz[1], xyz[2])
                     })
                 } else if (geoType === 'mesh') {
-                    const filename = n.children[0].getAttribute('filename').replace(/^package:\/\//, ''); // replace(/^((package:\/\/)|(model:\/\/))/, '')
-                    const path = './models' + '/' + filename
+                    const filename = n.children[0].getAttribute('filename').replace(/^package:\/\/modular\/src\/modular\/web\/static/, ''); // replace(/^((package:\/\/)|(model:\/\/))/, '')
+                    // const path = './models' + '/' + filename
+                    const path = filename
                     //console.log(path)
                     const ext = path.match(/.*\.([A-Z0-9]+)$/i).pop() || ''
                     let scale_exist = n.children[0].getAttribute('scale')

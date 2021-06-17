@@ -2,4 +2,15 @@
 <robot name="ModularBot" xmlns:xacro="http://www.ros.org/wiki/xacro">
     <xacro:include filename="ModularBot.library.urdf.xacro"/>
     <xacro:include filename="ModularBot.control.urdf.xacro"/>
+
+    <!-- adding world link for Gazebo simulation -->
+    <link name="world"/>
+    <joint name="world" type="fixed">
+        <parent link="world"/>
+        <child link="base_link"/>
+    </joint>
+
+    <link name="base_link">
+        <xacro:default_inertial mass="10.0"/>
+    </link>
 </robot>

@@ -55,15 +55,6 @@
         </inertial>
     </xacro:macro>
 
-    <!-- adding world link for Gazebo simulation -->
-    <!-- <link name="world"/>
-    <joint name="world" type="fixed">
-        <parent link="world"/>
-        <child link="base_link"/>
-    </joint> -->
-
-    <link name="base_link"/>
-
     <!-- Macro for adding a table -->
     <xacro:macro name="add_table" params="type name father">
         <joint name="fixed_table" type="fixed">
