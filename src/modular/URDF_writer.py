@@ -239,6 +239,54 @@ class Plugin:
 
         return xmlstr
 
+    # JOINT MAP
+    def write_joint_map(self, use_robot_id=False):
+        """Creates the joint map needed by XBotCore """
+
+        # global path_name
+        jointmap_filename = path_name + '/ModularBot/joint_map/ModularBot_joint_map.yaml'
+        # jointmap_filename = path_superbuild + '/configs/ADVR_shared/ModularBot/joint_map/ModularBot_joint_map.yaml'
+        ## jointmap_filename = self.urdf_writer.resource_finder.get_filename('joint_map/ModularBot_joint_map.yaml',
+        ##                                                       'modularbot_path')
+        #jointmap_filename="/tmp/modular/joint_map/ModularBot_joint_map.yaml"
+        i = 0
+        joint_map = {'joint_map': {}}
+        for hub_module in self.urdf_writer.listofhubs:
+            i += 1
+            if use_robot_id:
+                joint_map['joint_map'][int(hub_module.robot_id)] = "HUB_" + str(hub_module.robot_id)
+            else:
+                joint_map['joint_map'][i] = "HUB_" + str(i)
+        for joints_chain in self.urdf_writer.listofchains:
+            for joint_module in joints_chain:
+                i += 1
+                if joint_module.type == 'tool_exchanger':
+                    name = joint_module.name + '_fixed_joint'
+                elif joint_module.type == 'simple_ee':
+                    continue
+                elif joint_module.type == 'gripper':
+                    name = joint_module.name + '_fixed_joint'
+                else:
+                    name = joint_module.name
+                if use_robot_id:
+                    joint_map['joint_map'][int(joint_module.robot_id)] = name
+                else:
+                    joint_map['joint_map'][i] = name
+            # print(str(i), joint_module.name)
+            # print(joint_map)
+
+        # Create folder if doesen't exist
+        if not os.path.exists(os.path.dirname(jointmap_filename)):
+            try:
+                os.makedirs(os.path.dirname(jointmap_filename))
+            except OSError as exc: # Guard against race condition
+                if exc.errno != errno.EEXIST:
+                    raise
+
+        with open(jointmap_filename, 'w+') as outfile:
+            yaml.dump(joint_map, outfile, default_flow_style=False)
+        return joint_map
+
     # CONFIG
     def write_lowlevel_config(self):
         pass
@@ -629,12 +677,73 @@ class XBot2Plugin(Plugin):
             if pid.attrib['name'] == joint_name:
                 self.pid_node.remove(pid)
                 
+    # SRDF     
     def add_gripper_to_srdf(self, root, gripper_name, hand_name, parent_group_name):
         pass
 
     def add_hand_group_to_srdf(self, root, gripper_name, hand_name):
         pass
 
+    # JOINT MAP
+    def write_joint_map(self, use_robot_id=False):
+        """Creates the joint map needed by XBotCore """
+
+        # global path_name
+        jointmap_filename = path_name + '/ModularBot/joint_map/ModularBot_joint_map.yaml'
+        # jointmap_filename = path_superbuild + '/configs/ADVR_shared/ModularBot/joint_map/ModularBot_joint_map.yaml'
+        ## jointmap_filename = self.urdf_writer.resource_finder.get_filename('joint_map/ModularBot_joint_map.yaml',
+        ##                                                       'modularbot_path')
+        #jointmap_filename="/tmp/modular/joint_map/ModularBot_joint_map.yaml"
+        i = 0
+        joint_map = {'joint_map': {}, 'albero_gripper_map': {}}
+
+        for hub_module in self.urdf_writer.listofhubs:
+            i += 1
+            if use_robot_id:
+                joint_map['joint_map'][int(hub_module.robot_id)] = "HUB_" + str(hub_module.robot_id)
+            else:
+                joint_map['joint_map'][i] = "HUB_" + str(i)
+        for joints_chain in self.urdf_writer.listofchains:
+            for joint_module in joints_chain:
+                i += 1
+                if joint_module.type == 'tool_exchanger':
+                    name = joint_module.name + '_fixed_joint'
+                    if use_robot_id:
+                        joint_map['joint_map'][int(joint_module.robot_id)] = name
+                    else:
+                        joint_map['joint_map'][i] = name
+                elif joint_module.type == 'simple_ee':
+                    continue
+                elif joint_module.type == 'gripper':
+                    name = joint_module.name
+                    fingers = [name + '_rightfinger', name + '_leftfinger']
+                    if use_robot_id:
+                        joint_map['albero_gripper_map'][int(joint_module.robot_id)] = {'name': name, 'fingers': fingers}
+                    else:
+                        joint_map['albero_gripper_map'][i] = {'name': name, 'fingers': fingers}
+                else:
+                    name = joint_module.name
+                    if use_robot_id:
+                        joint_map['joint_map'][int(joint_module.robot_id)] = name
+                    else:
+                        joint_map['joint_map'][i] = name
+                
+            # print(str(i), joint_module.name)
+            # print(joint_map)
+
+        # Create folder if doesen't exist
+        if not os.path.exists(os.path.dirname(jointmap_filename)):
+            try:
+                os.makedirs(os.path.dirname(jointmap_filename))
+            except OSError as exc: # Guard against race condition
+                if exc.errno != errno.EEXIST:
+                    raise
+
+        with open(jointmap_filename, 'w+') as outfile:
+            yaml.dump(joint_map, outfile, default_flow_style=False)
+        return joint_map
+
+    # CONFIG
     def write_lowlevel_config(self, use_robot_id=False):
         """Creates the low level config file needed by XBotCore """
         # HAL config ModularBot_ec_all
@@ -844,6 +953,7 @@ class UrdfWriter:
         }
 
         self.listofchains = []
+        self.listofhubs = []
 
         self.origin, self.xaxis, self.yaxis, self.zaxis = (0, 0, 0.4), (1, 0, 0), (0, 1, 0), (0, 0, 1)
 
@@ -1458,6 +1568,8 @@ class UrdfWriter:
             # Update the parent_module attribute of the URDF_writer class
             self.parent_module = slavecube
 
+            self.listofhubs.append(slavecube)
+
             # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
             data = {'result': string,
                     'lastModule_type': 'mastercube',
@@ -1587,6 +1699,8 @@ class UrdfWriter:
             # Update the parent_module attribute of the URDF_writer class. A default connection is chosen.
             #self.parent_module = slavecube_con3
             self.parent_module = mastercube
+
+            self.listofhubs.append(mastercube)
 
             # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
             data = {'result': string,
@@ -2106,6 +2220,7 @@ class UrdfWriter:
 
         # TODO: This is not working in the urdf. The ModuleNode obj is removed but the elment from the tree is not
         elif selected_module.type == 'cube':
+            self.listofhubs.remove(selected_module)
             # save parent of the module to remove. This will be the last element of the chain after removal,
             # and its data will be returned by the function
             father = selected_module.parent.parent
@@ -3337,47 +3452,13 @@ class UrdfWriter:
     def write_lowlevel_config(self, use_robot_id=False):
         """Creates the low level config file needed by XBotCore """
         lowlevel_config = self.control_plugin.write_lowlevel_config(use_robot_id)
+        
         return lowlevel_config
 
     def write_joint_map(self, use_robot_id=False):
         """Creates the joint map needed by XBotCore """
+        joint_map = self.control_plugin.write_joint_map(use_robot_id)
 
-        # global path_name
-        jointmap_filename = path_name + '/ModularBot/joint_map/ModularBot_joint_map.yaml'
-        # jointmap_filename = path_superbuild + '/configs/ADVR_shared/ModularBot/joint_map/ModularBot_joint_map.yaml'
-        ## jointmap_filename = self.resource_finder.get_filename('joint_map/ModularBot_joint_map.yaml',
-        ##                                                       'modularbot_path')
-        #jointmap_filename="/tmp/modular/joint_map/ModularBot_joint_map.yaml"
-        i = 0
-        joint_map = {'joint_map': {}}
-        for joints_chain in self.listofchains:
-            for joint_module in joints_chain:
-                i += 1
-                if joint_module.type == 'tool_exchanger':
-                    name = joint_module.name + '_fixed_joint'
-                elif joint_module.type == 'simple_ee':
-                    continue
-                elif joint_module.type == 'gripper':
-                    name = joint_module.name + '_fixed_joint'
-                else:
-                    name = joint_module.name
-                if use_robot_id:
-                    joint_map['joint_map'][int(joint_module.robot_id)] = name
-                else:
-                    joint_map['joint_map'][i] = name
-            # print(str(i), joint_module.name)
-            # print(joint_map)
-
-        # Create folder if doesen't exist
-        if not os.path.exists(os.path.dirname(jointmap_filename)):
-            try:
-                os.makedirs(os.path.dirname(jointmap_filename))
-            except OSError as exc: # Guard against race condition
-                if exc.errno != errno.EEXIST:
-                    raise
-
-        with open(jointmap_filename, 'w+') as outfile:
-            yaml.dump(joint_map, outfile, default_flow_style=False)
         return joint_map
 
     def write_srdf(self, builder_joint_map=None):
