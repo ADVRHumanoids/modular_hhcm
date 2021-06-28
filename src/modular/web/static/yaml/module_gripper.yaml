@@ -16,7 +16,7 @@ kinematics:
 
     joint:
       delta_j: 0.0
-      type: "prismatic"
+      type: "fixed"
       lower_limit: 0.0
       upper_limit: 0.05
       effort: 20.0
