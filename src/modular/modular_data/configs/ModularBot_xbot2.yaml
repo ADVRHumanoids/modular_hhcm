@@ -43,15 +43,24 @@ xbotcore_plugins:
     params:
       time: { value: 5, type: double }
 
-  # homing_slow:
-  #   thread: rt_main
-  #   type: homing_example
-  #   params:
-  #     time: { value: 10, type: double }
+  cartesio: 
+      thread: rt_main 
+      type: albero_cartesio_rt
+      params:
+        problem_description:
+          value: $(rospack find PACKAGE_NAME)/cartesio/ModularBot_cartesio_config.yaml
+          type: file
+        solver: {value: AlberoImpedance, type: string}
+        enable_feedback: {value: true, type: bool}
+        fc_map: {value: {grav: 0.2, dfl: 0.9}, type: map<double>}
+    
+  gripper: 
+    thread: rt_main 
+    type: albero_gripper_rt
 
 # additional parameters that don't relate to any plugin
 xbotcore_param:
-  /jm/tx_filter_autostart: { value: true, type: bool } # autostart joint filter
+  /jm/tx_filter_autostart: { value: false, type: bool } # autostart joint filter
   /jm/tx_filter_cutoff: { value: 2.0, type: double } # set default filter bandwidth
   /xbot_internal/ros_io/call_timeout: { value: 1.0, type: chrono }
   /rt_slow/memory_hooks: { value: false, type: bool }

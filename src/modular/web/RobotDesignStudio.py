@@ -99,7 +99,7 @@ def writeURDF():
         joint_map = urdf_writer_fromHW.write_joint_map(use_robot_id=True)
         lowlevel_config = urdf_writer_fromHW.write_lowlevel_config(use_robot_id=True)
         #probdesc = urdf_writer_fromHW.write_problem_description()
-        probdesc = urdf_writer.write_problem_description_multi()
+        probdesc = urdf_writer_fromHW.write_problem_description_multi()
         # cartesio_stack = urdf_writer_fromHW.write_cartesio_stack()
     # print("\nSRDF\n")
     # print(srdf)
@@ -147,6 +147,22 @@ def addSocket():
 
     data = jsonify(data)
     return data
+
+
+# call URDF_writer.py to move socket. TODO: remeve hard-code of L_0_B socket for AutomationWare demo
+@app.route('/moveSocket/', methods=['POST'])
+def moveSocket():
+    values = json.loads(request.form.get('values'))
+    print(values)
+    offset = values['offset']
+    print(offset)
+    angle_offset = values['angle_offset']
+    print(angle_offset)
+    data = urdf_writer_fromHW.move_socket("L_0_B", float(offset.get('x_offset')), float(offset.get('y_offset')),
+                                  float(offset.get('z_offset')), float(angle_offset))
+    data = jsonify(data)
+    return data
+
 
 # call URDF_writer.py to remove the last module
 @app.route('/removeModule/', methods=['POST'])

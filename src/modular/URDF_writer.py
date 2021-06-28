@@ -676,7 +676,7 @@ class XBot2Plugin(Plugin):
         for pid in self.pid_node.findall('./pid'):
             if pid.attrib['name'] == joint_name:
                 self.pid_node.remove(pid)
-                
+
     # SRDF     
     def add_gripper_to_srdf(self, root, gripper_name, hand_name, parent_group_name):
         pass
@@ -823,24 +823,30 @@ class XBot2Plugin(Plugin):
                     i += 1
                     key = joint_module.name
                     value = joint_module.CentAcESC
+                    impd4_joint_config[key] = copy.deepcopy(value)
+                    impd4_joint_config[key].control_mode = 'D4_impedance_ctrl'
                     # HACK: Every joint on 2nd, 3rd, etc. chains have the torque loop damping set very low.
                     # This is to handle chains with only one joint and low inertia after it.
                     # If we build two big robots this could have catastrophic effects
                     # TODO: fix this
                     if p > 1:
                         value.pid.impedance = [500.0, 20.0, 1.0, 0.003, 0.99]
+
                 elif joint_module.type == 'tool_exchanger':
                     key = joint_module.name
                     value = joint_module.AinMsp432ESC
+
                 elif joint_module.type == 'gripper':
                     key = joint_module.name + '_motor'
                     value = joint_module.LpESC
+                    impd4_joint_config[key] = copy.deepcopy(value)
+                    impd4_joint_config[key].control_mode = '3B_motor_pos_ctrl'
+                    
                 elif joint_module.type == 'simple_ee':
                     continue
+
                 idle_joint_config[key] = copy.deepcopy(value)
                 idle_joint_config[key].control_mode = 'idle'
-                impd4_joint_config[key] = copy.deepcopy(value)
-                impd4_joint_config[key].control_mode = 'impedance_d4'
 
         # Create folder if doesen't exist
         if not os.path.exists(os.path.dirname(idle_joint_config_filename)):
@@ -1044,8 +1050,9 @@ class UrdfWriter:
 
         # Load the robot_id dictionary from yaml file
         opts = repl_option()
-        # d = yaml.load(open(opts["esc_type_yaml"], 'r'))
-        d = yaml.load(open(opts["robot_id_yaml"], 'r'))
+        # d = yaml.load(open(opts["robot_id_yaml"], 'r'))
+        robot_id_yaml = self.resource_finder.get_filename('robot_id.yaml', '')
+        d = yaml.load(open(robot_id_yaml, 'r'))
 
         # Process the modules described in the json to create the tree
         modules_dict = json.loads(json_data)
@@ -3458,7 +3465,7 @@ class UrdfWriter:
     def write_joint_map(self, use_robot_id=False):
         """Creates the joint map needed by XBotCore """
         joint_map = self.control_plugin.write_joint_map(use_robot_id)
-
+        
         return joint_map
 
     def write_srdf(self, builder_joint_map=None):
