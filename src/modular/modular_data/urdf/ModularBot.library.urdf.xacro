@@ -665,7 +665,7 @@
         <!-- <xacro:property name="visual" value="${module['visual']['mesh_body_1']}"/> -->
 
         <xacro:property name="mesh_bool" value="false"/>
-        <xacro:unless value="${ module['visual']['mesh_body_1'] == '' }">
+        <xacro:unless value="${ module['visual']['mesh_body_2'] == '' }">
             <xacro:property name="mesh_bool" value="true"/>
         </xacro:unless>
 

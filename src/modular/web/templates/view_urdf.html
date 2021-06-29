@@ -402,11 +402,16 @@
             <div id="selector" class="btn-group-vertical" style="overflow-y:auto;">
                 Select a module to add: 
                 <!-- <input type="file" id="moduleInput"> -->
-                <button type="button" id="addElbowJoint" class="btn btn-dark "><div>Elbow joint</div></button>
+                <button type="button" id="add_3011_ICM_14_v4" class="btn btn-dark "><div>3011_ICM_14_v4</div></button>
+                <button type="button" id="add_3011_ICM_17_v3" class="btn btn-dark "><div>3011_ICM_17_v3</div></button>
+                <button type="button" id="add_3011_ICM_20_v2" class="btn btn-dark "><div>3011_ICM_20_v2</div></button>
+                <button type="button" id="add_3011_ICM_25_v3" class="btn btn-dark "><div>3011_ICM_25_v3</div></button>
+                <button type="button" id="add_3011_ICM_32_v2" class="btn btn-dark "><div>3011_ICM_32_v2</div></button>
+                <!-- <button type="button" id="addElbowJoint" class="btn btn-dark "><div>Elbow joint</div></button>
                 <button type="button" id="addSlaveCube" class="btn btn-dark "><div>Slave cube</div></button>
                 <button type="button" id="addSocketBase" class="btn btn-dark "><div>Socket base</div></button>
                 <button type="button" id="addYawJoint" class="btn btn-dark "><div>Yaw joint</div></button>
-                <button type="button" id="addDoubleElbowJoint" class="btn btn-dark "><div>Double Elbow joint</div></button>
+                <button type="button" id="addDoubleElbowJoint" class="btn btn-dark "><div>Double Elbow joint</div></button> -->
                 <!-- <button type="button" id="remove"><div>Remove module</div></button> -->
             </div>
 		</div>
@@ -601,6 +606,11 @@
                 //var moduleInput = document.getElementById('moduleInput');
                 var selector = document.getElementById('selector')
                 var addJoint = document.getElementById('addJoint');
+                var add_3011_ICM_14_v4 = document.getElementById('add_3011_ICM_14_v4');
+                var add_3011_ICM_17_v3 = document.getElementById('add_3011_ICM_17_v3');
+                var add_3011_ICM_20_v2 = document.getElementById('add_3011_ICM_20_v2');
+                var add_3011_ICM_25_v3 = document.getElementById('add_3011_ICM_25_v3');
+                var add_3011_ICM_32_v2 = document.getElementById('add_3011_ICM_32_v2');
                 var addElbow = document.getElementById('addElbow');
                 var addLink = document.getElementById('addLink');
                 var addLink500 = document.getElementById('addLink500mm');
@@ -752,6 +762,12 @@
                 };
 
                 addElbowJoint.onclick = function() {addModule("module_tool_exchanger_heavy", size)};
+
+                add_3011_ICM_14_v4.onclick = function() {addModule("innowelle/3011_ICM_14_v4", size)};
+                add_3011_ICM_17_v3.onclick = function() {addModule("innowelle/3011_ICM_17_v3", size)};
+                add_3011_ICM_20_v2.onclick = function() {addModule("innowelle/3011_ICM_20_v2", size)};
+                add_3011_ICM_25_v3.onclick = function() {addModule("innowelle/3011_ICM_25_PRELIMINARY_v3", size)};
+                add_3011_ICM_32_v2.onclick = function() {addModule("innowelle/3011_ICM_32_PRELIMINARY_v2", size)};
                 
                 addYawJoint.onclick = function() {addModule("module_joint_yaw_ORANGE", size)};
 

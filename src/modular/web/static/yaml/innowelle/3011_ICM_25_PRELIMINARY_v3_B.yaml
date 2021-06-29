@@ -67,14 +67,15 @@ dynamics:
       y: 0.0
       z: 0.0
 visual:
-  mesh_body_1: package://modular/src/modular/web/static/models/modular/meshes/innowelle/3011_ICM_20_v2.stl
+  mesh_body_1: package://modular/src/modular/web/static/models/modular/meshes/innowelle/3011_ICM_25_PRELIMINARY_v3.stl
+  tf_mesh_1:
     x: 0.0
     y: 0.0
     z: 0.0
     roll: 0.0
     pitch: 0.0
     yaw: 0.0
-  mesh_body_2:
+  mesh_body_2: ""
   tf_mesh_2:
     x: 0.0
     y: 0.0
@@ -82,7 +83,7 @@ visual:
     roll: 0.0
     pitch: 0.0
     yaw: 0.0
-  mesh_collision_1: package://modular/src/modular/web/static/models/modular/meshes/innowelle/3011_ICM_20_v2.stl
+  mesh_collision_1: package://modular/src/modular/web/static/models/modular/meshes/innowelle/3011_ICM_25_PRELIMINARY_v3.stl
   mesh_collision_2: ""
 size: big
 size_in: null
