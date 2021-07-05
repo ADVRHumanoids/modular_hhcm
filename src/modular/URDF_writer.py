@@ -2618,15 +2618,17 @@ class UrdfWriter:
             self.control_plugin.add_joint(new_Link.name + '_finger_joint1')
             self.control_plugin.add_joint(new_Link.name + '_finger_joint2')
         else:
-            if new_Link.size > 1:
+            if new_Link.size >= 1:
                 setattr(new_Link, 'name', 'L_' + str(new_Link.i) + '_size_adapter_' + str(new_Link.p) + new_Link.tag)
                 ET.SubElement(self.root,
                               "xacro:add_size_adapter",
                               type="size_adapter",
                               name=new_Link.name,
+                              filename=new_Link.filename,
                               size_z=new_Link.link_size_z,
-                              size_in=new_Link.size_in,
-                              size_out=new_Link.size_out)
+                            #   size_in=new_Link.size_in,
+                            #   size_out=new_Link.size_out
+                )
                 setattr(new_Link, 'size', new_Link.size_out)
             else:
                 # ERROR
@@ -2911,16 +2913,18 @@ class UrdfWriter:
             # TO BE FIXED: ok for ros_control. How will it be for xbot2?
             self.control_plugin.add_joint(new_Link.name + '_finger_joint1')
             self.control_plugin.add_joint(new_Link.name + '_finger_joint2')
-        else:
-            if new_Link.size > 1:
+        elif new_Link.type == 'size_adapter':
+            if new_Link.size >= 1:
                 setattr(new_Link, 'name', 'L_' + str(new_Link.i) + '_size_adapter_' + str(new_Link.p) + new_Link.tag)
                 ET.SubElement(self.root,
                               "xacro:add_size_adapter",
                               type="size_adapter",
                               name=new_Link.name,
+                              filename=new_Link.filename,
                               size_z=new_Link.link_size_z,
-                              size_in=new_Link.size_in,
-                              size_out=new_Link.size_out)
+                            #   size_in=new_Link.size_in,
+                            #   size_out=new_Link.size_out
+                )
                 setattr(new_Link, 'size', new_Link.size_out)
             else:
                 # ERROR
@@ -3291,15 +3295,17 @@ class UrdfWriter:
             self.control_plugin.add_joint(new_Link.name + '_finger_joint1')
             self.control_plugin.add_joint(new_Link.name + '_finger_joint2')
         else:
-            if new_Link.size > 1:
+            if new_Link.size >= 1:
                 setattr(new_Link, 'name', 'L_' + str(new_Link.i) + '_size_adapter_' + str(new_Link.p) + new_Link.tag)
                 ET.SubElement(self.root,
                               "xacro:add_size_adapter",
                               type="size_adapter",
                               name=new_Link.name,
+                              filename=new_Link.filename,
                               size_z=new_Link.link_size_z,
-                              size_in=new_Link.size_in,
-                              size_out=new_Link.size_out)
+                            #   size_in=new_Link.size_in,
+                            #   size_out=new_Link.size_out
+                )
                 setattr(new_Link, 'size', new_Link.size_out)
             else:
                 # ERROR

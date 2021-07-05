@@ -60,6 +60,8 @@ class Module(object):
                 'small': '1',
                 'medium': '2',
                 'big': '3',
+                'large': '4',
+                'extra-large': '5',
             }
         if mod.type == "size_adapter":
             #print(mod.size_in)

@@ -1,29 +1,10 @@
 kinematics:
   joint:
-    proximal:
-      a_pl: 0
-      alpha_pl: -1.57
-      p_pl: 0.072
-      n_pl: 0.070
-      delta_pl: 0
-    distal:
-      a_dl: 0
-      alpha_dl: 0
-      p_dl: 0
-      n_dl: 0
-      delta_dl: 3.14 #HACK
-    joint:
-      delta_j: 0
-      type: revolute
-      lower_limit: -3.0
-      upper_limit: 3.0
-      effort: 147
-      velocity: 3.9
   link:
     a_l: 0
     alpha_l: 0
     p_l: 0
-    n_l: 0
+    n_l: 0.015
     delta_l_in: 0
     delta_l_out: 0
 dynamics:
@@ -41,38 +22,14 @@ dynamics:
       y: 0.027416
       z: 0.055419
   body_2:
-    mass: 0.153466
-    inertia_tensor:
-      I_xx: 3.4763e-05
-      I_yy: 3.4827e-05
-      I_zz: 3.1822e-05
-      I_xy: 0.0
-      I_xz: 0.0
-      I_yz: 0.0
-    CoM:
-      x: 0.0
-      y: 0.0
-      z: -0.002265
   body_2_fast:
-    mass: 0.0
-    inertia_tensor:
-      I_xx: 0.0
-      I_yy: 0.0
-      I_zz: 0.0
-      I_xy: 0.0
-      I_xz: 0.0
-      I_yz: 0.0
-    CoM:
-      x: 0.0
-      y: 0.0
-      z: 0.0
 visual:
-  mesh_body_1: package://modular/src/modular/web/static/models/modular/meshes/innowelle/3011_ICM_25_PRELIMINARY_v3.stl
+  mesh_body_1: package://modular/src/modular/web/static/models/modular/meshes/innowelle/adapter_25_20_v2.stl
   tf_mesh_1:
     x: 0.0
     y: 0.0
     z: 0.0
-    roll: 0.0
+    roll: 1.57
     pitch: 0.0
     yaw: 0.0
   mesh_body_2: ""
@@ -80,15 +37,15 @@ visual:
     x: 0.0
     y: 0.0
     z: 0.0
-    roll: 0.0
+    roll: 1.57
     pitch: 0.0
     yaw: 0.0
-  mesh_collision_1: package://modular/src/modular/web/static/models/modular/meshes/innowelle/3011_ICM_25_PRELIMINARY_v3.stl
+  mesh_collision_1: package://modular/src/modular/web/static/models/modular/meshes/innowelle/adapter_25_20_v2.stl
   mesh_collision_2: ""
-size: big
-size_in: null
-size_out: null
-type: joint
+size: null
+size_in: large
+size_out: big
+type: size_adapter
 control:
   K_theta: 500
   D_theta: 70

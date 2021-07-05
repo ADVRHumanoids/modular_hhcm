@@ -407,11 +407,17 @@
                 <button type="button" id="add_3011_ICM_20_v2" class="btn btn-dark "><div>3011_ICM_20_v2</div></button>
                 <button type="button" id="add_3011_ICM_25_v3" class="btn btn-dark "><div>3011_ICM_25_v3</div></button>
                 <button type="button" id="add_3011_ICM_32_v2" class="btn btn-dark "><div>3011_ICM_32_v2</div></button>
-                <!-- <button type="button" id="addElbowJoint" class="btn btn-dark "><div>Elbow joint</div></button>
+                <button type="button" id="add_size_adapter_MtoS" class="btn btn-dark "><div>size_adapter_MtoS</div></button>
+                <button type="button" id="add_size_adapter_BtoM" class="btn btn-dark "><div>size_adapter_BtoM</div></button>
+                <button type="button" id="add_size_adapter_LtoB" class="btn btn-dark "><div>size_adapter_LtoB</div></button>
+                <button type="button" id="add_size_adapter_XLtoL" class="btn btn-dark "><div>size_adapter_XLtoL</div></button>
+                <button type="button" id="add_innowelle_link" class="btn btn-dark "><div>Add Link</div></button>
+                
+                <button type="button" id="addElbowJoint" class="btn btn-dark "><div>Elbow joint</div></button>
                 <button type="button" id="addSlaveCube" class="btn btn-dark "><div>Slave cube</div></button>
                 <button type="button" id="addSocketBase" class="btn btn-dark "><div>Socket base</div></button>
                 <button type="button" id="addYawJoint" class="btn btn-dark "><div>Yaw joint</div></button>
-                <button type="button" id="addDoubleElbowJoint" class="btn btn-dark "><div>Double Elbow joint</div></button> -->
+                <button type="button" id="addDoubleElbowJoint" class="btn btn-dark "><div>Double Elbow joint</div></button>
                 <!-- <button type="button" id="remove"><div>Remove module</div></button> -->
             </div>
 		</div>
@@ -611,6 +617,12 @@
                 var add_3011_ICM_20_v2 = document.getElementById('add_3011_ICM_20_v2');
                 var add_3011_ICM_25_v3 = document.getElementById('add_3011_ICM_25_v3');
                 var add_3011_ICM_32_v2 = document.getElementById('add_3011_ICM_32_v2');
+                var add_size_adapter_MtoS = document.getElementById('add_size_adapter_MtoS');
+                var add_size_adapter_BtoM = document.getElementById('add_size_adapter_BtoM');
+                var add_size_adapter_LtoB = document.getElementById('add_size_adapter_LtoB');
+                var add_size_adapter_XLtoL = document.getElementById('add_size_adapter_XLtoL');
+                var add_innowelle_link = document.getElementById('add_innowelle_link');
+
                 var addElbow = document.getElementById('addElbow');
                 var addLink = document.getElementById('addLink');
                 var addLink500 = document.getElementById('addLink500mm');
@@ -768,6 +780,12 @@
                 add_3011_ICM_20_v2.onclick = function() {addModule("innowelle/3011_ICM_20_v2", size)};
                 add_3011_ICM_25_v3.onclick = function() {addModule("innowelle/3011_ICM_25_PRELIMINARY_v3", size)};
                 add_3011_ICM_32_v2.onclick = function() {addModule("innowelle/3011_ICM_32_PRELIMINARY_v2", size)};
+                add_size_adapter_MtoS.onclick = function() {addModule("innowelle/module_size_adapter_MtoS", size)};
+                add_size_adapter_BtoM.onclick = function() {addModule("innowelle/module_size_adapter_BtoM", size)};
+                add_size_adapter_LtoB.onclick = function() {addModule("innowelle/module_size_adapter_LtoB", size)};
+                add_size_adapter_XLtoL.onclick = function() {addModule("innowelle/module_size_adapter_XLtoL", size)};
+                add_innowelle_link.onclick = function() {addModule("innowelle/module_link", size)};
+                
                 
                 addYawJoint.onclick = function() {addModule("module_joint_yaw_ORANGE", size)};
 
@@ -819,6 +837,12 @@
                 //var url = $SCRIPT_ROOT + 'yaml/' + filename;
                 //openfile(url, callBack_YAML)  
                 switch (size_value) {
+                    case 5:
+                        size_tag = '_XL';
+                        break;
+                    case 4:
+                        size_tag = '_L';
+                        break;
                     case 3:
                         size_tag = '_B';
                         break;
@@ -836,7 +860,6 @@
                     filename = modulename + size_tag + '.yaml'
                 }
                 
-                console.log()
                 //making an ajax request to the server to proceed to write the modified URDF
                 $.ajax({
                     url: $SCRIPT_ROOT + 'changeURDF/',
