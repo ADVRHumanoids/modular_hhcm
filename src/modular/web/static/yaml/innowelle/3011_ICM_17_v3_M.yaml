@@ -3,8 +3,8 @@ kinematics:
     proximal:
       a_pl: 0
       alpha_pl: -1.57
-      p_pl: 0.072
-      n_pl: 0.070
+      p_pl: 0.050
+      n_pl: 0.0624
       delta_pl: 0
     distal:
       a_dl: 0
@@ -67,7 +67,7 @@ dynamics:
       y: 0.0
       z: 0.0
 visual:
-  mesh_body_1: package://modular/src/modular/web/static/models/modular/meshes/innowelle/3011_ICM_25_PRELIMINARY_v3.stl
+  mesh_body_1: package://modular/src/modular/web/static/models/modular/meshes/innowelle/3011_ICM_17_v3.stl
   tf_mesh_1:
     x: 0.0
     y: 0.0
@@ -83,9 +83,9 @@ visual:
     roll: 0.0
     pitch: 0.0
     yaw: 0.0
-  mesh_collision_1: package://modular/src/modular/web/static/models/modular/meshes/innowelle/3011_ICM_25_PRELIMINARY_v3.stl
+  mesh_collision_1: package://modular/src/modular/web/static/models/modular/meshes/innowelle/3011_ICM_17_v3.stl
   mesh_collision_2: ""
-size: big
+size: medium
 size_in: null
 size_out: null
 type: joint

@@ -407,10 +407,10 @@
                 <button type="button" id="add_3011_ICM_20_v2" class="btn btn-dark "><div>3011_ICM_20_v2</div></button>
                 <button type="button" id="add_3011_ICM_25_v3" class="btn btn-dark "><div>3011_ICM_25_v3</div></button>
                 <button type="button" id="add_3011_ICM_32_v2" class="btn btn-dark "><div>3011_ICM_32_v2</div></button>
-                <button type="button" id="add_size_adapter_MtoS" class="btn btn-dark "><div>size_adapter_MtoS</div></button>
-                <button type="button" id="add_size_adapter_BtoM" class="btn btn-dark "><div>size_adapter_BtoM</div></button>
-                <button type="button" id="add_size_adapter_LtoB" class="btn btn-dark "><div>size_adapter_LtoB</div></button>
-                <button type="button" id="add_size_adapter_XLtoL" class="btn btn-dark "><div>size_adapter_XLtoL</div></button>
+                <button type="button" id="add_size_adapter_MtoS" class="btn btn-dark "><div>Size adapter 17 to 14</div></button>
+                <button type="button" id="add_size_adapter_BtoM" class="btn btn-dark "><div>Size adapter 20 to 17</div></button>
+                <button type="button" id="add_size_adapter_LtoB" class="btn btn-dark "><div>Size adapter 25 to 20</div></button>
+                <button type="button" id="add_size_adapter_XLtoL" class="btn btn-dark "><div>Size adapter 32 to 25</div></button>
                 <button type="button" id="add_innowelle_link" class="btn btn-dark "><div>Add Link</div></button>
                 
                 <button type="button" id="addElbowJoint" class="btn btn-dark "><div>Elbow joint</div></button>
@@ -750,7 +750,7 @@
                 //     reader.readAsText(file);      
                 // });
 
-                addSlaveCube.onclick = function() {addCube("mastercube", size)};
+                addSlaveCube.onclick = function() {addCube("mastercube", size_value=3)};
 
                 addSocketBase.onclick = function() {addSocket()};
 
@@ -773,13 +773,13 @@
                     // });
                 };
 
-                addElbowJoint.onclick = function() {addModule("module_tool_exchanger_heavy", size)};
+                addElbowJoint.onclick = function() {addModule("module_tool_exchanger_heavy", size_value=3)};
 
-                add_3011_ICM_14_v4.onclick = function() {addModule("innowelle/3011_ICM_14_v4", size)};
-                add_3011_ICM_17_v3.onclick = function() {addModule("innowelle/3011_ICM_17_v3", size)};
-                add_3011_ICM_20_v2.onclick = function() {addModule("innowelle/3011_ICM_20_v2", size)};
-                add_3011_ICM_25_v3.onclick = function() {addModule("innowelle/3011_ICM_25_PRELIMINARY_v3", size)};
-                add_3011_ICM_32_v2.onclick = function() {addModule("innowelle/3011_ICM_32_PRELIMINARY_v2", size)};
+                add_3011_ICM_14_v4.onclick = function() {addModule("innowelle/3011_ICM_14_v4", size_value=1)};
+                add_3011_ICM_17_v3.onclick = function() {addModule("innowelle/3011_ICM_17_v3", size_value=2)};
+                add_3011_ICM_20_v2.onclick = function() {addModule("innowelle/3011_ICM_20_v2", size_value=3)};
+                add_3011_ICM_25_v3.onclick = function() {addModule("innowelle/3011_ICM_25_PRELIMINARY_v3", size_value=4)};
+                add_3011_ICM_32_v2.onclick = function() {addModule("innowelle/3011_ICM_32_PRELIMINARY_v2", size_value=5)};
                 add_size_adapter_MtoS.onclick = function() {addModule("innowelle/module_size_adapter_MtoS", size)};
                 add_size_adapter_BtoM.onclick = function() {addModule("innowelle/module_size_adapter_BtoM", size)};
                 add_size_adapter_LtoB.onclick = function() {addModule("innowelle/module_size_adapter_LtoB", size)};
@@ -787,9 +787,9 @@
                 add_innowelle_link.onclick = function() {addModule("innowelle/module_link", size)};
                 
                 
-                addYawJoint.onclick = function() {addModule("module_joint_yaw_ORANGE", size)};
+                addYawJoint.onclick = function() {addModule("module_joint_yaw_ORANGE", size_value=3)};
 
-                addDoubleElbowJoint.onclick = function() {addModule("module_joint_double_elbow_ORANGE", size)};
+                addDoubleElbowJoint.onclick = function() {addModule("module_joint_double_elbow_ORANGE", size_value=3)};
 
                 var ros = new ROSLIB.Ros({
                     url : 'ws://10.24.8.100:9090'
@@ -829,7 +829,7 @@
             // }
 
             //Function to add a new module. Called at the click of the linked button
-            function addModule(modulename, size_value) {
+            function    addModule(modulename, size_value) {
                 var offset = parseFloat(prompt("Enter the angle offset for the module:", "0"));
                 var reverse = confirm("Do you want to connect it backwards?");
                 
@@ -868,9 +868,10 @@
                     success: function(data) {
                         console.log(data)
                         robots = urdfViewer.updateURDF(data['result'])//, data['lastModule_name'])
-                        // size = data['size']
+                        // Update size
+                        size = data['size']
                         updateShownButtons(data['lastModule_type'], data['count'], data['size'])
-                        // console.log(size)
+                        console.log(size)
                         CURRENT_PARENT = data['lastModule_name']
                         //write the file
                         writeRequest(data['result'])
@@ -991,9 +992,10 @@
                     success: function(data) {
                         console.log(data)
                         robots = urdfViewer.updateURDF(data['result'])//, data['lastModule_name'])
-                        // size = data['size']
+                        // Update size
+                        size = data['size']
                         updateShownButtons(data['lastModule_type'], data['count'], data['size'])
-                        // console.log(size)
+                        console.log(size)
                         CURRENT_PARENT = data['lastModule_name']
                         
                         //write the file
@@ -1016,36 +1018,10 @@
                     success: function(data) {
                         console.log(data)
                         robots = urdfViewer.updateURDF(data['result'])//, data['lastModule_name'])
-                        // size = data['size']
+                        // Update size
+                        size = data['size']
                         updateShownButtons(data['lastModule_type'], data['count'], data['size'])
-                        // console.log(size)
-                        CURRENT_PARENT = data['lastModule_name']
-                        //write the file
-                        writeRequest(data['result'], true, function(){})
-                    },
-                    async: true
-                });
-
-            };
-
-            function addSocket() {
-                //making an ajax request to the server to add a Socket
-                var x_offset = parseFloat(prompt("Enter the x offset for the socket:", "0"));
-                var y_offset = parseFloat(prompt("Enter the yoffset for the socket:", "0"));
-                var z_offset = 0.0
-                var angle_offset = parseFloat(prompt("Enter the angle offset for the socket:", "0"))
-                var values= {'offset': {x_offset, y_offset, z_offset}, 'angle_offset': angle_offset}
-
-                $.ajax({
-                    url: $SCRIPT_ROOT + 'addSocket/',
-                    data: { 'values' : JSON.stringify(values) },
-                    method: 'POST',
-                    success: function(data) {
-                        console.log(data)
-                        robots = urdfViewer.updateURDF(data['result'])//, data['lastModule_name'])
-                        // size = data['size']
-                        updateShownButtons(data['lastModule_type'], data['count'], data['size'])
-                        // console.log(size)
+                        console.log(size)
                         CURRENT_PARENT = data['lastModule_name']
                         //write the file
                         writeRequest(data['result'], true, function(){})
@@ -1063,9 +1039,10 @@
                     success: function(data) {
                         console.log(data)
                         robots = urdfViewer.updateURDF(data['result'])
-                        //size = data['size']
+                        // Update size
+                        size = data['size']
                         updateShownButtons(data['lastModule_type'], data['count'], data['size'])
-                        //console.log(size)
+                        console.log(size)
                         CURRENT_PARENT = data['lastModule_name']
                         //write the file
                         writeRequest(data['result'], true, function(){})

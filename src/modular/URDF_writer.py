@@ -1828,9 +1828,10 @@ class UrdfWriter:
         self.tag_num += 1
 
         # Set attributes of the newly added module object
-        setattr(new_socket, 'size', self.parent_module.size)
         setattr(new_socket, 'i', self.parent_module.i)
         setattr(new_socket, 'p', self.parent_module.p)
+        # Size is already set from the YAML file
+        # setattr(new_socket, 'size', self.parent_module.size)
 
         setattr(new_socket, 'angle_offset', angle_offset)
         setattr(new_socket, 'robot_id', 0)
@@ -2051,9 +2052,10 @@ class UrdfWriter:
         print('new_module.tag:', new_module.tag)
 
         # Set attributes of the newly added module object
-        setattr(new_module, 'size', self.parent_module.size)
         setattr(new_module, 'i', self.parent_module.i)
         setattr(new_module, 'p', self.parent_module.p)
+        # Size is already set from the YAML file
+        # setattr(new_module, 'size', self.parent_module.size)
 
         setattr(new_module, 'angle_offset', angle_offset)
         setattr(new_module, 'reverse', reverse)
@@ -2617,23 +2619,19 @@ class UrdfWriter:
             # TO BE FIXED: ok for ros_control. How will it be for xbot2?
             self.control_plugin.add_joint(new_Link.name + '_finger_joint1')
             self.control_plugin.add_joint(new_Link.name + '_finger_joint2')
-        else:
-            if new_Link.size >= 1:
-                setattr(new_Link, 'name', 'L_' + str(new_Link.i) + '_size_adapter_' + str(new_Link.p) + new_Link.tag)
-                ET.SubElement(self.root,
-                              "xacro:add_size_adapter",
-                              type="size_adapter",
-                              name=new_Link.name,
-                              filename=new_Link.filename,
-                              size_z=new_Link.link_size_z,
-                            #   size_in=new_Link.size_in,
-                            #   size_out=new_Link.size_out
-                )
-                setattr(new_Link, 'size', new_Link.size_out)
-            else:
-                # ERROR
-                print("Error")
-
+        elif new_Link.type == 'size_adapter':
+            setattr(new_Link, 'name', 'L_' + str(new_Link.i) + '_size_adapter_' + str(new_Link.p) + new_Link.tag)
+            ET.SubElement(self.root,
+                            "xacro:add_size_adapter",
+                            type="size_adapter",
+                            name=new_Link.name,
+                            filename=new_Link.filename,
+                            size_z=new_Link.link_size_z,
+                        #   size_in=new_Link.size_in,
+                        #   size_out=new_Link.size_out
+            )
+            setattr(new_Link, 'size', new_Link.size_out)
+            
         print('past_Cube: ', past_Cube)
         print('past_Cube.selected_port: ', past_Cube.selected_port)
 
@@ -2914,22 +2912,18 @@ class UrdfWriter:
             self.control_plugin.add_joint(new_Link.name + '_finger_joint1')
             self.control_plugin.add_joint(new_Link.name + '_finger_joint2')
         elif new_Link.type == 'size_adapter':
-            if new_Link.size >= 1:
-                setattr(new_Link, 'name', 'L_' + str(new_Link.i) + '_size_adapter_' + str(new_Link.p) + new_Link.tag)
-                ET.SubElement(self.root,
-                              "xacro:add_size_adapter",
-                              type="size_adapter",
-                              name=new_Link.name,
-                              filename=new_Link.filename,
-                              size_z=new_Link.link_size_z,
-                            #   size_in=new_Link.size_in,
-                            #   size_out=new_Link.size_out
-                )
-                setattr(new_Link, 'size', new_Link.size_out)
-            else:
-                # ERROR
-                print("Error")
-
+            setattr(new_Link, 'name', 'L_' + str(new_Link.i) + '_size_adapter_' + str(new_Link.p) + new_Link.tag)
+            ET.SubElement(self.root,
+                            "xacro:add_size_adapter",
+                            type="size_adapter",
+                            name=new_Link.name,
+                            filename=new_Link.filename,
+                            size_z=new_Link.link_size_z,
+                        #   size_in=new_Link.size_in,
+                        #   size_out=new_Link.size_out
+            )
+            setattr(new_Link, 'size', new_Link.size_out)
+            
         transform = ModuleNode.get_rototranslation(past_Joint.Distal_tf,
                                                    tf.transformations.rotation_matrix(offset,
                                                                                       self.zaxis))
@@ -3294,26 +3288,23 @@ class UrdfWriter:
             # TO BE FIXED: ok for ros_control. How will it be for xbot2?
             self.control_plugin.add_joint(new_Link.name + '_finger_joint1')
             self.control_plugin.add_joint(new_Link.name + '_finger_joint2')
-        else:
-            if new_Link.size >= 1:
-                setattr(new_Link, 'name', 'L_' + str(new_Link.i) + '_size_adapter_' + str(new_Link.p) + new_Link.tag)
-                ET.SubElement(self.root,
-                              "xacro:add_size_adapter",
-                              type="size_adapter",
-                              name=new_Link.name,
-                              filename=new_Link.filename,
-                              size_z=new_Link.link_size_z,
-                            #   size_in=new_Link.size_in,
-                            #   size_out=new_Link.size_out
-                )
-                setattr(new_Link, 'size', new_Link.size_out)
-            else:
-                # ERROR
-                print("Error")
+        elif new_Link.type == 'size_adapter':
+            setattr(new_Link, 'name', 'L_' + str(new_Link.i) + '_size_adapter_' + str(new_Link.p) + new_Link.tag)
+            ET.SubElement(self.root,
+                            "xacro:add_size_adapter",
+                            type="size_adapter",
+                            name=new_Link.name,
+                            filename=new_Link.filename,
+                            size_z=new_Link.link_size_z,
+                        #   size_in=new_Link.size_in,
+                        #   size_out=new_Link.size_out
+            )
+            setattr(new_Link, 'size', new_Link.size_out)
 
         transform = ModuleNode.get_rototranslation(past_Link.Homogeneous_tf,
                                                    tf.transformations.rotation_matrix(offset,
                                                                                       self.zaxis))
+        print(transform)
         x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(transform)
 
         if new_Link.type == 'tool_exchanger' or new_Link.type == 'gripper':
