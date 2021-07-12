@@ -32,7 +32,7 @@
             function updateShownButtons(lastModule_type, count, lastSize) {
 
                 if (count>0)
-                    removeLast.style.display="block";
+                    removeLast.style.display="inline-flex";
                 else
                     removeLast.style.display="none";
                 
@@ -133,12 +133,12 @@
                 z-index: 10;
             }
             #removeLast {
-                background-color: rgb(206, 33, 33);
+                /* background-color: rgb(206, 33, 33); */
                 border: none;
                 position: absolute;
                 bottom: 0;
                 right: 20%;
-                font-size: 19px;
+                font-size: 24px;
                 color: white;
                 padding: 12px 16px;
                 display: none;
@@ -163,7 +163,7 @@
                 left: 45%;
                 font-size: 24px;
                 color: white;
-                padding: 11px 16px;
+                padding: 12px 16px;
                 /* vertical-align: bottom; */
             }
 
@@ -391,7 +391,9 @@
                 </div>
                 <div id="div-DiscoveryMode">Discovery Mode</div>
             </div>
-            <button id=removeLast class="btn"><i class="fa fa-trash"></i> Remove Module</button>
+            <button id=removeLast class="btn btn-danger">
+                <i class="material-icons" style="font-size: 30px; padding-top: 4px; padding-right: 4px;">delete</i>Remove Module
+            </button>
             <!-- <button id=syncHardware class="btn"><span style="padding-right: 4px"><i class="material-icons">developer_board</i></span>Sync with hardware</button> -->
             <button id=deploy class="btn btn-success">
                 <i class="material-icons" style="font-size: 30px; padding-top: 4px; padding-right: 4px;">done</i>Deploy Robot
@@ -402,23 +404,25 @@
             <div id="selector" class="btn-group-vertical" style="overflow-y:auto;">
                 Select a module to add: 
                 <!-- <input type="file" id="moduleInput"> -->
-                <button type="button" id="add_3011_ICM_14_v4" class="btn btn-dark "><div>3011_ICM_14_v4</div></button>
-                <button type="button" id="add_3011_ICM_17_v3" class="btn btn-dark "><div>3011_ICM_17_v3</div></button>
-                <button type="button" id="add_3011_ICM_20_v2" class="btn btn-dark "><div>3011_ICM_20_v2</div></button>
-                <button type="button" id="add_3011_ICM_25_v3" class="btn btn-dark "><div>3011_ICM_25_v3</div></button>
-                <button type="button" id="add_3011_ICM_32_v2" class="btn btn-dark "><div>3011_ICM_32_v2</div></button>
-                <button type="button" id="add_size_adapter_MtoS" class="btn btn-dark "><div>Size adapter 17 to 14</div></button>
-                <button type="button" id="add_size_adapter_BtoM" class="btn btn-dark "><div>Size adapter 20 to 17</div></button>
-                <button type="button" id="add_size_adapter_LtoB" class="btn btn-dark "><div>Size adapter 25 to 20</div></button>
-                <button type="button" id="add_size_adapter_XLtoL" class="btn btn-dark "><div>Size adapter 32 to 25</div></button>
-                <button type="button" id="add_innowelle_link" class="btn btn-dark "><div>Add Link</div></button>
-                
-                <button type="button" id="addElbowJoint" class="btn btn-dark "><div>Elbow joint</div></button>
-                <button type="button" id="addSlaveCube" class="btn btn-dark "><div>Slave cube</div></button>
-                <button type="button" id="addSocketBase" class="btn btn-dark "><div>Socket base</div></button>
-                <button type="button" id="addYawJoint" class="btn btn-dark "><div>Yaw joint</div></button>
-                <button type="button" id="addDoubleElbowJoint" class="btn btn-dark "><div>Double Elbow joint</div></button>
+                <button type="button" id="addSocketBase" class="btn btn-dark "><div>Add Socket Base</div></button>
+                <button type="button" id="addSlaveCube" class="btn btn-dark "><div>Add Slave Cube</div></button>
+                <button type="button" id="addYawJoint" class="btn btn-dark "><div>Add Straight Joint</div></button>
+                <button type="button" id="addDoubleElbowJoint" class="btn btn-dark "><div>Add Elbow Joint</div></button>
+                <button type="button" id="addElbowJoint" class="btn btn-dark "><div>Add Tool Exchanger</div></button>
                 <!-- <button type="button" id="remove"><div>Remove module</div></button> -->
+
+                <button type="button" id="add_3011_ICM_14_v4" class="btn btn-dark "><div>Add 3011_ICM_14_v4</div></button>
+                <button type="button" id="add_3011_ICM_17_v3" class="btn btn-dark "><div>Add 3011_ICM_17_v3</div></button>
+                <button type="button" id="add_3011_ICM_20_v2" class="btn btn-dark "><div>Add 3011_ICM_20_v2</div></button>
+                <button type="button" id="add_3011_ICM_25_v3" class="btn btn-dark "><div>Add 3011_ICM_25_v3</div></button>
+                <button type="button" id="add_3011_ICM_32_v2" class="btn btn-dark "><div>Add 3011_ICM_32_v2</div></button>
+                <button type="button" id="add_size_adapter_MtoS" class="btn btn-dark "><div>Add Size Adapter 17 to 14</div></button>
+                <button type="button" id="add_size_adapter_BtoM" class="btn btn-dark "><div>Add Size Adapter 20 to 17</div></button>
+                <button type="button" id="add_size_adapter_LtoB" class="btn btn-dark "><div>Add Size Adapter 25 to 20</div></button>
+                <button type="button" id="add_size_adapter_XLtoL" class="btn btn-dark "><div>Add Size Adapter 32 to 25</div></button>
+                <button type="button" id="add_innowelle_link" class="btn btn-dark "><div>Add Dummy Link</div></button>
+                <button type="button" id="add_goose_neck" class="btn btn-dark "><div>Add Goose Neck</div></button>
+                
             </div>
 		</div>
 		
@@ -622,6 +626,7 @@
                 var add_size_adapter_LtoB = document.getElementById('add_size_adapter_LtoB');
                 var add_size_adapter_XLtoL = document.getElementById('add_size_adapter_XLtoL');
                 var add_innowelle_link = document.getElementById('add_innowelle_link');
+                var add_goose_neck = document.getElementById('add_goose_neck');
 
                 var addElbow = document.getElementById('addElbow');
                 var addLink = document.getElementById('addLink');
@@ -650,14 +655,14 @@
                 urdfViewer._init();
                 requestURDF();
                 selector.style.display = 'block';
-                header.style.display = 'block';
+                header.style.display = 'none';
                 // syncHardware.style.display = 'inline-flex';
                 syncModel.style.display = 'inline-flex';
                 deploy.style.display = 'inline-flex';
             
                 if(buildingModeON){
                     selector.style.display = 'block';
-                    header.style.display = 'block';                    
+                    header.style.display = 'none';                    
                 }
                 else {
                     selector.style.display = 'none'; 
@@ -727,7 +732,7 @@
                                 erasePrevious = false;
                                 requestURDF();
                                 selector.style.display = 'block';
-                                header.style.display = 'block';
+                                header.style.display = 'none';
                             }
                         
 
@@ -785,6 +790,7 @@
                 add_size_adapter_LtoB.onclick = function() {addModule("innowelle/module_size_adapter_LtoB", size)};
                 add_size_adapter_XLtoL.onclick = function() {addModule("innowelle/module_size_adapter_XLtoL", size)};
                 add_innowelle_link.onclick = function() {addModule("innowelle/module_link", size)};
+                add_goose_neck.onclick = function() {addModule("innowelle/module_goose_neck", size_value=2)};
                 
                 
                 addYawJoint.onclick = function() {addModule("module_joint_yaw_ORANGE", size_value=3)};
@@ -987,7 +993,7 @@
 
                 $.ajax({
                     url: $SCRIPT_ROOT + 'addSocket/',
-                    data: { 'values' : JSON.stringify(values) },
+                    data: { 'values' : JSON.stringify(values), 'buildingModeON' : buildingModeON },
                     method: 'POST',
                     success: function(data) {
                         console.log(data)
