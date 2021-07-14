@@ -4,7 +4,7 @@ kinematics:
     a_l: 0
     alpha_l: 0
     p_l: 0
-    n_l: 0.140
+    n_l: 0.350
     delta_l_in: 0
     delta_l_out: 0
 dynamics:
