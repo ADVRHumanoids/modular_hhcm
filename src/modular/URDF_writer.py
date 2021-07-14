@@ -1819,6 +1819,9 @@ class UrdfWriter:
         # module_name = path_name + '/web/static/yaml/' + filename
         module_name = self.resource_finder.get_filename(filename, 'yaml_path')
 
+        # Set base_link as parent
+        self.parent_module = self.base_link
+
         # create a ModuleNode instance for the socket
         new_socket = ModuleNode.module_from_yaml(module_name, self.parent_module, reverse=0)
 
