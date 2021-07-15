@@ -347,7 +347,7 @@
                     <geometry>
                         <mesh filename="${module['visual']['mesh_body_1']}" scale="0.001 0.001 0.001"/>
                     </geometry>
-                    <material name="tree_green"/>
+                    <material name="white"/>
                 </visual>
                 <collision>
                     <origin
@@ -423,7 +423,7 @@
             <xacro:property name="mesh_bool" value="true"/>
         </xacro:unless> -->
 
-        <xacro:if value="${size==1}">
+        <!-- <xacro:if value="${size==1}">
             <xacro:property name="radius" value="${size1}" />
         </xacro:if>
         <xacro:unless value="${size==1}">
@@ -433,7 +433,9 @@
             <xacro:unless value="${size==2}">
                 <xacro:property name="radius" value="${size3}" />
             </xacro:unless>
-        </xacro:unless>
+        </xacro:unless> -->
+
+        <xacro:property name="radius" value="${size4}" />
 
         <link name="${name}">
             <visual>
