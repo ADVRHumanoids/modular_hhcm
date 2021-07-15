@@ -109,7 +109,7 @@
             #sliders {
                 z-index: 5;
             }
-            #selector {
+            /* #selector {
                 width: 20%;
                 height: 100%;
                 position: absolute;
@@ -119,11 +119,43 @@
                 display: none;
                 /* float:right;
                 width:50px;
-                height:100px; */
             }
             #selector {
                 z-index: 5;
+            } */
+
+            #selectModulesFamily{
+                width: 100%;
+                height: 100%
             }
+
+            #familySelector{
+                width: 100%;
+                height: 10%;
+            }
+
+            .button-bar-container {
+                width: 20%;
+                height: 100%;
+                position: fixed;
+                z-index: 1;
+                top: 0;
+                right: 0;
+                float: right;
+                background-color:#495057;
+            }
+
+            #leftBar {
+                width: 100%;
+                height: 100%;
+                padding: 0px 10px 0px; 
+                /* position: fixed; */
+                z-index: 1;
+                /* top: 0;
+                right: 0; */
+                float: right;
+            }
+            
             #header {
                 position: absolute;
                 top: 0;
@@ -180,9 +212,16 @@
                 /* display: none; */
             }
 
+            .btn-subgroup {
+                width:100%;
+                /* height:20%; */
+                padding:3px 0 3px 0;
+            }
+
 			.button-selector {
-                background-size: 100% 100%;
+                /* background-size: 100% 100%; */
                 height: 140px; 
+                /* height: fit-content; */
                 width: 100%;
                 padding-bottom: 10px;
                 /* text-align: center; */
@@ -191,10 +230,11 @@
                 font-size: 16px;
             }
             
-            button > div {
+            /* button > div {
                 padding-top: 50%;
-            }
-             /* The switch - the box around the slider */
+            } */
+            
+            /* The switch - the box around the slider */
             .switch {
                 position: relative;
                 display: inline-block;
@@ -401,15 +441,43 @@
             <button id=syncModel class="btn btn-primary">
                 <i class="material-icons" style="font-size: 30px; padding-top: 4px; padding-right: 4px;">power_settings_new</i>Generate model
             </button>
-            <div id="selector" class="btn-group-vertical" style="overflow-y:auto;">
-                Select a module to add: 
-                <!-- <input type="file" id="moduleInput"> -->
-                <button type="button" id="addElbowJoint" class="btn btn-dark "><div>Elbow joint</div></button>
-                <button type="button" id="addSlaveCube" class="btn btn-dark "><div>Slave cube</div></button>
-                <button type="button" id="addSocketBase" class="btn btn-dark "><div>Socket base</div></button>
-                <button type="button" id="addYawJoint" class="btn btn-dark "><div>Yaw joint</div></button>
-                <button type="button" id="addDoubleElbowJoint" class="btn btn-dark "><div>Double Elbow joint</div></button>
-                <!-- <button type="button" id="remove"><div>Remove module</div></button> -->
+            
+            <div id=barContainer class="button-bar-container">
+                <div id="leftBar" class="btn-group-vertical" > 
+                    <!-- style="overflow-y:auto;" -->
+                    <div id="familySelector"  class="btn-group-vertical"  >
+                        <!-- class="btn-group-vertical" style="overflow-y:auto;" -->
+                        
+                        <!-- <label for="selectModulesFamily">Modules Family:</label>
+                        <select name="selectModulesFamily" id="selectModulesFamily" class="selectpicker">
+                            <option value="alberobotics">Alberobotics Modules</option>
+                            <option value="innowelle">Innowelle Modules</option>
+                        </select> -->
+                        <div id="selectModulesFamily" class="btn-group dropleft">
+                            <button id="selectModulesFamilyBtn" type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown" data-prefix="Selected family: " aria-haspopup="true" aria-expanded="false">
+                                Select a family of modules:
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+                                <li><a href="#" class="dropdown-item" data-value="Alberobotics">Alberobotics Modules</a></li>
+                                <li><a href="#" class="dropdown-item" data-value="Innowelle">Innowelle Modules</a></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- <input type="file" id="moduleInput"> -->
+
+                    <!-- Select a module to add:  -->
+                    <div id='alberoboticsModules' class="btn-group-vertical btn-subgroup overflow-auto">
+                        <button type="button" id="addSocketBase" class="btn btn-dark button-selector"><div>Add Socket Base</div></button>
+                        <button type="button" id="addSlaveCube" class="btn btn-dark button-selector"><div>Add Slave Cube</div></button>
+                        <button type="button" id="addYawJoint" class="btn btn-dark button-selector"><div>Add Straight Joint</div></button>
+                        <button type="button" id="addDoubleElbowJoint" class="btn btn-dark button-selector"><div>Add Elbow Joint</div></button>
+                        <button type="button" id="addElbowJoint" class="btn btn-dark button-selector"><div>Add Tool Exchanger</div></button>
+                    </div>
+
+                    <div id='innowelleModules' class="btn-group-vertical btn-subgroup overflow-auto" style="display:none">
+                    </div>
+                </div>
             </div>
 		</div>
 		
@@ -601,7 +669,9 @@
                 console.log(buildingModeON);
                 //var fileDisplayArea = document.getElementById('fileDisplayArea');
                 //var moduleInput = document.getElementById('moduleInput');
-                var selector = document.getElementById('selector')
+                var barContainer = document.getElementById('barContainer')
+                var selectModulesFamily = document.getElementById("selectModulesFamily");
+
                 var addJoint = document.getElementById('addJoint');
                 var addElbow = document.getElementById('addElbow');
                 var addLink = document.getElementById('addLink');
@@ -629,18 +699,18 @@
                 // Initialize the urdfViewer class: create a scene, renderer, etc.
                 urdfViewer._init();
                 requestURDF();
-                selector.style.display = 'block';
+                barContainer.style.display = 'block';
                 header.style.display = 'none';
                 // syncHardware.style.display = 'inline-flex';
                 syncModel.style.display = 'inline-flex';
                 deploy.style.display = 'inline-flex';
             
                 if(buildingModeON){
-                    selector.style.display = 'block';
+                    barContainer.style.display = 'block';
                     header.style.display = 'none';                    
                 }
                 else {
-                    selector.style.display = 'none'; 
+                    barContainer.style.display = 'none'; 
                     header.style.display = 'none';                
                 }
 
@@ -653,7 +723,7 @@
                         //fileDisplayArea.innerText = reader.result;
                         document.getElementById('header').style.display="none";
                         //robots = urdfViewer.showURDF(reader);
-                        // selector.style.display = 'block';
+                        // barContainer.style.display = 'block';
                         // modeSwitch.style.display = 'inline-block';
                         // modeSwitchSlider.style.display = 'block';
                         // syncHardware.style.display = 'inline-flex';
@@ -697,7 +767,7 @@
                             if(modeInput.checked) {
                                 console.log("Discovery mode on")
                                 // buildingModeON = false;
-                                selector.style.display = 'none';
+                                barContainer.style.display = 'none';
                                 header.style.display = 'none';
                             }
                             else {
@@ -706,7 +776,7 @@
                                 // buildingModeON = true;
                                 erasePrevious = false;
                                 requestURDF();
-                                selector.style.display = 'block';
+                                barContainer.style.display = 'block';
                                 header.style.display = 'none';
                             }
                         
@@ -752,6 +822,40 @@
                         });
                     // });
                 };
+
+                // $(document).on('change', '#selectModulesFamilyBtn', function () {
+                //     // var dropdownToggle = $(this).parents('.btn-group').find('.dropdown-toggle')
+                //     if($('#selectModulesFamilyBtn option:selected').val() == "Innowelle") {
+                //         $('#innowelleModules').show()
+                //         $('#alberoboticsModules').hide()
+                //     }
+                //     else {
+                //         $('#innowelleModules').hide()
+                //         $('#alberoboticsModules').show()
+                //     }
+                // })
+
+                $( ".dropdown-menu" ).on( "click", "a", function( event ) {
+					event.preventDefault();  //do not follow link of anchor element
+					console.log('Selection')
+					var selText = $(this).text();
+					console.log( $(this).text())
+                    console.log($(this).parents('.btn-group'))
+  					var dropdownToggle = $(this).parents('.btn-group').find('.dropdown-toggle')
+					dropdownToggle.html(dropdownToggle.data('prefix')+selText+'  <span class="caret"></span>');
+					dropdownToggle.val($(this).data('value'));
+                    dropdownToggle.change();
+                    console.log(dropdownToggle.val())
+                    
+                    if(dropdownToggle.val() == "Innowelle") {
+                        $('#innowelleModules').show()
+                        $('#alberoboticsModules').hide()
+                    }
+                    else {
+                        $('#innowelleModules').hide()
+                        $('#alberoboticsModules').show()
+                    }
+				});
 
                 addElbowJoint.onclick = function() {addModule("module_tool_exchanger_heavy", size)};
                 
