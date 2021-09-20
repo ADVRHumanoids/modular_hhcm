@@ -10,6 +10,10 @@ The package can be installed in system, local, or virtualenv site-packages direc
 If you plan to make modifications it and don't want to re-install it every time, install it in 'editable mode' :
 `pip install -e .`
 
+REQUIREMENTS: ros-melodic-tf package: `sudo apt update && sudo apt install ros-melodic-tf`. 
+
+NOTE (python2): setuptools must be upgraded before the installation (`pip2 install --upgrade setuptools`) because protobuf_to_dict does not specify the minimum required version and pip dependecies are resolved in alphabetical order.
+
 2. **Catkin install**
 
 After cloning the repo in the caktin sourcespace run:
