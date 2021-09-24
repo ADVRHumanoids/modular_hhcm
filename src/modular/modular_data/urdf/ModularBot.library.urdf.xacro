@@ -435,7 +435,7 @@
             </xacro:unless>
         </xacro:unless> -->
 
-        <xacro:property name="radius" value="${size4}" />
+        <xacro:property name="radius" value="${size_interface}" />
 
         <link name="${name}">
             <visual>
