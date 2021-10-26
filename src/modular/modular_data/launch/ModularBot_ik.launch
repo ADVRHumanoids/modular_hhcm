@@ -1,5 +1,5 @@
 <launch>
-    <arg name="pkg_name"  default="ModularBot_test"/>
+    <arg name="pkg_name"  default="PACKAGE_NAME"/>
     <param name="robot_description" textfile="$(eval find(pkg_name) + '/urdf/ModularBot.urdf')"/>
     <param name="robot_description_semantic" textfile="$(eval find(pkg_name) + '/srdf/ModularBot.srdf')"/>
     <param name="cartesian/problem_description" textfile="$(eval find(pkg_name) + '/cartesio/ModularBot_cartesio_IK_config.yaml')"/>
