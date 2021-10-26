@@ -3532,9 +3532,10 @@ class UrdfWriter:
     def deploy_robot(self, robot_name, path="/home/tree/xbot2_ws/src"):
         # script = path + '/scripts/deploy.sh'
         script = self.resource_finder.get_filename('deploy.sh', 'data_path')
+        deploy_dir = self.resource_finder.cfg['deploy_dir']
 
         #subprocess.check_call([script, robot_name])
-        output = subprocess.check_output([script, robot_name, "-v"])
+        output = subprocess.check_output([script, robot_name, "--destination-folder", deploy_dir, "-v"])
         # output = subprocess.check_output([script, robot_name, "-d", path, "-v"])
         print(output)
         
