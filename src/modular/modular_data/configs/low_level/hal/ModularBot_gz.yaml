@@ -2,7 +2,7 @@ xbotcore_devices:
 
     joint_gz:
         names: []
-        thread: nrt_main
+        thread: rt_main
 
     joint_master:
         master: true  # this is a master device for 'joint'
