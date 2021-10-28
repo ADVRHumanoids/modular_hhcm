@@ -825,6 +825,11 @@ class XBot2Plugin(Plugin):
                     value = joint_module.CentAcESC
                     impd4_joint_config[key] = copy.deepcopy(value)
                     impd4_joint_config[key].control_mode = 'D4_impedance_ctrl'
+                    # Remove parameters that are now not used by XBot2 (they are handled by the EtherCat master on a different config file)
+                    del impd4_joint_config[key].sign 
+                    del impd4_joint_config[key].pos_offset 
+                    del impd4_joint_config[key].max_current_A 
+
                     # HACK: Every joint on 2nd, 3rd, etc. chains have the torque loop damping set very low.
                     # This is to handle chains with only one joint and low inertia after it.
                     # If we build two big robots this could have catastrophic effects
@@ -847,6 +852,10 @@ class XBot2Plugin(Plugin):
 
                 idle_joint_config[key] = copy.deepcopy(value)
                 idle_joint_config[key].control_mode = 'idle'
+                # Remove parameters that are now not used by XBot2 (they are handled by the EtherCat master on a different config file)
+                del idle_joint_config[key].sign 
+                del idle_joint_config[key].pos_offset 
+                del idle_joint_config[key].max_current_A 
 
         # Create folder if doesen't exist
         if not os.path.exists(os.path.dirname(idle_joint_config_filename)):
