@@ -846,6 +846,9 @@ class XBot2Plugin(Plugin):
                     value = joint_module.LpESC
                     impd4_joint_config[key] = copy.deepcopy(value)
                     impd4_joint_config[key].control_mode = '3B_motor_pos_ctrl'
+                    del impd4_joint_config[key].sign 
+                    del impd4_joint_config[key].pos_offset 
+                    del impd4_joint_config[key].max_current_A 
                     
                 elif joint_module.type == 'simple_ee':
                     continue
