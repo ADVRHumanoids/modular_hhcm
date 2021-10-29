@@ -5,7 +5,7 @@
   
   
   <!-- gazebo configuration parameters -->
-  <arg name="paused" default="true"/>
+  <arg name="paused" default="false"/>
   <arg name="use_sim_time" default="true"/>
   <arg name="gui" default="true"/>
   <arg name="headless" default="false"/>
@@ -27,8 +27,7 @@
   <arg     if="$(arg debug)" name="script_type" value="debug"/>
 
   
-  <!-- from where the simulation enviornment will be loaded:
-       WARNING: exactly one parameter has to be true, otherwise simulation behaviour is undefined -->
+  <!-- from where the simulation enviornment will be loaded -->
   <arg name="world_name" default="$(find PACKAGE_NAME)/database/PACKAGE_NAME_fixed_base/PACKAGE_NAME_world.sdf"/>
 
 
