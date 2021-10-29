@@ -11,6 +11,6 @@
     </joint>
 
     <link name="base_link">
-        <xacro:default_inertial mass="10.0"/>
+        <xacro:default_inertial mass="0.1"/>
     </link>
 </robot>
