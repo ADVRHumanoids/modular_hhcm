@@ -120,5 +120,6 @@ LpESC:
   sign: 1
   pos_offset: 0
   control_mode : pos_3b
+  max_current_A: 10.0
   pid :
     position: [100000.0 , 0.0 , 1.0]
