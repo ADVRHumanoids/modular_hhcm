@@ -25,6 +25,18 @@ xbotcore_devices:
             joint_id_map: &jim
                 value: $PWD/../../joint_map/ModularBot_joint_map.yaml
                 type: yamlfile
+
+    digital_io_ec:
+        names: []
+        thread: rt_main
+        params:
+            robot_name: *rn
+            config_ec_imp:
+                value: $PWD/../digital_io_config/digital_io.yaml
+                type: yamlfile
+            digital_io_id_map: &dioim
+                value: $PWD/../../external_devices_map/digital_io.yaml
+                type: yamlfile
   
     albero_gripper:
         names: []
