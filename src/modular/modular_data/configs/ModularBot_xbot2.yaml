@@ -57,6 +57,10 @@ xbotcore_plugins:
   gripper: 
     thread: rt_main 
     type: albero_gripper_rt
+  
+  digital_io:
+    thread: rt_main
+    type: digital_io_rt
 
 # additional parameters that don't relate to any plugin
 xbotcore_param:
