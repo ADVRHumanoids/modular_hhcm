@@ -999,13 +999,13 @@ class UrdfWriter:
         next_position = 2  # 1 #TODO: remove this hack for not cosidering pwrboard
         for module in modules:
             if module_id in module.keys():
-                position = module[module_id]['poistion']
+                position = module[module_id]['position']
                 next_position = int(position) + 1
                 break
         print('next position:', next_position)
         for next_module in modules:
             next_id = (next_module.keys())[0]
-            if next_module[next_id]['poistion'] == next_position:
+            if next_module[next_id]['position'] == next_position:
                 found_module = next_module
                 found_module_id = next_id
                 break
@@ -1019,7 +1019,7 @@ class UrdfWriter:
 
         for key, item in modules_dict.items():
 
-            module_position = int(item['poistion'])
+            module_position = int(item['position'])
 
             try:
                 ordered_chain[module_position - 1] = item
@@ -1061,7 +1061,11 @@ class UrdfWriter:
         for module in modules_list:
 
             module_id = int(module['robot_id'])
-            module_position = int(module['poistion'])
+            if d.get(module_id) is None:
+                print("Id not recognized! Skipping add_module()")		
+		print(d.get(module_id))                
+                continue
+            module_position = int(module['position'])
             module_topology = int(module['topology'])
 
             print('Now processing module', module_id)
@@ -1134,7 +1138,7 @@ class UrdfWriter:
                         self.add_socket()
                 #add the module
                 module_filename = d.get(int(module['robot_id']))
-                data = self.add_module(module_filename, 0, robot_id=module_id)
+		data = self.add_module(module_filename, 0, robot_id=module_id)
             
             else:
                 cube_active_ports = int(module['active_ports'])
