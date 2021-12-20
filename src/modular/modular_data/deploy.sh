@@ -27,7 +27,6 @@ if [ -n "$ROBOTOLOGY_ROOT" ]; then
 else
     export DESTINATION_FOLDER="$HOME/albero_xbot2_ws/robots"
 fi
-mkdir -p $DESTINATION_FOLDER
 
 # read arguments
 while test $# -gt 0
