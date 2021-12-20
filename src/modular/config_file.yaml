@@ -1,4 +1,4 @@
 data_path: 'modular_data'
 yaml_path: 'web/static/yaml'
 modularbot_path: 'modular_data/ModularBot'
-deploy_dir: '/home/tree/xbot2_ws/src'
+deploy_dir: '~/robots'
