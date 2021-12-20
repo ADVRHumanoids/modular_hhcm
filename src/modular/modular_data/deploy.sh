@@ -27,7 +27,6 @@ if [ -n "$ROBOTOLOGY_ROOT" ]; then
 else
     export DESTINATION_FOLDER="$HOME/xbot2_ws/src"
 fi
-mkdir -p $DESTINATION_FOLDER
 
 # read arguments
 while test $# -gt 0
