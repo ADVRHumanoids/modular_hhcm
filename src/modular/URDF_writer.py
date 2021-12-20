@@ -1,6 +1,7 @@
 from __future__ import print_function
 from future.utils import iteritems
 from abc import ABCMeta, abstractmethod
+import os
 
 
 # try:
@@ -3530,15 +3531,13 @@ class UrdfWriter:
         return doc.toprettyxml(indent='  ')
 
     # Save URDF/SRDF etc. in a directory with the specified robot_name
-    def deploy_robot(self, robot_name, path="/home/tree/xbot2_ws/src"):
-        # script = path + '/scripts/deploy.sh'
+    def deploy_robot(self, robot_name):
         script = self.resource_finder.get_filename('deploy.sh', 'data_path')
+        deploy_dir = os.path.expanduser(self.resource_finder.cfg['deploy_dir'])
+        deploy_dir = os.path.expandvars(deploy_dir)
 
-        #subprocess.check_call([script, robot_name])
-        output = subprocess.check_output([script, robot_name, "-v"])
-        # output = subprocess.check_output([script, robot_name, "-d", path, "-v"])
+        output = subprocess.check_output([script, robot_name, "--destination-folder", deploy_dir, "-v"])
         print(output)
-        
 
         self.add_connectors()
 
