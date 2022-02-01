@@ -37,6 +37,18 @@ xbotcore_devices:
             digital_io_id_map: &dioim
                 value: $PWD/../../external_devices_map/digital_io.yaml
                 type: yamlfile
+    
+    iolink_ec:
+        names: []
+        thread: rt_main
+        params:
+            robot_name: *rn
+            config_ec_imp:
+                value: $PWD/../iolink_config/iolink.yaml
+                type: yamlfile
+            iolink_id_map: &iolinkm
+                value: $PWD/../../external_devices_map/iolink.yaml
+                type: yamlfile
   
     albero_gripper:
         names: []
