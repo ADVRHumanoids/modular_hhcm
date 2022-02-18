@@ -665,12 +665,14 @@ class XBot2Plugin(Plugin):
                                          name="xbot2_gz_joint_server",
                                          filename="libxbot2_gz_joint_server.so")
         self.pid_node = ET.SubElement(self.plugin_node, "pid")
-        self.gain_node = ET.SubElement(self.plugin_node, "gain", name='small_mot', p='100', d='5')
+        self.gain_node = ET.SubElement(self.pid_node, "gain", name='small_mot', p='100', d='10')
+        self.gain_node = ET.SubElement(self.pid_node, "gain", name='medium_mot', p='500', d='50')
+        self.gain_node = ET.SubElement(self.pid_node, "gain", name='big_mot', p='1000', d='100')
         return self.pid_node
 
     def add_joint(self, joint_name):
         #return ET.SubElement(self.pid_node, "xacro:add_xbot2_pid", name=joint_name, profile="small_mot")
-        return ET.SubElement(self.pid_node, "pid", name=joint_name, profile="small_mot")
+        return ET.SubElement(self.pid_node, "gain", name=joint_name, profile="medium_mot")
 
     def remove_joint(self, joint_name):
         for pid in self.pid_node.findall('./pid'):
