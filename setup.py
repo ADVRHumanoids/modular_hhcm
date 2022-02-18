@@ -15,7 +15,7 @@ d = generate_distutils_setup(
    include_package_data=True,
    zip_safe=False,
    # data_files=[('launch', ['launch/*'])],  # Add files outside package. Not working
-   # install_requires=['setuptools', 'flask', 'anytree'],
+   # install_requires=['setuptools', 'flask', 'anytree', 'rospkg', 'pyzmq', 'numpy', 'future', 'defusedxml', 'protobuf', 'protobuf_to_dict'],
    # python_requires='==2.7.*'
 )
 
