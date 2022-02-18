@@ -1,0 +1,48 @@
+kinematics:
+  joint:
+  link:
+    a_l: 0.1045
+    alpha_l: 0.0
+    p_l: 0.250
+    n_l: 0.0
+    delta_l_in: -1.57
+    delta_l_out: 1.57
+dynamics:
+  body_1:
+    mass: 0.890557
+    inertia_tensor:
+      I_xx: 0.001172126
+      I_yy: 0.000792081
+      I_zz: 0.001115561
+      I_xy: 0.0
+      I_xz: 0.0
+      I_yz: 0.0
+    CoM:
+      x: 0.0
+      y: 0.027416
+      z: 0.055419
+  body_2:
+  body_2_fast:
+visual:
+  mesh_body_1: "package://modular/src/modular/web/static/models/modular/meshes/innowelle/goose_neck_dummy_v1.stl"
+  tf_mesh_1:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    roll: 0.0
+    pitch: 0.0
+    yaw: -1.57
+  mesh_body_2: ""
+  tf_mesh_2:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    roll: 0.0
+    pitch: 0.0
+    yaw: 0.0
+  mesh_collision_1: "package://modular/src/modular/web/static/models/modular/meshes/innowelle/goose_neck_dummy_v1.stl"
+  mesh_collision_2: ""
+size: medium
+size_in: null
+size_out: null
+type: link
