@@ -4,7 +4,6 @@ import yaml
 class ResourceFinder:
     def __init__(self, config_file='config_file.yaml'):
         self.cfg = self.get_yaml(config_file)
-        print(self.get_filename(config_file))
 
     def find_resource_path(self, resource_name, relative_path=None):
         if relative_path:
