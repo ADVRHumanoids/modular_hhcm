@@ -25,7 +25,7 @@ print_help () {
 if [ -n "$ROBOTOLOGY_ROOT" ]; then
     export DESTINATION_FOLDER=$ROBOTOLOGY_ROOT/robots
 else
-    export DESTINATION_FOLDER="$HOME/xbot2_ws/src"
+    export DESTINATION_FOLDER="$HOME/albero_xbot2_ws/robots"
 fi
 
 # read arguments

@@ -1,7 +1,4 @@
 # joints
-1: module_joint_elbow_B.yaml
-2: module_joint_elbow_B.yaml
-3: module_joint_elbow_B.yaml
 111: module_joint_yaw_ORANGE_B.yaml
 16: module_joint_yaw_ORANGE_B.yaml
 12: module_joint_yaw_ORANGE_B.yaml

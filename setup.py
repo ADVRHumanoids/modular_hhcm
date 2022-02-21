@@ -15,7 +15,7 @@ d = generate_distutils_setup(
    include_package_data=True,
    zip_safe=False,
    # data_files=[('launch', ['launch/*'])],  # Add files outside package. Not working
-   install_requires=['setuptools>=44.1.1', 'protobuf_to_dict>=0.1.0', 'protobuf==3.17.3', 'flask', 'anytree', 'xacro', 'zmq', 'future', 'google'],   # , 'transformations'], todo: import guard for transformations or tf.transformations  
+   install_requires=['protobuf_to_dict>=0.1.0', 'protobuf==3.17.3', 'flask', 'anytree', 'pyzmq', 'future', 'rospkg',  'defusedxml'],   # , 'transformations'], todo: import guard for transformations or tf.transformations  
    python_requires='==2.7.*'
 )
 

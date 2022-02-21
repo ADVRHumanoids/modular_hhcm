@@ -1070,7 +1070,7 @@ class UrdfWriter:
         d = yaml.load(open(robot_id_yaml, 'r'))
 
         # Process the modules described in the json to create the tree
-        modules_dict = json.loads(json_data)
+        modules_dict = yaml.load(json_data)
         modules_list = self.sort_modules(modules_dict)
         
         for module in modules_list:
@@ -1236,7 +1236,7 @@ class UrdfWriter:
         # module_type = data['lastModule_type']
 
         # Process the modules described in the json to create the tree
-        modules = json.loads(json_data)
+        modules = json.load(json_data)
         print("modules:", modules, type(modules))
         
         # # This loop has only one iteration over the first element of each chain in the module list from the json msg
