@@ -369,14 +369,11 @@ def byteify(input):
     else:
         return input
 
-
-
-if __name__ == '__main__':
-
-    # initialize ros node
+def main():
+     # initialize ros node
     rospy.init_node('robot_design_studio')
     # Start Flask web-server
-    app.run(host='192.168.9.211', port=5000, debug=False, threaded=True)
+    app.run(host='localhost', port=5000, debug=False, threaded=True)
     #app.run(debug=False, threaded=True)
 
     #main()
@@ -387,3 +384,8 @@ if __name__ == '__main__':
     # logger.info('Starting serving')
     # print('Starting serving')
     # http_server.serve_forever()
+
+
+if __name__ == '__main__':
+    main()
+   
