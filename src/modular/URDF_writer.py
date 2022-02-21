@@ -65,7 +65,7 @@ print(path_superbuild)
 path_name = "/tmp"
 
 # noinspection PyPep8Naming
-def ordered_load(stream, Loader=yaml.Loader, object_pairs_hook=OrderedDict):
+def ordered_load(stream, Loader=yaml.SafeLoader, object_pairs_hook=OrderedDict):
     class OrderedLoader(Loader):
         pass
 
@@ -80,7 +80,7 @@ def ordered_load(stream, Loader=yaml.Loader, object_pairs_hook=OrderedDict):
     return yaml.load(stream, OrderedLoader)
 
 
-class MyDumper(yaml.Dumper):
+class MyDumper(yaml.SafeDumper):
 
     def increase_indent(self, flow=False, indentless=False):
         return super(MyDumper, self).increase_indent(flow, False)
@@ -861,13 +861,13 @@ class XBot2Plugin(Plugin):
                     del impd4_joint_config[key].pos_offset 
                     del impd4_joint_config[key].max_current_A 
 
-                idle_joint_config[key] = copy.deepcopy(value)
-                idle_joint_config[key].control_mode = 'idle'
-                # Remove parameters that are now not used by XBot2 (they are handled by the EtherCat master on a different config file)
-                del idle_joint_config[key].sign 
-                del idle_joint_config[key].pos_offset 
-                del idle_joint_config[key].max_current_A 
-
+                    idle_joint_config[key] = copy.deepcopy(value)
+                    idle_joint_config[key].control_mode = 'idle'
+                    # Remove parameters that are now not used by XBot2 (they are handled by the EtherCat master on a different config file)   
+                    del idle_joint_config[key].sign 
+                    del idle_joint_config[key].pos_offset 
+                    del idle_joint_config[key].max_current_A 
+                    
                 elif joint_module.type == 'simple_ee':
                     continue
 
@@ -1080,12 +1080,12 @@ class UrdfWriter:
 
         # Load the robot_id dictionary from yaml file
         opts = repl_option()
-        # d = yaml.load(open(opts["robot_id_yaml"], 'r'))
+        # d = yaml.safe_load(open(opts["robot_id_yaml"], 'r'))
         robot_id_yaml = self.resource_finder.get_filename('robot_id.yaml', '')
-        d = yaml.load(open(robot_id_yaml, 'r'))
+        d = yaml.safe_load(open(robot_id_yaml, 'r'))
 
         # Process the modules described in the json to create the tree
-        modules_dict = yaml.load(json_data)
+        modules_dict = yaml.safe_load(json_data)
         modules_list = self.sort_modules(modules_dict)
         
         for module in modules_list:
@@ -1240,8 +1240,8 @@ class UrdfWriter:
 
         # Load the esc_type dictionary from yaml file
         opts = repl_option()
-        # d = yaml.load(open(opts["esc_type_yaml"], 'r'))
-        d = yaml.load(open(opts["robot_id_yaml"], 'r'))
+        # d = yaml.safe_load(open(opts["esc_type_yaml"], 'r'))
+        d = yaml.safe_load(open(opts["robot_id_yaml"], 'r'))
 
         # Add a first cube for the initial ethercat test with no Hub.
         # TODO: remove it once the hub is implemented and can be added automatically

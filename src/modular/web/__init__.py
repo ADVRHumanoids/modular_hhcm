@@ -217,7 +217,7 @@ def syncHW():
     # return data
 
     opts = modular.zmq_requester.repl_option()
-    d = yaml.load(open(opts["repl_yaml"], 'r'))
+    d = yaml.safe_load(open(opts["repl_yaml"], 'r'))
 
     io = modular.zmq_requester.zmqIO(d['uri'])
 

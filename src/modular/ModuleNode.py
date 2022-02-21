@@ -323,7 +323,7 @@ def module_from_yaml(filename, father, reverse):
     """Function parsing YAML file describing a generic module and returning an instance of a Module class"""
     with open(filename, 'r') as stream:
         try:
-            data = yaml.load(stream)
+            data = yaml.safe_load(stream)
         except yaml.YAMLError as exc:
             print(exc)
     # Create an instance of a ModuleNode class from the dictionary obtained from YAML
@@ -339,7 +339,7 @@ def mastercube_from_yaml(filename, father=None, reverse=False):
     """Function parsing YAML file describing a mastercube and returning an instance of a Module class"""
     with open(filename, 'r') as stream:
         try:
-            data = yaml.load(stream)
+            data = yaml.safe_load(stream)
         except yaml.YAMLError as exc:
             print(exc)
 
@@ -365,7 +365,7 @@ def slavecube_from_yaml(filename, father=None):
     """Function parsing YAML file describing a mastercube and returning an instance of a Module class"""
     with open(filename, 'r') as stream:
         try:
-            data = yaml.load(stream)
+            data = yaml.safe_load(stream)
         except yaml.YAMLError as exc:
             print(exc)
 

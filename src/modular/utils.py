@@ -33,7 +33,7 @@ class ResourceFinder:
     def get_yaml(self, resource_name, relative_path=None):
         with self.get_stream(resource_name, relative_path) as stream:
             try:
-                yaml_dict = yaml.load(stream)
+                yaml_dict = yaml.safe_load(stream)
             except yaml.YAMLError as exc:
                 yaml_dict = {}
                 print(exc)
