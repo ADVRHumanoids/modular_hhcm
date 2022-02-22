@@ -174,7 +174,7 @@ def evaluate_robot(robot_structure, coordinates, angle_offsets):
     urdf_writer.add_simple_ee(0.0, 0.0, 0.189, 0.0)
     # urdf_writer.select_module_from_name(parent)
     # gripper
-    # data = urdf_writer.add_module('module_gripper.yaml', 0, False)
+    # data = urdf_writer.add_module('module_gripper_B.yaml', 0, False)
     
     # urdf_writer.access_module("table")
 
@@ -191,7 +191,7 @@ def evaluate_robot(robot_structure, coordinates, angle_offsets):
     # # Add a simple virtual end-effector
     # # urdf_writer.add_simple_ee(0.0, 0.0, 0.075, 0.0)
     # # gripper
-    # data = urdf_writer.add_module('module_gripper.yaml', 0, False)
+    # data = urdf_writer.add_module('module_gripper_B.yaml', 0, False)
 
     # # Modify position and orientation of the 2nd base
     # urdf_writer.move_socket("L_0_B", xy[0], xy[1], 0.0, angle_offset)

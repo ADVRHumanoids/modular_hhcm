@@ -428,7 +428,7 @@ def test_robot(individual):
 
     # Add a simple virtual end-effector
     # urdf_writer.add_simple_ee(0.0, 0.0, 0.26, 0.0)
-    urdf_writer.add_module('module_gripper.yaml', 0, False)
+    urdf_writer.add_module('module_gripper_B.yaml', 0, False)
 
     string = urdf_writer.process_urdf()
     urdf = urdf_writer.write_urdf()
@@ -878,7 +878,7 @@ def reachVSpayload_test_robot(individual):
 
     # Add a simple virtual end-effector
     # urdf_writer.add_simple_ee(0.0, 0.0, 0.26, 0.0)
-    urdf_writer.add_module('module_gripper.yaml', 0, False)
+    urdf_writer.add_module('module_gripper_B.yaml', 0, False)
 
     urdf = urdf_writer.process_urdf()
     # urdf = urdf_writer.write_urdf()
