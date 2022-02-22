@@ -200,7 +200,6 @@ class Plugin:
         arms_group = ET.SubElement(root, 'group', name="arms")
         chains_group = ET.SubElement(root, 'group', name="chains")
         group_state = ET.SubElement(root, 'group_state', name="home", group="chains")
-        tool_exchanger_group = ET.SubElement(root, 'group', name="ToolExchanger")
         for joints_chain in self.urdf_writer.listofchains:
             group_name = "chain" + self.urdf_writer.branch_switcher.get(i + 1)
             hand_name = "hand" + self.urdf_writer.branch_switcher.get(i + 1)
@@ -2322,6 +2321,9 @@ class UrdfWriter:
             # delete object father_module
             del father_module
         elif selected_module.type == 'gripper':
+            #remove the gripper from their chain
+            self.remove_from_chain(selected_module)
+
             # save parent of the module to remove. This will be the last element of the chain after removal,
             # and its data will be returned by the function
             father = selected_module.parent
@@ -2341,6 +2343,31 @@ class UrdfWriter:
             # TO BE FIXED: ok for ros_control. How will it be for xbot2?
             self.control_plugin.remove_joint(selected_module.name+'_finger_joint1')
             self.control_plugin.remove_joint(selected_module.name+'_finger_joint2')
+
+        elif selected_module.type == 'tool_exchanger':
+            #remove the tool exchanger from the chain
+            self.remove_from_chain(selected_module)
+
+            # save parent of the module to remove. This will be the last element of the chain after removal,
+            # and its data will be returned by the function
+            father = selected_module.parent
+
+            # Generate te name of the fixed joint connecting the module with its parent
+            fixed_joint_name = str(selected_module.name) + '_fixed_joint'
+
+            for node in self.gen:
+                try:
+                    if node.attrib['name'] == fixed_joint_name:
+                        self.root.remove(node)
+                    elif node.attrib['name'] == selected_module.name:
+                        self.root.remove(node)
+                    elif node.attrib['name'] == selected_module.pen_name:
+                        self.root.remove(node)
+                    elif node.attrib['name'] == 'fixed_'+selected_module.pen_name:
+                        self.root.remove(node)
+
+                except KeyError:
+                    pass
 
         else:
             # save parent of the module to remove. This will be the last element of the chain after removal,
