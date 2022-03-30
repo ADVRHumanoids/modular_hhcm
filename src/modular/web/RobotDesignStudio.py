@@ -373,8 +373,8 @@ def main():
      # initialize ros node
     rospy.init_node('robot_design_studio')
     # Start Flask web-server
-    app.run(host='localhost', port=5000, debug=False, threaded=True)
-    #app.run(debug=False, threaded=True)
+    app.run(host='0.0.0.0', port=5000, debug=True, threaded=True)
+    # app.run(debug=False, threaded=True)
 
     #main()
 
