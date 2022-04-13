@@ -905,11 +905,13 @@ class XBot2Plugin(Plugin):
 
 # noinspection PyUnresolvedReferences
 class UrdfWriter:
-    def __init__(self, config_file='config_file.yaml', control_plugin='xbot2', elementree=None, speedup=False, parent=None):
+    def __init__(self, config_file='config_file.yaml', control_plugin='xbot2', elementree=None, speedup=False, parent=None, verbose=False):
 
         # Setting this variable to True, speed up the robot building.
         # To be used when the urdf does not need to be shown at every iteration
         self.speedup = speedup
+
+        self.verbose = verbose
 
         self.resource_finder = ResourceFinder(config_file)
 
@@ -1078,7 +1080,7 @@ class UrdfWriter:
         # print(ET.tostring(self.urdf_tree.getroot()))
 
         # Load the robot_id dictionary from yaml file
-        opts = repl_option()
+        # opts = repl_option()
         # d = yaml.safe_load(open(opts["robot_id_yaml"], 'r'))
         robot_id_yaml = self.resource_finder.get_filename('robot_id.yaml', '')
         d = yaml.safe_load(open(robot_id_yaml, 'r'))
@@ -1141,12 +1143,14 @@ class UrdfWriter:
                 parent_topology = int(parent['topology'])
                 print('parent_topology:', parent_topology)
 
-                # Render tree
-                print(RenderTree(self.base_link))
-                for pre, _, node in RenderTree(self.base_link):
-                    print(pre, node, node.name, node.robot_id)
-                    # treestr = u"%s%s" % (pre, node.name)
-                    # print(treestr.ljust(8), node.name, node.robot_id)
+                if self.verbose:
+                    # Render tree
+                    print(RenderTree(self.base_link))
+                    for pre, _, node in RenderTree(self.base_link):
+                        print(pre, node, node.name, node.robot_id)
+                        # treestr = u"%s%s" % (pre, node.name)
+                        # print(treestr.ljust(8), node.name, node.robot_id)
+
                 parent_module = anytree.search.findall_by_attr(self.base_link, parent_id, name='robot_id')[0]
                 print('parent_module:', parent_module, '\nparent name:', parent_module.name)
                 self.select_module_from_name(parent_module.name)
@@ -1167,7 +1171,7 @@ class UrdfWriter:
                         self.add_socket()
                 #add the module
                 module_filename = d.get(int(module['robot_id']))
-		data = self.add_module(module_filename, 0, robot_id=module_id)
+                data = self.add_module(module_filename, 0, robot_id=module_id)
             
             else:
                 cube_active_ports = int(module['active_ports'])
@@ -1175,8 +1179,9 @@ class UrdfWriter:
 
                 data = self.add_slave_cube(0, is_structural=False, robot_id=module_id, active_ports=cube_active_ports)
 
-                for pre, _, node in RenderTree(self.base_link):
-                    print(pre, node, node.name, node.robot_id)
+                if self.verbose:
+                    for pre, _, node in RenderTree(self.base_link):
+                        print(pre, node, node.name, node.robot_id)
 
             #TODO: remove this shit
 
@@ -1570,9 +1575,10 @@ class UrdfWriter:
             data4 = {'Homogeneous_tf': self.T_con, 'type': "con", 'name': name_con4, 'i': 0, 'p': 0, 'size': 3}
             slavecube_con4 = ModuleNode.ModuleNode(data4, name_con4, parent=slavecube)
 
-            # Render tree
-            for pre, _, node in anytree.render.RenderTree(self.base_link):
-                print("%s%s" % (pre, node.name))
+            if self.verbose:
+                # Render tree
+                for pre, _, node in anytree.render.RenderTree(self.base_link):
+                    print("%s%s" % (pre, node.name))
 
             # new_Link = slavecube_con1
             # past_Link = parent_module
@@ -1830,9 +1836,10 @@ class UrdfWriter:
             # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string
             string = self.process_urdf()
 
-        # Render tree
-        for pre, _, node in anytree.render.RenderTree(self.base_link):
-            print("%s%s" % (pre, node.name))
+        if self.verbose:
+            # Render tree
+            for pre, _, node in anytree.render.RenderTree(self.base_link):
+                print("%s%s" % (pre, node.name))
 
         # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
         data = {'result': string,
@@ -1945,9 +1952,10 @@ class UrdfWriter:
         # update the urdf file, adding the new module
         # string = write_urdf(path_name + '/urdf/ModularBot_test.urdf', urdf_tree)
 
-        # Render tree
-        for pre, _, node in anytree.render.RenderTree(self.base_link):
-            print("%s%s" % (pre, node.name))
+        if self.verbose:
+            # Render tree
+            for pre, _, node in anytree.render.RenderTree(self.base_link):
+                print("%s%s" % (pre, node.name))
 
         # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
         data = {'result': string,
@@ -2163,9 +2171,10 @@ class UrdfWriter:
         # update the urdf file, adding the new module
         # string = write_urdf(path_name + '/urdf/ModularBot_test.urdf', urdf_tree)
 
-        # Render tree
-        for pre, _, node in anytree.render.RenderTree(self.base_link):
-            print("%s%s" % (pre, node.name))
+        if self.verbose:
+            # Render tree
+            for pre, _, node in anytree.render.RenderTree(self.base_link):
+                print("%s%s" % (pre, node.name))
 
         # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
         data = {'result': string,
@@ -2442,9 +2451,10 @@ class UrdfWriter:
         # delete object selected_module
         del selected_module
 
-        # Render tree
-        for pre, _, node in anytree.render.RenderTree(self.base_link):
-            print("%s%s" % (pre, node.name))
+        if self.verbose:
+            # Render tree
+            for pre, _, node in anytree.render.RenderTree(self.base_link):
+                print("%s%s" % (pre, node.name))
 
         return data
 
@@ -3621,9 +3631,10 @@ class UrdfWriter:
         # Update the urdf file, removing the module
         string = self.process_urdf()
 
-        # Render tree
-        for pre, _, node in anytree.render.RenderTree(self.base_link):
-            print("%s%s" % (pre, node.name))
+        if self.verbose:
+            # Render tree
+            for pre, _, node in anytree.render.RenderTree(self.base_link):
+                print("%s%s" % (pre, node.name))
 
         return string
 

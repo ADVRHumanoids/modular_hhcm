@@ -11,13 +11,27 @@ from modular.URDF_writer import UrdfWriter
 import zmq
 import yaml
 import json
+import os
 
 import rospy
 import modular.zmq_requester
 
 from ec_srvs.srv import GetSlaveInfo, GetSlaveInfoRequest, GetSlaveInfoResponse
 
-app = Flask(__name__, static_folder='static', static_url_path='')
+import sys
+if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+    print('running in a PyInstaller bundle')
+    template_folder = os.path.join(sys._MEIPASS, 'modular/web/templates')
+    static_folder = os.path.join(sys._MEIPASS, 'modular/web/static')
+    print(sys._MEIPASS)
+    print(template_folder)
+    print(static_folder)
+    app = Flask(__name__, static_folder=static_folder, template_folder=template_folder, static_url_path='')
+else:
+    print('running in a normal Python process')
+    app = Flask(__name__, static_folder='static', template_folder='templates', static_url_path='')
+    
+
 # app = Flask(__name__)
 
 # Instance of ZMQ Poller class (create sockets, etc.)
@@ -287,7 +301,8 @@ def syncHW():
 
     data = urdf_writer_fromHW.read_from_json(reply)
     # data = urdf_writer_fromHW.read_from_json_alt(reply)
-    urdf_writer_fromHW.render_tree()
+    if urdf_writer_fromHW.verbose:
+        urdf_writer_fromHW.render_tree()
     print('data:', data)
     data = jsonify(data)
     return data
