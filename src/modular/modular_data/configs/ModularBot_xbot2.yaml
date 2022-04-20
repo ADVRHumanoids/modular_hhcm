@@ -23,7 +23,7 @@ xbotcore_device_configs:
 
 # define threads to be created
 xbotcore_threads:
-  rt_main: { sched: fifo, prio: 60, period: 0.001, core_id: 2 }
+  rt_main: { sched: fifo, prio: 60, period: 0.001}
   nrt_main: { sched: other, prio: 0, period: 0.005 }
   iolink_main: { sched: other, prio: 0, period: 0.005 } # Use this to avoid problem when reading/writing parameters that require some time
 
