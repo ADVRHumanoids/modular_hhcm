@@ -1081,21 +1081,33 @@ class UrdfWriter:
 
         # Load the robot_id dictionary from yaml file
         # opts = repl_option()
-        # d = yaml.safe_load(open(opts["robot_id_yaml"], 'r'))
+        # robot_id_dict = yaml.safe_load(open(opts["robot_id_yaml"], 'r'))
         robot_id_yaml = self.resource_finder.get_filename('robot_id.yaml', '')
-        d = yaml.safe_load(open(robot_id_yaml, 'r'))
+        robot_id_dict = yaml.safe_load(open(robot_id_yaml, 'r'))
+
+        module_params_yaml = self.resource_finder.get_filename('module_params.yaml', '')
+        module_params_dict = yaml.safe_load(open(module_params_yaml, 'r'))
 
         # Process the modules described in the json to create the tree
         modules_dict = yaml.safe_load(json_data)
         modules_list = self.sort_modules(modules_dict)
-        
+
         for module in modules_list:
 
             module_id = int(module['robot_id'])
-            if d.get(module_id) is None:
-                print("Id not recognized! Skipping add_module()")		
-		print(d.get(module_id))                
-                continue
+
+            mod_type = int(module['mod_type'])
+            mod_id = int(module['mod_id'])
+            mod_size = int(module['mod_size'])
+            mod_rev = int(module['mod_rev'])
+
+            module_filename = module_params_dict.get(mod_type, {}).get(mod_id,{}).get(mod_size,{}).get(mod_rev)
+            if module_filename is None:
+                module_filename = robot_id_dict.get(module_id)
+                if module_filename is None:
+                    print("Id not recognized! Skipping add_module() for id", robot_id_dict.get(module_id))          
+                    continue
+
             module_position = int(module['position'])
             module_topology = int(module['topology'])
 
@@ -1169,19 +1181,20 @@ class UrdfWriter:
                 if parent_module.type == 'cube':
                     if parent_module.is_structural == False:
                         self.add_socket()
-                #add the module
-                module_filename = d.get(int(module['robot_id']))
-                data = self.add_module(module_filename, 0, robot_id=module_id)
-            
+
+            # get which ports in the ESC slave are active
+            active_ports = int(module['active_ports'])
+            print('active_ports:', active_ports)
+
+            #add the module
+            if mod_type == 2 or module_filename=='master_cube.yaml':
+                data = self.add_slave_cube(0, is_structural=False, robot_id=module_id, active_ports=active_ports)
             else:
-                cube_active_ports = int(module['active_ports'])
-                print('cube_active_ports:', cube_active_ports)
-
-                data = self.add_slave_cube(0, is_structural=False, robot_id=module_id, active_ports=cube_active_ports)
-
-                if self.verbose:
-                    for pre, _, node in RenderTree(self.base_link):
-                        print(pre, node, node.name, node.robot_id)
+                data = self.add_module(module_filename, 0, robot_id=module_id, active_ports=active_ports)
+            
+            if self.verbose:
+                for pre, _, node in RenderTree(self.base_link):
+                    print(pre, node, node.name, node.robot_id)
 
             #TODO: remove this shit
 
@@ -1244,8 +1257,8 @@ class UrdfWriter:
 
         # Load the esc_type dictionary from yaml file
         opts = repl_option()
-        # d = yaml.safe_load(open(opts["esc_type_yaml"], 'r'))
-        d = yaml.safe_load(open(opts["robot_id_yaml"], 'r'))
+        # robot_id_dict = yaml.safe_load(open(opts["esc_type_yaml"], 'r'))
+        robot_id_dict = yaml.safe_load(open(opts["robot_id_yaml"], 'r'))
 
         # Add a first cube for the initial ethercat test with no Hub.
         # TODO: remove it once the hub is implemented and can be added automatically
@@ -1270,7 +1283,7 @@ class UrdfWriter:
         print("module id:",module_id)
         # Find the name of the yaml describing the module to be added, searching the dictionary by the esc_type
         #TODO: handle exception if the id is not found in the dict
-        module_filename = d.get(module[module_id]['robot_id'])
+        module_filename = robot_id_dict.get(module[module_id]['robot_id'])
         data = self.add_module(module_filename, 0, robot_id=module_id)
 
         module_name = data['lastModule_name']
@@ -1287,7 +1300,7 @@ class UrdfWriter:
         print(connections)
 
         # Process the connections of the module and add the modules as child of the current one
-        self.process_connections_alt(connections, modules, module_name, module_type, d)
+        self.process_connections_alt(connections, modules, module_name, module_type, robot_id_dict)
 
         # break
 
@@ -2050,7 +2063,7 @@ class UrdfWriter:
 
         return data
 
-    def add_module(self, filename, angle_offset, reverse=False, robot_id=0):
+    def add_module(self, filename, angle_offset, reverse=False, robot_id=0, active_ports=3):
         """Add a module specified by filename as child of the currently selected module.
 
         Parameters
@@ -2118,7 +2131,7 @@ class UrdfWriter:
         print('mastercube.selected_port :', new_module.selected_port)
 
         # save the active ports as a binary string
-        setattr(new_module, 'active_ports', "{0:04b}".format(3)) # TODO:change this
+        setattr(new_module, 'active_ports', "{0:04b}".format(active_ports)) 
         print('active_ports: ', new_module.active_ports)
 
         # save the occupied ports as a binary string
