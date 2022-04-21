@@ -183,6 +183,11 @@ sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./launch/ModularBot_sliders.launch
 # - gazebo.launch
 cp $SCRIPT_ROOT/launch/ModularBot_gazebo.launch ./launch/ModularBot_gazebo.launch $VERBOSITY || end_exec
 sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./launch/ModularBot_gazebo.launch
+
+cp $SCRIPT_ROOT/rviz/cartesio.rviz ./rviz/cartesio.rviz $VERBOSITY || end_exec
+cp $SCRIPT_ROOT/rviz/sliders.rviz ./rviz/sliders.rviz $VERBOSITY || end_exec
+cp $SCRIPT_ROOT/rviz/xbot.rviz ./rviz/xbot.rviz $VERBOSITY || end_exec
+
 printf "${GREEN}[4/9] Deployed ModularBot launch files${NC}\n"
 
 # TODO: fix moveit deploy
