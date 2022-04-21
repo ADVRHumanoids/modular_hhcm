@@ -228,11 +228,11 @@ sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./database/${package_name}_fixed_ba
 # - model.config
 cp $SCRIPT_ROOT/database/ModularBot_fixed_base/model.config ./database/${package_name}_fixed_base/model.config $VERBOSITY || end_exec
 sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./database/${package_name}_fixed_base/model.config
-# - ModularBot.sdf
-gz sdf --print \
-    $DESTINATION_FOLDER/${package_name}/urdf/ModularBot.urdf > \
-    $DESTINATION_FOLDER/${package_name}/database/${package_name}_fixed_base/${package_name}.sdf \
-    || end_exec
+# # - ModularBot.sdf
+# gz sdf --print \
+#     $DESTINATION_FOLDER/${package_name}/urdf/ModularBot.urdf > \
+#     $DESTINATION_FOLDER/${package_name}/database/${package_name}_fixed_base/${package_name}.sdf \
+#     || end_exec
 printf "${GREEN}[9/9] Deployed gazebo model${NC}\n"
 
 # All done
