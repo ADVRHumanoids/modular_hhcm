@@ -2,6 +2,7 @@ from __future__ import print_function
 from future.utils import iteritems
 from abc import ABCMeta, abstractmethod
 import os
+import logging
 
 
 # try:
@@ -10,9 +11,10 @@ import os
 # except ImportError:
 try:
     import xml.etree.ElementTree as ET
-    print("running with ElementTree on Python 2.5+")
+    # print("running with ElementTree on Python 2.5+")
 except ImportError:
-    print("Failed to import ElementTree from any known place")
+    # print("Failed to import ElementTree from any known place")
+    pass
 
 import xacro
 import xml.dom.minidom
@@ -41,9 +43,9 @@ import os
 import errno
 import sys
 currDir = os.path.dirname(os.path.realpath(__file__))
-print(currDir)
+# print(currDir)
 rootDir = os.path.abspath(os.path.join(currDir, '../..'))
-print(rootDir)
+# print(rootDir)
 if rootDir not in sys.path:  # add parent dir to paths
     sys.path.append(rootDir)
 
@@ -53,9 +55,9 @@ ns = {"xacro": NS_XACRO}
 
 import modular
 path_name = os.path.dirname(modular.__file__)
-print(path_name)
+# print(path_name)
 path_superbuild = os.path.abspath(os.path.join(path_name, '../..'))
-print(path_superbuild)
+# print(path_superbuild)
 # #obtaining tree from base file
 # resource_path = '/'.join(('modular_data', 'urdf/ModularBot.library.urdf.xacro'))
 # basefile_name = pkg_resources.resource_string(resource_package, resource_path)
@@ -170,7 +172,7 @@ class Plugin:
         # tip_link = ""
         i = 0
 
-        print(self.urdf_writer.listofchains)
+        self.urdf_writer.print(self.urdf_writer.listofchains)
         for joints_chain in self.urdf_writer.listofchains:
             group_name = "chain" + self.urdf_writer.branch_switcher.get(i + 1)
             # group_name = "arm" + self.urdf_writer.branch_switcher.get(i + 1)
@@ -212,7 +214,7 @@ class Plugin:
                         homing_value = float(builder_joint_map[joint_module.name]['angle'])
                     else:
                         homing_value = 0.1
-                    # print(homing_value)
+                    # self.urdf_writer.print(homing_value)
                     joints.append(ET.SubElement(group_state, 'joint', name=joint_module.name, value=str(homing_value)))
                 elif joint_module.type == 'tool_exchanger':
                     tool_exchanger_group = ET.SubElement(root, 'group', name="ToolExchanger")
@@ -272,8 +274,8 @@ class Plugin:
                     joint_map['joint_map'][int(joint_module.robot_id)] = name
                 else:
                     joint_map['joint_map'][i] = name
-            # print(str(i), joint_module.name)
-            # print(joint_map)
+            # self.urdf_writer.print(str(i), joint_module.name)
+            # self.urdf_writer.print(joint_map)
 
         # Create folder if doesen't exist
         if not os.path.exists(os.path.dirname(jointmap_filename)):
@@ -375,7 +377,7 @@ class RosControlPlugin(Plugin):
             try:
                 tmp_kinematics = ordered_load(stream, yaml.SafeLoader)
             except yaml.YAMLError as exc:
-                print(exc)
+                self.urdf_writer.print(exc)
 
         #ompl_planning.yaml
         template_ompl_filename = self.urdf_writer.get_filename('moveit_config/ompl_planning.yaml', 'data_path')
@@ -387,10 +389,10 @@ class RosControlPlugin(Plugin):
             try:
                 tmp_ompl = ordered_load(stream, yaml.SafeLoader)
             except yaml.YAMLError as exc:
-                print(exc)
+                self.urdf_writer.print(exc)
         ompl.update([('planner_configs', copy.deepcopy(tmp_ompl['planner_configs']))])
 
-        print(self.urdf_writer.listofchains)
+        self.urdf_writer.print(self.urdf_writer.listofchains)
         for joints_chain in self.urdf_writer.listofchains:
             group_name = "arm" + self.urdf_writer.branch_switcher.get(i + 1)
             #group_name = "chain_"+str(i+1)
@@ -441,7 +443,7 @@ class RosControlPlugin(Plugin):
                         homing_value = float(builder_joint_map[joint_module.name]['angle'])
                     else:
                         homing_value = 0.1
-                    #print(homing_value)
+                    #self.urdf_writer.print(homing_value)
                     joints.append(ET.SubElement(group_state, 'joint', name=joint_module.name, value=str(homing_value)))
                     # Disable collision
                     # disable_collision = ET.SubElement(root, 'disable_collisions', link1=joint_module.stator_name, link2=joint_module.distal_link_name, reason='Adjacent')
@@ -588,12 +590,12 @@ class XBotCorePlugin(Plugin):
             try:
                 lowlevel_config = ordered_load(stream, yaml.SafeLoader)
                 # cartesio_stack['EE']['base_link'] = self.urdf_writer.listofchains[0]
-                print(lowlevel_config.items()[0])
+                self.urdf_writer.print(lowlevel_config.items()[0])
             except yaml.YAMLError as exc:
-                print(exc)
+                self.urdf_writer.print(exc)
 
-        print(lowlevel_config.items())
-        print(lowlevel_config['GazeboXBotPlugin'])
+        self.urdf_writer.print(lowlevel_config.items())
+        self.urdf_writer.print(lowlevel_config['GazeboXBotPlugin'])
         lowlevel_config['GazeboXBotPlugin']['gains'] = OrderedDict([])
         i = 0
         p = 0
@@ -610,7 +612,7 @@ class XBotCorePlugin(Plugin):
                     else:
                         key = 'CentAcESC_' + str(i)
                     value = joint_module.CentAcESC
-                    print(yaml.dump(joint_module.CentAcESC))
+                    self.urdf_writer.print(yaml.dump(joint_module.CentAcESC))
                     # HACK: Every joint on 2nd, 3rd, etc. chains have the torque loop damping set very low.
                     # This is to handle chains with only one joint and low inertia after it.
                     # If we build two big robots this could have catastrophic effects
@@ -625,7 +627,7 @@ class XBotCorePlugin(Plugin):
                         key = 'AinMsp432ESC_' + str(i)
                         xbot_ecat_interface = [[int(i)], "libXBotEcat_ToolExchanger"]
                     value = joint_module.AinMsp432ESC
-                    print(yaml.dump(joint_module.AinMsp432ESC))
+                    self.urdf_writer.print(yaml.dump(joint_module.AinMsp432ESC))
                     lowlevel_config['HALInterface']['IEndEffectors'].append(xbot_ecat_interface)
                 elif joint_module.type == 'gripper':
                     if use_robot_id:
@@ -635,13 +637,13 @@ class XBotCorePlugin(Plugin):
                         key = 'LpESC_' + str(i)
                         xbot_ecat_interface = [[int(i)], "libXBotEcat_Gripper"]
                     value = joint_module.LpESC
-                    print(yaml.dump(joint_module.LpESC))
+                    self.urdf_writer.print(yaml.dump(joint_module.LpESC))
                     lowlevel_config['HALInterface']['IEndEffectors'].append(xbot_ecat_interface)
                 elif joint_module.type == 'simple_ee':
                     continue
                 lowlevel_config[key] = value
-                print(joint_module.kinematics.__dict__.items())
-                print(lowlevel_config[key])
+                self.urdf_writer.print(joint_module.kinematics.__dict__.items())
+                self.urdf_writer.print(lowlevel_config[key])
 
         # Create folder if doesen't exist
         if not os.path.exists(os.path.dirname(lowlevel_config_filename)):
@@ -730,8 +732,8 @@ class XBot2Plugin(Plugin):
                     else:
                         joint_map['joint_map'][i] = name
                 
-            # print(str(i), joint_module.name)
-            # print(joint_map)
+            # self.urdf_writer.print(str(i), joint_module.name)
+            # self.urdf_writer.print(joint_map)
 
         # Create folder if doesen't exist
         if not os.path.exists(os.path.dirname(jointmap_filename)):
@@ -758,11 +760,11 @@ class XBot2Plugin(Plugin):
         with open(hal_config_template, 'r') as stream:
             try:
                 hal_config = ordered_load(stream, yaml.SafeLoader)
-                print(hal_config.items()[0])
+                self.urdf_writer.print(hal_config.items()[0])
             except yaml.YAMLError as exc:
-                print(exc)
+                self.urdf_writer.print(exc)
 
-        print(hal_config['xbotcore_devices']['joint_ec']['params'].items())
+        self.urdf_writer.print(hal_config['xbotcore_devices']['joint_ec']['params'].items())
         ids = []
         i = 0
         for joints_chain in self.urdf_writer.listofchains:
@@ -805,15 +807,15 @@ class XBot2Plugin(Plugin):
         with open(idle_joint_config_template, 'r') as stream:
             try:
                 idle_joint_config = ordered_load(stream, yaml.SafeLoader)
-                print(idle_joint_config.items()[0])
+                self.urdf_writer.print(idle_joint_config.items()[0])
             except yaml.YAMLError as exc:
-                print(exc)
+                self.urdf_writer.print(exc)
         with open(impd4_joint_config_template, 'r') as stream:
             try:
                 impd4_joint_config = ordered_load(stream, yaml.SafeLoader)
-                print(impd4_joint_config.items()[0])
+                self.urdf_writer.print(impd4_joint_config.items()[0])
             except yaml.YAMLError as exc:
-                print(exc)
+                self.urdf_writer.print(exc)
 
         i = 0
         p = 0
@@ -905,15 +907,32 @@ class XBot2Plugin(Plugin):
 
 # noinspection PyUnresolvedReferences
 class UrdfWriter:
-    def __init__(self, config_file='config_file.yaml', control_plugin='xbot2', elementree=None, speedup=False, parent=None, verbose=False):
+    def __init__(self, 
+                config_file='config_file.yaml', 
+                control_plugin='xbot2', 
+                elementree=None, 
+                speedup=False, 
+                parent=None, 
+                verbose=False,
+                logger=None):
 
         # Setting this variable to True, speed up the robot building.
         # To be used when the urdf does not need to be shown at every iteration
         self.speedup = speedup
 
-        self.verbose = verbose
+        self.parent = parent
 
-        self.resource_finder = ResourceFinder(config_file)
+        self.verbose = verbose
+        if self.verbose:
+            self.logger.setLevel(logging.DEBUG)  
+        else:
+            pass
+
+        self.logger = logger
+
+        self.config_file = config_file
+
+        self.resource_finder = ResourceFinder(self.config_file)
 
         self.collision_elements = []
 
@@ -932,7 +951,7 @@ class UrdfWriter:
             self.root = ET.fromstring(template)
             # Open the base xacro file
             # filename = path_name + '/modular_data/urdf/template.urdf.xacro'
-            # print(filename)
+            # self.print(filename)
             # with codecs.open(filename, 'r') as f:
             #     string = f.read()
             # Instantiate an Element Tree
@@ -1010,6 +1029,18 @@ class UrdfWriter:
 
         self.parent_module = self.base_link
 
+    def print(self, *args):
+        if isinstance(self.logger, logging.Logger):
+            self.logger.debug(' '.join(str(a) for a in args))
+        else:
+            print(args)
+
+    def info_print(self, *args):
+        if isinstance(self.logger, logging.Logger):
+            self.logger.info(' '.join(str(a) for a in args))
+        else:
+            print(args)
+
     @staticmethod
     def find_module_from_id(module_id, modules):
         """Given the module id find the corresponding dictionary entry and return it"""
@@ -1033,7 +1064,7 @@ class UrdfWriter:
                 position = module[module_id]['position']
                 next_position = int(position) + 1
                 break
-        print('next position:', next_position)
+        # print('next position:', next_position)
         for next_module in modules:
             next_id = (next_module.keys())[0]
             if next_module[next_id]['position'] == next_position:
@@ -1056,7 +1087,7 @@ class UrdfWriter:
                 ordered_chain[module_position - 1] = item
             
             except IndexError:
-                print ('unexpected module position {}, modules number: {}'.format(module_position, len(modules_dict)))
+                self.print('unexpected module position {}, modules number: {}'.format(module_position, len(modules_dict)))
                 return list()
         
         return ordered_chain
@@ -1067,8 +1098,12 @@ class UrdfWriter:
 
         # If a tree representing the topology was already instantiated, re-initialize and start from scratch
         if self.root != 0:
-            print("Re-initialization")
-            self.__init__()
+            self.print("Re-initialization")
+            self.__init__(config_file=self.config_file, 
+                control_plugin=self.control_plugin, 
+                speedup=self.speedup, 
+                verbose=self.verbose,
+                logger=self.logger)
         
         # # Open the base xacro file
         # filename = path_name + '/urdf/ModularBot_new.urdf.xacro'
@@ -1077,7 +1112,7 @@ class UrdfWriter:
         # # Instantiate an Element Tree
         # self.root = ET.fromstring(string)
         # self.urdf_tree = ET.ElementTree(self.root)
-        # print(ET.tostring(self.urdf_tree.getroot()))
+        # self.print(ET.tostring(self.urdf_tree.getroot()))
 
         # Load the robot_id dictionary from yaml file
         # opts = repl_option()
@@ -1105,13 +1140,13 @@ class UrdfWriter:
             if module_filename is None:
                 module_filename = robot_id_dict.get(module_id)
                 if module_filename is None:
-                    print("Id not recognized! Skipping add_module() for id", robot_id_dict.get(module_id))          
+                    self.info_print("Id not recognized! Skipping add_module() for id", robot_id_dict.get(module_id))          
                     continue
 
             module_position = int(module['position'])
             module_topology = int(module['topology'])
 
-            print('Now processing module', module_id)
+            self.info_print('Discovered module with ID:', module_id)
 
             parent_position = None
 
@@ -1139,42 +1174,42 @@ class UrdfWriter:
 
                     candidate_position -= 1
 
-            print("module and parent:", module_id, parent_position)
+            self.print("module and parent:", module_id, parent_position)
 
             # select the correct parent module
             if parent_position :
                 parent = modules_list[parent_position -1]
-                print('parent:', parent)
+                self.print('parent:', parent)
                 
                 parent_id = int(parent['robot_id'])
-                print('parent_id:', parent_id)
+                self.print('parent_id:', parent_id)
                 
                 parent_active_ports = int(parent['active_ports'])
-                print('parent_active_ports:', parent_active_ports)
+                self.print('parent_active_ports:', parent_active_ports)
 
                 parent_topology = int(parent['topology'])
-                print('parent_topology:', parent_topology)
+                self.print('parent_topology:', parent_topology)
 
                 if self.verbose:
                     # Render tree
-                    print(RenderTree(self.base_link))
+                    self.print(RenderTree(self.base_link))
                     for pre, _, node in RenderTree(self.base_link):
-                        print(pre, node, node.name, node.robot_id)
+                        self.print(pre, node, node.name, node.robot_id)
                         # treestr = u"%s%s" % (pre, node.name)
-                        # print(treestr.ljust(8), node.name, node.robot_id)
+                        # self.print(treestr.ljust(8), node.name, node.robot_id)
 
                 parent_module = anytree.search.findall_by_attr(self.base_link, parent_id, name='robot_id')[0]
-                print('parent_module:', parent_module, '\nparent name:', parent_module.name)
+                self.print('parent_module:', parent_module, '\nparent name:', parent_module.name)
                 self.select_module_from_name(parent_module.name)
-                print(self.parent_module.name)
+                self.print(self.parent_module.name)
                 #TODO:replace with select_module_from_id
 
                 # set the selected_port as occupied
                 mask = 1 << parent_module.selected_port - 1
-                print(mask)
-                print(parent_module.occupied_ports)
+                self.print(mask)
+                self.print(parent_module.occupied_ports)
                 parent_module.occupied_ports = "{0:04b}".format(int(parent_module.occupied_ports, 2) | mask)
-                print(parent_module.occupied_ports)
+                self.print(parent_module.occupied_ports)
                 #parent_module.occupied_ports[-selected_port] = 1
 
                 #If the parent is a cube to support non-structural box we add a socket
@@ -1184,7 +1219,7 @@ class UrdfWriter:
 
             # get which ports in the ESC slave are active
             active_ports = int(module['active_ports'])
-            print('active_ports:', active_ports)
+            self.print('active_ports:', active_ports)
 
             #add the module
             if mod_type == 2 or module_filename=='master_cube.yaml':
@@ -1194,7 +1229,7 @@ class UrdfWriter:
             
             if self.verbose:
                 for pre, _, node in RenderTree(self.base_link):
-                    print(pre, node, node.name, node.robot_id)
+                    self.print(pre, node, node.name, node.robot_id)
 
             #TODO: remove this shit
 
@@ -1202,8 +1237,8 @@ class UrdfWriter:
             module_type = data['lastModule_type']
 
             # if module['connections'][0] == 0:
-            #     print('\n Module: \n')
-            #     print(module['id'], module['type'])
+            #     self.print('\n Module: \n')
+            #     self.print(module['id'], module['type'])
             #     if module['type'] == 'master_cube':
             #         data = self.add_slave_cube(0)
             #     else:
@@ -1217,12 +1252,14 @@ class UrdfWriter:
         # string = doc.toprettyxml(indent='  ')
         string = self.process_urdf()
 
+        self.info_print("Discovery completed")
+
         data = {'string': string}
         return data
 
     def render_tree(self):
         for pre, _, node in RenderTree(self.base_link):
-            print(pre, node, node.name, node.robot_id)
+            self.print(pre, node, node.name, node.robot_id)
 
         return 0
 
@@ -1243,7 +1280,7 @@ class UrdfWriter:
 
         # If a tree representing the topology was already instantiated, re-initialize and start from scratch
         if self.root != 0:
-            print("Re-initialization")
+            self.print("Re-initialization")
             self.__init__()
 
         # # Open the base xacro file
@@ -1253,7 +1290,7 @@ class UrdfWriter:
         # # Instantiate an Element Tree
         # self.root = ET.fromstring(string)
         # self.urdf_tree = ET.ElementTree(self.root)
-        # print(ET.tostring(self.urdf_tree.getroot()))
+        # self.print(ET.tostring(self.urdf_tree.getroot()))
 
         # Load the esc_type dictionary from yaml file
         opts = repl_option()
@@ -1269,18 +1306,18 @@ class UrdfWriter:
 
         # Process the modules described in the json to create the tree
         modules = json.load(json_data)
-        print("modules:", modules, type(modules))
+        self.print("modules:", modules, type(modules))
         
         # # This loop has only one iteration over the first element of each chain in the module list from the json msg
         # # The others modules in the chain are processed by process_connections_alt
         # for module in modules:
-        #     print("module:", module)
+        #     self.print("module:", module)
         module, module_id = self.find_next_module_in_chain(0, modules)
-        print("module:",module, type(module))
+        self.print("module:",module, type(module))
         # TODO: The "IDs" actually are now the "positions" in the ECAT network (from get_ec_positions()).
         #       Need to change when branches are implemented
         # for module_id in module.keys():
-        print("module id:",module_id)
+        self.print("module id:",module_id)
         # Find the name of the yaml describing the module to be added, searching the dictionary by the esc_type
         #TODO: handle exception if the id is not found in the dict
         module_filename = robot_id_dict.get(module[module_id]['robot_id'])
@@ -1297,7 +1334,7 @@ class UrdfWriter:
             next_module, next_module_id = self.find_next_module_in_chain(module_id, modules)
             connections.append(str(next_module_id))
         # if topology is not 2, the only other option is 1 right now so the connections list is empty
-        print(connections)
+        self.print(connections)
 
         # Process the connections of the module and add the modules as child of the current one
         self.process_connections_alt(connections, modules, module_name, module_type, robot_id_dict)
@@ -1314,11 +1351,11 @@ class UrdfWriter:
 
     def process_connections(self, connections_list, modules_list, name, m_type):
         """Process connections of the module as described in the JSON as a list"""
-        print('enter!')
+        self.print('enter!')
         for child_id in connections_list[1:]:
-            print('child: ', child_id)
+            self.print('child: ', child_id)
             self.select_module_from_name(name)
-            print(self.parent_module.name)
+            self.print(self.parent_module.name)
             if child_id != -1:
                 # Find child module to process searching by id
                 child = self.find_module_from_id(child_id, modules_list)
@@ -1358,16 +1395,16 @@ class UrdfWriter:
             Dictionary assigning esc_type numbers to the relative modules and the yaml file describing it
 
         """
-        print('enter!')
+        self.print('enter!')
         for child_id in connections_list:
-            print('child: ', child_id)
+            self.print('child: ', child_id)
             self.select_module_from_name(name)
-            print(self.parent_module.name)
+            self.print(self.parent_module.name)
             if child_id != -1:
                 # Find child module to process searching by id in the modules_list
                 #child = modules_list[int(child_id) - 1]  # self.find_module_from_id(child_id, modules_list)
                 child = self.find_module_from_id(child_id, modules_list)       
-                print(child[child_id])
+                self.print(child[child_id])
                 # TODO: Uncomment below when switching to branched robot
                 # # If the processed module is a mastercube we need first to select the connector to which attach to
                 # if m_type == 'mastercube':
@@ -1392,7 +1429,7 @@ class UrdfWriter:
                 if child[child_id]['topology'] == 2:
                     next_module, next_module_id = self.find_next_module_in_chain(child_id, modules_list)
                     connections.append(str(next_module_id))
-                print('connections:', connections)
+                self.print('connections:', connections)
 
                 # Recursively call the function.
                 # Process the connections of the module and add the modules as child of the current one
@@ -1401,10 +1438,10 @@ class UrdfWriter:
     def read_file(self, file_str):
         """Open the URDF chosen from the front-end and import it as a ElemenTree tree"""
         # global root, urdf_tree
-        print(file_str)
+        self.print(file_str)
         self.root = ET.fromstring(file_str.encode('utf-8'))
         self.urdf_tree = ET.ElementTree(self.root)
-        print(ET.tostring(self.urdf_tree.getroot()))
+        self.print(ET.tostring(self.urdf_tree.getroot()))
 
         # include files necessary for Gazebo&XBot simulation
         # ET.SubElement(root, "xacro:include", filename="$(find modular)/urdf/config.xacro")
@@ -1444,7 +1481,7 @@ class UrdfWriter:
         # get tag_index, an integer representing on which branch of the robot the joint has been added
         tag_index = self.inverse_branch_switcher.get(new_joint.tag)
         chain = [new_joint]
-        print("tag_index: ", tag_index, "list of chains: ", len(self.listofchains))
+        self.print("tag_index: ", tag_index, "list of chains: ", len(self.listofchains))
         # if tag_index is bigger than the length of the list of chains, it means this chain hasn't been added yet.
         # then we need to append a new list representing the new chain formed by the new joint only
         if tag_index > len(self.listofchains):
@@ -1516,7 +1553,7 @@ class UrdfWriter:
             # Generate name and dict for the 1st connector module
             name_con1 = name + '_con1'
             data1 = {'Homogeneous_tf': T_con_inv, 'type': "con", 'name': name_con1, 'i': 0, 'p': 0, 'size': 3}
-            print('T_con_inv:', T_con_inv)
+            self.print('T_con_inv:', T_con_inv)
 
             # Add the 1st connector module to the tree
             slavecube_con1 = ModuleNode.ModuleNode(data1, name_con1, parent=self.parent_module)
@@ -1591,12 +1628,12 @@ class UrdfWriter:
             if self.verbose:
                 # Render tree
                 for pre, _, node in anytree.render.RenderTree(self.base_link):
-                    print("%s%s" % (pre, node.name))
+                    self.print("%s%s" % (pre, node.name))
 
             # new_Link = slavecube_con1
             # past_Link = parent_module
             # new_Link.get_rototranslation(past_Link.Homogeneous_tf, tf.transformations.identity_matrix())
-            # print(new_Link.z)
+            # self.print(new_Link.z)
 
             # ET.SubElement(root, "xacro:add_master_cube", name=name)
 
@@ -1640,7 +1677,7 @@ class UrdfWriter:
 
         else:
             # add master cube
-            print('add_master_cube')
+            self.print('add_master_cube')
             # Generate name according to the # of cubes already in the tree
             name = 'L_0' + self.cube_switcher.get(self.n_cubes)
             self.n_cubes += 1
@@ -1694,12 +1731,12 @@ class UrdfWriter:
 
             # Render tree
             #for pre, _, node in anytree.render.RenderTree(self.base_link):
-                #print("%s%s" % (pre, node.name))
+                #self.print("%s%s" % (pre, node.name))
 
             # new_Link = slavecube_con1
             # past_Link = parent_module
             # new_Link.get_rototranslation(past_Link.Homogeneous_tf, tf.transformations.identity_matrix())
-            # print(new_Link.z)
+            # self.print(new_Link.z)
 
             # ET.SubElement(root, "xacro:add_master_cube", name=name)
 
@@ -1732,15 +1769,15 @@ class UrdfWriter:
             #    |           |           |           |
             # com-exp   upper port  front port    nothing
             setattr(mastercube, 'selected_port', 2)
-            print('mastercube.selected_port :', mastercube.selected_port)
+            self.print('mastercube.selected_port :', mastercube.selected_port)
 
             # save the active ports as a binary string
             setattr(mastercube, 'active_ports', "{0:04b}".format(active_ports))
-            print('active_ports: ', mastercube.active_ports)
+            self.print('active_ports: ', mastercube.active_ports)
 
             # save the occupied ports as a binary string
             setattr(mastercube, 'occupied_ports', "0001")
-            print('occupied_ports: ', mastercube.occupied_ports)
+            self.print('occupied_ports: ', mastercube.occupied_ports)
 
             # # If parent topology is greater than 2 the parent is a switch/hub so we need to find the right port where the module is connected
             # if active_ports >= 3:
@@ -1753,7 +1790,7 @@ class UrdfWriter:
             #     self.parent_module.selected_port = 3
             # elif parent_active_ports == 5:
             #     self.parent_module.selected_port = 4
-            # print('self.parent_module.selected_port: ', self.parent_module.selected_port)
+            # self.print('self.parent_module.selected_port: ', self.parent_module.selected_port)
 
             # Update the parent_module attribute of the URDF_writer class. A default connection is chosen.
             #self.parent_module = slavecube_con3
@@ -1852,7 +1889,7 @@ class UrdfWriter:
         if self.verbose:
             # Render tree
             for pre, _, node in anytree.render.RenderTree(self.base_link):
-                print("%s%s" % (pre, node.name))
+                self.print("%s%s" % (pre, node.name))
 
         # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
         data = {'result': string,
@@ -1894,15 +1931,15 @@ class UrdfWriter:
 
         # Update the EtherCAT port connected to the electro-mechanical interface where the new module/slave will be added
         setattr(new_socket, 'selected_port', 2)
-        #print('selected_port :', new_socket.selected_port)
+        #self.print('selected_port :', new_socket.selected_port)
 
         # save the active ports as a binary string
         setattr(new_socket, 'active_ports', "{0:04b}".format(3))  # TODO:change this
-        #print('active_ports: ', new_socket.active_ports)
+        #self.print('active_ports: ', new_socket.active_ports)
 
         # save the occupied ports as a binary string
         setattr(new_socket, 'occupied_ports', "0001")
-        #print('occupied_ports: ', new_socket.occupied_ports)
+        #self.print('occupied_ports: ', new_socket.occupied_ports)
 
         setattr(new_socket, 'name', 'L_' + str(new_socket.i) + new_socket.tag)
         ET.SubElement(self.root,
@@ -1968,7 +2005,7 @@ class UrdfWriter:
         if self.verbose:
             # Render tree
             for pre, _, node in anytree.render.RenderTree(self.base_link):
-                print("%s%s" % (pre, node.name))
+                self.print("%s%s" % (pre, node.name))
 
         # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
         data = {'result': string,
@@ -1984,7 +2021,7 @@ class UrdfWriter:
         # Update the parent_module attribute of the URDF_writer class
         self.parent_module = new_socket
 
-        # print(self.parent_module)
+        # self.print(self.parent_module)
 
         return data
 
@@ -1992,9 +2029,9 @@ class UrdfWriter:
         # TODO: treat this as a link in the link_after_* methods!
         data = {'type': "simple_ee", 'name': "simple_ee"}
 
-        #print("Parent module:")
-        #print(self.parent_module.name)
-        #print(self.parent_module.type)
+        #self.print("Parent module:")
+        #self.print(self.parent_module.name)
+        #self.print(self.parent_module.type)
 
         simple_ee = ModuleNode.ModuleNode(data, "simple_ee", parent=self.parent_module)
         setattr(simple_ee, 'tag', self.parent_module.tag)
@@ -2084,8 +2121,8 @@ class UrdfWriter:
 
         """
         # global tag, parent_module
-        print(path_name)
-        print(filename)
+        self.print(path_name)
+        self.print(filename)
         # Generate the path to the required YAML file
         module_name = self.resource_finder.get_filename(filename, 'yaml_path')
         # module_name = path_name + '/web/static/yaml/' + filename
@@ -2093,7 +2130,7 @@ class UrdfWriter:
         # Load the module from YAML and create a ModuleNode instance
         new_module = ModuleNode.module_from_yaml(module_name, self.parent_module, reverse)
 
-        # print(angle_offset)
+        # self.print(angle_offset)
 
         # If the parent is a connector module, it means we are starting a new branch from a cube.
         # Then assign the correct tag (A, B, C, ...) to the new module (and therefore start a new branch)
@@ -2106,7 +2143,7 @@ class UrdfWriter:
         else:
             setattr(new_module, 'tag', self.parent_module.tag)
 
-        print('new_module.tag:', new_module.tag)
+        self.print('new_module.tag:', new_module.tag)
 
         # Set attributes of the newly added module object
         setattr(new_module, 'i', self.parent_module.i)
@@ -2118,9 +2155,9 @@ class UrdfWriter:
         setattr(new_module, 'reverse', reverse)
         setattr(new_module, 'robot_id', robot_id)
 
-        print("parent module:")
-        print(self.parent_module)
-        print(self.parent_module.type)
+        self.print("parent module:")
+        self.print(self.parent_module)
+        self.print(self.parent_module.type)
 
         # Update the EtherCAT port connected to the electro-mechanical interface where the new module/slave will be added 
         #    1           2           3           4
@@ -2128,15 +2165,15 @@ class UrdfWriter:
         #    |           |           |           |
         # com-exp   upper port  front port    nothing
         setattr(new_module, 'selected_port', 2)
-        print('mastercube.selected_port :', new_module.selected_port)
+        self.print('mastercube.selected_port :', new_module.selected_port)
 
         # save the active ports as a binary string
         setattr(new_module, 'active_ports', "{0:04b}".format(active_ports)) 
-        print('active_ports: ', new_module.active_ports)
+        self.print('active_ports: ', new_module.active_ports)
 
         # save the occupied ports as a binary string
         setattr(new_module, 'occupied_ports', "0001")
-        print('occupied_ports: ', new_module.occupied_ports)
+        self.print('occupied_ports: ', new_module.occupied_ports)
 
         # Depending on the type of the parent module and the new module, call the right method to add the new module.
         # If the new module is a joint add it to the correct chain via the 'add_to_chain' method.
@@ -2146,13 +2183,13 @@ class UrdfWriter:
         if self.parent_module.type == 'joint':
             if new_module.type == 'joint':
                 # joint + joint
-                print("joint + joint")
+                self.print("joint + joint")
                 self.joint_after_joint(new_module, self.parent_module, angle_offset, reverse=reverse)
                 # Add the joint to the list of chains
                 self.add_to_chain(new_module)
             else:
                 # joint + link
-                print("joint + link")
+                self.print("joint + link")
                 self.link_after_joint(new_module, self.parent_module, angle_offset, reverse=reverse)
         elif self.parent_module.type == 'cube':
             if new_module.type == 'joint':
@@ -2166,13 +2203,13 @@ class UrdfWriter:
         else:
             if new_module.type == 'joint':
                 # link + joint
-                print("link + joint")
+                self.print("link + joint")
                 self.joint_after_link(new_module, self.parent_module, angle_offset, reverse=reverse)
                 # Add the joint to the list of chains
                 self.add_to_chain(new_module)
             else:
                 # link + link
-                print("link + link")
+                self.print("link + link")
                 self.link_after_link(new_module, self.parent_module, angle_offset, reverse=reverse)
 
         if self.speedup:
@@ -2187,7 +2224,7 @@ class UrdfWriter:
         if self.verbose:
             # Render tree
             for pre, _, node in anytree.render.RenderTree(self.base_link):
-                print("%s%s" % (pre, node.name))
+                self.print("%s%s" % (pre, node.name))
 
         # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
         data = {'result': string,
@@ -2203,7 +2240,7 @@ class UrdfWriter:
         # Update the parent_module attribute of the URDF_writer class
         self.parent_module = new_module
 
-        # print(self.parent_module)
+        # self.print(self.parent_module)
 
         return data
 
@@ -2234,17 +2271,17 @@ class UrdfWriter:
         if '_con' in selected_module.name:
             selected_module = selected_module.parent
 
-        print(selected_module.name)
+        self.print(selected_module.name)
 
         # If the selected module is NOT a cube start by first removing its child and descendants.
         # There is a recursive call to this function inside the loop to remove each module.
         if selected_module.type != 'cube':
-            print('eliminate child')
+            self.print('eliminate child')
             for child in selected_module.children:
                 self.remove_module(child)
 
-        print(selected_module.children)
-        print(selected_module.parent.name)
+        self.print(selected_module.children)
+        self.print(selected_module.parent.name)
 
         # update generator expression
         self.update_generator()
@@ -2291,7 +2328,7 @@ class UrdfWriter:
             # save parent of the module to remove. This will be the last element of the chain after removal,
             # and its data will be returned by the function
             father = selected_module.parent.parent
-            print(selected_module.parent.name)
+            self.print(selected_module.parent.name)
 
             # update attribute representing number of cubes present in the model
             self.n_cubes -= 1
@@ -2326,13 +2363,13 @@ class UrdfWriter:
 
             # Generate the name of the fixed joint between parent and cube
             joint_name = 'FJ_' + father_module.parent.parent.name + '_' + father_module.name
-            print(joint_name)
+            self.print(joint_name)
 
             # Remove the fixed joint
             for node in self.gen:
                 try:
                     if node.attrib['name'] == joint_name:
-                        #print(joint_name)
+                        #self.print(joint_name)
                         self.root.remove(node)
                 except KeyError:
                     pass
@@ -2467,7 +2504,7 @@ class UrdfWriter:
         if self.verbose:
             # Render tree
             for pre, _, node in anytree.render.RenderTree(self.base_link):
-                print("%s%s" % (pre, node.name))
+                self.print("%s%s" % (pre, node.name))
 
         return data
 
@@ -2487,12 +2524,12 @@ class UrdfWriter:
 
         """
         # global parent_module
-        print('queried_module_name: ', queried_module_name)
+        self.print('queried_module_name: ', queried_module_name)
 
         # Serch the tree by name for the selected module
         queried_module = anytree.search.findall_by_attr(self.base_link, queried_module_name)[0]
 
-        print('queried_module.type: ', queried_module.type)
+        self.print('queried_module.type: ', queried_module.type)
         
         # Update parent_module attribute
         self.parent_module = queried_module
@@ -2519,7 +2556,7 @@ class UrdfWriter:
 
         """
 
-        print(name)
+        self.print(name)
 
         # If the selected module is the stator of a joint modify the string so to select the joint itself.
         # This is needed because from the GUI when you select a joint by clicking, the mesh corresponding to the stator
@@ -2532,28 +2569,28 @@ class UrdfWriter:
             selected_module_name = name[:-5]
             # Save the selected port
             selected_port = int(name[-1])
-            print(selected_port)
+            self.print(selected_port)
         else:
             selected_module_name = name
 
-        print(selected_module_name)
+        self.print(selected_module_name)
 
         # Call access_module to get the object with the requested name and sets it as parent.
         # The method doing the real work is actually access_module
         selected_module = self.access_module(selected_module_name)
-        print(selected_module.type)
-        print(selected_module.name)
-        print(selected_module.robot_id)
-        print(selected_module.active_ports)
-        print(selected_module.occupied_ports)
+        self.print(selected_module.type)
+        self.print(selected_module.name)
+        self.print(selected_module.robot_id)
+        self.print(selected_module.active_ports)
+        self.print(selected_module.occupied_ports)
         
         # TODO: Replace this with select_ports
         # binary XOR
         free_ports = int(selected_module.active_ports, 2) ^ int(selected_module.occupied_ports, 2)
-        print("{0:04b}".format(free_ports))
+        self.print("{0:04b}".format(free_ports))
 
         selected_module.selected_port = self.ffs(free_ports)
-        print('selected_module.selected_port :', selected_module.selected_port)
+        self.print('selected_module.selected_port :', selected_module.selected_port)
         
         # # If parent topology is greater than 2 the parent is a switch/hub so we need to find the right port where the module is connected
         # if active_ports >= 3:
@@ -2566,7 +2603,7 @@ class UrdfWriter:
         #     self.parent_module.selected_port = 3
         # elif parent_active_ports == 5:
         #     self.parent_module.selected_port = 4
-        # print('self.parent_module.selected_port: ', self.parent_module.selected_port)
+        # self.print('self.parent_module.selected_port: ', self.parent_module.selected_port)
 
         # Select the correct port where to add the module to
         if '_con' in name:
@@ -2598,25 +2635,25 @@ class UrdfWriter:
             module.active_ports = module.occupied_ports  # int(module.active_ports, 2) & int(module.occupied_ports, 2)
             # Save the selected port
             selected_port = int(name[-1])
-            #print(selected_port)
+            #self.print(selected_port)
             # Set the selected_port as active
             mask = 1 << selected_port - 1
-            #print(mask)
-            #print(module.active_ports)
+            #self.print(mask)
+            #self.print(module.active_ports)
             # binary OR
             module.active_ports = "{0:04b}".format(int(module.active_ports, 2) | mask)
-            #print(module.active_ports)
-        #print(module.type)
-        #print(module.name)
-        #print(module.robot_id)
-        #print(module.active_ports)
-        #print(module.occupied_ports)
+            #self.print(module.active_ports)
+        #self.print(module.type)
+        #self.print(module.name)
+        #self.print(module.robot_id)
+        #self.print(module.active_ports)
+        #self.print(module.occupied_ports)
         # binary XOR
         free_ports = int(module.active_ports, 2) ^ int(module.occupied_ports, 2)
-        #print("{0:04b}".format(free_ports))
+        #self.print("{0:04b}".format(free_ports))
 
         module.selected_port = self.ffs(free_ports)
-        #print('module.selected_port :', module.selected_port)
+        #self.print('module.selected_port :', module.selected_port)
 
         # # If parent topology is greater than 2 the parent is a switch/hub so we need to find the right port where
         # the module is connected if active_ports >= 3: for port_idx in range(2, len(mastercube.active_ports) - 1) if
@@ -2626,11 +2663,11 @@ class UrdfWriter:
         #     self.parent_module.selected_port = 3
         # elif parent_active_ports == 5:
         #     self.parent_module.selected_port = 4
-        # #print('self.parent_module.selected_port: ', self.parent_module.selected_port)
+        # #self.print('self.parent_module.selected_port: ', self.parent_module.selected_port)
 
         # Select the correct port where to add the module to
         # if '_con' in name:
-        #     #print('AAAAAAAAAAAAAAAAAAAAAAA')
+        #     #self.print('AAAAAAAAAAAAAAAAAAAAAAA')
         #     module.selected_port = selected_port
 
         return 0
@@ -2719,8 +2756,8 @@ class UrdfWriter:
             )
             setattr(new_Link, 'size', new_Link.size_out)
             
-        print('past_Cube: ', past_Cube)
-        print('past_Cube.selected_port: ', past_Cube.selected_port)
+        self.print('past_Cube: ', past_Cube)
+        self.print('past_Cube.selected_port: ', past_Cube.selected_port)
 
         if past_Cube.is_structural:
             parent_name = past_Cube.name
@@ -2738,8 +2775,8 @@ class UrdfWriter:
 
             interface_transform = tf.transformations.identity_matrix()
 
-        print('past_Cube.selected_port:', past_Cube.selected_port)
-        print('interface_transform: ', interface_transform)
+        self.print('past_Cube.selected_port:', past_Cube.selected_port)
+        self.print('interface_transform: ', interface_transform)
 
         transform = ModuleNode.get_rototranslation(interface_transform,
                                                    tf.transformations.rotation_matrix(offset,
@@ -2781,7 +2818,7 @@ class UrdfWriter:
             Value of the angle between the parent module output frame and the module input frame
         """
 
-        print('past_Cube')
+        self.print('past_Cube')
 
         if past_Cube.is_structural:
             parent_name = past_Cube.name
@@ -2799,8 +2836,8 @@ class UrdfWriter:
 
             interface_transform = tf.transformations.identity_matrix()
 
-        print('past_Cube.selected_port:', past_Cube.selected_port)
-        print('interface_transform: ', interface_transform)
+        self.print('past_Cube.selected_port:', past_Cube.selected_port)
+        self.print('interface_transform: ', interface_transform)
 
         transform = ModuleNode.get_rototranslation(interface_transform,
                                                    tf.transformations.rotation_matrix(offset,
@@ -2817,8 +2854,8 @@ class UrdfWriter:
         setattr(new_Joint, 'name', 'J' + str(new_Joint.i) + new_Joint.tag)
         setattr(new_Joint, 'stator_name', new_Joint.name + '_stator')
         joint_stator_name = "fixed_" + new_Joint.name
-        print('stator_name: ', new_Joint.stator_name)
-        print('joint_stator_name: ', joint_stator_name)
+        self.print('stator_name: ', new_Joint.stator_name)
+        self.print('joint_stator_name: ', joint_stator_name)
         ET.SubElement(self.root, "xacro:add_fixed_joint",
                       type="fixed_joint_stator",
                       name=joint_stator_name,
@@ -3391,7 +3428,7 @@ class UrdfWriter:
         transform = ModuleNode.get_rototranslation(past_Link.Homogeneous_tf,
                                                    tf.transformations.rotation_matrix(offset,
                                                                                       self.zaxis))
-        print(transform)
+        self.print(transform)
         x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(transform)
 
         if new_Link.type == 'tool_exchanger' or new_Link.type == 'gripper':
@@ -3431,11 +3468,11 @@ class UrdfWriter:
             try:
                 probdesc = ordered_load(stream, yaml.SafeLoader)
                 # cartesio_stack['EE']['base_link'] = self.listofchains[0]
-                #print(probdesc.items()[0])
+                #self.print(probdesc.items()[0])
             except yaml.YAMLError as exc:
-                print(exc)
+                self.print(exc)
 
-        #print(probdesc.items())
+        #self.print(probdesc.items())
         i = 0
         tasks = []
         stack = [tasks]
@@ -3503,11 +3540,11 @@ class UrdfWriter:
             try:
                 probdesc = ordered_load(stream, yaml.SafeLoader)
                 # cartesio_stack['EE']['base_link'] = self.listofchains[0]
-                print(probdesc.items()[0])
+                self.print(probdesc.items()[0])
             except yaml.YAMLError as exc:
-                print(exc)
+                self.print(exc)
                 
-        print(probdesc.items())
+        self.print(probdesc.items())
         joints_chain = self.listofchains[0]
         if joints_chain[-1].children:
             if "con" in joints_chain[-1].children[0].name:
@@ -3593,7 +3630,7 @@ class UrdfWriter:
         # perform macro replacement
         xacro.process_doc(doc)
 
-        # print(doc.lastChild.toprettyxml(indent='  '))
+        # self.print(doc.lastChild.toprettyxml(indent='  '))
 
         # add xacro auto-generated banner
         banner = [xml.dom.minidom.Comment(c) for c in
@@ -3615,8 +3652,12 @@ class UrdfWriter:
         deploy_dir = os.path.expanduser(self.resource_finder.cfg['deploy_dir'])
         deploy_dir = os.path.expandvars(deploy_dir)
 
-        output = subprocess.check_output([script, robot_name, "--destination-folder", deploy_dir, "-v"])
-        print(output)
+        if self.verbose:
+            output = subprocess.check_output([script, robot_name, "--destination-folder", deploy_dir, "-v"])
+        else:
+            output = subprocess.check_output([script, robot_name, "--destination-folder", deploy_dir])
+        
+        self.info_print(output)
 
         self.add_connectors()
 
@@ -3634,10 +3675,10 @@ class UrdfWriter:
             try:
                 node_type = node.attrib['type']
                 if node_type == 'connectors':
-                    print('removing node:', node.attrib)
+                    self.print('removing node:', node.attrib)
                     self.root.remove(node)
             except KeyError:
-                #print('missing type', node.attrib['name'])
+                #self.print('missing type', node.attrib['name'])
                 continue
 
         # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string
@@ -3647,7 +3688,7 @@ class UrdfWriter:
         if self.verbose:
             # Render tree
             for pre, _, node in anytree.render.RenderTree(self.base_link):
-                print("%s%s" % (pre, node.name))
+                self.print("%s%s" % (pre, node.name))
 
         return string
 
@@ -3666,7 +3707,7 @@ class UrdfWriter:
 
                     ET.SubElement(self.root, "xacro:add_connectors", type='connectors', name=name, filename=filename)
             except KeyError:
-                #print('missing type', node.attrib['name'])
+                #self.print('missing type', node.attrib['name'])
                 continue
         
         

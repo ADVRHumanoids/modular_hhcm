@@ -3,7 +3,7 @@ import time
 from flask import Flask, render_template, request, jsonify, send_from_directory, url_for
 #import hierarchy_server as hp
 # import flask
-# print(flask.__file__, flask.__version__)
+# roslogger.debug(flask.__file__, flask.__version__)
 
 # import logging
 from modular.URDF_writer import UrdfWriter
@@ -12,6 +12,7 @@ import zmq
 import yaml
 import json
 import os
+import logging
 
 import rospy
 import modular.zmq_requester
@@ -19,16 +20,20 @@ import modular.zmq_requester
 from ec_srvs.srv import GetSlaveInfo, GetSlaveInfoRequest, GetSlaveInfoResponse
 
 import sys
+
+roslogger = logging.getLogger('rosout')
+
+
 if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
-    print('running in a PyInstaller bundle')
+    roslogger.debug('running in a PyInstaller bundle')
     template_folder = os.path.join(sys._MEIPASS, 'modular/web/templates')
     static_folder = os.path.join(sys._MEIPASS, 'modular/web/static')
-    print(sys._MEIPASS)
-    print(template_folder)
-    print(static_folder)
+    roslogger.debug(sys._MEIPASS)
+    roslogger.debug(template_folder)
+    roslogger.debug(static_folder)
     app = Flask(__name__, static_folder=static_folder, template_folder=template_folder, static_url_path='')
 else:
-    print('running in a normal Python process')
+    roslogger.debug('running in a normal Python process')
     app = Flask(__name__, static_folder='static', template_folder='templates', static_url_path='')
     
 
@@ -37,11 +42,12 @@ else:
 # Instance of ZMQ Poller class (create sockets, etc.)
 #zmq_poller = zmq_poller.ZmqPoller()
 
+
 # Instance of UrdfWriter class
-urdf_writer = UrdfWriter()
+urdf_writer = UrdfWriter(logger=roslogger)
 
 # 2nd instance of UrdfWriter class for the robot got from HW
-urdf_writer_fromHW = UrdfWriter()
+urdf_writer_fromHW = UrdfWriter(logger=roslogger)
 
 # Initialize json parser server manager
 #manager = hp.MANAGER(config_namespace='/state_machine')
@@ -74,13 +80,13 @@ def test():
 @app.route('/changeURDF/', methods=['POST'])
 def changeURDF():
     filename = request.form.get('module_name', 0)
-    print(filename)
+    roslogger.debug(filename)
     parent = request.form.get('parent', 0)
-    print(parent)
+    roslogger.debug(parent)
     offset = float(request.form.get('angle_offset', 0))
-    print(offset)
+    roslogger.debug(offset)
     reverse = True if request.form.get('reverse', 0) == 'true' else False
-    print(reverse)
+    roslogger.debug(reverse)
     data = urdf_writer.add_module(filename, offset, reverse)
     data = jsonify(data)
     return data 
@@ -90,17 +96,17 @@ def changeURDF():
 def writeURDF():
     global building_mode_ON
     #string = request.form.get('string', 0)
-    # print(string)
-    # print (building_mode_ON)
-    print('jointMap')
+    # roslogger.debug(string)
+    # roslogger.debug (building_mode_ON)
+    roslogger.debug('jointMap')
     json_jm = request.form.get('jointMap', 0)
-    print(json_jm)
+    roslogger.debug(json_jm)
     builder_jm = json.loads(json_jm)
     building_mode_ON = True if request.form.get('buildingModeON', 0) == 'true' else False
     if building_mode_ON :
         data = urdf_writer.write_urdf()
         srdf = urdf_writer.write_srdf(builder_jm)
-        print(srdf)
+        roslogger.debug(srdf)
         joint_map = urdf_writer.write_joint_map()
         lowlevel_config = urdf_writer.write_lowlevel_config()
         #probdesc = urdf_writer.write_problem_description()
@@ -109,18 +115,18 @@ def writeURDF():
     else:
         data = urdf_writer_fromHW.write_urdf()
         srdf = urdf_writer_fromHW.write_srdf(builder_jm)
-        print(srdf)
+        roslogger.debug(srdf)
         joint_map = urdf_writer_fromHW.write_joint_map(use_robot_id=True)
         lowlevel_config = urdf_writer_fromHW.write_lowlevel_config(use_robot_id=True)
         #probdesc = urdf_writer_fromHW.write_problem_description()
         probdesc = urdf_writer_fromHW.write_problem_description_multi()
         # cartesio_stack = urdf_writer_fromHW.write_cartesio_stack()
-    # print("\nSRDF\n")
-    # print(srdf)
-    # print("\nJoint Map\n")
-    # print(joint_map)
-    # print("\nCartesIO stack\n")
-    # print(cartesio_stack)
+    # roslogger.debug("\nSRDF\n")
+    # roslogger.debug(srdf)
+    # roslogger.debug("\nJoint Map\n")
+    # roslogger.debug(joint_map)
+    # roslogger.debug("\nCartesIO stack\n")
+    # roslogger.debug(cartesio_stack)
     # data = jsonify(data)
     return data 
 
@@ -129,11 +135,11 @@ def writeURDF():
 @app.route('/addMasterCube/', methods=['POST'])
 def addCube():
     filename = request.form.get('module_name', 0)
-    print(filename)
+    roslogger.debug(filename)
     parent = request.form.get('parent', 0)
-    print(parent)
+    roslogger.debug(parent)
     offset = float(request.form.get('angle_offset', 0))
-    print(offset)
+    roslogger.debug(offset)
     data = urdf_writer.add_slave_cube(offset)
     data = jsonify(data)
     return data 
@@ -144,9 +150,9 @@ def addCube():
 def addSocket():
     values = json.loads(request.form.get('values'))
     offset = values['offset']
-    print(offset)
+    roslogger.debug(offset)
     angle_offset = values['angle_offset']
-    print(angle_offset)
+    roslogger.debug(angle_offset)
 
     global building_mode_ON
 
@@ -167,11 +173,11 @@ def addSocket():
 @app.route('/moveSocket/', methods=['POST'])
 def moveSocket():
     values = json.loads(request.form.get('values'))
-    print(values)
+    roslogger.debug(values)
     offset = values['offset']
-    print(offset)
+    roslogger.debug(offset)
     angle_offset = values['angle_offset']
-    print(angle_offset)
+    roslogger.debug(angle_offset)
     data = urdf_writer_fromHW.move_socket("L_0_B", float(offset.get('x_offset')), float(offset.get('y_offset')),
                                   float(offset.get('z_offset')), float(angle_offset))
     data = jsonify(data)
@@ -200,9 +206,9 @@ def accessModule():
 @app.route('/openFile/', methods=['POST'])
 def openFile():
     file_str = request.form.get('file', 0)
-    print(file_str)
+    roslogger.debug(file_str)
     data = urdf_writer.read_file(file_str)
-    print('data:', data)
+    roslogger.debug('data:', data)
     data = jsonify(data)
     return data
 
@@ -210,10 +216,10 @@ def openFile():
 @app.route('/requestURDF/', methods=['POST'])
 def requestURDF():
     # building_mode_on_str = request.form.get('mode', 0)
-    # print(building_mode_on_str)
+    # roslogger.debug(building_mode_on_str)
     urdf_string = urdf_writer.process_urdf()
     data = {'string': urdf_string}
-    print('data:', data)
+    roslogger.debug('data:', data)
     data = jsonify(data)
     return data
 
@@ -227,7 +233,7 @@ def send_file(path):
 def pub_cmd():
     key = 'Builder'
     cmd = request.form.get('cmd', 0)
-    print('cmd:', cmd.encode())
+    roslogger.debug('cmd:', cmd.encode())
     publisher.send_multipart([key, cmd.encode()])
 
     return jsonify(cmd)
@@ -238,21 +244,21 @@ def syncHW():
     # ## Method using the poller
     # # zmq_poller.requester.send(b"Topology_REQ")
     # # message = zmq_poller.requester.recv_json()
-    # # print("Received reply: %s" % (message))
+    # # roslogger.debug("Received reply: %s" % (message))
     # # data = urdf_writer_fromHW.read_from_json(message)
-    # # #print('data:', data)
+    # # #roslogger.debug('data:', data)
     # # data = jsonify(data)
     # # return data
 
 
     # # requester.send(b"Topology_REQ")
     # # message = requester.recv_json()
-    # # print("Received reply: %s" % (message))
+    # # roslogger.debug("Received reply: %s" % (message))
     
     # # # data = urdf_writer_fromHW.read_from_json(message)
     # # data = urdf_writer_fromHW.read_from_json_alt(message)
 
-    # # #print('data:', data)
+    # # #roslogger.debug('data:', data)
     # # data = jsonify(data)
     # # return data
 
@@ -264,7 +270,7 @@ def syncHW():
     # cnt = opts["cmd_exec_cnt"]
     # while cnt:
 
-    #     print("cmd_exec_cnt", cnt)
+    #     roslogger.debug("cmd_exec_cnt", cnt)
     #     cnt -= 1
 
     #     test_dict = {"type": "ECAT_MASTER_CMD", "ecat_master_cmd": {"type": "GET_SLAVES_DESCR"}}
@@ -293,17 +299,17 @@ def syncHW():
         slave_description = rospy.ServiceProxy(srv_name, GetSlaveInfo)
 
     except rospy.ServiceException as e:
-        print("Service call failed: %s"%e)
+        roslogger.debug("Service call failed: %s"%e)
 
     reply = slave_description()
     reply = reply.cmd_info.msg
-    print("Exit")
+    roslogger.debug("Exit")
 
     data = urdf_writer_fromHW.read_from_json(reply)
     # data = urdf_writer_fromHW.read_from_json_alt(reply)
     if urdf_writer_fromHW.verbose:
         urdf_writer_fromHW.render_tree()
-    print('data:', data)
+    roslogger.debug('data:', data)
     data = jsonify(data)
     return data
 
@@ -315,7 +321,7 @@ def changeMode():
     # Get the state of the toggle switch. Convert the boolean from Javascript to Python
     building_mode_ON = True if request.form.get('buildingModeON', 0) == 'true' else False
 
-    print(building_mode_ON)
+    roslogger.debug(building_mode_ON)
 
     # Re-initialize the two object instances
     urdf_writer.__init__()
@@ -336,7 +342,7 @@ def deployRobot():
     
     if building_mode_ON :
         name = request.form.get('name', 'ModularBot')
-        print(name)
+        roslogger.debug(name)
         data = urdf_writer.deploy_robot(name)
     else:
         data = urdf_writer_fromHW.deploy_robot('ModularBot')
@@ -358,19 +364,19 @@ def removeConnectors():
 @app.route('/sendCommands/', methods=['POST'])
 def sendCommands():
     jsonData = request.get_json()
-    print(jsonData)
-    print(byteify(jsonData))
+    roslogger.debug(jsonData)
+    roslogger.debug(byteify(jsonData))
     # res = manager.parse_json(jsonData)
     
     res = 'if you read this something wrong is happening: fi commented out the hierarchy server!'
-    print(res)
-    # print jsonData['descriptors']
-    # print jsonData['name']
+    roslogger.debug(res)
+    # roslogger.debug jsonData['descriptors']
+    # roslogger.debug jsonData['name']
     # dictData = json.loads(jsonData)
-    # print(dictData)
-    # print(prova["descriptors"])
+    # roslogger.debug(dictData)
+    # roslogger.debug(prova["descriptors"])
     # data = request.form.to_dict
-    # print data
+    # roslogger.debug data
     return res
 
 def byteify(input):
@@ -386,7 +392,7 @@ def byteify(input):
 
 def main():
      # initialize ros node
-    rospy.init_node('robot_design_studio')
+    rospy.init_node('robot_builder')
     # Start Flask web-server
     app.run(host='0.0.0.0', port=5000, debug=True, threaded=True)
     # app.run(debug=False, threaded=True)
@@ -397,7 +403,7 @@ def main():
     # from geventwebsocket.handler import WebSocketHandler
     # http_server = WSGIServer(('', 5000), app, handler_class=WebSocketHandler)
     # logger.info('Starting serving')
-    # print('Starting serving')
+    # roslogger.debug('Starting serving')
     # http_server.serve_forever()
 
 
