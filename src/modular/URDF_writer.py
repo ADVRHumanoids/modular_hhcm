@@ -922,13 +922,13 @@ class UrdfWriter:
 
         self.parent = parent
 
+        self.logger = logger
+        
         self.verbose = verbose
         if self.verbose:
             self.logger.setLevel(logging.DEBUG)  
         else:
             pass
-
-        self.logger = logger
 
         self.config_file = config_file
 
@@ -2859,7 +2859,7 @@ class UrdfWriter:
         ET.SubElement(self.root, "xacro:add_fixed_joint",
                       type="fixed_joint_stator",
                       name=joint_stator_name,
-                      father=past_Cube.name,  # TODO: check!
+                      father=parent_name, # past_Cube.name,  # TODO: check!
                       child=new_Joint.stator_name,
                       x=x,
                       y=y,
