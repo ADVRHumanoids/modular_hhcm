@@ -27,11 +27,12 @@ script:
   - pip install -e .
   - cd src/modular/web/
   - pyinstaller --onefile RobotBuilder.spec
+  - ls dist/RobotBuilder  # fail if does not exist
 
 deploy:
   provider: releases
   api_key: $GH_TOKEN
-  file: src/modular/web/dist/RobotBuilder
+  file: dist/RobotBuilder
   skip_cleanup: true
   on:
     tags: true
