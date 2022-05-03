@@ -11,6 +11,7 @@ branches:
 notifications:
   email:
     recipients:
+      - edoardo.romiti@iit.it
       - arturo.laurenzi@iit.it
     on_success: never
     on_failure: always
