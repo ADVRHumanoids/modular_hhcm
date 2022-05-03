@@ -16,7 +16,7 @@ notifications:
     on_failure: always
 
 before_install:
-  - rm -rf /opt/pyenv
+  - rm -rf /opt/pyenv  # damn pyenv
 
 before_script:
   - echo "Travis tag is $TRAVIS_TAG"
