@@ -120,6 +120,29 @@ mkdir -p ./config
 mkdir -p ./config/hal
 mkdir -p ./config/joint_config
 
+##################################Deploy Pilgrim stuff###########################################
+
+#External devices map
+mkdir -p ./external_devices_map
+pushd ./external_devices_map
+echo "1: EL1259" >> digital_io.yaml
+echo "2: EL6224_1" >> iolink.yaml
+echo "Put inside the different yaml file, the position in the chain with the name written in the corresponding config file 
+(es: 1:EL6224_1, if iolink is in the first position)" >> Readme.txt
+popd
+
+#Digital Io
+mkdir -p ./config/digital_io_config
+pushd ./config/digital_io_config
+cp $SCRIPT_ROOT/configs/external_devices/digital_io.yaml .
+popd
+
+#Io Link
+mkdir -p ./config/iolink_config
+pushd ./config/iolink_config
+cp $SCRIPT_ROOT/configs/external_devices/iolink.yaml .
+popd
+
 # - Low level hal configs
 #   - ec_all (modified)
 cp /tmp/ModularBot/config/hal/ModularBot_ec_all.yaml ./config/hal/ModularBot_ec_all.yaml $VERBOSITY || end_exec
