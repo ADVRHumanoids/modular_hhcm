@@ -81,55 +81,61 @@ class Module(object):
         proximal = self.kinematics.joint.proximal
         distal = self.kinematics.joint.distal
 
-        # if not reverse:
-        H1 = tf.transformations.rotation_matrix(proximal.delta_pl, zaxis)
-        H2 = tf.transformations.translation_matrix((0, 0, proximal.p_pl))
-        H3 = tf.transformations.translation_matrix((proximal.a_pl, 0, 0))
-        H4 = tf.transformations.rotation_matrix(proximal.alpha_pl, xaxis)
-        H5 = tf.transformations.translation_matrix((0, 0, proximal.n_pl))
+        if self.kinematics.convention == "urdf":
+            # if not reverse:
+            H1 = tf.transformations.translation_matrix((proximal.x, proximal.y, proximal.z))
+            H2 = tf.transformations.rotation_matrix(proximal.roll, xaxis)
+            H3 = tf.transformations.rotation_matrix(proximal.pitch, yaxis)
+            H4 = tf.transformations.rotation_matrix(proximal.yaw, zaxis)
+            # R = tf.transformations.euler_matrix(proximal.roll, proximal.pitch, proximal.yaw, 'sxyz')
+            
+            P = tf.transformations.concatenate_matrices(H1, H2, H3, H4)
 
-        P = tf.transformations.concatenate_matrices(H1, H2, H3, H4, H5)
+            H1 = tf.transformations.translation_matrix((distal.x, distal.y, distal.z))
+            H2 = tf.transformations.rotation_matrix(distal.roll, xaxis)
+            H3 = tf.transformations.rotation_matrix(distal.pitch, yaxis)
+            H4 = tf.transformations.rotation_matrix(distal.yaw, zaxis)
+            # R = tf.transformations.euler_matrix(distal.roll, distal.pitch, distal.yaw, 'rxyz')
 
-        H1 = tf.transformations.translation_matrix((0, 0, distal.p_dl))
-        H2 = tf.transformations.translation_matrix((distal.a_dl, 0, 0))
-        H3 = tf.transformations.rotation_matrix(distal.alpha_dl, xaxis)
-        H4 = tf.transformations.translation_matrix((0, 0, distal.n_dl))
-        H5 = tf.transformations.rotation_matrix(distal.delta_dl, zaxis)  # 3.14
+            D = tf.transformations.concatenate_matrices(H1, H2, H3, H4)
 
-        D = tf.transformations.concatenate_matrices(H1, H2, H3, H4, H5)
+            if reverse:
+                P = tf.transformations.inverse_matrix(D)
+                D = tf.transformations.inverse_matrix(P)
 
-        if reverse:
-            P = tf.transformations.inverse_matrix(D)
-            D = tf.transformations.inverse_matrix(P)
+            # Add the transformation matrix for the Proximal part as attribute of the class
+            setattr(self, 'Proximal_tf', P)
 
-        # Add the transformation matrix for the Proximal part as attribute of the class
-        setattr(self, 'Proximal_tf', P)
+            # Add the transformation matrix for the Distal part as attribute of the class
+            setattr(self, 'Distal_tf', D)
 
-        # Add the transformation matrix for the Distal part as attribute of the class
-        setattr(self, 'Distal_tf', D)
+        else:
+            # if not reverse:
+            H1 = tf.transformations.rotation_matrix(proximal.delta_pl, zaxis)
+            H2 = tf.transformations.translation_matrix((0, 0, proximal.p_pl))
+            H3 = tf.transformations.translation_matrix((proximal.a_pl, 0, 0))
+            H4 = tf.transformations.rotation_matrix(proximal.alpha_pl, xaxis)
+            H5 = tf.transformations.translation_matrix((0, 0, proximal.n_pl))
 
-        # else:
-        #     H1 = tf.transformations.translation_matrix((0, 0, -proximal.n_pl))
-        #     H2 = tf.transformations.rotation_matrix(-proximal.alpha_pl, xaxis)
-        #     H3 = tf.transformations.translation_matrix((-proximal.a_pl, 0, 0))
-        #     H4 = tf.transformations.translation_matrix((0, 0, -proximal.p_pl))
-        #     H5 = tf.transformations.rotation_matrix(-proximal.delta_pl, zaxis)
-        #
-        #     D = tf.transformations.concatenate_matrices(H1, H2, H3, H4, H5)
-        #
-        #     # Add the transformation matrix for the Distal part as attribute of the class
-        #     setattr(self, 'Distal_tf', D)
-        #
-        #     H1 = tf.transformations.translation_matrix((0, 0, -distal.p_dl))
-        #     H2 = tf.transformations.translation_matrix((-distal.a_dl, 0, 0))
-        #     H3 = tf.transformations.rotation_matrix(-distal.alpha_dl, xaxis)
-        #     H4 = tf.transformations.translation_matrix((0, 0, -distal.n_dl))
-        #     H5 = tf.transformations.rotation_matrix(-distal.delta_dl, zaxis)  # 3.14
-        #
-        #     P = tf.transformations.concatenate_matrices(H1, H2, H3, H4, H5)
-        #
-        #     # Add the transformation matrix for the Proximal part as attribute of the class
-        #     setattr(self, 'Proximal_tf', P)
+            P = tf.transformations.concatenate_matrices(H1, H2, H3, H4, H5)
+
+            H1 = tf.transformations.translation_matrix((0, 0, distal.p_dl))
+            H2 = tf.transformations.translation_matrix((distal.a_dl, 0, 0))
+            H3 = tf.transformations.rotation_matrix(distal.alpha_dl, xaxis)
+            H4 = tf.transformations.translation_matrix((0, 0, distal.n_dl))
+            H5 = tf.transformations.rotation_matrix(distal.delta_dl, zaxis)  # 3.14
+
+            D = tf.transformations.concatenate_matrices(H1, H2, H3, H4, H5)
+
+            if reverse:
+                P = tf.transformations.inverse_matrix(D)
+                D = tf.transformations.inverse_matrix(P)
+
+            # Add the transformation matrix for the Proximal part as attribute of the class
+            setattr(self, 'Proximal_tf', P)
+
+            # Add the transformation matrix for the Distal part as attribute of the class
+            setattr(self, 'Distal_tf', D)
 
         # TO BE CHECKED!!!
         # Decompose proximal transform. Translation part will be used to set the size of the joint
@@ -148,7 +154,7 @@ class Module(object):
             size_y = trans[1]  # proximal.p_pl + distal.p_dl
             # print(size_y)
             size_z = -trans[2]  # proximal.n_pl + distal.n_dl
-            # print(size_z)
+            # print(size_z)         
 
         # Set the joint size
         setattr(self, 'joint_size_x', str(size_x))
@@ -239,6 +245,59 @@ class Module(object):
         #     pass
 
     # 
+    # noinspection PyPep8Naming
+    def get_mobile_base_connections_tf(self, reverse):
+        """Computes the homogeneous transformation matrices for the 4 cube connections"""
+        origin, xaxis, yaxis, zaxis = (0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1)
+
+        if hasattr(self.kinematics, "connector_1"):
+            con_1 = self.kinematics.connector_1
+            trasl_1 = tf.transformations.translation_matrix((con_1.x, con_1.y, con_1.z))
+            rot_1 = tf.transformations.euler_matrix(con_1.roll, con_1.pitch, con_1.yaw, 'sxyz')
+            tf_con_1 = tf.transformations.concatenate_matrices(trasl_1, rot_1)
+            # Add the transformation matrix for the Proximal part as attribute of the class
+            setattr(self, 'Con_1_tf', tf_con_1)
+
+        if hasattr(self.kinematics, "connector_2"):
+            con_2 = self.kinematics.connector_2
+            trasl_2 = tf.transformations.translation_matrix((con_2.x, con_2.y, con_2.z))
+            rot_2 = tf.transformations.euler_matrix(con_2.roll, con_2.pitch, con_2.yaw, 'sxyz')
+            tf_con_2 = tf.transformations.concatenate_matrices(trasl_2, rot_2)
+            # Add the transformation matrix for the Proximal part as attribute of the class
+            setattr(self, 'Con_2_tf', tf_con_2)
+
+        if hasattr(self.kinematics, "connector_3"):
+            con_3 = self.kinematics.connector_3
+            trasl_3 = tf.transformations.translation_matrix((con_3.x, con_3.y, con_3.z))
+            rot_3 = tf.transformations.euler_matrix(con_3.roll, con_3.pitch, con_3.yaw, 'sxyz')
+            tf_con_3 = tf.transformations.concatenate_matrices(trasl_3, rot_3)
+            # Add the transformation matrix for the Proximal part as attribute of the class
+            setattr(self, 'Con_3_tf', tf_con_3)
+
+        if hasattr(self.kinematics, "connector_4"):
+            con_4 = self.kinematics.connector_4
+            trasl_4 = tf.transformations.translation_matrix((con_4.x, con_4.y, con_4.z))
+            rot_4 = tf.transformations.euler_matrix(con_4.roll, con_4.pitch, con_4.yaw, 'sxyz')
+            tf_con_4 = tf.transformations.concatenate_matrices(trasl_4, rot_4)
+            # Add the transformation matrix for the Proximal part as attribute of the class
+            setattr(self, 'Con_4_tf', tf_con_4)
+
+        if hasattr(self.kinematics, "connector_5"):
+            con_5 = self.kinematics.connector_5
+            trasl_5 = tf.transformations.translation_matrix((con_5.x, con_5.y, con_5.z))
+            rot_5 = tf.transformations.euler_matrix(con_5.roll, con_5.pitch, con_5.yaw, 'sxyz')
+            tf_con_5 = tf.transformations.concatenate_matrices(trasl_5, rot_5)
+            # Add the transformation matrix for the Proximal part as attribute of the class
+            setattr(self, 'Con_5_tf', tf_con_5)
+
+
+        # if not reverse:
+        #     pass
+        # else:
+        #     # TBD!!!
+        #     pass
+
+    # 
     def get_transform(self, reverse):
         """Computes the correct transformation depending on the module type"""
         x = self.type
@@ -252,6 +311,7 @@ class Module(object):
             'tool_exchanger': self.get_homogeneous_matrix,
             'gripper': self.get_homogeneous_matrix,
             'cube': self.get_cube_connections_tf,
+            'mobile_base': self.get_mobile_base_connections_tf,
             'base_link': tf.transformations.identity_matrix()
         }
         return switcher.get(x, 'Invalid type')(reverse)

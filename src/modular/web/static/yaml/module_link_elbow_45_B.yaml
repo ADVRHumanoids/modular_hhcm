@@ -1,4 +1,5 @@
 kinematics:
+  convention: "DH_ext"
   joint:
     
   link:

@@ -1,5 +1,6 @@
 kinematics:
   joint:
+    convention: "DH_ext"
     proximal:
       a_pl: 0
       alpha_pl: -1.57
