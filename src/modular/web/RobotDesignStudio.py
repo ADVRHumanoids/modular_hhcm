@@ -15,7 +15,7 @@ import json
 import rospy
 import modular.zmq_requester
 
-from ec_srvs.srv import GetSlaveInfo, GetSlaveInfoRequest, GetSlaveInfoResponse
+# from ec_srvs.srv import GetSlaveInfo, GetSlaveInfoRequest, GetSlaveInfoResponse
 
 app = Flask(__name__, static_folder='static', static_url_path='')
 # app = Flask(__name__)
@@ -71,6 +71,23 @@ def changeURDF():
     data = jsonify(data)
     return data 
 
+# call URDF_writer.py to modify the urdf
+@app.route('/addWheel/', methods=['POST'])
+def addWheel():
+    wheel_filename = request.form.get('wheel_module_name', 0)
+    print(wheel_filename)
+    steering_filename = request.form.get('steering_module_name', 0)
+    print(steering_filename)
+    parent = request.form.get('parent', 0)
+    print(parent)
+    offset = float(request.form.get('angle_offset', 0))
+    print(offset)
+    reverse = True if request.form.get('reverse', 0) == 'true' else False
+    print(reverse)
+    data = urdf_writer.add_wheel_module(wheel_filename, steering_filename, offset, reverse)
+    data = jsonify(data)
+    return data 
+
 
 @app.route('/writeURDF/', methods=['POST'])
 def writeURDF():
@@ -121,6 +138,19 @@ def addCube():
     offset = float(request.form.get('angle_offset', 0))
     print(offset)
     data = urdf_writer.add_slave_cube(offset)
+    data = jsonify(data)
+    return data 
+
+# call URDF_writer.py to add another master cube
+@app.route('/addMobilePlatform/', methods=['POST'])
+def addMobilePlatform():
+    filename = request.form.get('module_name', 0)
+    print(filename)
+    parent = request.form.get('parent', 0)
+    print(parent)
+    offset = float(request.form.get('angle_offset', 0))
+    print(offset)
+    data = urdf_writer.add_mobile_platform(offset)
     data = jsonify(data)
     return data 
 
@@ -243,7 +273,7 @@ def syncHW():
     # # return data
 
     # opts = modular.zmq_requester.repl_option()
-    # d = yaml.load(open(opts["repl_yaml"], 'r'))
+    # d = yaml.safe_load(open(opts["repl_yaml"], 'r'))
 
     # io = modular.zmq_requester.zmqIO(d['uri'])
 
@@ -373,7 +403,7 @@ def main():
      # initialize ros node
     rospy.init_node('robot_design_studio')
     # Start Flask web-server
-    app.run(host='localhost', port=5000, debug=False, threaded=True)
+    app.run(host='0.0.0.0', port=5000, debug=True, threaded=True)
     #app.run(debug=False, threaded=True)
 
     #main()

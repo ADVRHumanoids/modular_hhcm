@@ -51,11 +51,12 @@ NS_XACRO = "http://www.ros.org/wiki/xacro"
 ET.register_namespace("xacro", NS_XACRO)
 ns = {"xacro": NS_XACRO}
 
-import modular
-path_name = os.path.dirname(modular.__file__)
-print(path_name)
-path_superbuild = os.path.abspath(os.path.join(path_name, '../..'))
-print(path_superbuild)
+# import modular
+# path_name = os.path.dirname(modular.__file__)
+# print(path_name)
+# path_superbuild = os.path.abspath(os.path.join(path_name, '../..'))
+# print(path_superbuild)
+
 # #obtaining tree from base file
 # resource_path = '/'.join(('modular_data', 'urdf/ModularBot.library.urdf.xacro'))
 # basefile_name = pkg_resources.resource_string(resource_package, resource_path)
@@ -80,7 +81,7 @@ def ordered_load(stream, Loader=yaml.SafeLoader, object_pairs_hook=OrderedDict):
     return yaml.load(stream, OrderedLoader)
 
 
-class MyDumper(yaml.SafeDumper):
+class MyDumper(yaml.Dumper):
 
     def increase_indent(self, flow=False, indentless=False):
         return super(MyDumper, self).increase_indent(flow, False)
@@ -927,14 +928,8 @@ class UrdfWriter:
         if elementree is None:
             ## Open the template xacro file
             template = self.resource_finder.get_string('urdf/template.urdf.xacro', 'data_path')
+            # we load the template as a ET Element. Store the 'robot' element as root
             self.root = ET.fromstring(template)
-            # Open the base xacro file
-            # filename = path_name + '/modular_data/urdf/template.urdf.xacro'
-            # print(filename)
-            # with codecs.open(filename, 'r') as f:
-            #     string = f.read()
-            # Instantiate an Element Tree
-            #self.root = ET.fromstring(string)
             
             self.urdf_tree = ET.ElementTree(self.root)
             
@@ -1525,7 +1520,7 @@ class UrdfWriter:
 
             if self.parent_module.type == 'joint':
                 parent_distal_tf = self.parent_module.Distal_tf
-            elif self.parent_module.type == 'cube':
+            elif self.parent_module.type == 'cube' or self.parent_module.type == 'mobile_base':
                 if self.parent_module.selected_port == 1:
                     parent_distal_tf = self.parent_module.Con_1_tf
                 elif self.parent_module.selected_port == 2:
@@ -1534,6 +1529,8 @@ class UrdfWriter:
                     parent_distal_tf = self.parent_module.Con_3_tf
                 elif self.parent_module.selected_port == 4:
                     parent_distal_tf = self.parent_module.Con_4_tf
+                elif self.parent_module.selected_port == 5:
+                    parent_distal_tf = self.parent_module.Con_5_tf
             else:
                 parent_distal_tf = self.parent_module.Homogeneous_tf
 
@@ -1545,6 +1542,8 @@ class UrdfWriter:
                 cube_proximal_tf = slavecube.Con_3_tf
             elif connection_port == 4:
                 cube_proximal_tf = slavecube.Con_4_tf
+            elif connection_port == 5:
+                cube_proximal_tf = slavecube.Con_5_tf
 
             # Get transform representing the output frame of the parent module after a rotation of angle_offset
             parent_transform = ModuleNode.get_rototranslation(parent_distal_tf,
@@ -1555,7 +1554,7 @@ class UrdfWriter:
             x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(cube_transform)
 
             # Generate the name of the fixed joint used to connect the cube
-            if self.parent_module.type == "cube":
+            if self.parent_module.type == "cube" or self.parent_module.type == "mobile_base":
                 fixed_joint_name = 'FJ_' + self.parent_module.parent.name + '_' + name
             else:
                 fixed_joint_name = 'FJ_' + self.parent_module.name + '_' + name
@@ -1673,7 +1672,7 @@ class UrdfWriter:
             # self.T_con = self.mastercube.geometry.connector_length))
 
             # filename = path_name + '/web/static/yaml/master_cube.yaml'
-            filename = self.resource_finder.get_filename('master_cube.yaml', 'yaml_path')
+            filename = self.resource_finder.get_filename('concert/mobile_platform.yaml', 'yaml_path')
 
             # call the method that reads the yaml file describing the cube and instantiate a new module object
             mastercube = ModuleNode.mastercube_from_yaml(filename, self.parent_module)
@@ -1793,6 +1792,92 @@ class UrdfWriter:
                     'count': self.n_cubes}
 
             return data
+
+
+    # noinspection PyPep8Naming
+    def add_mobile_platform(self, angle_offset, robot_id=0, active_ports=1, connection_port=2):
+        """Method adding slave/master cube to the tree.
+
+        Parameters
+        ----------
+        angle_offset: float
+            Value of the angle between the parent module output frame and the cube input frame
+
+        robot_id: int
+            Value of the robot_id set in the firmware of the module. 
+            This is obtained in Discovery Mode when reading the JSON from the EtherCAT master. This is not used when in Bulding Mode.
+
+        active_ports: int
+            The number of active ports of the cube (how many ports have established a connection to a module). 
+            The value is the conversion to int of the 4-bit binary string where each bit represent one port (1 if port is active, 0 if port is unactive)
+
+        Returns
+        -------
+        data: dict
+            Dictionary with as entries all the relevant info on the newly added module.
+            In particular the updated and newly processed urdf string.
+
+        """
+
+        if self.parent_module != self.base_link :
+            print('mobile base can be have only base_link as parent!')
+            self.parent_module = self.base_link
+
+        print('add_mobile_platform')
+        # Generate name according to the # of cubes already in the tree
+        name = 'mobile_base'
+
+        # filename = path_name + '/web/static/yaml/master_cube.yaml'
+        filename = self.resource_finder.get_filename('concert/mobile_platform.yaml', 'yaml_path')
+
+        # call the method that reads the yaml file describing the cube and instantiate a new module object
+        mobilebase = ModuleNode.mastercube_from_yaml(filename, self.parent_module)
+
+        # set attributes of the newly added module object
+        setattr(mobilebase, 'name', name)
+        setattr(mobilebase, 'i', 0)
+        setattr(mobilebase, 'p', 0)
+
+        setattr(mobilebase, 'robot_id', robot_id)
+
+        # add the master cube to the xml tree
+        ET.SubElement(self.root, "xacro:add_mobile_base", type='mobile_base', name=name, filename=filename)
+        ET.SubElement(self.root, "xacro:add_connectors", type='connectors', name=name, filename=filename)
+        
+        if self.speedup:
+            string = ""
+        else:
+            # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string.
+            string = self.process_urdf()
+
+        # Update the EtherCAT port connected to the electro-mechanical interface where the new module/slave will be added 
+        #    1           2           3           4
+        #    o           o           o           o
+        #    |           |           |           |
+        # com-exp   upper port  front port    nothing
+        setattr(mobilebase, 'selected_port', 2)
+        print('mobilebase.selected_port :', mobilebase.selected_port)
+
+        # save the active ports as a binary string
+        setattr(mobilebase, 'active_ports', "{0:04b}".format(active_ports))
+        print('active_ports: ', mobilebase.active_ports)
+
+        # save the occupied ports as a binary string
+        setattr(mobilebase, 'occupied_ports', "0001")
+        print('occupied_ports: ', mobilebase.occupied_ports)
+
+        self.parent_module = mobilebase
+
+        # self.listofhubs.append(mobilebase)
+
+        # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
+        data = {'result': string,
+                'lastModule_type': 'mobilebase',
+                'lastModule_name': name,
+                'size': 3,
+                'count': 1}
+
+        return data
 
     def get_ET(self):
         return self.urdf_tree
@@ -1936,7 +2021,7 @@ class UrdfWriter:
                       size_z=new_socket.link_size_z,
                       size=str(new_socket.size))
 
-        if self.parent_module.type == 'cube':
+        if self.parent_module.type == 'cube' or self.parent_module.type == "mobile_base":
             if self.parent_module.is_structural:
                 parent_name = self.parent_module.name
                 if self.parent_module.selected_port == 1:
@@ -1947,6 +2032,8 @@ class UrdfWriter:
                     interface_transform = self.parent_module.Con_3_tf
                 elif self.parent_module.selected_port == 4:
                     interface_transform = self.parent_module.Con_4_tf
+                elif self.parent_module.selected_port == 5:
+                    interface_transform = self.parent_module.Con_5_tf
             else:
                 parent_name = self.parent_module.parent.name
                 interface_transform = tf.transformations.identity_matrix()
@@ -2085,6 +2172,14 @@ class UrdfWriter:
 
         return data
 
+
+    def add_wheel_module(self, wheel_filename, steering_filename, angle_offset, reverse=False, robot_id=0):
+        steering_data = self.add_module(steering_filename, angle_offset, reverse, robot_id)
+        wheel_data = self.add_module(wheel_filename, angle_offset, reverse, robot_id)
+
+        return wheel_data
+    
+    
     def add_module(self, filename, angle_offset, reverse=False, robot_id=0):
         """Add a module specified by filename as child of the currently selected module.
 
@@ -2121,7 +2216,7 @@ class UrdfWriter:
         # Then assign the correct tag (A, B, C, ...) to the new module (and therefore start a new branch)
         # by looking at the current tag_num (1, 2, 3, ...) and so at how many branches are already present in the robot.
         # If the parent is any other kind of module, assign as tag the same of his parent.
-        if self.parent_module.type == 'cube' :
+        if self.parent_module.type == 'cube' or self.parent_module.type == 'mobile_base' :
             tag_letter = self.branch_switcher.get(self.tag_num)
             setattr(new_module, 'tag', tag_letter)
             self.tag_num += 1
@@ -2176,7 +2271,7 @@ class UrdfWriter:
                 # joint + link
                 print("joint + link")
                 self.link_after_joint(new_module, self.parent_module, angle_offset, reverse=reverse)
-        elif self.parent_module.type == 'cube':
+        elif self.parent_module.type == 'cube' or self.parent_module.type == "mobile_base":
             if new_module.type == 'joint':
                 # cube + joint
                 self.joint_after_cube(new_module, self.parent_module, angle_offset, reverse=reverse)
@@ -2753,6 +2848,8 @@ class UrdfWriter:
                 interface_transform = past_Cube.Con_3_tf
             elif past_Cube.selected_port == 4:
                 interface_transform = past_Cube.Con_4_tf
+            elif past_Cube.selected_port == 5:
+                interface_transform = past_Cube.Con_5_tf
         else:
             parent_name = past_Cube.parent.name
 
@@ -2803,9 +2900,22 @@ class UrdfWriter:
 
         print('past_Cube')
 
-        if past_Cube.is_structural:
+        if past_Cube.type == 'cube':
+            if past_Cube.is_structural:
+                parent_name = past_Cube.name
+                if past_Cube.selected_port == 1:
+                    interface_transform = past_Cube.Con_1_tf
+                elif past_Cube.selected_port == 2:
+                    interface_transform = past_Cube.Con_2_tf
+                elif past_Cube.selected_port == 3:
+                    interface_transform = past_Cube.Con_3_tf
+                elif past_Cube.selected_port == 4:
+                    interface_transform = past_Cube.Con_4_tf
+            else:
+                parent_name = past_Cube.parent.name
+                interface_transform = tf.transformations.identity_matrix()
+        else:
             parent_name = past_Cube.name
-
             if past_Cube.selected_port == 1:
                 interface_transform = past_Cube.Con_1_tf
             elif past_Cube.selected_port == 2:
@@ -2814,10 +2924,8 @@ class UrdfWriter:
                 interface_transform = past_Cube.Con_3_tf
             elif past_Cube.selected_port == 4:
                 interface_transform = past_Cube.Con_4_tf
-        else:
-            parent_name = past_Cube.parent.name
-
-            interface_transform = tf.transformations.identity_matrix()
+            elif past_Cube.selected_port == 5:
+                interface_transform = past_Cube.Con_5_tf
 
         print('past_Cube.selected_port:', past_Cube.selected_port)
         print('interface_transform: ', interface_transform)
@@ -3581,7 +3689,7 @@ class UrdfWriter:
     # Function writin the urdf file after converting from .xacro (See xacro/__init__.py for reference)
     def write_urdf(self):
         """Returns the string with the URDF, after writing it to file"""
-        global path_name, path_superbuild
+        global path_name  # , path_superbuild
         urdf_filename = path_name + '/ModularBot/urdf/ModularBot.urdf'
         # urdf_filename = path_superbuild + '/configs/ADVR_shared/ModularBot/urdf/ModularBot.urdf'
         # urdf_filename = self.resource_finder.get_filename('urdf/ModularBot.urdf', 'modularbot_path')
@@ -3678,7 +3786,7 @@ class UrdfWriter:
         for node in self.gen:
             try:
                 node_type = node.attrib['type']
-                if node_type == 'cube':
+                if node_type == 'cube' or node_type == 'mobile_base':
                     name = node.attrib['name']
                     filename = path_name + '/web/static/yaml/master_cube.yaml'
                     #filename = self.resource_finder.get_filename('master_cube.yaml', 'yaml_path')

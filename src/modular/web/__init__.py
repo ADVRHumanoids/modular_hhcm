@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import time
 from flask import Flask, render_template, request, jsonify, send_from_directory, url_for
-# import hierarchy_server as hp
+#import hierarchy_server as hp
 # import flask
 # print(flask.__file__, flask.__version__)
 
@@ -12,12 +12,16 @@ import zmq
 import yaml
 import json
 
+import rospy
 import modular.zmq_requester
 
-app = Flask(__name__)  # , static_folder='static', static_url_path='')
+# from ec_srvs.srv import GetSlaveInfo, GetSlaveInfoRequest, GetSlaveInfoResponse
+
+app = Flask(__name__, static_folder='static', static_url_path='')
+# app = Flask(__name__)
 
 # Instance of ZMQ Poller class (create sockets, etc.)
-# zmq_poller = zmq_poller.ZmqPoller()
+#zmq_poller = zmq_poller.ZmqPoller()
 
 # Instance of UrdfWriter class
 urdf_writer = UrdfWriter()
@@ -26,28 +30,26 @@ urdf_writer = UrdfWriter()
 urdf_writer_fromHW = UrdfWriter()
 
 # Initialize json parser server manager
-# manager = hp.MANAGER(config_namespace='/state_machine')
+#manager = hp.MANAGER(config_namespace='/state_machine')
 
-# manager.publish_to_frontend()
+#manager.publish_to_frontend()
 # Prepare context and sockets. When not using Poller class
 
 # Prepare our context and sockets
-context = zmq.Context()  # .instance()
+context = zmq.Context()#.instance()
 
 # Socket to talk to DEMO SM
 publisher = context.socket(zmq.PUB)
 publisher.connect('tcp://192.168.9.211:5563')
-# publisher.connect('tcp://10.255.36.12:5555')
+#publisher.connect('tcp://10.255.36.12:5555')
 
 # Flags defining which mode are in
 building_mode_ON = True
-
 
 # load view_urdf.html
 @app.route('/')
 def index():
     return render_template('view_urdf.html')
-
 
 @app.route('/test')
 def test():
@@ -67,13 +69,30 @@ def changeURDF():
     print(reverse)
     data = urdf_writer.add_module(filename, offset, reverse)
     data = jsonify(data)
-    return data
+    return data 
+
+# call URDF_writer.py to modify the urdf
+@app.route('/addWheel/', methods=['POST'])
+def addWheel():
+    wheel_filename = request.form.get('wheel_module_name', 0)
+    print(wheel_filename)
+    steering_filename = request.form.get('steering_module_name', 0)
+    print(steering_filename)
+    parent = request.form.get('parent', 0)
+    print(parent)
+    offset = float(request.form.get('angle_offset', 0))
+    print(offset)
+    reverse = True if request.form.get('reverse', 0) == 'true' else False
+    print(reverse)
+    data = urdf_writer.add_wheel_module(wheel_filename, steering_filename, offset, reverse)
+    data = jsonify(data)
+    return data 
 
 
 @app.route('/writeURDF/', methods=['POST'])
 def writeURDF():
     global building_mode_ON
-    # string = request.form.get('string', 0)
+    #string = request.form.get('string', 0)
     # print(string)
     # print (building_mode_ON)
     print('jointMap')
@@ -81,21 +100,23 @@ def writeURDF():
     print(json_jm)
     builder_jm = json.loads(json_jm)
     building_mode_ON = True if request.form.get('buildingModeON', 0) == 'true' else False
-    if building_mode_ON:
+    if building_mode_ON :
         data = urdf_writer.write_urdf()
         srdf = urdf_writer.write_srdf(builder_jm)
         print(srdf)
         joint_map = urdf_writer.write_joint_map()
         lowlevel_config = urdf_writer.write_lowlevel_config()
-    #        probdesc = urdf_writer.write_problem_description()
-    # cartesio_stack = urdf_writer.write_cartesio_stack()
+        #probdesc = urdf_writer.write_problem_description()
+        probdesc = urdf_writer.write_problem_description_multi()
+        # cartesio_stack = urdf_writer.write_cartesio_stack()
     else:
         data = urdf_writer_fromHW.write_urdf()
         srdf = urdf_writer_fromHW.write_srdf(builder_jm)
         print(srdf)
         joint_map = urdf_writer_fromHW.write_joint_map(use_robot_id=True)
         lowlevel_config = urdf_writer_fromHW.write_lowlevel_config(use_robot_id=True)
-        probdesc = urdf_writer_fromHW.write_problem_description()
+        #probdesc = urdf_writer_fromHW.write_problem_description()
+        probdesc = urdf_writer_fromHW.write_problem_description_multi()
         # cartesio_stack = urdf_writer_fromHW.write_cartesio_stack()
     # print("\nSRDF\n")
     # print(srdf)
@@ -104,7 +125,7 @@ def writeURDF():
     # print("\nCartesIO stack\n")
     # print(cartesio_stack)
     # data = jsonify(data)
-    return data
+    return data 
 
 
 # call URDF_writer.py to add another master cube
@@ -118,7 +139,20 @@ def addCube():
     print(offset)
     data = urdf_writer.add_slave_cube(offset)
     data = jsonify(data)
-    return data
+    return data 
+
+# call URDF_writer.py to add another master cube
+@app.route('/addMobilePlatform/', methods=['POST'])
+def addMobilePlatform():
+    filename = request.form.get('module_name', 0)
+    print(filename)
+    parent = request.form.get('parent', 0)
+    print(parent)
+    offset = float(request.form.get('angle_offset', 0))
+    print(offset)
+    data = urdf_writer.add_mobile_platform(offset)
+    data = jsonify(data)
+    return data 
 
 
 # call URDF_writer.py to add another socket
@@ -129,7 +163,32 @@ def addSocket():
     print(offset)
     angle_offset = values['angle_offset']
     print(angle_offset)
-    data = urdf_writer.add_socket(float(offset.get('x_offset')), float(offset.get('y_offset')),
+
+    global building_mode_ON
+
+    building_mode_ON = True if request.form.get('buildingModeON', 0) == 'true' else False
+    
+    if building_mode_ON :
+        data = urdf_writer.add_socket(float(offset.get('x_offset')), float(offset.get('y_offset')),
+                                  float(offset.get('z_offset')), float(angle_offset))
+    else:
+         data = urdf_writer_fromHW.move_socket("L_0_B", float(offset.get('x_offset')), float(offset.get('y_offset')),
+                                  float(offset.get('z_offset')), float(angle_offset))
+
+    data = jsonify(data)
+    return data
+
+
+# call URDF_writer.py to move socket. TODO: remeve hard-code of L_0_B socket for AutomationWare demo
+@app.route('/moveSocket/', methods=['POST'])
+def moveSocket():
+    values = json.loads(request.form.get('values'))
+    print(values)
+    offset = values['offset']
+    print(offset)
+    angle_offset = values['angle_offset']
+    print(angle_offset)
+    data = urdf_writer_fromHW.move_socket("L_0_B", float(offset.get('x_offset')), float(offset.get('y_offset')),
                                   float(offset.get('z_offset')), float(angle_offset))
     data = jsonify(data)
     return data
@@ -163,7 +222,6 @@ def openFile():
     data = jsonify(data)
     return data
 
-
 # request the urdf generated from the currently stored tree
 @app.route('/requestURDF/', methods=['POST'])
 def requestURDF():
@@ -175,12 +233,10 @@ def requestURDF():
     data = jsonify(data)
     return data
 
-
 # upload on the server the /static folder
 @app.route('/<path:path>')
 def send_file(path):
     return send_from_directory(app.static_folder, path)
-
 
 # publish through ZMQ socket to signal user inputs to DEMO GUI
 @app.route('/pub_cmd/', methods=['POST'])
@@ -192,59 +248,71 @@ def pub_cmd():
 
     return jsonify(cmd)
 
-
 # send a request to the poller thread to get ECat topology and synchronize with hardware
 @app.route('/syncHW/', methods=['POST'])
 def syncHW():
-    ## Method using the poller
-    # zmq_poller.requester.send(b"Topology_REQ")
-    # message = zmq_poller.requester.recv_json()
-    # print("Received reply: %s" % (message))
-    # data = urdf_writer_fromHW.read_from_json(message)
-    # #print('data:', data)
-    # data = jsonify(data)
-    # return data
-
-    # requester.send(b"Topology_REQ")
-    # message = requester.recv_json()
-    # print("Received reply: %s" % (message))
-
+    # ## Method using the poller
+    # # zmq_poller.requester.send(b"Topology_REQ")
+    # # message = zmq_poller.requester.recv_json()
+    # # print("Received reply: %s" % (message))
     # # data = urdf_writer_fromHW.read_from_json(message)
-    # data = urdf_writer_fromHW.read_from_json_alt(message)
+    # # #print('data:', data)
+    # # data = jsonify(data)
+    # # return data
 
-    # #print('data:', data)
-    # data = jsonify(data)
-    # return data
 
-    opts = modular.zmq_requester.repl_option()
-    d = yaml.safe_load(open(opts["repl_yaml"], 'r'))
+    # # requester.send(b"Topology_REQ")
+    # # message = requester.recv_json()
+    # # print("Received reply: %s" % (message))
+    
+    # # # data = urdf_writer_fromHW.read_from_json(message)
+    # # data = urdf_writer_fromHW.read_from_json_alt(message)
 
-    io = modular.zmq_requester.zmqIO(d['uri'])
+    # # #print('data:', data)
+    # # data = jsonify(data)
+    # # return data
 
-    cnt = opts["cmd_exec_cnt"]
-    while cnt:
+    # opts = modular.zmq_requester.repl_option()
+    # d = yaml.safe_load(open(opts["repl_yaml"], 'r'))
 
-        print("cmd_exec_cnt", cnt)
-        cnt -= 1
+    # io = modular.zmq_requester.zmqIO(d['uri'])
 
-        test_dict = {"type": "ECAT_MASTER_CMD", "ecat_master_cmd": {"type": "GET_SLAVES_DESCR"}}
-        io.send_to(test_dict)
-        ''' wait reply ... blocking'''
-        reply = io.recv_from()
+    # cnt = opts["cmd_exec_cnt"]
+    # while cnt:
 
-        if not 'cmds' in d:
-            continue
+    #     print("cmd_exec_cnt", cnt)
+    #     cnt -= 1
 
-        for cmd_dict in gen_cmds(d['cmds']):
-            ''' send cmd '''
-            io.send_to(cmd_dict)
-            ''' wait reply ... blocking'''
-            reply = io.recv_from()
+    #     test_dict = {"type": "ECAT_MASTER_CMD", "ecat_master_cmd": {"type": "GET_SLAVES_DESCR"}}
+    #     io.send_to(test_dict)
+    #     ''' wait reply ... blocking'''
+    #     reply = io.recv_from()
 
-            # time.sleep(0.01)
+    #     if not 'cmds' in d:
+    #         continue
 
-        # time.sleep(0.05)
+    #     for cmd_dict in gen_cmds(d['cmds']):
+    #         ''' send cmd '''
+    #         io.send_to(cmd_dict)
+    #         ''' wait reply ... blocking'''
+    #         reply = io.recv_from()
 
+    #         #time.sleep(0.01)
+
+    #     #time.sleep(0.05)
+
+    srv_name = '/ec_client/get_slaves_description'
+
+    rospy.wait_for_service(srv_name)
+
+    try:
+        slave_description = rospy.ServiceProxy(srv_name, GetSlaveInfo)
+
+    except rospy.ServiceException as e:
+        print("Service call failed: %s"%e)
+
+    reply = slave_description()
+    reply = reply.cmd_info.msg
     print("Exit")
 
     data = urdf_writer_fromHW.read_from_json(reply)
@@ -254,12 +322,11 @@ def syncHW():
     data = jsonify(data)
     return data
 
-
 # Change mode and reset
 @app.route('/changeMode/', methods=['POST'])
 def changeMode():
     global building_mode_ON
-
+    
     # Get the state of the toggle switch. Convert the boolean from Javascript to Python
     building_mode_ON = True if request.form.get('buildingModeON', 0) == 'true' else False
 
@@ -269,12 +336,11 @@ def changeMode():
     urdf_writer.__init__()
     urdf_writer_fromHW.__init__()
 
-    # data = urdf_writer_fromHW.read_file(file_str)
+    #data = urdf_writer_fromHW.read_file(file_str)
     data = {'building mode': building_mode_ON}
 
     data = jsonify(data)
     return data
-
 
 # deploy the package of the built robot
 @app.route('/deployRobot/', methods=['POST'])
@@ -282,36 +348,36 @@ def deployRobot():
     global building_mode_ON
 
     building_mode_ON = True if request.form.get('buildingModeON', 0) == 'true' else False
-
-    if building_mode_ON:
+    
+    if building_mode_ON :
         name = request.form.get('name', 'ModularBot')
         print(name)
         data = urdf_writer.deploy_robot(name)
     else:
         data = urdf_writer_fromHW.deploy_robot('ModularBot')
-    # time.sleep(10)
+    #time.sleep(10)
     return data
-
 
 @app.route('/removeConnectors/', methods=['POST'])
 def removeConnectors():
     global building_mode_ON
 
     building_mode_ON = True if request.form.get('buildingModeON', 0) == 'true' else False
-
-    if building_mode_ON:
+    
+    if building_mode_ON :
         data = urdf_writer.remove_connectors()
     else:
-        data = urdf_writer_fromHW.remove_connectors()
+        data = urdf_writer_fromHW.remove_connectors()    
     return data
-
 
 @app.route('/sendCommands/', methods=['POST'])
 def sendCommands():
     jsonData = request.get_json()
     print(jsonData)
     print(byteify(jsonData))
-    res = manager.parse_json(jsonData)
+    # res = manager.parse_json(jsonData)
+    
+    res = 'if you read this something wrong is happening: fi commented out the hierarchy server!'
     print(res)
     # print jsonData['descriptors']
     # print jsonData['name']
@@ -321,7 +387,6 @@ def sendCommands():
     # data = request.form.to_dict
     # print data
     return res
-
 
 def byteify(input):
     if isinstance(input, dict):
@@ -334,17 +399,23 @@ def byteify(input):
     else:
         return input
 
+def main():
+     # initialize ros node
+    rospy.init_node('robot_design_studio')
+    # Start Flask web-server
+    app.run(host='0.0.0.0', port=5000, debug=True, threaded=True)
+    #app.run(debug=False, threaded=True)
 
-# if __name__ == '__main__':
-#     # Start Flask web-server
-#     app.run(debug=True, threaded=True)
-#     # host='10.24.8.100', port=5000, debug=False,
-#
-#     # main()
-#
-#     # from gevent.pywsgi import WSGIServer
-#     # from geventwebsocket.handler import WebSocketHandler
-#     # http_server = WSGIServer(('', 5000), app, handler_class=WebSocketHandler)
-#     # logger.info('Starting serving')
-#     # print('Starting serving')
-#     # http_server.serve_forever()
+    #main()
+
+    # from gevent.pywsgi import WSGIServer
+    # from geventwebsocket.handler import WebSocketHandler
+    # http_server = WSGIServer(('', 5000), app, handler_class=WebSocketHandler)
+    # logger.info('Starting serving')
+    # print('Starting serving')
+    # http_server.serve_forever()
+
+
+if __name__ == '__main__':
+    main()
+   

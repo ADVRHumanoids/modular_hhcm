@@ -460,6 +460,7 @@
                             <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
                                 <li><a href="#" class="dropdown-item" data-value="Alberobotics">Alberobotics Modules</a></li>
                                 <li><a href="#" class="dropdown-item" data-value="Innowelle">Innowelle Modules</a></li>
+                                <li><a href="#" class="dropdown-item" data-value="Concert">Concert Modules</a></li>
                             </ul>
                         </div>
                     </div>
@@ -488,6 +489,13 @@
                         <button type="button" id="add_size_adapter_XLtoL" class="btn btn-dark button-selector"><div>Add Size Adapter 32 to 25</div></button>
                         <button type="button" id="add_innowelle_link" class="btn btn-dark button-selector"><div>Add Dummy Link</div></button>
                         <button type="button" id="add_goose_neck" class="btn btn-dark button-selector"><div>Add Goose Neck</div></button>
+                    </div>
+
+                    <div id='concertModules' class="btn-group-vertical btn-subgroup overflow-auto" style="display:none">
+                        <button type="button" id="addMobileBase" class="btn btn-dark button-selector"><div>Add Mobile Base</div></button>
+                        <button type="button" id="addConcertYawJoint" class="btn btn-dark button-selector"><div>Add Concert Straight Joint</div></button>
+                        <button type="button" id="addConcertElbowJoint" class="btn btn-dark button-selector"><div>Add Concert Elbow Joint</div></button>
+                        <button type="button" id="addConcertWheel" class="btn btn-dark button-selector"><div>Add Concert Wheel</div></button>
                     </div>
                 </div>
             </div>
@@ -704,6 +712,8 @@
                 var addSizeAdapter_Big2Medium = document.getElementById('addSizeAdapter_Big2Medium');
                 var addSizeAdapter_Big2Small = document.getElementById('addSizeAdapter_Big2Small');
                 var addSizeAdapter_Medium2Small = document.getElementById('addSizeAdapter_Medium2Small');
+
+                var addMobileBase = document.getElementById('addMobileBase');
                 var addSlaveCube = document.getElementById('addSlaveCube');
                 var addSocketBase = document.getElementById('addSocketBase');
                 var addToolExchanger = document.getElementById('addToolExchanger');
@@ -715,7 +725,10 @@
                 var modeSwitch = document.getElementById('modeSwitch');
                 var modeSwitchSlider = document.getElementById('modeSwitchSlider');
                 var addYawJoint = document.getElementById('addYawJoint');
+                var addConcertYawJoint = document.getElementById('addConcertYawJoint');
                 var addDoubleElbowJoint = document.getElementById('addDoubleElbowJoint');
+                var addConcertElbowJoint = document.getElementById('addConcertElbowJoint');
+                var addConcertWheel = document.getElementById('addConcertWheel');
 
                 var URDFChangeEventHandler = new URDF_change_eventHandler();
 
@@ -824,6 +837,7 @@
                 //     }    
                 //     reader.readAsText(file);      
                 // });
+                addMobileBase.onclick = function() {addMobilePlatform("concert/mobile_platform", size_value=3)};
 
                 addSlaveCube.onclick = function() {addCube("mastercube", size_value=3)};
 
@@ -875,10 +889,17 @@
                     if(dropdownToggle.val() == "Innowelle") {
                         $('#innowelleModules').show()
                         $('#alberoboticsModules').hide()
+                        $('#concertModules').hide()
                     }
-                    else {
+                    else if(dropdownToggle.val() == "Alberobotics") {
                         $('#innowelleModules').hide()
                         $('#alberoboticsModules').show()
+                        $('#concertModules').hide()
+                    }
+                    else if(dropdownToggle.val() == "Concert") {
+                        $('#innowelleModules').hide()
+                        $('#alberoboticsModules').hide()
+                        $('#concertModules').show()
                     }
 				});
 
@@ -899,8 +920,11 @@
                 
                 
                 addYawJoint.onclick = function() {addModule("module_joint_yaw_ORANGE", size_value=3)};
+                addConcertYawJoint.onclick = function() {addModule("concert/module_joint_concert_yaw_ORANGE", size_value=3)};
 
                 addDoubleElbowJoint.onclick = function() {addModule("module_joint_double_elbow_ORANGE", size_value=3)};
+                addConcertElbowJoint.onclick = function() {addModule("concert/module_joint_concert_elbow_ORANGE", size_value=3)};
+                addConcertWheel.onclick = function() {addWheel("concert/module_wheel_concert_ORANGE", "concert/module_steering_concert_ORANGE", size_value=3)};
 
                 var ros = new ROSLIB.Ros({
                     url : 'ws://10.24.8.100:9090'
@@ -975,6 +999,56 @@
                 $.ajax({
                     url: $SCRIPT_ROOT + 'changeURDF/',
                     data: {'module_name': filename, 'parent': CURRENT_PARENT, 'angle_offset': offset, 'reverse': reverse},
+                    method: 'POST',
+                    success: function(data) {
+                        console.log(data)
+                        robots = urdfViewer.updateURDF(data['result'])//, data['lastModule_name'])
+                        // Update size
+                        size = data['size']
+                        updateShownButtons(data['lastModule_type'], data['count'], data['size'])
+                        console.log(size)
+                        CURRENT_PARENT = data['lastModule_name']
+                        //write the file
+                        writeRequest(data['result'])
+                    },
+                    async: true
+                });
+
+            };
+
+            //Function to add a new module. Called at the click of the linked button
+            function    addWheel(wheel_module_name, steering_module_name, size_value) {
+                var offset = parseFloat(prompt("Enter the angle offset for the module:", "0"));
+                var reverse = confirm("Do you want to connect it backwards?");
+                
+                //opening YAML file containing kin. and dyn. parameters and URDF path
+                //var url = $SCRIPT_ROOT + 'yaml/' + filename;
+                //openfile(url, callBack_YAML)  
+                switch (size_value) {
+                    case 5:
+                        size_tag = '_XL';
+                        break;
+                    case 4:
+                        size_tag = '_L';
+                        break;
+                    case 3:
+                        size_tag = '_B';
+                        break;
+                    case 2:
+                        size_tag = '_M';
+                        break;
+                    case 1:
+                        size_tag = '_S';
+                        break;
+                }
+                
+                wheel_filename = wheel_module_name + size_tag + '.yaml'
+                steering_filename = steering_module_name + size_tag + '.yaml'
+                
+                //making an ajax request to the server to proceed to write the modified URDF
+                $.ajax({
+                    url: $SCRIPT_ROOT + 'addWheel/',
+                    data: {'wheel_module_name': wheel_filename, 'steering_module_name': steering_filename, 'parent': CURRENT_PARENT, 'angle_offset': offset, 'reverse': reverse},
                     method: 'POST',
                     success: function(data) {
                         console.log(data)
@@ -1124,6 +1198,31 @@
                 filename = modulename + '.yaml'
                 $.ajax({
                     url: $SCRIPT_ROOT + 'addMasterCube/',
+                    data: {'module_name': filename, 'parent': CURRENT_PARENT, 'angle_offset': offset},
+                    method: 'POST',
+                    success: function(data) {
+                        console.log(data)
+                        robots = urdfViewer.updateURDF(data['result'])//, data['lastModule_name'])
+                        // Update size
+                        size = data['size']
+                        updateShownButtons(data['lastModule_type'], data['count'], data['size'])
+                        console.log(size)
+                        CURRENT_PARENT = data['lastModule_name']
+                        //write the file
+                        writeRequest(data['result'], true, function(){})
+                    },
+                    async: true
+                });
+
+            };
+
+            function addMobilePlatform(modulename) {
+                //making an ajax request to the server to add a Cube
+                var offset = parseFloat(prompt("Enter the angle offset for the module:", "0"));
+                
+                filename = modulename + '.yaml'
+                $.ajax({
+                    url: $SCRIPT_ROOT + 'addMobilePlatform/',
                     data: {'module_name': filename, 'parent': CURRENT_PARENT, 'angle_offset': offset},
                     method: 'POST',
                     success: function(data) {

@@ -1,0 +1,72 @@
+kinematics:
+    convention: "urdf"
+    connector_1:  # Front Left Interface
+        roll: 0.0
+        pitch: -1.57
+        yaw: 3.14
+        x: 0.38025
+        y: 0.315
+        z: -0.210
+    connector_2:  # Front Right Interface
+        roll: 0.0
+        pitch: -1.57
+        yaw: 3.14
+        x: 0.38025
+        y: -0.315
+        z: -0.210
+    connector_3:  # Back Left Interface
+        roll: 0.0
+        pitch: -1.57
+        yaw: 0.0
+        x: -0.38025
+        y: 0.315
+        z: -0.210
+    connector_4:  # Back Right Interface
+        roll: 0.0
+        pitch: -1.57
+        yaw: 0.0
+        x: -0.38025
+        y: -0.315
+        z: -0.210
+    connector_5:  # Manipulator Interface
+        roll: 0.0
+        pitch: 0.0
+        yaw: 0.0
+        x: 0.2
+        y: 0.0
+        z: 0.0
+dynamics:
+    body_1:
+        mass: 1.0395833e+02
+        inertia_tensor:
+            I_xx: 8.6261624
+            I_yy: 9.8845242
+            I_zz: 1.0924003e+01
+            I_xy: -2.5971484e-01 
+            I_xz: -6.9796544e-02
+            I_yz: 3.5441021e-01
+        CoM:
+            x: 3.1233048e-03
+            y: 1.8644386e-02
+            z: -2.2333776e-01
+size: big
+type: mobile_base
+visual:
+  mesh_body_1: 'package://modular/src/modular/web/static/models/modular/meshes/concert/concert_central_body.stl'
+  mesh_collision_1: 'package://modular/src/modular/web/static/models/modular/meshes/concert/concert_central_body.stl'
+  tf_mesh_1:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    roll: 0.0
+    pitch: 0.0
+    yaw: 0.0
+  mesh_body_2: ''
+  mesh_collision_2: ''
+  tf_mesh_2:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    roll: 0.0
+    pitch: 0.0
+    yaw: 0.0
