@@ -1088,8 +1088,8 @@ class UrdfWriter:
 
             module_id = int(module['robot_id'])
             if d.get(module_id) is None:
-                print("Id not recognized! Skipping add_module()")		
-		print(d.get(module_id))                
+                print("Id not recognized! Skipping add_module()")
+                print(d.get(module_id))                
                 continue
             module_position = int(module['position'])
             module_topology = int(module['topology'])
@@ -2433,19 +2433,13 @@ class UrdfWriter:
                     except KeyError:
                         pass
 
-                        # Remove the cube module from the xml tree
+            # Remove the cube module from the xml tree
             for node in self.gen:
                 try:
                     if node.attrib['name'] == selected_module.name:
                         self.root.remove(node)
                 except KeyError:
                     pass
-
-            # Remove the cube module from the xml tree
-            for node in gen:
-                if node.attrib['name'] == selected_module.name:
-                    self.root.remove(node)
-                    # gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
 
             # selected_module.parent = None
 
