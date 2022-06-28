@@ -1,0 +1,6 @@
+zmq_setup:
+    timeout: 1000
+#EL1259_1:
+#    control_mode: active # idle
+#EL1259_2:
+#    control_mode: idle # active

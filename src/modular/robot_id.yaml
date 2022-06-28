@@ -6,6 +6,9 @@
 13: module_joint_double_elbow_ORANGE_B.yaml
 14: module_joint_double_elbow_ORANGE_B.yaml
 42: module_joint_double_elbow_ORANGE_B.yaml
+# fhi joints
+24: module_joint_double_elbow_ORANGE_B.yaml
+25: module_joint_double_elbow_ORANGE_B.yaml
 # end-effectors
 89: module_gripper_B.yaml
 19: module_gripper_B.yaml
