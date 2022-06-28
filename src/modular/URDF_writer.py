@@ -1451,7 +1451,7 @@ class UrdfWriter:
 
 
     # noinspection PyPep8Naming
-    def add_slave_cube(self, angle_offset, is_structural=True, robot_id=0, active_ports=1):
+    def add_slave_cube(self, angle_offset, is_structural=True, robot_id=0, active_ports=1, connection_port=2):
         """Method adding slave/master cube to the tree.
 
         Parameters
@@ -1485,29 +1485,74 @@ class UrdfWriter:
         # It was made to handle creating robots with multiple "boxes", which will be probably never done.
         # If important should be reviewed and modify it as the part below the "else".
 
-        if self.n_cubes > 0:
+        if self.parent_module != self.base_link :
             # add slave cube
-
+            print('add_slave_cube')
             # Generate name according to the # of cubes already in the tree
             name = 'L_0' + self.cube_switcher.get(self.n_cubes)
             self.n_cubes += 1
 
-            # Get inverse of the transform of the connector
-            T_con_inv = tf.transformations.inverse_matrix(self.T_con)
+            filename = self.resource_finder.get_filename('master_cube.yaml', 'yaml_path')
 
-            # Generate name and dict for the 1st connector module
-            name_con1 = name + '_con1'
-            data1 = {'Homogeneous_tf': T_con_inv, 'type': "con", 'name': name_con1, 'i': 0, 'p': 0, 'size': 3}
-            print('T_con_inv:', T_con_inv)
+            # call the method that reads the yaml file describing the cube and instantiate a new module object
+            slavecube = ModuleNode.mastercube_from_yaml(filename, self.parent_module)
 
-            # Add the 1st connector module to the tree
-            slavecube_con1 = ModuleNode.ModuleNode(data1, name_con1, parent=self.parent_module)
+            setattr(slavecube, 'name', name)
+
+            # Set attributes of the newly added module object
+            setattr(slavecube, 'i', self.parent_module.i)
+            setattr(slavecube, 'p', self.parent_module.p)
+            # Size is already set from the YAML file
+            # setattr(slavecube, 'size', self.parent_module.size)
+
+            setattr(slavecube, 'angle_offset', angle_offset)
+            setattr(slavecube, 'robot_id', robot_id)
+
+            # add the master cube to the xml tree
+            ET.SubElement(self.root, "xacro:add_slave_cube", type='cube', name=name, filename=filename)
+            ET.SubElement(self.root, "xacro:add_connectors", type='connectors', name=name, filename=filename)
+
+            # # Get inverse of the transform of the connector
+            # T_con_inv = tf.transformations.inverse_matrix(self.T_con)
+
+            # # Generate name and dict for the 1st connector module
+            # name_con1 = name + '_con1'
+            # data1 = {'Homogeneous_tf': T_con_inv, 'type': "con", 'name': name_con1, 'i': 0, 'p': 0, 'size': 3}
+            # print('T_con_inv:', T_con_inv)
+
+            # # Add the 1st connector module to the tree
+            # slavecube_con1 = ModuleNode.ModuleNode(data1, name_con1, parent=self.parent_module)
+
+            if self.parent_module.type == 'joint':
+                parent_distal_tf = self.parent_module.Distal_tf
+            elif self.parent_module.type == 'cube':
+                if self.parent_module.selected_port == 1:
+                    parent_distal_tf = self.parent_module.Con_1_tf
+                elif self.parent_module.selected_port == 2:
+                    parent_distal_tf = self.parent_module.Con_2_tf
+                elif self.parent_module.selected_port == 3:
+                    parent_distal_tf = self.parent_module.Con_3_tf
+                elif self.parent_module.selected_port == 4:
+                    parent_distal_tf = self.parent_module.Con_4_tf
+            else:
+                parent_distal_tf = self.parent_module.Homogeneous_tf
+
+            if connection_port == 1:
+                cube_proximal_tf = slavecube.Con_1_tf
+            elif connection_port == 2:
+                cube_proximal_tf = slavecube.Con_2_tf
+            elif connection_port == 3:
+                cube_proximal_tf = slavecube.Con_3_tf
+            elif connection_port == 4:
+                cube_proximal_tf = slavecube.Con_4_tf
 
             # Get transform representing the output frame of the parent module after a rotation of angle_offset
-            transform = ModuleNode.get_rototranslation(self.parent_module.Homogeneous_tf,
+            parent_transform = ModuleNode.get_rototranslation(parent_distal_tf,
                                                        tf.transformations.rotation_matrix(angle_offset,
                                                                                           self.zaxis))
-            x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(transform)
+            cube_transform = ModuleNode.get_rototranslation(parent_transform, cube_proximal_tf)
+            
+            x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(cube_transform)
 
             # Generate the name of the fixed joint used to connect the cube
             if self.parent_module.type == "cube":
@@ -1518,7 +1563,7 @@ class UrdfWriter:
             # Select the name of the parent to use to generate the urdf. If the parent is a joint use the name of the
             # dummy link attached to it
             if self.parent_module.type == "joint":
-                parent_name = 'L_' + str(self.parent_module.i) + self.parent_module.tag
+                parent_name = self.parent_module.distal_link_name
             else:
                 parent_name = self.parent_module.name
 
@@ -1529,7 +1574,7 @@ class UrdfWriter:
                 type="fixed_joint",
                 name=fixed_joint_name,
                 father=parent_name,
-                child=name_con1,
+                child=name,
                 x=x,
                 y=y,
                 z=z,
@@ -1538,41 +1583,22 @@ class UrdfWriter:
                 yaw=yaw
             )
 
-            # call the method that reads the yaml file describing the cube and instantiate a new module object
-            # cube_path = '/'.join((yaml_path, 'master_cube.yaml'))
-            # filename = pkg_resources.resource_string(resource_package, cube_path)
-            filename = self.resource_finder.get_filename('master_cube.yaml', 'yaml_path')
-            # filename = path_name + '/web/static/yaml/master_cube.yaml'
-            slavecube = ModuleNode.slavecube_from_yaml(filename, slavecube_con1)
+            # # call the method that reads the yaml file describing the cube and instantiate a new module object
+            # # cube_path = '/'.join((yaml_path, 'master_cube.yaml'))
+            # # filename = pkg_resources.resource_string(resource_package, cube_path)
+            # filename = self.resource_finder.get_filename('master_cube.yaml', 'yaml_path')
+            # # filename = path_name + '/web/static/yaml/master_cube.yaml'
+            # slavecube = ModuleNode.slavecube_from_yaml(filename, slavecube_con1)
 
-            # set attributes of the newly added module object
-            setattr(slavecube, 'name', name)
-            setattr(slavecube, 'i', 0)
-            setattr(slavecube, 'p', 0)
+            # # set attributes of the newly added module object
+            # setattr(slavecube, 'name', name)
+            # setattr(slavecube, 'i', 0)
+            # setattr(slavecube, 'p', 0)
 
-            setattr(slavecube, 'robot_id', robot_id)
+            # setattr(slavecube, 'robot_id', robot_id)
 
-            # add the slave cube to the xml tree
-            ET.SubElement(self.root, "xacro:add_slave_cube", type='cube', name=name, filename=filename)
-
-            # instantate a ModuleNode for branch 2 connector
-            name_con2 = name + '_con2'
-            data2 = {'Homogeneous_tf': self.T_con, 'type': "con", 'name': name_con2, 'i': 0, 'p': 0, 'size': 3}
-            slavecube_con2 = ModuleNode.ModuleNode(data2, name_con2, parent=slavecube)
-
-            # instantate a ModuleNode for branch 3 connector
-            name_con3 = name + '_con3'
-            data3 = {'Homogeneous_tf': self.T_con, 'type': "con", 'name': name_con3, 'i': 0, 'p': 0, 'size': 3}
-            slavecube_con3 = ModuleNode.ModuleNode(data3, name_con3, parent=slavecube)
-
-            # instantate a ModuleNode for branch 4 connector
-            name_con4 = name + '_con4'
-            data4 = {'Homogeneous_tf': self.T_con, 'type': "con", 'name': name_con4, 'i': 0, 'p': 0, 'size': 3}
-            slavecube_con4 = ModuleNode.ModuleNode(data4, name_con4, parent=slavecube)
-
-            # Render tree
-            for pre, _, node in anytree.render.RenderTree(self.base_link):
-                print("%s%s" % (pre, node.name))
+            # # add the slave cube to the xml tree
+            # ET.SubElement(self.root, "xacro:add_slave_cube", type='cube', name=name, filename=filename)
 
             # new_Link = slavecube_con1
             # past_Link = parent_module
@@ -1604,6 +1630,23 @@ class UrdfWriter:
                 # Process the urdf string by calling the process_urdf method.
                 # Parse, convert from xacro and write to string.
                 string = self.process_urdf()
+
+            # Update the EtherCAT port connected to the electro-mechanical interface where the new module/slave will be added 
+            #    1           2           3           4
+            #    o           o           o           o
+            #    |           |           |           |
+            # com-exp   upper port  front port    nothing
+            setattr(mastercube, 'selected_port', 3)
+            print('mastercube.selected_port :', mastercube.selected_port)
+
+            # save the active ports as a binary string
+            setattr(mastercube, 'active_ports', "{0:04b}".format(active_ports))
+            print('active_ports: ', mastercube.active_ports)
+
+            # save the occupied ports as a binary string
+            setattr(mastercube, 'occupied_ports', "{0:04b}".format(active_ports))
+            print('occupied_ports: ', mastercube.occupied_ports)
+
 
             # Update the parent_module attribute of the URDF_writer class
             self.parent_module = slavecube
