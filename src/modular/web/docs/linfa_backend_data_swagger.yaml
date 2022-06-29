@@ -11,7 +11,52 @@ servers:
 externalDocs:
   description: Github repository
   url: https://github.com/ADVRHumanoids/linfa_backend_data #TBD
+
+components:
+  schemas:
+
+    FeedbackResponse:
+      type: object
+      properties:
+        result:   # the updated URDF to render!
+          type: string
+        lastModule_type: 
+          type: string
+        lastModule_name:
+          type: string
+        size: 
+          type: number
+          format: integer
+        count:
+          type: number
+          format: integer
+      example:
+        result: "the updated URDF to render!"
+        lastModule_type: "joint"
+        lastModule_name: "L3_A"
+        size: 3
+        count: 1
+
+    AddModuleRequest:
+      type: object
+      properties:
+        module_name: #  The name of the type of module to add
+          type: string
+        parent: #  The parent name
+          type: string
+        angle_offset: #  The angle offset w.r.t the parent
+          type: number
+          format: float
+        reverse: 
+          type: boolean
+      example:
+        module_name: "module_joint_yaw_ORANGE"
+        parent: "L3_A"
+        angle_offset: 0.5
+        reverse: false
+
 paths:
+
   /changeURDF:
     post:
       tags:
@@ -23,27 +68,21 @@ paths:
         content:
           application/json:
             schema:
-              module_name: string
-              parent: string
-              angle_offset: float
-              reverse: boolean
+              $ref: '#/components/schemas/AddModuleRequest'
       responses:
         "200":
           description: OK
           content:
             application/json:
               schema:
-                result: string  # the updated URDF to render!
-                lastModule_type: string
-                lastModule_name: string
-                size: number
-                count: number
+                $ref: '#/components/schemas/FeedbackResponse'
         #TBD
         "400":
           description: Bad Request
         #TBD
         "500":
           description: Server Error
+
   /addMasterCube:  # TODO: This should be merged under changeURDF
     post:
       tags:
@@ -55,26 +94,21 @@ paths:
         content:
           application/json:
             schema:
-              module_name: string
-              parent: string
-              angle_offset: float
+              $ref: '#/components/schemas/AddModuleRequest'
       responses:
         "200":
           description: OK
           content:
             application/json:
               schema:
-                result: string  # the updated URDF to render!
-                lastModule_type: string
-                lastModule_name: string
-                size: number
-                count: number
+                $ref: '#/components/schemas/FeedbackResponse'
         #TBD
         "400":
           description: Bad Request 
         #TBD
         "500":
           description: Server Error
+
   /addSocket:
     post:
       tags:
@@ -86,33 +120,41 @@ paths:
         content:
           application/json:
             schema:
+              type: object
+              properties:
+                values:
+                  type: object
+                  properties:
+                    offset:
+                      type: array
+                      items:
+                        type: number
+                        format: float
+                      example: [0.1, 0.2, 0.3]
+                    angle_offset: 
+                      type: number
+                      format: float
+                buildingModeON:
+                  type: boolean
+            example: 
               values:
-                offset:
-                  type: array
-                  items:
-                    type: float
-                  example:
-                    - 0.0
-                    - 0.0
-                    - 0.0
-                angle_offset: float
+                offset: [0.1, 0.2, 0.3]
+                angle_offset: 0.0
+              buildingModeON: true
       responses:
         "200":
           description: OK
           content:
             application/json:
               schema:
-                result: string  # the updated URDF to render!
-                lastModule_type: string
-                lastModule_name: string
-                size: number
-                count: number
+                $ref: '#/components/schemas/FeedbackResponse'
         #TBD
         "400":
           description: Bad Request 
         #TBD
         "500":
           description: Server Error
+
   /writeURDF:
     post:  # PUT?
       tags:
@@ -124,52 +166,63 @@ paths:
         content:
           application/json:
             schema:
-              jointMap: 
-                type: JSON
-                items:
-                  type: float
-                example:
-                  {'J1_A': 0.1,
-                  'J2_A': 0.2}
-              buildingModeON: boolean
+              type: object
+              properties:
+                jointMap: 
+                  type: object
+                  additionalProperties:
+                    type: object
+                    properties:
+                      joint_name:
+                        type: string
+                      homing_value:
+                        type: number
+                        format: float
+                  example:
+                    J1_A: 0.1
+                    J2_A: 0.2
+                buildingModeON: 
+                  type: boolean
       responses:
         "200":
           description: OK
-          content: string
+          content: 
+            text/plain:
+              schema:
+                type: string
+                example: "the URDF string. for logging purposes"
         #TBD
         "400":
           description: Bad Request
         #TBD
         "500":
           description: Server Error
+
   /removeModule:
     post:  # DELETE?
       tags:
         - ???
-      summary: makes an ajax request to the server to remove the last selected module and its children
-      requestBody:
-        description: 
-        required: true
-        content:
-          application/json:
-            schema:
+      summary: makes an ajax request to the server to remove the **last selected module** and its **children**
+      # requestBody:
+      #   description: ....
+      #   required: false
+      #   content:
+      #     application/json:
+      #       schema: ...
       responses:
         "200":
           description: OK
           content:
             application/json:
               schema:
-                result: string  # the updated URDF to render!
-                lastModule_type: string
-                lastModule_name: string
-                size: number
-                count: number
+                $ref: '#/components/schemas/FeedbackResponse'
         #TBD
         "400":
           description: Bad Request
         #TBD
         "500":
           description: Server Error
+
   /updateLastModule:
     post:  # PUT?
       tags:
@@ -181,24 +234,25 @@ paths:
         content:
           application/json:
             schema:
-              parent: string
+              type: object
+              properties:
+                parent: 
+                  type: string
+                  example: "L2_A"
       responses:
         "200":
           description: OK
           content:
             application/json:
               schema:
-                result: string  # the updated URDF to render! (also if no changes are made)
-                lastModule_type: string  # to update shown buttons, etc.
-                lastModule_name: string
-                size: number
-                count: number
+                $ref: '#/components/schemas/FeedbackResponse'
         #TBD
         "400":
           description: Bad Request
         #TBD
         "500":
           description: Server Error
+
   /openFile:
     post:
       tags:
@@ -210,70 +264,92 @@ paths:
         content:
           application/json:
             schema:
-              file: string
+              type: object
+              properties:
+                file: 
+                  type: string
       responses:
         "200":
           description: OK
           content:
             application/json:
               schema:
-                string: string  # the updated URDF to render!
+                type: object
+                properties:
+                  parent: 
+                    type: string  
+                    example: "the updated URDF to render!"
         #TBD
         "400":
           description: Bad Request
         #TBD
         "500":
           description: Server Error
+
   /requestURDF:
     post:  # GET?
       tags:
         - ???
       summary: makes an ajax request to get the urdf generated from the currently stored tree
       requestBody:
-        description: 
+        description: JSON specifying if we are in building mode (true) or not (false)
         required: true
         content:
           application/json:
             schema:
-              mode: boolean # True for building mode ON
+                type: object
+                properties:
+                  mode: 
+                    type: boolean # True for building mode ON
       responses:
         "200":
           description: OK
           content:
             application/json:
               schema:
-                string: string  # the updated URDF to render!
+                type: object
+                properties:
+                  parent: 
+                    type: string #  the updated URDF to render!
         #TBD
         "400":
           description: Bad Request
         #TBD
         "500":
           description: Server Error
+
   /changeMode:
     post:  # GET?
       tags:
         - ???
       summary: makes an ajax request to change mode (Building vs Discovery) and reset the robot instance
       requestBody:
-        description: 
+        description: JSON specifying if switching in building (true) or dicovery mode (false)
         required: true
         content:
           application/json:
             schema:
-              buildingModeON: boolean # True for building mode ON
+                type: object
+                properties: 
+                  buildingModeON: 
+                    type: boolean # True for building mode ON
       responses:
         "200":
           description: OK
           content:
             application/json:
               schema:
-                buildingModeON: boolean  # True for building mode ON
+                type: object
+                properties: 
+                  buildingModeON: 
+                    type: boolean # True for building mode ON
         #TBD
         "400":
           description: Bad Request
         #TBD
         "500":
           description: Server Error
+
   /deployRobot:
     post:  # PUT?
       tags:
@@ -285,18 +361,28 @@ paths:
         content:
           application/json:
             schema:
-              name: string
-              buildingModeON: boolean
+              type: object
+              properties: 
+                name: 
+                  type: string
+                  example: "ModularBot"
+                buildingModeON: 
+                  type: boolean
       responses:
         "200":
           description: OK
-          content: string
+          content: 
+            text/plain:
+              schema:
+                type: string
+                example: "The URDF sting. Returned just for logging purposes..."
         #TBD
         "400":
           description: Bad Request
         #TBD
         "500":
           description: Server Error
+
   /removeConnectors:
     post:  # PUT?
       tags:
@@ -308,17 +394,24 @@ paths:
         content:
           application/json:
             schema:
-              buildingModeON: boolean
+              type: object
+              properties:
+                buildingModeON: 
+                  type: boolean
       responses:
         "200":
           description: OK
-          content: string
+          content: 
+            text/plain:
+              schema:
+                type: string
+                example: "The URDF string without connectors"
         #TBD
         "400":
           description: Bad Request
         #TBD
         "500":
           description: Server Error
-  tags:
-  - name: ....
-    description: ....
+tags:
+- name: ....
+  description: ....
