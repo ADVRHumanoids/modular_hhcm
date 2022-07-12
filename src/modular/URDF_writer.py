@@ -24,8 +24,8 @@ import json
 import copy
 from collections import OrderedDict
 
-from utils import ResourceFinder
-import ModuleNode  # import module_from_yaml, ModuleNode, mastercube_from_yaml, slavecube_from_yaml
+from modular.utils import ResourceFinder
+import modular.ModuleNode  as ModuleNode# import module_from_yaml, ModuleNode, mastercube_from_yaml, slavecube_from_yaml
 import argparse
 
 import rospy
@@ -590,7 +590,7 @@ class XBotCorePlugin(Plugin):
             try:
                 lowlevel_config = ordered_load(stream, yaml.SafeLoader)
                 # cartesio_stack['EE']['base_link'] = self.urdf_writer.listofchains[0]
-                self.urdf_writer.print(lowlevel_config.items()[0])
+                self.urdf_writer.print(list(lowlevel_config.items())[0])
             except yaml.YAMLError as exc:
                 self.urdf_writer.print(exc)
 
@@ -760,7 +760,7 @@ class XBot2Plugin(Plugin):
         with open(hal_config_template, 'r') as stream:
             try:
                 hal_config = ordered_load(stream, yaml.SafeLoader)
-                self.urdf_writer.print(hal_config.items()[0])
+                self.urdf_writer.print(list(hal_config.items())[0])
             except yaml.YAMLError as exc:
                 self.urdf_writer.print(exc)
 
@@ -807,13 +807,13 @@ class XBot2Plugin(Plugin):
         with open(idle_joint_config_template, 'r') as stream:
             try:
                 idle_joint_config = ordered_load(stream, yaml.SafeLoader)
-                self.urdf_writer.print(idle_joint_config.items()[0])
+                self.urdf_writer.print(list(idle_joint_config.items())[0])
             except yaml.YAMLError as exc:
                 self.urdf_writer.print(exc)
         with open(impd4_joint_config_template, 'r') as stream:
             try:
                 impd4_joint_config = ordered_load(stream, yaml.SafeLoader)
-                self.urdf_writer.print(impd4_joint_config.items()[0])
+                self.urdf_writer.print(list(impd4_joint_config.items())[0])
             except yaml.YAMLError as exc:
                 self.urdf_writer.print(exc)
 
@@ -2351,7 +2351,7 @@ class UrdfWriter:
                     pass
 
             # Remove the cube module from the xml tree
-            for node in gen:
+            for node in self.gen:
                 if node.attrib['name'] == selected_module.name:
                     self.root.remove(node)
                     # gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
@@ -3468,7 +3468,7 @@ class UrdfWriter:
             try:
                 probdesc = ordered_load(stream, yaml.SafeLoader)
                 # cartesio_stack['EE']['base_link'] = self.listofchains[0]
-                #self.print(probdesc.items()[0])
+                #self.print(list(probdesc.items())[0])
             except yaml.YAMLError as exc:
                 self.print(exc)
 
@@ -3542,7 +3542,7 @@ class UrdfWriter:
             try:
                 probdesc = ordered_load(stream, yaml.SafeLoader)
                 # cartesio_stack['EE']['base_link'] = self.listofchains[0]
-                self.print(probdesc.items()[0])
+                self.print(list(probdesc.items())[0])
             except yaml.YAMLError as exc:
                 self.print(exc)
                 
@@ -3659,7 +3659,7 @@ class UrdfWriter:
         else:
             output = subprocess.check_output([script, robot_name, "--destination-folder", deploy_dir])
         
-        self.info_print(output)
+        self.info_print(str(output, 'utf-8', 'ignore'))
 
         self.add_connectors()
 

@@ -326,7 +326,7 @@ def sendCommands():
 def byteify(input):
     if isinstance(input, dict):
         return {byteify(key): byteify(value)
-                for key, value in input.iteritems()}
+                for key, value in input.items()}
     elif isinstance(input, list):
         return [byteify(element) for element in input]
     elif isinstance(input, unicode):
