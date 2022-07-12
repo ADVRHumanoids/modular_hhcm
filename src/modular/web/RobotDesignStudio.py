@@ -7,7 +7,7 @@ from flask import Flask, render_template, request, jsonify, send_from_directory,
 
 # import logging
 from modular.URDF_writer import UrdfWriter
-# import zmq_poller
+
 import zmq
 import yaml
 import json
@@ -15,7 +15,6 @@ import os
 import logging
 
 import rospy
-import modular.zmq_requester
 
 from ec_srvs.srv import GetSlaveInfo, GetSlaveInfoRequest, GetSlaveInfoResponse
 
@@ -38,10 +37,6 @@ else:
     
 
 # app = Flask(__name__)
-
-# Instance of ZMQ Poller class (create sockets, etc.)
-#zmq_poller = zmq_poller.ZmqPoller()
-
 
 # Instance of UrdfWriter class
 urdf_writer = UrdfWriter(logger=roslogger)
@@ -241,56 +236,6 @@ def pub_cmd():
 # send a request to the poller thread to get ECat topology and synchronize with hardware
 @app.route('/syncHW/', methods=['POST'])
 def syncHW():
-    # ## Method using the poller
-    # # zmq_poller.requester.send(b"Topology_REQ")
-    # # message = zmq_poller.requester.recv_json()
-    # # roslogger.debug("Received reply: %s" % (message))
-    # # data = urdf_writer_fromHW.read_from_json(message)
-    # # #roslogger.debug('data:', data)
-    # # data = jsonify(data)
-    # # return data
-
-
-    # # requester.send(b"Topology_REQ")
-    # # message = requester.recv_json()
-    # # roslogger.debug("Received reply: %s" % (message))
-    
-    # # # data = urdf_writer_fromHW.read_from_json(message)
-    # # data = urdf_writer_fromHW.read_from_json_alt(message)
-
-    # # #roslogger.debug('data:', data)
-    # # data = jsonify(data)
-    # # return data
-
-    # opts = modular.zmq_requester.repl_option()
-    # d = yaml.load(open(opts["repl_yaml"], 'r'))
-
-    # io = modular.zmq_requester.zmqIO(d['uri'])
-
-    # cnt = opts["cmd_exec_cnt"]
-    # while cnt:
-
-    #     roslogger.debug("cmd_exec_cnt", cnt)
-    #     cnt -= 1
-
-    #     test_dict = {"type": "ECAT_MASTER_CMD", "ecat_master_cmd": {"type": "GET_SLAVES_DESCR"}}
-    #     io.send_to(test_dict)
-    #     ''' wait reply ... blocking'''
-    #     reply = io.recv_from()
-
-    #     if not 'cmds' in d:
-    #         continue
-
-    #     for cmd_dict in gen_cmds(d['cmds']):
-    #         ''' send cmd '''
-    #         io.send_to(cmd_dict)
-    #         ''' wait reply ... blocking'''
-    #         reply = io.recv_from()
-
-    #         #time.sleep(0.01)
-
-    #     #time.sleep(0.05)
-
     srv_name = '/ec_client/get_slaves_description'
 
     rospy.wait_for_service(srv_name)
