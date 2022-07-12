@@ -124,24 +124,24 @@ mkdir -p ./config/joint_config
 
 #External devices map
 mkdir -p ./external_devices_map
-pushd ./external_devices_map
+pushd ./external_devices_map > /dev/null #hide print
 echo "1: EL1259" >> digital_io.yaml
 echo "2: EL6224_1" >> iolink.yaml
 echo "Put inside the different yaml file, the position in the chain with the name written in the corresponding config file 
 (es: 1:EL6224_1, if iolink is in the first position)" >> Readme.txt
-popd
+popd > /dev/null #hide print
 
 #Digital Io
 mkdir -p ./config/digital_io_config
-pushd ./config/digital_io_config
+pushd ./config/digital_io_config > /dev/null #hide print
 cp $SCRIPT_ROOT/configs/external_devices/digital_io.yaml .
-popd
+popd > /dev/null #hide print
 
 #Io Link
 mkdir -p ./config/iolink_config
-pushd ./config/iolink_config
+pushd ./config/iolink_config > /dev/null #hide print
 cp $SCRIPT_ROOT/configs/external_devices/iolink.yaml .
-popd
+popd > /dev/null #hide print
 
 # - Low level hal configs
 #   - ec_all (modified)
