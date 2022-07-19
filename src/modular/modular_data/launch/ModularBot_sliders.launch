@@ -8,7 +8,7 @@
     <param name="rate" value="50.0"/>
      
         
-    <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
+    <node name="joint_state_publisher_gui" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui">
     <param name="publish_default_efforts" value="True"/>
     </node>
 
