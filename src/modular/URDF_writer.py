@@ -2129,6 +2129,7 @@ class UrdfWriter:
 
         # Load the module from YAML and create a ModuleNode instance
         new_module = ModuleNode.module_from_yaml(module_name, self.parent_module, reverse)
+        self.print("Module loaded from YAML: " + new_module.name)
 
         # self.print(angle_offset)
 
@@ -2242,6 +2243,8 @@ class UrdfWriter:
 
         # self.print(self.parent_module)
 
+        self.info_print("Module added to URDF: " + new_module.name + " (" + new_module.type + ")")
+
         return data
 
     def remove_module(self, selected_module=0):
@@ -2271,7 +2274,7 @@ class UrdfWriter:
         if '_con' in selected_module.name:
             selected_module = selected_module.parent
 
-        self.print(selected_module.name)
+        self.info_print('Removing module: ' + str(selected_module.name) + ' (and all its descendants)')
 
         # If the selected module is NOT a cube start by first removing its child and descendants.
         # There is a recursive call to this function inside the loop to remove each module.
