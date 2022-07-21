@@ -194,7 +194,8 @@ def addSocket():
     return data
 
 
-# call URDF_writer.py to move socket. TODO: remeve hard-code of L_0_B socket for AutomationWare demo
+#TODO: to be included in the next versions
+# call URDF_writer.py to move socket. TODO: remove hard-code of L_0_B socket for AutomationWare demo
 @app.route('/moveSocket/', methods=['POST'])
 def moveSocket():
     values = json.loads(request.form.get('values'))
@@ -227,7 +228,8 @@ def accessModule():
     return data
 
 
-# update "last module" (and so shown buttons) when clicking on it
+#TODO: to be included in the next versions
+# upload a URDF file and display it
 @app.route('/openFile/', methods=['POST'])
 def openFile():
     file_str = request.form.get('file', 0)
@@ -236,6 +238,7 @@ def openFile():
     app.logger.debug('data:', data)
     data = jsonify(data)
     return data
+
 
 # request the urdf generated from the currently stored tree
 @app.route('/requestURDF/', methods=['POST'])
@@ -248,11 +251,14 @@ def requestURDF():
     data = jsonify(data)
     return data
 
+
 # upload on the server the /static folder
 @app.route('/<path:path>')
 def send_file(path):
     return send_from_directory(app.static_folder, path)
 
+
+#TODO: to be included in the next versions (or to be removed)
 # publish through ZMQ socket to signal user inputs to DEMO GUI
 @app.route('/pub_cmd/', methods=['POST'])
 def pub_cmd():
@@ -263,6 +269,8 @@ def pub_cmd():
 
     return jsonify(cmd)
 
+
+#TODO: to be included in the next versions (requires ROS etc.)
 # send a request to the poller thread to get ECat topology and synchronize with hardware
 @app.route('/syncHW/', methods=['POST'])
 def syncHW():
@@ -288,6 +296,7 @@ def syncHW():
     data = jsonify(data)
     return data
 
+
 # Change mode and reset
 @app.route('/changeMode/', methods=['POST'])
 def changeMode():
@@ -308,6 +317,7 @@ def changeMode():
     data = jsonify(data)
     return data
 
+
 # deploy the package of the built robot
 @app.route('/deployRobot/', methods=['POST'])
 def deployRobot():
@@ -324,6 +334,7 @@ def deployRobot():
     #time.sleep(10)
     return data
 
+
 @app.route('/removeConnectors/', methods=['POST'])
 def removeConnectors():
     global building_mode_ON
@@ -336,6 +347,8 @@ def removeConnectors():
         data = urdf_writer_fromHW.remove_connectors()    
     return data
 
+
+#TODO: to be included in the next versions (or to be removed)
 @app.route('/sendCommands/', methods=['POST'])
 def sendCommands():
     jsonData = request.get_json()
@@ -354,6 +367,7 @@ def sendCommands():
     # app.logger.debug data
     return res
 
+
 def byteify(input):
     if isinstance(input, dict):
         return {byteify(key): byteify(value)
@@ -364,6 +378,7 @@ def byteify(input):
         return input.encode('utf-8')
     else:
         return input
+
 
 def main():
     # Start Flask web-server

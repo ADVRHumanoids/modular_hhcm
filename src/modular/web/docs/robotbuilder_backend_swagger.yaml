@@ -1,0 +1,324 @@
+openapi: 3.0.0
+info:
+  title: linfa_backend_data
+  version: 1.0.0-alpha.0
+  description: Alberobitcs Storage API for RobotBuilder
+  contact:
+    email: info@alberobotics.it
+    name: Alberobotics
+servers:
+  - url: /linfa/api/v1/storage #TBD
+externalDocs:
+  description: Github repository
+  url: https://github.com/ADVRHumanoids/linfa_backend_data #TBD
+paths:
+  /changeURDF:
+    post:
+      tags:
+        - ???
+      summary: makes an ajax request to the server to modify the URDF by adding the requested module
+      requestBody:
+        description: JSON containing the name of the module to add, the parent module and their respective orientation.
+        required: true
+        content:
+          application/json:
+            schema:
+              module_name: string
+              parent: string
+              angle_offset: float
+              reverse: boolean
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                result: string  # the updated URDF to render!
+                lastModule_type: string
+                lastModule_name: string
+                size: number
+                count: number
+        #TBD
+        "400":
+          description: Bad Request
+        #TBD
+        "500":
+          description: Server Error
+  /addMasterCube:  # TODO: This should be merged under changeURDF
+    post:
+      tags:
+        - ???
+      summary: makes an ajax request to the server to modify the URDF by adding the requested cube
+      requestBody:
+        description: JSON containing the name of the module to add, the parent module and their respective orientation.
+        required: true
+        content:
+          application/json:
+            schema:
+              module_name: string
+              parent: string
+              angle_offset: float
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                result: string  # the updated URDF to render!
+                lastModule_type: string
+                lastModule_name: string
+                size: number
+                count: number
+        #TBD
+        "400":
+          description: Bad Request 
+        #TBD
+        "500":
+          description: Server Error
+  /addSocket:
+    post:
+      tags:
+        - ???
+      summary: add a Socket to the robot model (meaning adding a kinematic chain to the robot in practice)
+      requestBody:
+        description: JSON containing position and orientation of the socket.
+        required: true
+        content:
+          application/json:
+            schema:
+              values:
+                offset:
+                  type: array
+                  items:
+                    type: float
+                  example:
+                    - 0.0
+                    - 0.0
+                    - 0.0
+                angle_offset: float
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                result: string  # the updated URDF to render!
+                lastModule_type: string
+                lastModule_name: string
+                size: number
+                count: number
+        #TBD
+        "400":
+          description: Bad Request 
+        #TBD
+        "500":
+          description: Server Error
+  /writeURDF:
+    post:  # PUT?
+      tags:
+        - ???
+      summary: makes an ajax request to the server to write the URDF in the filesystem (and SRDF, configs, etc.)
+      requestBody:
+        description: JSON containing a boolean to determine whether or not building mode is activated and a joint map containing the value for the homing of the joints
+        required: true
+        content:
+          application/json:
+            schema:
+              jointMap: 
+                type: JSON
+                items:
+                  type: float
+                example:
+                  {'J1_A': 0.1,
+                  'J2_A': 0.2}
+              buildingModeON: boolean
+      responses:
+        "200":
+          description: OK
+          content: string
+        #TBD
+        "400":
+          description: Bad Request
+        #TBD
+        "500":
+          description: Server Error
+  /removeModule:
+    post:  # DELETE?
+      tags:
+        - ???
+      summary: makes an ajax request to the server to remove the last selected module and its children
+      requestBody:
+        description: 
+        required: true
+        content:
+          application/json:
+            schema:
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                result: string  # the updated URDF to render!
+                lastModule_type: string
+                lastModule_name: string
+                size: number
+                count: number
+        #TBD
+        "400":
+          description: Bad Request
+        #TBD
+        "500":
+          description: Server Error
+  /updateLastModule:
+    post:  # PUT?
+      tags:
+        - ???
+      summary: makes an ajax request to the server to update the "last selected module" (and so shown buttons) when clicking on it from the front-end
+      requestBody:
+        description: JSON containing the name of the current parent module (last selected one)
+        required: true
+        content:
+          application/json:
+            schema:
+              parent: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                result: string  # the updated URDF to render! (also if no changes are made)
+                lastModule_type: string  # to update shown buttons, etc.
+                lastModule_name: string
+                size: number
+                count: number
+        #TBD
+        "400":
+          description: Bad Request
+        #TBD
+        "500":
+          description: Server Error
+  /openFile:
+    post:
+      tags:
+        - ???
+      summary: makes an ajax request to the server to upload a URDF file and display it
+      requestBody:
+        description: JSON containing the string of the read URDF
+        required: true
+        content:
+          application/json:
+            schema:
+              file: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                string: string  # the updated URDF to render!
+        #TBD
+        "400":
+          description: Bad Request
+        #TBD
+        "500":
+          description: Server Error
+  /requestURDF:
+    post:  # GET?
+      tags:
+        - ???
+      summary: makes an ajax request to get the urdf generated from the currently stored tree
+      requestBody:
+        description: 
+        required: true
+        content:
+          application/json:
+            schema:
+              mode: boolean # True for building mode ON
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                string: string  # the updated URDF to render!
+        #TBD
+        "400":
+          description: Bad Request
+        #TBD
+        "500":
+          description: Server Error
+  /changeMode:
+    post:  # GET?
+      tags:
+        - ???
+      summary: makes an ajax request to change mode (Building vs Discovery) and reset the robot instance
+      requestBody:
+        description: 
+        required: true
+        content:
+          application/json:
+            schema:
+              buildingModeON: boolean # True for building mode ON
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                buildingModeON: boolean  # True for building mode ON
+        #TBD
+        "400":
+          description: Bad Request
+        #TBD
+        "500":
+          description: Server Error
+  /deployRobot:
+    post:  # PUT?
+      tags:
+        - ???
+      summary: makes an ajax request to the server to deploy the URDF of the robot in a ROS pakage to be saved in the filesystem
+      requestBody:
+        description: JSON containing a boolean to determine whether or not building mode is activated and the name of the ROS package to save
+        required: true
+        content:
+          application/json:
+            schema:
+              name: string
+              buildingModeON: boolean
+      responses:
+        "200":
+          description: OK
+          content: string
+        #TBD
+        "400":
+          description: Bad Request
+        #TBD
+        "500":
+          description: Server Error
+  /removeConnectors:
+    post:  # PUT?
+      tags:
+        - ???
+      summary: makes an ajax request to the server to remove the connectors from the model. To be called before making a write request and deploying a robot.
+      requestBody:
+        description: JSON containing a boolean to determine whether or not building mode is activated 
+        required: true
+        content:
+          application/json:
+            schema:
+              buildingModeON: boolean
+      responses:
+        "200":
+          description: OK
+          content: string
+        #TBD
+        "400":
+          description: Bad Request
+        #TBD
+        "500":
+          description: Server Error
+  tags:
+  - name: ....
+    description: ....
