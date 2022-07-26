@@ -1,6 +1,8 @@
 # MODULAR
 
-There are 3 ways to install:
+## Installation
+
+There are 3 ways to install modular:
 
 1. **pip install**
 
@@ -73,4 +75,22 @@ Python 3 package for Protocol Buffers need to be installed
 
 and then the .bashrc has to be modified adding the line:
 
-` export PYTHONPATH=$PYTHONPATH:/usr/lib/python3.5/dist-packages `
+## Documentation
+
+Static documentation for API calls has been added and is stored in the `modular/src/modular/web/docs` directory. 
+It can be accessed locally as follow:
+
+1. clone the repo and navigate to the docs folder:
+
+```bash
+git clone git@github.com:ADVRHumanoids/modular.git
+cd modular/src/modular/web/docs
+```
+
+2. starts a local python HTTP server:
+
+```bash
+python3 -m http.server
+```
+
+3. open <http://0.0.0.0:8000/> from a browser
