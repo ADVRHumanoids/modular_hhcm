@@ -1,14 +1,14 @@
 window.onload = function () {
   // Build a system
   const ui = SwaggerUIBundle({
-    url: './linfa_backend_data_swagger.yaml',
-    dom_id: '#swagger-ui',
+    url: "./modular_swagger.yaml",
+    dom_id: "#swagger-ui",
     defaultModelsExpandDepth: -1,
     deepLinking: true,
     presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
     plugins: [SwaggerUIBundle.plugins.DownloadUrl],
-    layout: 'StandaloneLayout',
-  })
+    layout: "StandaloneLayout",
+  });
 
-  window.ui = ui
-}
+  window.ui = ui;
+};
