@@ -972,11 +972,12 @@
                 }
                 
                 //making an ajax request to the server to proceed to write the modified URDF
+                //
                 $.ajax({
                     url: $SCRIPT_ROOT + 'changeURDF/',
                     data: {'module_name': filename, 'parent': CURRENT_PARENT, 'angle_offset': offset, 'reverse': reverse},
                     method: 'POST',
-                    success: function(data) {
+                    success: function(data) { //data is a JSON returned by the server containing 'result', which is the modified URDF
                         console.log(data)
                         robots = urdfViewer.updateURDF(data['result'])//, data['lastModule_name'])
                         // Update size

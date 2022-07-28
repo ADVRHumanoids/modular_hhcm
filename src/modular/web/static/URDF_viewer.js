@@ -60,8 +60,8 @@ class URDF_viewer extends HTMLElement {
     /* Public API */
     /*
     There are 3 methods to add a module to the robot:
-    - addModule: Method that reads a URDF file describing the module and adds the 3D object
-    - addModuleYAML: Method that reads a YAML file describing the module and adds the 3D object
+    - addModule: Method that reads a URDF file describing the module and adds the 3D object (deprecated)
+    - addModuleYAML: Method that reads a YAML file describing the module and adds the 3D object (deprecated)
     - updateURDF: Method that parse a string describing the updated robot URDF. The string is received from the Python script which reads it from YAML
     */
 
