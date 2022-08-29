@@ -1,12 +1,11 @@
-#!/usr/bin/env python
-import time
-from flask import Flask, render_template, request, jsonify, send_from_directory, url_for
-#import hierarchy_server as hp
+#!/usr/bin/env python3
+# Disable some of the pylint violations in this file
+# see https://pylint.pycqa.org/en/latest/user_guide/messages/message_control.html#block-disables
+# pylint: disable=logging-too-many-args
+# pylint: disable=protected-access, global-statement, broad-except, unused-variable
+# pylint: disable=line-too-long, missing-function-docstring
 
-from modular.URDF_writer import UrdfWriter
-
-import zmq
-import yaml
+# import yaml
 import json
 import os
 import logging
@@ -14,12 +13,15 @@ import sys
 from importlib import reload, util
 
 import rospy
+from flask import Flask, Response, render_template, request, jsonify, send_from_directory
+from flask.logging import create_logger
+import zmq
+#import hierarchy_server as hp
 
+from modular.URDF_writer import UrdfWriter
 ec_srvs_spec = util.find_spec('ec_srvs')
 if ec_srvs_spec is not None:
     from ec_srvs.srv import GetSlaveInfo, GetSlaveInfoRequest, GetSlaveInfoResponse
-
-import sys
 
 # initialize ros node
 rospy.init_node('robot_builder', disable_signals=True) # , log_level=rospy.DEBUG)
@@ -55,13 +57,23 @@ else:
 if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
     template_folder = os.path.join(sys._MEIPASS, 'modular/web/templates')
     static_folder = os.path.join(sys._MEIPASS, 'modular/web/static')
+    is_pyinstaller_bundle=True
+else:
+    static_folder='static'
+    template_folder='templates'
+    static_url_path=''
+    is_pyinstaller_bundle=False
+
     app = Flask(__name__, static_folder=static_folder, template_folder=template_folder, static_url_path='')
+# workaround for "Method 'logger' has no 'debug' member | pylint(no-member)"
+# see https://stackoverflow.com/a/69990293/14020329
+app.logger = create_logger(app)
+if is_pyinstaller_bundle:
     app.logger.debug('running in a PyInstaller bundle')
-    app.logger.debug(sys._MEIPASS)
+    app.logger.debug(sys._MEIPASS) # pylint: disable= protected-access, no-member
     app.logger.debug(template_folder)
     app.logger.debug(static_folder)
 else:
-    app = Flask(__name__, static_folder='static', template_folder='templates', static_url_path='')
     app.logger.debug('running in a normal Python process')
     
 
@@ -266,7 +278,7 @@ def send_file(path):
 def pub_cmd():
     key = 'Builder'
     cmd = request.form.get('cmd', 0)
-    app.logger.debug('cmd:', cmd.encode())
+    app.logger.debug('cmd: %s', cmd.encode())
     publisher.send_multipart([key, cmd.encode()])
 
     return jsonify(cmd)
@@ -281,10 +293,10 @@ def syncHW():
     rospy.wait_for_service(srv_name)
 
     try:
-        slave_description = rospy.ServiceProxy(srv_name, GetSlaveInfo)
+        slave_description = rospy.ServiceProxy(srv_name, GetSlaveInfo) # pylint: disable=undefined-variable
 
     except rospy.ServiceException as e:
-        app.logger.debug("Service call failed: %s"%e)
+        app.logger.debug("Service call failed: %s",e)
 
     reply = slave_description()
     reply = reply.cmd_info.msg
@@ -294,7 +306,7 @@ def syncHW():
     # data = urdf_writer_fromHW.read_from_json_alt(reply)
     if urdf_writer_fromHW.verbose:
         urdf_writer_fromHW.render_tree()
-    app.logger.debug('data:', data)
+    app.logger.debug('data: %s', data)
     data = jsonify(data)
     return data
 
@@ -399,4 +411,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-   
