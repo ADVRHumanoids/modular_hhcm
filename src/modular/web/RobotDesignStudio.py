@@ -568,7 +568,7 @@ def byteify(input):
 
 def main():
     # Start Flask web-server
-    app.run(host='0.0.0.0', port=5003, debug=False, threaded=True)
+    app.run(port=5003, debug=False, threaded=True)
     # app.run(debug=False, threaded=True)
 
 
