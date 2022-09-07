@@ -12,6 +12,7 @@ import os
 import logging
 import sys
 from importlib import reload, util
+from configparser import ConfigParser, ExtendedInterpolation
 
 import rospy
 from flask import Flask, Response, render_template, request, jsonify, send_from_directory, abort
@@ -24,6 +25,15 @@ if ec_srvs_spec is not None:
 
 # Add Mock Resources lists
 import modular.web.mock_resources as mock_resources
+
+# import custom server config (if any)
+base_path, _ = os.path.split(__file__)
+config = ConfigParser(interpolation=ExtendedInterpolation(), allow_no_value=True)
+config.read(os.path.join(base_path, 'web_config.ini'))
+host = config.get('MODULAR_SERVER', 'host', fallback=None)
+port = config.getint('MODULAR_SERVER','port',fallback=5003)
+gui_route = config.get('MODULAR_API','gui_route',fallback='')
+api_base_route = config.get('MODULAR_API','base_route',fallback='')
 
 # initialize ros node
 rospy.init_node('robot_builder', disable_signals=True) # , log_level=rospy.DEBUG)
@@ -92,7 +102,7 @@ urdf_writer_fromHW = UrdfWriter(**urdfwriter_kwargs_dict)
 building_mode_ON = True
 
 # load view_urdf.html
-@app.route('/')
+@app.route(f'{gui_route}/', methods=['GET'])
 def index():
     return render_template('view_urdf.html')
 
@@ -101,7 +111,7 @@ def test():
     return render_template('test.html')
 
 # Get workspace mode
-@app.route('/mode', methods=['GET'])
+@app.route(f'{api_base_route}/mode', methods=['GET'])
 def getMode():
     mode = 'Build' if building_mode_ON else 'Discover'
     return jsonify({'mode': mode}), 200
@@ -109,7 +119,7 @@ def getMode():
 # Change mode and reset
 # Request payload:
 #   - mode:             [string]: "Build" or "Discover"
-@app.route('/mode', methods=['POST'])
+@app.route(f'{api_base_route}/mode', methods=['POST'])
 def setMode():
     global building_mode_ON
     try:
@@ -145,7 +155,7 @@ def setMode():
         )
 
 # Get a list of the available modules
-@app.route('/resources/modules', methods=['GET'])
+@app.route(f'{api_base_route}/resources/modules', methods=['GET'])
 def resources_modules_get():
     """Get available modules
 
@@ -205,7 +215,7 @@ def resources_modules_get():
         )
 
 # Get a list of the available families of modules
-@app.route('/resources/families', methods=['GET'])
+@app.route(f'{api_base_route}/resources/families', methods=['GET'])
 def resources_families_get():
     """Get a list of families of the available modules
 
@@ -263,7 +273,7 @@ def resources_families_get():
             mimetype="application/json"
         )
 
-@app.route('/urdf/modules', methods=['POST'])
+@app.route(f'{api_base_route}/urdf/modules', methods=['POST'])
 def addNewModule():
     if not building_mode_ON:
         return Response(
@@ -476,7 +486,7 @@ def openFile():
 
 
 # request the urdf generated from the currently stored tree
-@app.route('/urdf', methods=['GET'])
+@app.route(f'{api_base_route}/urdf', methods=['GET'])
 def getURDF():
     try:
         if building_mode_ON:
@@ -487,8 +497,8 @@ def getURDF():
         # replace path for remote access of STL meshes that will be served with '/meshes/<path:path>' route
         # urdf= urdf_string.replace('package://modular/src/modular/web/static/models/modular/,'package://')
         urdf= urdf_string\
-                .replace('package://modular_resources','package://linfa/api/v1/modular/resources/meshes')\
-                .replace('package://concert_resources','package://linfa/api/v1/modular/resources/meshes')
+                .replace('package://modular_resources',f'package:/{api_base_route}/resources/meshes')\
+                .replace('package://concert_resources',f'package:/{api_base_route}/resources/meshes')
 
 
         return  Response(
@@ -524,7 +534,7 @@ def requestURDF():
 
 # upload on the server the /modular_resources folder.
 # This is needed to load the meshes of the modules (withot the need to put them in the /static folder)
-@app.route('/resources/meshes/<path:path>', methods=['GET'])
+@app.route(f'{api_base_route}/resources/meshes/<path:path>', methods=['GET'])
 @app.route('/modular_resources/<path:path>')
 def send_file(path):
     resources_paths = []
@@ -548,7 +558,7 @@ def send_file(path):
 
 #TODO: to be included in the next versions (requires ROS etc.)
 # send a request to the poller thread to get ECat topology and synchronize with hardware
-@app.route('/urdf', methods=['PUT'])
+@app.route(f'{api_base_route}/urdf', methods=['PUT'])
 @app.route('/syncHW/', methods=['POST'])
 def syncHW():
     srv_name = '/ec_client/get_slaves_description'
@@ -614,7 +624,7 @@ def getModulesMap():
     return modules
 
 # get list of modules of robot
-@app.route('/urdf/modules', methods=['GET'])
+@app.route(f'{api_base_route}/urdf/modules', methods=['GET'])
 def getModelModules():
     try:
         modules = getModulesMap()
@@ -634,7 +644,7 @@ def getModelModules():
         )
 
 # call URDF_writer.py to remove the last module
-@app.route('/urdf/modules', methods=['DELETE'])
+@app.route(f'{api_base_route}/urdf/modules', methods=['DELETE'])
 def removeModules():
     """Delete one or more modules from the robot model. By default it removes the last element.
 
@@ -704,7 +714,7 @@ def removeConnectors():
     return data
 
 # deploy the package of the built robot
-@app.route('/urdf', methods=['POST'])
+@app.route(f'{api_base_route}/urdf', methods=['POST'])
 def deployROSModel():
     try:
         req = request.get_json()
@@ -743,11 +753,9 @@ def byteify(input_raw):
         return input_raw
 
 
-def main():
-    # Start Flask web-server
-    app.run(port=5003, debug=False, threaded=True)
-    # app.run(debug=False, threaded=True)
+def main(host = None, port = None):
+    app.run(host=host, port=port, debug=False, threaded=True)
 
 
 if __name__ == '__main__':
-    main()
+    main(host=host, port=port)
