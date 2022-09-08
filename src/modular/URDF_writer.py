@@ -1502,7 +1502,7 @@ class UrdfWriter:
         for chain in self.listofchains:
             if joint in chain:
                 chain.remove(joint)
-        self.listofchains = filter(None, self.listofchains)
+        self.listofchains = list(filter(None, self.listofchains))
 
 
     # noinspection PyPep8Naming
