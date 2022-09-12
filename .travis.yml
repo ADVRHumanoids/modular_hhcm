@@ -1,13 +1,13 @@
 os: linux
-language: cpp
-compiler: g++
 dist: bionic
+language: python
+cache: pip
 
 branches:
   only:
-    - binarization
-    - /^v\d+\.\d+\.\d+.*$/  # version tags
-  
+    - python3
+    - /^v\d+\.\d+\.\d+.*$/ # version tags
+
 notifications:
   email:
     recipients:
@@ -16,19 +16,15 @@ notifications:
     on_success: never
     on_failure: always
 
-before_install:
-  - rm -rf /opt/pyenv  # damn pyenv
-
-before_script:
+install:
   - echo "Travis tag is $TRAVIS_TAG"
-  - sudo apt update && sudo apt install python2.7 python-pip 
-  - sudo pip install pyinstaller==3.6
-
-script: 
+  - pip install pyinstaller
   - pip install -e .
+
+script:
   - cd src/modular/web/
   - pyinstaller --onefile RobotBuilder.spec
-  - ls dist/RobotBuilder  # fail if does not exist
+  - ls dist/RobotBuilder # fail if does not exist
 
 deploy:
   provider: releases
@@ -37,5 +33,3 @@ deploy:
   skip_cleanup: true
   on:
     tags: true
-
-
