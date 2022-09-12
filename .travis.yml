@@ -17,7 +17,7 @@ notifications:
 
 install:
   - echo "Travis tag is $TRAVIS_TAG"
-  - python --varsion
+  - python --version
   - pip --version
   - pip install pyinstaller
   - pip install -e .
