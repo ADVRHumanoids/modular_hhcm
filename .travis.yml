@@ -5,6 +5,7 @@ dist: bionic
 
 branches:
   only:
+    - python3
     - /^v\d+\.\d+\.\d+.*$/ # version tags
 
 notifications:
