@@ -18,7 +18,7 @@ notifications:
 
 before_script:
   - echo "Travis tag is $TRAVIS_TAG"
-  - sudo pip install pyinstaller
+  - sudo pip install pyinstaller>3.6
 
 script:
   - pip install -e .
