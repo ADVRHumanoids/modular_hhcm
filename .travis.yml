@@ -1,6 +1,5 @@
 os: linux
 language: python
-compiler: g++
 dist: bionic
 
 branches:
@@ -16,12 +15,14 @@ notifications:
     on_success: never
     on_failure: always
 
-before_script:
+install:
   - echo "Travis tag is $TRAVIS_TAG"
-  - sudo pip install pyinstaller>3.6
+  - python --varsion
+  - pip --version
+  - pip install pyinstaller
+  - pip install -e .
 
 script:
-  - pip install -e .
   - cd src/modular/web/
   - pyinstaller --onefile RobotBuilder.spec
   - ls dist/RobotBuilder # fail if does not exist
