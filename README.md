@@ -60,17 +60,16 @@
 
 ## About The Project
 
-This project focuses on the rapid generation of Tailor-Made solutions with few to many modules.
+This project focuses on the development of an app for rapid model generation of modular robots, starting from a set of basic robotic modules.
+This app will genereate URDF, SRDF and a complete ROS package, which can be used to simulate and control the robot. 
 
 ![reconfigurable_pino](https://alberobotics.it/templates/yootheme/cache/reconfigurable_pino-2e1209e8.png)
 
 This is handled in 2 different scenarios: online or offline.
 
-In the offline approach, a user sets up a robot with our reconfigurable modules in the virtual environment: the user selects modules from a library, assembles them toform a mechanism that is immediateley visualised in 3D.
+In the offline approach (Building Mode), a user sets up a robot with our reconfigurable modules in the virtual environment: the user selects modules from a library, assembles them to form a mechanism that is immediateley visualised in 3D.
 
-The more pragmatic user might prefer an online approach to assemble the robot from real physical modules. This gives more immediate impression of the size and shape of the mechanism. Potentially this user also directly assembles the modules in the eventual operating environment and sees how it fits without modelling the entire workplace in CAD.
-
-No matter which approach a user might select, the workflow is the same. Once the user has assembled a set of modules in a desired configuration, our Operating System automatically reconfigures the entire software architecture on-the-fly, generating mathematical models of both the robot kinematics and dynamics and updating the controller architecture.
+An online approach (Discovery Mode) is also provided that allows the user to query the EtherCAT master for a description of the network topology graph. The  robot built from real physical modules is therefore recognized and displayed in 3D. 
 
 <!--
 ### Built With:
@@ -88,7 +87,7 @@ No matter which approach a user might select, the workflow is the same. Once the
 
 Currently we only support Python3 (for the last version supporting Python2 see [v.0.0.4](https://github.com/ADVRHumanoids/modular/releases/tag/v0.0.4)) and it's recommended to have pip version 21.3 or newer if you plan use editable installs (see below).
 
-There are 3 ways to install modular:
+There are 2 ways to install modular:
 
 ### Option 1. **pip install**
 
@@ -98,81 +97,28 @@ The package can be installed in system, local, or virtualenv site-packages direc
 If you plan to make modifications it and don't want to re-install it every time, install it in 'editable mode' :
 `pip install -e .`
 
-REQUIREMENTS: ros-melodic-tf package: `sudo apt update && sudo apt install ros-melodic-tf`.
-
-### Option 2. **Catkin install**
-
-After cloning the repo in the caktin sourcespace run:
-`catkin_make install`
-Similarly to the superbuild, to run the application some dependencies can be installed with:
-`rosdep install modular`
-while some python packages need to be installed manually:
-`pip install Flask anytree protobuf_to_dict`
-
-When the catkin workspace is sourced the app can be run from everywhere with:
-`env FLASK_APP=modular.web flask run`
-
-### Option 3. **Superbuild install**
-
-When installing modular from superbuild set through ccmake:
-
-```
-PLAYGROUND = ON
-SUPERBUILD_modular = ON
-```
-
-and then:
-
-```
-cd $ROBOTOLOGY_ROOT/build
-make modular
-```
-
-To run the application some dependencies can be installed with:
-`rosdep install modular`
-while some python packages need to be installed manually:
-`pip install Flask anytree protobuf_to_dict`
-
-When the superbuild is sourced the app can be run from everywhere with:
-`env FLASK_APP=modular.web flask run`
-
-- **Run the simulation**
-
-After generating the robot with the configurator, and installing the package via the superbuild:
-After generating the robot with the configurator, and installing the package via the superbuild:
-After generating the robot with the configurator, and installing the package via the superbuild:
-
-```
-cd $ROBOTOLOGY_ROOT/build
-make modular
-  make modular
-make modular
-```
-
-Gazebo simulation can be run with:
-
-`roslaunch modular modular_world.launch`
-
-and then the plugins in the **modular_plugins** repo can be used to control the robot. For instance:
-
-`rosservice call /Modularbot_switch 1`
-
-########################################
-
-**When reading configuration from hardware**
-
-Python 3 package for Protocol Buffers need to be installed
-
-`pip3 install protobuf`
-
-and then the .bashrc has to be modified adding the line:
+### Option 2. **Use the binaries**
+Get the `RobotBuilder` app from the latest release and make it executable (`chmod +x RobotBuilder`).
 
 ## Usage
 
-To use modular start the python server:
+To use modular you need to start the python server.
+
+1. If you installed with **pip install**:
 
 ```bash
 python modular/src/modular/web/RobotDesignStudio.py
+```
+or even better, run:
+```
+robot-design-studio
+```
+Note: You might need to modify the PATH ;)
+
+2. If you instead **use the binaries**:
+run
+```
+./RobotBuilder
 ```
 
 Then open <http://0.0.0.0:5000/> from a browser to acces the graphical interface.
