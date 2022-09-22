@@ -11,11 +11,13 @@ import json
 import os
 import logging
 import sys
-from importlib import reload
+from importlib import reload, util
 
 import rospy
 
-from ec_srvs.srv import GetSlaveInfo, GetSlaveInfoRequest, GetSlaveInfoResponse
+ec_srvs_spec = util.find_spec('ec_srvs')
+if ec_srvs_spec is not None:
+    from ec_srvs.srv import GetSlaveInfo, GetSlaveInfoRequest, GetSlaveInfoResponse
 
 import sys
 
