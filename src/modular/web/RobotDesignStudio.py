@@ -65,9 +65,8 @@ else:
     is_pyinstaller_bundle=False
 
 app = Flask(__name__, static_folder=static_folder, template_folder=template_folder, static_url_path='')
-# workaround for "Method 'logger' has no 'debug' member | pylint(no-member)"
-# see https://stackoverflow.com/a/69990293/14020329
-app.logger = create_logger(app)
+app.logger = logger
+
 if is_pyinstaller_bundle:
     app.logger.debug('running in a PyInstaller bundle')
     app.logger.debug(sys._MEIPASS) # pylint: disable= protected-access, no-member
@@ -76,7 +75,6 @@ if is_pyinstaller_bundle:
 else:
     app.logger.debug('running in a normal Python process')
     
-
 urdfwriter_kwargs_dict={
     'verbose': verbose,
     'logger': logger
@@ -249,7 +247,7 @@ def openFile():
     file_str = request.form.get('file', 0)
     app.logger.debug(file_str)
     data = urdf_writer.read_file(file_str)
-    app.logger.debug('data:', data)
+    app.logger.debug('data: %s', data)
     data = jsonify(data)
     return data
 
@@ -261,7 +259,7 @@ def requestURDF():
     # app.logger.debug(building_mode_on_str)
     urdf_string = urdf_writer.process_urdf()
     data = {'string': urdf_string}
-    app.logger.debug('data:', data)
+    app.logger.debug('data: %s', data)
     data = jsonify(data)
     return data
 
