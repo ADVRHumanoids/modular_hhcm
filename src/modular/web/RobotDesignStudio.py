@@ -64,7 +64,7 @@ else:
     static_url_path=''
     is_pyinstaller_bundle=False
 
-    app = Flask(__name__, static_folder=static_folder, template_folder=template_folder, static_url_path='')
+app = Flask(__name__, static_folder=static_folder, template_folder=template_folder, static_url_path='')
 # workaround for "Method 'logger' has no 'debug' member | pylint(no-member)"
 # see https://stackoverflow.com/a/69990293/14020329
 app.logger = create_logger(app)
