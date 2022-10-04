@@ -154,7 +154,7 @@
     <!-- Macro for adding a master cube -->
     <xacro:macro name="add_master_cube" params="name filename type">
 
-        <xacro:property name="module" value="${load_yaml(filename)}"/>
+        <xacro:property name="module" value="${xacro.load_yaml(filename)}"/>
 
         <joint name="fixed" type="fixed">
             <parent link="base_link"/>
@@ -188,7 +188,7 @@
 
     <xacro:macro name="add_connectors" params="name filename type">
 
-        <xacro:property name="module" value="${load_yaml(filename)}"/>
+        <xacro:property name="module" value="${xacro.load_yaml(filename)}"/>
 
         <xacro:if value="${'connector_1' in module['kinematics']}">
             <link name="${name}_con1">
@@ -295,7 +295,7 @@
     <!-- Macro for adding a slave cube -->
     <xacro:macro name="add_slave_cube" params="name filename type">
 
-        <xacro:property name="module" value="${load_yaml(filename)}"/>
+        <xacro:property name="module" value="${xacro.load_yaml(filename)}"/>
 
         <link name="${name}">
             <visual>
@@ -398,7 +398,7 @@
     <!-- Macro for adding a straight link -->
     <xacro:macro name="add_link" params="name type filename size_z size">
 
-        <xacro:property name="module" value="${load_yaml(filename)}"/>
+        <xacro:property name="module" value="${xacro.load_yaml(filename)}"/>
         
         <xacro:property name="mesh_bool" value="false"/>
         <xacro:unless value="${ module['visual']['mesh_body_1'] == '' }">
@@ -507,24 +507,7 @@
     <!-- Macro for adding a socket -->
     <xacro:macro name="add_socket" params="name type filename size_z size">
 
-        <xacro:property name="module" value="${load_yaml(filename)}"/>
-        
-        <xacro:property name="mesh_bool" value="false"/>
-        <!-- <xacro:unless value="${ module['visual']['mesh_body_1'] == '' }">
-            <xacro:property name="mesh_bool" value="true"/>
-        </xacro:unless> -->
-
-        <!-- <xacro:if value="${size==1}">
-            <xacro:property name="radius" value="${size1}" />
-        </xacro:if>
-        <xacro:unless value="${size==1}">
-            <xacro:if value="${size==2}">
-                <xacro:property name="radius" value="${size2}" />
-            </xacro:if>
-            <xacro:unless value="${size==2}">
-                <xacro:property name="radius" value="${size3}" />
-            </xacro:unless>
-        </xacro:unless> -->
+        <xacro:property name="module" value="${xacro.load_yaml(filename)}"/>
 
         <xacro:property name="radius" value="${size_interface}" />
 
@@ -567,7 +550,7 @@
     <!-- Macro for adding a size adapter -->
     <xacro:macro name="add_size_adapter" params="type name filename size_z">
 
-         <xacro:property name="module" value="${load_yaml(filename)}"/>
+         <xacro:property name="module" value="${xacro.load_yaml(filename)}"/>
         
         <xacro:property name="mesh_bool" value="false"/>
         <xacro:unless value="${ module['visual']['mesh_body_1'] == '' }">
@@ -777,7 +760,7 @@
 
     <xacro:macro name="add_rotor_fast" params="type name filename x y z roll pitch yaw">
 
-        <xacro:property name="module" value="${load_yaml(filename)}"/>
+        <xacro:property name="module" value="${xacro.load_yaml(filename)}"/>
         <xacro:property name="gear_ratio" value="${module['control']['nu']}"/>
 
         <link name="${name}">
@@ -803,8 +786,7 @@
 
     <xacro:macro name="add_distal" params="type name filename">
 
-        <xacro:property name="module" value="${load_yaml(filename)}"/>
-        <!-- <xacro:property name="visual" value="${module['visual']['mesh_body_1']}"/> -->
+        <xacro:property name="module" value="${xacro.load_yaml(filename)}"/>
 
         <xacro:property name="mesh_bool" value="false"/>
         <xacro:unless value="${ module['visual']['mesh_body_2'] == '' }">
@@ -859,8 +841,7 @@
 
     <xacro:macro name="add_tool_exchanger" params="type name filename">
 
-        <xacro:property name="module" value="${load_yaml(filename)}"/>
-        <!-- <xacro:property name="visual" value="${module['visual']['mesh_body_1']}"/> -->
+        <xacro:property name="module" value="${xacro.load_yaml(filename)}"/>
 
         <xacro:property name="mesh_bool" value="false"/>
         <xacro:unless value="${ module['visual']['mesh_body_1'] == '' }">
@@ -925,7 +906,7 @@
     </xacro:macro>
 
     <xacro:macro name="add_gripper" params="type name filename">
-        <xacro:property name="module" value="${load_yaml(filename)}"/>
+        <xacro:property name="module" value="${xacro.load_yaml(filename)}"/>
         <xacro:property name="mesh_bool" value="false"/>
         <xacro:unless value="${ module['visual']['mesh_body_1'] == '' }">
             <xacro:property name="mesh_bool" value="true"/>
@@ -1095,7 +1076,7 @@
     <!-- Macro for adding the physical module housing the actuator -->
     <xacro:macro name="add_joint_stator" params="type name filename size_y size_z size">
 
-        <xacro:property name="module" value="${load_yaml(filename)}"/>
+        <xacro:property name="module" value="${xacro.load_yaml(filename)}"/>
 
         <xacro:property name="mesh_bool" value="false"/>
         <xacro:unless value="${ module['visual']['mesh_body_1'] == '' }">

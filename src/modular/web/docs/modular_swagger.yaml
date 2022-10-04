@@ -1,0 +1,412 @@
+openapi: 3.0.0
+info:
+  title: Modular
+  version: 0.0.3
+  # description: Alberobitcs API for RobotBuilder
+  contact:
+    email: edoardo.romiti@iit.it
+    name: Edoardo Romiti
+servers:
+  - url: http://0.0.0.0:5000
+externalDocs:
+  description: Github repository
+  url: https://github.com/ADVRHumanoids/modular
+
+components:
+  schemas:
+    FeedbackResponse:
+      type: object
+      properties:
+        result: # the updated URDF to render!
+          type: string
+        lastModule_type:
+          type: string
+        lastModule_name:
+          type: string
+        size:
+          type: number
+          format: integer
+        count:
+          type: number
+          format: integer
+      example:
+        result: "the updated URDF to render!"
+        lastModule_type: "joint"
+        lastModule_name: "L3_A"
+        size: 3
+        count: 1
+
+    AddModuleRequest:
+      type: object
+      properties:
+        module_name: #  The name of the type of module to add
+          type: string
+        parent: #  The parent name
+          type: string
+        angle_offset: #  The angle offset w.r.t the parent
+          type: number
+          format: float
+        reverse:
+          type: boolean
+      example:
+        module_name: "module_joint_yaw_ORANGE"
+        parent: "L3_A"
+        angle_offset: 0.5
+        reverse: false
+
+paths:
+  /changeURDF:
+    post:
+      tags:
+        - modular
+      summary: makes an ajax request to the server to modify the URDF by adding the requested module
+      requestBody:
+        description: JSON containing the name of the module to add, the parent module and their respective orientation.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddModuleRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeedbackResponse"
+        #TBD
+        "400":
+          description: Bad Request
+        #TBD
+        "500":
+          description: Server Error
+
+  /addMasterCube: # TODO: This should be merged under changeURDF
+    post:
+      tags:
+        - modular
+      summary: makes an ajax request to the server to modify the URDF by adding the requested cube
+      requestBody:
+        description: JSON containing the name of the module to add, the parent module and their respective orientation.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddModuleRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeedbackResponse"
+        #TBD
+        "400":
+          description: Bad Request
+        #TBD
+        "500":
+          description: Server Error
+
+  /addSocket:
+    post:
+      tags:
+        - modular
+      summary: add a Socket to the robot model (meaning adding a kinematic chain to the robot in practice)
+      requestBody:
+        description: JSON containing position and orientation of the socket.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                values:
+                  type: object
+                  properties:
+                    offset:
+                      type: array
+                      items:
+                        type: number
+                        format: float
+                      example: [0.1, 0.2, 0.3]
+                    angle_offset:
+                      type: number
+                      format: float
+                buildingModeON:
+                  type: boolean
+            example:
+              values:
+                offset: [0.1, 0.2, 0.3]
+                angle_offset: 0.0
+              buildingModeON: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeedbackResponse"
+        #TBD
+        "400":
+          description: Bad Request
+        #TBD
+        "500":
+          description: Server Error
+
+  /writeURDF:
+    post: # PUT?
+      tags:
+        - modular
+      summary: makes an ajax request to the server to write the URDF in the filesystem (and SRDF, configs, etc.)
+      requestBody:
+        description: JSON containing a boolean to determine whether or not building mode is activated and a joint map containing the value for the homing of the joints
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                jointMap:
+                  type: object
+                  additionalProperties:
+                    type: object
+                    properties:
+                      joint_name:
+                        type: string
+                      homing_value:
+                        type: number
+                        format: float
+                  example:
+                    J1_A: 0.1
+                    J2_A: 0.2
+                buildingModeON:
+                  type: boolean
+      responses:
+        "200":
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "the URDF string. for logging purposes"
+        #TBD
+        "400":
+          description: Bad Request
+        #TBD
+        "500":
+          description: Server Error
+
+  /removeModule:
+    post: # DELETE?
+      tags:
+        - modular
+      summary: makes an ajax request to the server to remove the **last selected module** and its **children**
+      # requestBody:
+      #   description: ....
+      #   required: false
+      #   content:
+      #     application/json:
+      #       schema: ...
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeedbackResponse"
+        #TBD
+        "400":
+          description: Bad Request
+        #TBD
+        "500":
+          description: Server Error
+
+  /updateLastModule:
+    post: # PUT?
+      tags:
+        - modular
+      summary: makes an ajax request to the server to update the "last selected module" (and so shown buttons) when clicking on it from the front-end
+      requestBody:
+        description: JSON containing the name of the current parent module (last selected one)
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                parent:
+                  type: string
+                  example: "L2_A"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeedbackResponse"
+        #TBD
+        "400":
+          description: Bad Request
+        #TBD
+        "500":
+          description: Server Error
+
+  /openFile:
+    post:
+      tags:
+        - modular
+      summary: makes an ajax request to the server to upload a URDF file and display it
+      requestBody:
+        description: JSON containing the string of the read URDF
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  parent:
+                    type: string
+                    example: "the updated URDF to render!"
+        #TBD
+        "400":
+          description: Bad Request
+        #TBD
+        "500":
+          description: Server Error
+
+  /requestURDF:
+    post: # GET?
+      tags:
+        - modular
+      summary: makes an ajax request to get the urdf generated from the currently stored tree
+      requestBody:
+        description: JSON specifying if we are in building mode (true) or not (false)
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                mode:
+                  type: boolean # True for building mode ON
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  parent:
+                    type: string #  the updated URDF to render!
+        #TBD
+        "400":
+          description: Bad Request
+        #TBD
+        "500":
+          description: Server Error
+
+  /changeMode:
+    post: # GET?
+      tags:
+        - modular
+      summary: makes an ajax request to change mode (Building vs Discovery) and reset the robot instance
+      requestBody:
+        description: JSON specifying if switching in building (true) or dicovery mode (false)
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                buildingModeON:
+                  type: boolean # True for building mode ON
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  buildingModeON:
+                    type: boolean # True for building mode ON
+        #TBD
+        "400":
+          description: Bad Request
+        #TBD
+        "500":
+          description: Server Error
+
+  /deployRobot:
+    post: # PUT?
+      tags:
+        - modular
+      summary: makes an ajax request to the server to deploy the URDF of the robot in a ROS pakage to be saved in the filesystem
+      requestBody:
+        description: JSON containing a boolean to determine whether or not building mode is activated and the name of the ROS package to save
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "ModularBot"
+                buildingModeON:
+                  type: boolean
+      responses:
+        "200":
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "The URDF sting. Returned just for logging purposes..."
+        #TBD
+        "400":
+          description: Bad Request
+        #TBD
+        "500":
+          description: Server Error
+
+  /removeConnectors:
+    post: # PUT?
+      tags:
+        - modular
+      summary: makes an ajax request to the server to remove the connectors from the model. To be called before making a write request and deploying a robot.
+      requestBody:
+        description: JSON containing a boolean to determine whether or not building mode is activated
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                buildingModeON:
+                  type: boolean
+      responses:
+        "200":
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "The URDF string without connectors"
+        #TBD
+        "400":
+          description: Bad Request
+        #TBD
+        "500":
+          description: Server Error

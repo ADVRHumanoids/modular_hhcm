@@ -42,5 +42,7 @@
         <remap from="zeros" to="cartesian/posture/home"/>
     </node> -->
 
+    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find $(arg pkg_name))/rviz/cartesio.rviz" />
+
 </launch>
 

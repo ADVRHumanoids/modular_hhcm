@@ -17,8 +17,21 @@ constraints:
 #     type: Cartesian
 #     base_link: L_0_B
 #     distal_link: ee_B
+# EE:
+#     type: Cartesian
+#     base_link: ee_B
+#     distal_link: ee_A
+#     indices: [0,1,2,3,4]
 EE:
     type: Cartesian
-    base_link: ee_B
+    base_link: base_link
     distal_link: ee_A
     indices: [0,1,2,3,4]
+
+# constraints: [JointLimits, VelocityLimits]
+
+JointLimits:
+    type: JointLimits
+
+VelocityLimits:
+    type: VelocityLimits

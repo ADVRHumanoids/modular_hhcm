@@ -124,24 +124,24 @@ mkdir -p ./config/joint_config
 
 #External devices map
 mkdir -p ./external_devices_map
-pushd ./external_devices_map
+pushd ./external_devices_map > /dev/null #hide print
 echo "1: EL1259" >> digital_io.yaml
 echo "2: EL6224_1" >> iolink.yaml
 echo "Put inside the different yaml file, the position in the chain with the name written in the corresponding config file 
 (es: 1:EL6224_1, if iolink is in the first position)" >> Readme.txt
-popd
+popd > /dev/null #hide print
 
 #Digital Io
 mkdir -p ./config/digital_io_config
-pushd ./config/digital_io_config
+pushd ./config/digital_io_config > /dev/null #hide print
 cp $SCRIPT_ROOT/configs/external_devices/digital_io.yaml .
-popd
+popd > /dev/null #hide print
 
 #Io Link
 mkdir -p ./config/iolink_config
-pushd ./config/iolink_config
+pushd ./config/iolink_config > /dev/null #hide print
 cp $SCRIPT_ROOT/configs/external_devices/iolink.yaml .
-popd
+popd > /dev/null #hide print
 
 # - Low level hal configs
 #   - ec_all (modified)
@@ -166,7 +166,11 @@ printf "${GREEN}[2/9] Deployed XBot2 configs${NC}\n"
 mkdir -p ./cartesio
 # - /ModularBot_cartesio_config.yaml
 cp /tmp/ModularBot/cartesio/ModularBot_cartesio_config.yaml ./cartesio/ModularBot_cartesio_config.yaml $VERBOSITY || end_exec
+# - /ModularBot_cartesio_IK_config.yaml
+cp /tmp/ModularBot/cartesio/ModularBot_cartesio_IK_config.yaml ./cartesio/ModularBot_cartesio_IK_config.yaml $VERBOSITY || end_exec
 sed -i -e "s+ModularBot+${package_name}+g" ./cartesio/ModularBot_cartesio_config.yaml
+sed -i -e "s+ModularBot+${package_name}+g" ./cartesio/ModularBot_cartesio_IK_config.yaml
+
 printf "${GREEN}[3/9] Deployed cartesio configs${NC}\n"
 
 # Deploy launch files
@@ -183,6 +187,13 @@ sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./launch/ModularBot_sliders.launch
 # - gazebo.launch
 cp $SCRIPT_ROOT/launch/ModularBot_gazebo.launch ./launch/ModularBot_gazebo.launch $VERBOSITY || end_exec
 sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./launch/ModularBot_gazebo.launch
+
+# Deploy rviz config files
+mkdir -p ./rviz
+cp $SCRIPT_ROOT/rviz/cartesio.rviz ./rviz/cartesio.rviz $VERBOSITY || end_exec
+cp $SCRIPT_ROOT/rviz/sliders.rviz ./rviz/sliders.rviz $VERBOSITY || end_exec
+cp $SCRIPT_ROOT/rviz/xbot.rviz ./rviz/xbot.rviz $VERBOSITY || end_exec
+
 printf "${GREEN}[4/9] Deployed ModularBot launch files${NC}\n"
 
 # TODO: fix moveit deploy
@@ -228,11 +239,11 @@ sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./database/${package_name}_fixed_ba
 # - model.config
 cp $SCRIPT_ROOT/database/ModularBot_fixed_base/model.config ./database/${package_name}_fixed_base/model.config $VERBOSITY || end_exec
 sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./database/${package_name}_fixed_base/model.config
-# - ModularBot.sdf
-gz sdf --print \
-    $DESTINATION_FOLDER/${package_name}/urdf/ModularBot.urdf > \
-    $DESTINATION_FOLDER/${package_name}/database/${package_name}_fixed_base/${package_name}.sdf \
-    || end_exec
+# # - ModularBot.sdf
+# gz sdf --print \
+#     $DESTINATION_FOLDER/${package_name}/urdf/ModularBot.urdf > \
+#     $DESTINATION_FOLDER/${package_name}/database/${package_name}_fixed_base/${package_name}.sdf \
+#     || end_exec
 printf "${GREEN}[9/9] Deployed gazebo model${NC}\n"
 
 # All done

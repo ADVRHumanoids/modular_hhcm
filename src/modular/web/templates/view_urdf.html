@@ -2,7 +2,8 @@
     <head>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-		
+        <link rel="icon" href="https://alberobotics.it/images/apple-touch-icon.png" />
+
         <title>URDF builder</title>
 
         <!-- <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"> -->
@@ -51,8 +52,8 @@
         <script type="text/javascript" src="{{ url_for('static', filename='/examples/js/loaders/ColladaLoader.js') }}"></script>
 
         <script type="text/javascript" src="{{ url_for('static', filename='/examples/js/renderers/Projector.js') }}"></script>
-        
-        <script type="text/javascript" src="{{ url_for('static', filename='/js/dat.gui.js') }}"></script>
+
+        <script type="text/javascript" src="{{ url_for('static', filename='/js/dat.gui.min.js') }}"></script>
         <!-- <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script> -->
         <!-- <script type="text/javascript" src="{{ url_for('static', filename='/js/jquery-3.2.1.min.js') }}"></script> -->
 
@@ -996,11 +997,12 @@
                 }
                 
                 //making an ajax request to the server to proceed to write the modified URDF
+                //
                 $.ajax({
                     url: $SCRIPT_ROOT + 'changeURDF/',
                     data: {'module_name': filename, 'parent': CURRENT_PARENT, 'angle_offset': offset, 'reverse': reverse},
                     method: 'POST',
-                    success: function(data) {
+                    success: function(data) { //data is a JSON returned by the server containing 'result', which is the modified URDF
                         console.log(data)
                         robots = urdfViewer.updateURDF(data['result'])//, data['lastModule_name'])
                         // Update size
