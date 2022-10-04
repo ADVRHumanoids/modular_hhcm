@@ -146,7 +146,7 @@ def writeURDF():
         app.logger.debug(srdf)
         joint_map = urdf_writer.write_joint_map()
         lowlevel_config = urdf_writer.write_lowlevel_config()
-        #probdesc = urdf_writer.write_problem_description()
+        probdesc = urdf_writer.write_problem_description()
         probdesc = urdf_writer.write_problem_description_multi()
         # cartesio_stack = urdf_writer.write_cartesio_stack()
     else:
@@ -155,7 +155,7 @@ def writeURDF():
         app.logger.debug(srdf)
         joint_map = urdf_writer_fromHW.write_joint_map(use_robot_id=True)
         lowlevel_config = urdf_writer_fromHW.write_lowlevel_config(use_robot_id=True)
-        #probdesc = urdf_writer_fromHW.write_problem_description()
+        probdesc = urdf_writer_fromHW.write_problem_description()
         probdesc = urdf_writer_fromHW.write_problem_description_multi()
         # cartesio_stack = urdf_writer_fromHW.write_cartesio_stack()
     # app.logger.debug("\nSRDF\n")

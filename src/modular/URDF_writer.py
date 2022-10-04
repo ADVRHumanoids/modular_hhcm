@@ -3455,13 +3455,11 @@ class UrdfWriter:
         self.collision_elements.append((past_Link.name, new_Link.name))
 
     # TODO: remove hard-coded values
-    # temporary solution for multi chain robots
-    # not used!
     def write_problem_description_multi(self):
-        basic_probdesc_filename = self.resource_finder.get_filename('cartesio/ModularBot_cartesio_config.yaml',
+        basic_probdesc_filename = self.resource_finder.get_filename('cartesio/ModularBot_cartesio_IK_config.yaml',
                                                           'data_path')
         # basic_probdesc_filename = path_name + '/cartesio/ModularBot_cartesio_config.yaml'
-        probdesc_filename = path_name + '/ModularBot/cartesio/ModularBot_cartesio_config.yaml'
+        probdesc_filename = path_name + '/ModularBot/cartesio/ModularBot_cartesio_IK_config.yaml'
         # probdesc_filename = "/tmp/modular/cartesio/ModularBot_cartesio_multichain_config.yaml"
         # probdesc_filename = self.resource_finder.get_filename('cartesio/ModularBot_cartesio_multichain_config.yaml',
         #                                                       'modularbot_path')
@@ -3507,9 +3505,9 @@ class UrdfWriter:
             else:
                 base_link = joints_chain[0].parent.name
             probdesc[ee_name]['base_link'] = base_link
-            probdesc[ee_name]['type'] = "Interaction"
-            # probdesc[ee_name]['type'] = "Cartesian"
-            # probdesc[ee_name]['lambda'] = 0.1
+            # probdesc[ee_name]['type'] = "Interaction"
+            probdesc[ee_name]['type'] = "Cartesian"
+            probdesc[ee_name]['lambda'] = 0.1
 
             i += 1
 

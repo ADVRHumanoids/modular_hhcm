@@ -166,7 +166,11 @@ printf "${GREEN}[2/9] Deployed XBot2 configs${NC}\n"
 mkdir -p ./cartesio
 # - /ModularBot_cartesio_config.yaml
 cp /tmp/ModularBot/cartesio/ModularBot_cartesio_config.yaml ./cartesio/ModularBot_cartesio_config.yaml $VERBOSITY || end_exec
+# - /ModularBot_cartesio_IK_config.yaml
+cp /tmp/ModularBot/cartesio/ModularBot_cartesio_IK_config.yaml ./cartesio/ModularBot_cartesio_IK_config.yaml $VERBOSITY || end_exec
 sed -i -e "s+ModularBot+${package_name}+g" ./cartesio/ModularBot_cartesio_config.yaml
+sed -i -e "s+ModularBot+${package_name}+g" ./cartesio/ModularBot_cartesio_IK_config.yaml
+
 printf "${GREEN}[3/9] Deployed cartesio configs${NC}\n"
 
 # Deploy launch files
@@ -184,6 +188,8 @@ sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./launch/ModularBot_sliders.launch
 cp $SCRIPT_ROOT/launch/ModularBot_gazebo.launch ./launch/ModularBot_gazebo.launch $VERBOSITY || end_exec
 sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./launch/ModularBot_gazebo.launch
 
+# Deploy rviz config files
+mkdir -p ./rviz
 cp $SCRIPT_ROOT/rviz/cartesio.rviz ./rviz/cartesio.rviz $VERBOSITY || end_exec
 cp $SCRIPT_ROOT/rviz/sliders.rviz ./rviz/sliders.rviz $VERBOSITY || end_exec
 cp $SCRIPT_ROOT/rviz/xbot.rviz ./rviz/xbot.rviz $VERBOSITY || end_exec
