@@ -800,9 +800,14 @@ class XBot2Plugin(Plugin):
         impd4_joint_config_template = self.urdf_writer.resource_finder.get_filename(
             'configs/low_level/joint_config/ModularBot_impd4.yaml', 'data_path')
         impd4_joint_config_filename = path_name + '/ModularBot/config/joint_config/ModularBot_impd4.yaml'
+        # XBot2 config
+        xbot2_config_template = self.urdf_writer.resource_finder.get_filename(
+            'configs/ModularBot_xbot2.yaml', 'data_path')
+        xbot2_config_filename = path_name + '/ModularBot/config/ModularBot.yaml'
 
         idle_joint_config = OrderedDict([])
         impd4_joint_config = OrderedDict([])
+        xbot2_config = OrderedDict([])
 
         with open(idle_joint_config_template, 'r') as stream:
             try:
@@ -879,6 +884,16 @@ class XBot2Plugin(Plugin):
                 # del idle_joint_config[key].pos_offset 
                 # del idle_joint_config[key].max_current_A 
 
+        with open(xbot2_config_template, 'r') as stream:
+            try:
+                xbot2_config = ordered_load(stream, yaml.SafeLoader)
+                self.urdf_writer.print(list(idle_joint_config.items())[0])
+            except yaml.YAMLError as exc:
+                self.urdf_writer.print(exc)
+
+        if self.urdf_writer.floating_base:
+            xbot2_config['ModelInterface']['is_model_floating_base'] = 'true'
+
         # Create folder if doesen't exist
         if not os.path.exists(os.path.dirname(idle_joint_config_filename)):
             try:
@@ -892,6 +907,12 @@ class XBot2Plugin(Plugin):
             except OSError as exc:  # Guard against race condition
                 if exc.errno != errno.EEXIST:
                     raise
+        if not os.path.exists(os.path.dirname(xbot2_config_filename)):
+            try:
+                os.makedirs(os.path.dirname(xbot2_config_filename))
+            except OSError as exc:  # Guard against race condition
+                if exc.errno != errno.EEXIST:
+                    raise
 
         with open(idle_joint_config_filename, 'w') as outfile:
             # ordered_dump(idle_joint_config, stream=outfile, Dumper=yaml.SafeDumper,  default_flow_style=False, line_break='\n\n', indent=4)
@@ -902,6 +923,12 @@ class XBot2Plugin(Plugin):
             # ordered_dump(impd4_joint_config, stream=outfile, Dumper=yaml.SafeDumper,  default_flow_style=False, line_break='\n\n', indent=4)
             ordered_dump(impd4_joint_config, stream=outfile, default_flow_style=False, line_break='\n\n', indent=4,
                          canonical=False)
+
+        with open(xbot2_config_filename, 'w') as outfile:
+            # ordered_dump(impd4_joint_config, stream=outfile, Dumper=yaml.SafeDumper,  default_flow_style=False, line_break='\n\n', indent=4)
+            ordered_dump(xbot2_config, stream=outfile, default_flow_style=False, line_break='\n\n', indent=4,
+                         canonical=False)
+
         return hal_config
 
 
@@ -1913,9 +1940,9 @@ class UrdfWriter:
 
         setattr(mobilebase, 'is_structural', is_structural)
         if is_structural:
-        # add the master cube to the xml tree
-        ET.SubElement(self.root, "xacro:add_mobile_base", type='mobile_base', name=name, filename=filename)
-        ET.SubElement(self.root, "xacro:add_connectors", type='connectors', name=name, filename=filename)
+            # add the master cube to the xml tree
+            ET.SubElement(self.root, "xacro:add_mobile_base", type='mobile_base', name=name, filename=filename)
+            ET.SubElement(self.root, "xacro:add_connectors", type='connectors', name=name, filename=filename)
         else:
             # add the master cube to the xml tree
             #ET.SubElement(self.root, "xacro:add_master_cube", type='cube', name=name, filename=filename)
@@ -2938,10 +2965,10 @@ class UrdfWriter:
         self.print('past_Cube: ', past_Cube)
         self.print('past_Cube.selected_port: ', past_Cube.selected_port)
 
-            if past_Cube.is_structural:
-                parent_name = past_Cube.name
-            else:
-                parent_name = past_Cube.parent.name
+        if past_Cube.is_structural:
+            parent_name = past_Cube.name
+        else:
+            parent_name = past_Cube.parent.name
 
         interface_transform = self.get_cube_output_transform(past_Cube)
 

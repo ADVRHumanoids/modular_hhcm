@@ -158,7 +158,7 @@ sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./config/hal/ModularBot_dummy.yaml
 cp -TRf /tmp/ModularBot/config/joint_config ./config/joint_config $VERBOSITY || end_exec
 
 # - High level config
-cp $SCRIPT_ROOT/configs/ModularBot_xbot2.yaml ./config/ModularBot.yaml $VERBOSITY || end_exec
+cp /tmp/ModularBot/config/ModularBot.yaml ./config/ModularBot.yaml $VERBOSITY || end_exec
 sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./config/ModularBot.yaml
 printf "${GREEN}[2/9] Deployed XBot2 configs${NC}\n"
 
