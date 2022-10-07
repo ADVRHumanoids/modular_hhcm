@@ -1862,7 +1862,7 @@ class UrdfWriter:
 
 
     # noinspection PyPep8Naming
-    def add_mobile_platform(self, angle_offset, robot_id=0, active_ports=1, connection_port=2):
+    def add_mobile_platform(self, angle_offset, is_structural=True, robot_id=0, active_ports=1, connection_port=2):
         """Method adding slave/master cube to the tree.
 
         Parameters
@@ -1907,9 +1907,17 @@ class UrdfWriter:
 
         setattr(mobilebase, 'robot_id', robot_id)
 
+
+        setattr(mobilebase, 'is_structural', is_structural)
+        if is_structural:
         # add the master cube to the xml tree
         ET.SubElement(self.root, "xacro:add_mobile_base", type='mobile_base', name=name, filename=filename)
         ET.SubElement(self.root, "xacro:add_connectors", type='connectors', name=name, filename=filename)
+        else:
+            # add the master cube to the xml tree
+            #ET.SubElement(self.root, "xacro:add_master_cube", type='cube', name=name, filename=filename)
+            #ET.SubElement(self.root, "xacro:add_connectors", type='connectors', name=name, filename=filename)
+            pass
         
         if self.speedup:
             string = ""
