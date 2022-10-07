@@ -913,6 +913,7 @@ class UrdfWriter:
                 elementree=None, 
                 speedup=False, 
                 parent=None, 
+                floating_base=False,
                 verbose=False,
                 logger=None):
 
@@ -922,10 +923,12 @@ class UrdfWriter:
 
         self.parent = parent
 
+        self.floating_base = floating_base
+
         self.logger = logger
         
         self.verbose = verbose
-        if self.verbose:
+        if self.verbose and self.logger is not None:
             self.logger.setLevel(logging.DEBUG)  
         else:
             pass
@@ -1862,7 +1865,7 @@ class UrdfWriter:
 
 
     # noinspection PyPep8Naming
-    def add_mobile_platform(self, angle_offset, is_structural=True, robot_id=0, active_ports=1, connection_port=2):
+    def add_mobile_platform(self, angle_offset=0.0, is_structural=True, robot_id=0, active_ports=1, connection_port=2):
         """Method adding slave/master cube to the tree.
 
         Parameters
@@ -2254,7 +2257,7 @@ class UrdfWriter:
         steering_data = self.add_module(steering_filename, angle_offset, reverse, robot_id)
         wheel_data = self.add_module(wheel_filename, angle_offset, reverse, robot_id)
 
-        return wheel_data
+        return wheel_data, steering_data
     
 
     def add_module(self, filename, angle_offset, reverse=False, robot_id=0, active_ports=3):

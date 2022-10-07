@@ -142,8 +142,8 @@ def addWheel():
     reverse = True if request.form.get('reverse', 0) == 'true' else False
     print(reverse)
     data = urdf_writer.add_wheel_module(wheel_filename, steering_filename, offset, reverse)
-    data = jsonify(data)
-    return data 
+    wheel_data, steering_data = jsonify(data)
+    return wheel_data 
 
 
 @app.route('/writeURDF/', methods=['POST'])
