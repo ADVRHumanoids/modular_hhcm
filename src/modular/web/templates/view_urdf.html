@@ -1011,7 +1011,7 @@
                         console.log(size)
                         CURRENT_PARENT = data['lastModule_name']
                         //write the file
-                        writeRequest(data['result'])
+                        writeRequest(data['result'], true, function(){})
                     },
                     async: true
                 });
@@ -1061,7 +1061,7 @@
                         console.log(size)
                         CURRENT_PARENT = data['lastModule_name']
                         //write the file
-                        writeRequest(data['result'])
+                        writeRequest(data['result'], true, function(){})
                     },
                     async: true
                 });

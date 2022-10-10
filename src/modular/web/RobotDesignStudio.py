@@ -132,18 +132,18 @@ def changeURDF():
 @app.route('/addWheel/', methods=['POST'])
 def addWheel():
     wheel_filename = request.form.get('wheel_module_name', 0)
-    print(wheel_filename)
+    app.logger.debug(wheel_filename)
     steering_filename = request.form.get('steering_module_name', 0)
-    print(steering_filename)
+    app.logger.debug(steering_filename)
     parent = request.form.get('parent', 0)
-    print(parent)
+    app.logger.debug(parent)
     offset = float(request.form.get('angle_offset', 0))
-    print(offset)
+    app.logger.debug(offset)
     reverse = True if request.form.get('reverse', 0) == 'true' else False
-    print(reverse)
-    data = urdf_writer.add_wheel_module(wheel_filename, steering_filename, offset, reverse)
-    wheel_data, steering_data = jsonify(data)
-    return wheel_data 
+    app.logger.debug(reverse)
+    wheel_data, steering_data = urdf_writer.add_wheel_module(wheel_filename, steering_filename, offset, reverse)
+    data = jsonify(wheel_data)
+    return data 
 
 
 @app.route('/writeURDF/', methods=['POST'])
@@ -163,7 +163,7 @@ def writeURDF():
         app.logger.debug(srdf)
         joint_map = urdf_writer.write_joint_map()
         lowlevel_config = urdf_writer.write_lowlevel_config()
-        probdesc = urdf_writer.write_problem_description()
+        # probdesc = urdf_writer.write_problem_description()
         probdesc = urdf_writer.write_problem_description_multi()
         # cartesio_stack = urdf_writer.write_cartesio_stack()
     else:
@@ -172,7 +172,7 @@ def writeURDF():
         app.logger.debug(srdf)
         joint_map = urdf_writer_fromHW.write_joint_map(use_robot_id=True)
         lowlevel_config = urdf_writer_fromHW.write_lowlevel_config(use_robot_id=True)
-        probdesc = urdf_writer_fromHW.write_problem_description()
+        # probdesc = urdf_writer_fromHW.write_problem_description()
         probdesc = urdf_writer_fromHW.write_problem_description_multi()
         # cartesio_stack = urdf_writer_fromHW.write_cartesio_stack()
     # app.logger.debug("\nSRDF\n")
@@ -202,11 +202,11 @@ def addCube():
 @app.route('/addMobilePlatform/', methods=['POST'])
 def addMobilePlatform():
     filename = request.form.get('module_name', 0)
-    print(filename)
+    app.logger.debug(filename)
     parent = request.form.get('parent', 0)
-    print(parent)
+    app.logger.debug(parent)
     offset = float(request.form.get('angle_offset', 0))
-    print(offset)
+    app.logger.debug(offset)
     data = urdf_writer.add_mobile_platform(offset)
     data = jsonify(data)
     return data 

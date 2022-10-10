@@ -165,10 +165,10 @@ printf "${GREEN}[2/9] Deployed XBot2 configs${NC}\n"
 # Deploy cartesio config
 mkdir -p ./cartesio
 # - /ModularBot_cartesio_config.yaml
-cp /tmp/ModularBot/cartesio/ModularBot_cartesio_config.yaml ./cartesio/ModularBot_cartesio_config.yaml $VERBOSITY || end_exec
+# cp /tmp/ModularBot/cartesio/ModularBot_cartesio_config.yaml ./cartesio/ModularBot_cartesio_config.yaml $VERBOSITY || end_exec
 # - /ModularBot_cartesio_IK_config.yaml
 cp /tmp/ModularBot/cartesio/ModularBot_cartesio_IK_config.yaml ./cartesio/ModularBot_cartesio_IK_config.yaml $VERBOSITY || end_exec
-sed -i -e "s+ModularBot+${package_name}+g" ./cartesio/ModularBot_cartesio_config.yaml
+# sed -i -e "s+ModularBot+${package_name}+g" ./cartesio/ModularBot_cartesio_config.yaml
 sed -i -e "s+ModularBot+${package_name}+g" ./cartesio/ModularBot_cartesio_IK_config.yaml
 
 printf "${GREEN}[3/9] Deployed cartesio configs${NC}\n"

@@ -105,7 +105,7 @@
     <!-- Macro for adding a mobile base -->
     <xacro:macro name="add_mobile_base" params="name filename type">
 
-        <xacro:property name="module" value="${load_yaml(filename)}"/>
+        <xacro:property name="module" value="${xacro.load_yaml(filename)}"/>
 
         <joint name="floating" type="floating">
             <parent link="base_link"/>

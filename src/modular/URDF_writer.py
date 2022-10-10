@@ -1573,7 +1573,7 @@ class UrdfWriter:
 
         if self.parent_module != self.base_link :
             # add slave cube
-            print('add_slave_cube')
+            self.print('add_slave_cube')
             # Generate name according to the # of cubes already in the tree
             name = 'L_0' + self.cube_switcher.get(self.n_cubes)
             self.n_cubes += 1
@@ -1604,7 +1604,7 @@ class UrdfWriter:
             # # Generate name and dict for the 1st connector module
             # name_con1 = name + '_con1'
             # data1 = {'Homogeneous_tf': T_con_inv, 'type': "con", 'name': name_con1, 'i': 0, 'p': 0, 'size': 3}
-            # print('T_con_inv:', T_con_inv)
+            # self.print('T_con_inv:', T_con_inv)
 
             # Generate name and dict for the 1st connector module
             name_con1 = name + '_con1'
@@ -1733,15 +1733,15 @@ class UrdfWriter:
             #    |           |           |           |
             # com-exp   upper port  front port    nothing
             setattr(mastercube, 'selected_port', 3)
-            print('mastercube.selected_port :', mastercube.selected_port)
+            self.print('mastercube.selected_port :', mastercube.selected_port)
 
             # save the active ports as a binary string
             setattr(mastercube, 'active_ports', "{0:04b}".format(active_ports))
-            print('active_ports: ', mastercube.active_ports)
+            self.print('active_ports: ', mastercube.active_ports)
 
             # save the occupied ports as a binary string
             setattr(mastercube, 'occupied_ports', "{0:04b}".format(active_ports))
-            print('occupied_ports: ', mastercube.occupied_ports)
+            self.print('occupied_ports: ', mastercube.occupied_ports)
 
 
             # Update the parent_module attribute of the URDF_writer class
@@ -1915,12 +1915,13 @@ class UrdfWriter:
             In particular the updated and newly processed urdf string.
 
         """
+        self.floating_base = True  # TODO: better way to do this?
 
         if self.parent_module != self.base_link :
-            print('mobile base can be have only base_link as parent!')
+            self.print('mobile base can be have only base_link as parent!')
             self.parent_module = self.base_link
 
-        print('add_mobile_platform')
+        self.print('add_mobile_platform')
         # Generate name according to the # of cubes already in the tree
         name = 'mobile_base'
 
@@ -1961,15 +1962,15 @@ class UrdfWriter:
         #    |           |           |           |
         # com-exp   upper port  front port    nothing
         setattr(mobilebase, 'selected_port', 2)
-        print('mobilebase.selected_port :', mobilebase.selected_port)
+        self.print('mobilebase.selected_port :', mobilebase.selected_port)
 
         # save the active ports as a binary string
         setattr(mobilebase, 'active_ports', "{0:04b}".format(active_ports))
-        print('active_ports: ', mobilebase.active_ports)
+        self.print('active_ports: ', mobilebase.active_ports)
 
         # save the occupied ports as a binary string
         setattr(mobilebase, 'occupied_ports', "0001")
-        print('occupied_ports: ', mobilebase.occupied_ports)
+        self.print('occupied_ports: ', mobilebase.occupied_ports)
 
         self.parent_module = mobilebase
 
