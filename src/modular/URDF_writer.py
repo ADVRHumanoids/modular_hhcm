@@ -1512,6 +1512,7 @@ class UrdfWriter:
         
         # write the urdf tree to a string
         xmlstr = xml.dom.minidom.parseString(ET.tostring(self.urdf_tree.getroot())).toprettyxml(indent="   ")
+        self.print(xmlstr)
 
         # parse the string to convert from xacro
         doc = xacro.parse(xmlstr)
@@ -2454,6 +2455,31 @@ class UrdfWriter:
         self.info_print("Module added to URDF: " + new_module.name + " (" + new_module.type + ")")
 
         return data
+
+    def add_gazebo_element(self, new_module):
+        """
+        Add a gazebo element to the new module
+        """
+        # Add the gazebo element to the new module
+        if new_module.gazebo != '':
+            gazebo_el = ET.SubElement(self.root, 
+                                    'xacro:gazebo_element',
+                                    name=new_module.name)
+            self.add_gazebo_element_children(new_module.gazebo, gazebo_el)
+                    
+    def add_gazebo_element_children(self, new_module_gazebo, gazebo_element):
+        """
+        Add the gazebo element children to the new module
+        """
+        for key, value in vars(new_module_gazebo).items():
+            gazebo_child_el = ET.SubElement(gazebo_element, key)
+            if isinstance(value, ModuleNode.Module):
+                self.print(vars(value))
+                self.add_gazebo_element_children(value, gazebo_child_el)
+            else:
+                self.print(value)
+                gazebo_child_el.text = str(value)
+
 
     def remove_module(self, selected_module=0):
         """Remove the selected module (and all its childs and descendants) and return info on its parent
