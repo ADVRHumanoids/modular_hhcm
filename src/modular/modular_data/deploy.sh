@@ -224,10 +224,16 @@ printf "${GREEN}[7/9] Deployed SRDF${NC}\n"
 
 # Deploy URDF
 mkdir -p ./urdf
+# - /ModularBot.urdf
 cp /tmp/ModularBot/urdf/ModularBot.urdf ./urdf/ModularBot.urdf $VERBOSITY || end_exec
 sed -i -e "s+ModularBot+${package_name}+g" ./urdf/ModularBot.urdf
 sed -i -e "s+/tmp/ModularBot+package://${package_name}+g" ./urdf/ModularBot.urdf
 sed -i -e "s+package://modular/src/modular/web/static/models/modular/meshes+package://${package_name}/database/modular/meshes+g" ./urdf/ModularBot.urdf
+# - ModularBot.gazebo.urdf
+cp /tmp/ModularBot/urdf/ModularBot.gazebo.urdf ./urdf/ModularBot.gazebo.urdf $VERBOSITY || end_exec
+sed -i -e "s+ModularBot+${package_name}+g" ./urdf/ModularBot.gazebo.urdf
+sed -i -e "s+/tmp/ModularBot+package://${package_name}+g" ./urdf/ModularBot.gazebo.urdf
+sed -i -e "s+package://modular/src/modular/web/static/models/modular/meshes+package://${package_name}/database/modular/meshes+g" ./urdf/ModularBot.gazebo.urdf
 printf "${GREEN}[8/9] Deployed URDF${NC}\n"
 
 # Deploy gazebo model

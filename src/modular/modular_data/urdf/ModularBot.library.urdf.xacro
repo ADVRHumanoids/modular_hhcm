@@ -107,7 +107,7 @@
 
         <xacro:property name="module" value="${xacro.load_yaml(filename)}"/>
 
-        <joint name="floating" type="floating">
+        <joint name="fixed" type="fixed">
             <parent link="base_link"/>
             <child link="${name}"/>
             <axis rpy="0 0 0" xyz="0 0 1"/>

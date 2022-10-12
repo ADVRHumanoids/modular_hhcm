@@ -950,7 +950,11 @@ class UrdfWriter:
 
         self.parent = parent
 
-        self.floating_base = floating_base
+        # xacro mappings to perform args substitution (see template.urdf.xacro)
+        self.xacro_mappings = {'floating_joint': 'false',
+                                'gazebo_urdf': 'false'}
+
+        self.set_floating_base(floating_base)
 
         self.logger = logger
         
@@ -987,7 +991,7 @@ class UrdfWriter:
             #     string = f.read()
             # Instantiate an Element Tree
             #self.root = ET.fromstring(string)
-            
+
             self.urdf_tree = ET.ElementTree(self.root)
             
             # change path to xacro library
@@ -1059,6 +1063,22 @@ class UrdfWriter:
         setattr(self.base_link, 'robot_id', 0)
 
         self.parent_module = self.base_link
+
+        # update generator expression
+        self.update_generator()
+
+    def set_floating_base(self, floating_base):
+        """Set the floating base flag"""
+        self.floating_base = floating_base
+        self.update_xacro_mappings()
+
+    def update_xacro_mappings(self):
+        """Update the xacro mappings to perform args substitution (see template.urdf.xacro).
+        To be called when the floating base status changes."""
+        if self.floating_base:
+            self.xacro_mappings['floating_joint'] = 'true'
+        else:
+            self.xacro_mappings['floating_joint'] = 'false'
 
     def print(self, *args):
         if isinstance(self.logger, logging.Logger):
@@ -1487,7 +1507,9 @@ class UrdfWriter:
 
     def process_urdf(self):
         """Process the urdf to convert from xacro and perform macro substitutions. Returns urdf string"""
+        #TODO: this is used just by the front-end to show the urdf. It should be removed and 'merged' with write_urdf
         # global urdf_tree
+        
         # write the urdf tree to a string
         xmlstr = xml.dom.minidom.parseString(ET.tostring(self.urdf_tree.getroot())).toprettyxml(indent="   ")
 
@@ -1495,7 +1517,7 @@ class UrdfWriter:
         doc = xacro.parse(xmlstr)
 
         # perform macro replacement
-        xacro.process_doc(doc)
+        xacro.process_doc(doc, mappings=self.xacro_mappings)
 
         string = doc.toprettyxml(indent='  ')
 
@@ -1915,7 +1937,7 @@ class UrdfWriter:
             In particular the updated and newly processed urdf string.
 
         """
-        self.floating_base = True  # TODO: better way to do this?
+        self.set_floating_base(True)  # TODO: better way to do this?
 
         if self.parent_module != self.base_link :
             self.print('mobile base can be have only base_link as parent!')
@@ -3431,52 +3453,43 @@ class UrdfWriter:
     def write_urdf(self):
         """Returns the string with the URDF, after writing it to file"""
         global path_name  # , path_superbuild
+
         urdf_filename = path_name + '/ModularBot/urdf/ModularBot.urdf'
         # urdf_filename = path_superbuild + '/configs/ADVR_shared/ModularBot/urdf/ModularBot.urdf'
         # urdf_filename = self.resource_finder.get_filename('urdf/ModularBot.urdf', 'modularbot_path')
         # urdf_filename= '/tmp/modular/urdf/ModularBot.urdf'
         out = xacro.open_output(urdf_filename)
 
-        urdf_xacro_filename = path_name + '/ModularBot/urdf/ModularBot.urdf.xacro'
-        # urdf_xacro_filename = self.resource_finder.get_filename('urdf/ModularBot.urdf.xacro', 'modularbot_path')
-        # urdf_xacro_filename = '/tmp/modular/urdf/ModularBot.urdf.xacro'
+        gazebo_urdf_filename = path_name + '/ModularBot/urdf/ModularBot.gazebo.urdf'
+        gazebo_out = xacro.open_output(gazebo_urdf_filename)
 
-        # Create folder if doesen't exist
-        if not os.path.exists(os.path.dirname(urdf_xacro_filename)):
-            try:
-                os.makedirs(os.path.dirname(urdf_xacro_filename))
-            except OSError as exc: # Guard against race condition
-                if exc.errno != errno.EEXIST:
-                    raise
-
-        # writing .xacro file
-        # tree.write(urdf_xacro_filename, xml_declaration=True, encoding='utf-8')
+        # get xml string from ET
         xmlstr = xml.dom.minidom.parseString(ET.tostring(self.urdf_tree.getroot())).toprettyxml(indent="   ")
-        with open(urdf_xacro_filename, 'w+') as f:
-            f.write(xmlstr)
 
-        # parse the document into a xml.dom tree
-        doc = xacro.parse(None, urdf_xacro_filename)
-        # doc = xacro.parse(doc)
+        # write preprocessed xml to file
+        urdf_xacro_filename = path_name + '/ModularBot/urdf/ModularBot.urdf.xacro'
+        # # urdf_xacro_filename = self.resource_finder.get_filename('urdf/ModularBot.urdf.xacro', 'modularbot_path')
+        # # urdf_xacro_filename = '/tmp/modular/urdf/ModularBot.urdf.xacro'
+        preprocessed_out = xacro.open_output(urdf_xacro_filename)
+        preprocessed_out.write(xmlstr)
+        preprocessed_out.close()
 
-        # perform macro replacement
-        xacro.process_doc(doc)
+        mappings = copy.deepcopy(self.xacro_mappings)
+        
+        # write the URDF for Gazebo
+        mappings['gazebo_urdf'] = 'true'
+        doc = xacro.process_file(urdf_xacro_filename, mappings=mappings)
+        gazebo_out.write(doc.toprettyxml(indent='  ', encoding='utf-8').decode('utf-8'))
+        gazebo_out.close()
 
-        # self.print(doc.lastChild.toprettyxml(indent='  '))
+        # write the URDF
+        mappings['gazebo_urdf'] = 'false'
+        doc = xacro.process_file(urdf_xacro_filename, mappings=mappings)
+        string = doc.toprettyxml(indent='  ', encoding='utf-8')
+        out.write(string.decode('utf-8'))
+        out.close()
 
-        # add xacro auto-generated banner
-        banner = [xml.dom.minidom.Comment(c) for c in
-                  [" %s " % ('=' * 83),
-                   " |    This document was autogenerated by xacro from %-30s | " % urdf_xacro_filename,
-                   " |    EDITING THIS FILE BY HAND IS NOT RECOMMENDED  %-30s | " % "",
-                   " %s " % ('=' * 83)]]
-        first = doc.firstChild
-        for comment in banner:
-            doc.insertBefore(comment, first)
-
-        out.write(doc.toprettyxml(indent='  '))
-
-        return doc.toprettyxml(indent='  ')
+        return string
 
     # Save URDF/SRDF etc. in a directory with the specified robot_name
     def deploy_robot(self, robot_name):
