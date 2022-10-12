@@ -1,120 +1,117 @@
-type: "joint"
-
+type: joint
 kinematics:
-  convention: "urdf"
-  joint:
-    proximal:
-      x: -0.022
-      y: 0.0
-      z: 0.06075
-      roll: 0.0
-      pitch: 1.57
-      yaw: 0.0
-
-    distal:
-      x: 0.0
-      y: 0.0
-      z: -0.37015
-      roll: 0.0
-      pitch: -1.57
-      yaw: 0.0
-
+    convention: urdf
     joint:
-      zero_offset: 0
-      type: "revolute"
-      lower_limit: -3.0
-      upper_limit: 3.0
-      effort: 314
-      velocity: 6.6
-
-  link:
-    a_l: 0
-    alpha_l: 0
-    p_l: 0
-    n_l: 0
-    delta_l_in: 0
-    delta_l_out: 0
-
+        proximal:
+            x: -0.022
+            y: 0.0
+            z: 0.06075
+            roll: 0.0
+            pitch: 1.57
+            yaw: 0.0
+        distal:
+            x: 0.0
+            y: 0.0
+            z: -0.37015
+            roll: 0.0
+            pitch: -1.57
+            yaw: 0.0
+        joint:
+            zero_offset: 0
+            type: revolute
+            lower_limit: -3.0
+            upper_limit: 3.0
+            effort: 314
+            velocity: 6.6
+    link:
+        a_l: 0
+        alpha_l: 0
+        p_l: 0
+        n_l: 0
+        delta_l_in: 0
+        delta_l_out: 0
 dynamics:
-  body_1:
-    mass: 1.4161778
-    inertia_tensor:
-      I_xx: 3.6297902e-03
-      I_yy: 3.7972339e-03
-      I_zz: 3.2117794e-03
-      I_xy: 0.0
-      I_xz: 2.8780035e-04
-      I_yz: 0.0
-    CoM:
-      x: -8.7659895e-03
-      y: 0.0
-      z: 4.5978055e-02
-
-  body_2:
-    mass: 7.3958740
-    inertia_tensor:
-      I_xx: 4.3332117e-01
-      I_yy: 5.1158571e-01
-      I_zz: 6.9708495e-01
-      I_xy: -3.6680821e-02
-      I_xz: 2.2994193e-02
-      I_yz: -2.6228477e-03
-    CoM:
-      x: 9.3141833e-02
-      y: 0.0
-      z: -2.3097778e-01
-
-  body_2_fast:
-    mass: 0.0
-    inertia_tensor:
-      I_xx: 0.0
-      I_yy: 0.0
-      I_zz: 0.0
-      I_xy: 0.0
-      I_xz: 0.0
-      I_yz: 0.0
-    CoM:
-      x: 0.0 
-      y: 0.0 
-      z: 0.0
-
+    body_1:
+        mass: 1.4161778
+        inertia_tensor:
+            I_xx: 0.0036297902
+            I_yy: 0.0037972339
+            I_zz: 0.0032117794
+            I_xy: 0.0
+            I_xz: 0.00028780035
+            I_yz: 0.0
+        CoM:
+            x: -0.0087659895
+            y: 0.0
+            z: 0.045978055
+    body_2:
+        mass: 7.395874
+        inertia_tensor:
+            I_xx: 0.43332117
+            I_yy: 0.51158571
+            I_zz: 0.69708495
+            I_xy: -0.036680821
+            I_xz: 0.022994193
+            I_yz: -0.0026228477
+        CoM:
+            x: 0.093141833
+            y: 0.0
+            z: -0.23097778
+    body_2_fast:
+        mass: 0.0
+        inertia_tensor:
+            I_xx: 0.0
+            I_yy: 0.0
+            I_zz: 0.0
+            I_xy: 0.0
+            I_xz: 0.0
+            I_yz: 0.0
+        CoM:
+            x: 0.0
+            y: 0.0
+            z: 0.0
 visual:
-  mesh_body_1: "package://modular/src/modular/web/static/models/modular/meshes/concert/concert_steering_connection_module.stl"
-  mesh_collision_1: "package://modular/src/modular/web/static/models/modular/meshes/concert/concert_steering_connection_module.stl"
-  tf_mesh_1:
-    x: 0.0
-    y: 0.0
-    z: 0.0
-    roll: 0.0
-    pitch: 0.0
-    yaw: 0.0
-  mesh_body_2: "package://modular/src/modular/web/static/models/modular/meshes/concert/concert_steering_module_frame.stl"
-  mesh_collision_2: "package://modular/src/modular/web/static/models/modular/meshes/concert/concert_steering_module_frame.stl"
-  tf_mesh_2:
-    x: 0.0
-    y: 0.0
-    z: 0.0
-    roll: 0.0
-    pitch: 0.0
-    yaw: 0.0
-
-size: "big"
-
+    mesh_body_1: package://modular/src/modular/web/static/models/modular/meshes/concert/concert_steering_connection_module.stl
+    mesh_collision_1: package://modular/src/modular/web/static/models/modular/meshes/concert/concert_steering_connection_module.stl
+    tf_mesh_1:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        roll: 0.0
+        pitch: 0.0
+        yaw: 0.0
+    mesh_body_2: package://modular/src/modular/web/static/models/modular/meshes/concert/concert_steering_module_frame.stl
+    mesh_collision_2: package://modular/src/modular/web/static/models/modular/meshes/concert/concert_steering_module_frame.stl
+    tf_mesh_2:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        roll: 0.0
+        pitch: 0.0
+        yaw: 0.0
+size: big
 control:
-  K_theta: 500
-  D_theta: 70
-  B: 0.000031
-  K_s: 80000
-  D_s: 2
-  D_m: 0.0000578
-  nu: 160
-
-
+    K_theta: 500
+    D_theta: 70
+    B: 3.1e-05
+    K_s: 80000
+    D_s: 2
+    D_m: 5.78e-05
+    nu: 160
 CentAcESC:
-  control_mode: impedance_d4 #pos_3b #impedance_d4 #idle
-  sign: 1
-  pos_offset: 0
-  max_current_A: 30.0
-  pid:
-    position: [1000.0, 0.0, 30.0]
-    impedance: [500.0, 20.0, 1.0, 0.025, 0.99]
+    control_mode: impedance_d4
+    sign: 1
+    pos_offset: 0
+    max_current_A: 30.0
+    pid:
+        position:
+        - 1000.0
+        - 0.0
+        - 30.0
+        impedance:
+        - 500.0
+        - 20.0
+        - 1.0
+        - 0.025
+        - 0.99
+gazebo: ''

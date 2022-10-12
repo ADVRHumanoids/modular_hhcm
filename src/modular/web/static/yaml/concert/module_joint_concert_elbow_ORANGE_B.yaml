@@ -1,120 +1,117 @@
-type: "joint"
-
+type: joint
 kinematics:
-  convention: "urdf"
-  joint:
-    proximal:
-      x: 0.0
-      y: 0.137
-      z: 0.0875
-      roll: -1.57
-      pitch: 0
-      yaw: 0
-
-    distal:
-      x: 0.0
-      y: -0.0875
-      z: 0.0195
-      roll: 1.57
-      pitch: 0
-      yaw: 3.14
-
+    convention: urdf
     joint:
-      zero_offset: 0
-      type: "revolute"
-      lower_limit: -3.0
-      upper_limit: 3.0
-      effort: 314
-      velocity: 6.6
-
-  link:
-    a_l: 0
-    alpha_l: 0
-    p_l: 0
-    n_l: 0
-    delta_l_in: 0
-    delta_l_out: 0
-
+        proximal:
+            x: 0.0
+            y: 0.137
+            z: 0.0875
+            roll: -1.57
+            pitch: 0
+            yaw: 0
+        distal:
+            x: 0.0
+            y: -0.0875
+            z: 0.0195
+            roll: 1.57
+            pitch: 0
+            yaw: 3.14
+        joint:
+            zero_offset: 0
+            type: revolute
+            lower_limit: -3.0
+            upper_limit: 3.0
+            effort: 314
+            velocity: 6.6
+    link:
+        a_l: 0
+        alpha_l: 0
+        p_l: 0
+        n_l: 0
+        delta_l_in: 0
+        delta_l_out: 0
 dynamics:
-  body_1:
-    mass: 3.2766919
-    inertia_tensor:
-      I_xx: 1.2637273e-02
-      I_yy: 7.0022546e-03
-      I_zz: 1.1473441e-02
-      I_xy: -4.3584802e-06
-      I_xz: -1.7193922e-05
-      I_yz: -1.0749867e-03
-    CoM:
-      x: 0.0 
-      y: 4.6246697e-02
-      z: 8.0847144e-02
-
-  body_2:
-    mass: 0.74408816
-    inertia_tensor:
-      I_xx: 2.5039211e-03
-      I_yy: 2.2253533e-03
-      I_zz: 2.8139261e-03
-      I_xy: 7.9633034e-05
-      I_xz: -4.4187383e-05
-      I_yz: 2.2947517e-04
-    CoM:
-      x: 0.0 
-      y: 3.5133259e-02
-      z: 1.5513655e-02
-
-  body_2_fast:
-    mass: 0.0
-    inertia_tensor:
-      I_xx: 0.0
-      I_yy: 0.0
-      I_zz: 0.0
-      I_xy: 0.0
-      I_xz: 0.0
-      I_yz: 0.0
-    CoM:
-      x: 0.0 
-      y: 0.0 
-      z: 0.0
-
+    body_1:
+        mass: 3.2766919
+        inertia_tensor:
+            I_xx: 0.012637273
+            I_yy: 0.0070022546
+            I_zz: 0.011473441
+            I_xy: -4.3584802e-06
+            I_xz: -1.7193922e-05
+            I_yz: -0.0010749867
+        CoM:
+            x: 0.0
+            y: 0.046246697
+            z: 0.080847144
+    body_2:
+        mass: 0.74408816
+        inertia_tensor:
+            I_xx: 0.0025039211
+            I_yy: 0.0022253533
+            I_zz: 0.0028139261
+            I_xy: 7.9633034e-05
+            I_xz: -4.4187383e-05
+            I_yz: 0.00022947517
+        CoM:
+            x: 0.0
+            y: 0.035133259
+            z: 0.015513655
+    body_2_fast:
+        mass: 0.0
+        inertia_tensor:
+            I_xx: 0.0
+            I_yy: 0.0
+            I_zz: 0.0
+            I_xy: 0.0
+            I_xz: 0.0
+            I_yz: 0.0
+        CoM:
+            x: 0.0
+            y: 0.0
+            z: 0.0
 visual:
-  mesh_body_1: "package://modular/src/modular/web/static/models/modular/meshes/concert/concert_elbow-base.stl"
-  mesh_collision_1: "package://modular/src/modular/web/static/models/modular/meshes/concert/concert_elbow-base.stl"
-  tf_mesh_1:
-    x: 0.0
-    y: 0.0
-    z: 0.0
-    roll: 0.0
-    pitch: 0.0
-    yaw: 0.0
-  mesh_body_2: "package://modular/src/modular/web/static/models/modular/meshes/concert/concert_elbow-link.stl"
-  mesh_collision_2: "package://modular/src/modular/web/static/models/modular/meshes/concert/concert_elbow-link.stl"
-  tf_mesh_2:
-    x: 0.0
-    y: 0.0
-    z: 0.0
-    roll: 0.0
-    pitch: 0.0
-    yaw: 0.0
-
-size: "big"
-
+    mesh_body_1: package://modular/src/modular/web/static/models/modular/meshes/concert/concert_elbow-base.stl
+    mesh_collision_1: package://modular/src/modular/web/static/models/modular/meshes/concert/concert_elbow-base.stl
+    tf_mesh_1:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        roll: 0.0
+        pitch: 0.0
+        yaw: 0.0
+    mesh_body_2: package://modular/src/modular/web/static/models/modular/meshes/concert/concert_elbow-link.stl
+    mesh_collision_2: package://modular/src/modular/web/static/models/modular/meshes/concert/concert_elbow-link.stl
+    tf_mesh_2:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        roll: 0.0
+        pitch: 0.0
+        yaw: 0.0
+size: big
 control:
-  K_theta: 500
-  D_theta: 70
-  B: 0.000031
-  K_s: 80000
-  D_s: 2
-  D_m: 0.0000578
-  nu: 160
-
-
+    K_theta: 500
+    D_theta: 70
+    B: 3.1e-05
+    K_s: 80000
+    D_s: 2
+    D_m: 5.78e-05
+    nu: 160
 CentAcESC:
-  control_mode: impedance_d4 #pos_3b #impedance_d4 #idle
-  sign: 1
-  pos_offset: 0
-  max_current_A: 30.0
-  pid:
-    position: [1000.0, 0.0, 30.0]
-    impedance: [500.0, 20.0, 1.0, 0.025, 0.99]
+    control_mode: impedance_d4
+    sign: 1
+    pos_offset: 0
+    max_current_A: 30.0
+    pid:
+        position:
+        - 1000.0
+        - 0.0
+        - 30.0
+        impedance:
+        - 500.0
+        - 20.0
+        - 1.0
+        - 0.025
+        - 0.99
+gazebo: ''

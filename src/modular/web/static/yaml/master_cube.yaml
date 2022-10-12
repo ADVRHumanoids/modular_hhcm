@@ -2,7 +2,7 @@ geometry:
     cube_size: 0.34
     connector_length: 0.1
 kinematics:
-    convention: "urdf"
+    convention: urdf
     connector_1:
         roll: 3.14
         pitch: 0.0
@@ -40,21 +40,22 @@ dynamics:
 size: big
 type: cube
 visual:
-  mesh_body_1: 'package://modular/src/modular/web/static/models/modular/meshes/space_cube.stl'
-  mesh_collision_1: 'package://modular/src/modular/web/static/models/modular/meshes/space_cube.stl'
-  tf_mesh_1:
-    x: 0.0
-    y: 0.0
-    z: 0.17
-    roll: 0.0
-    pitch: 0.0
-    yaw: 0.0
-  mesh_body_2: ''
-  mesh_collision_2: ''
-  tf_mesh_2:
-    x: 0.0
-    y: 0.0
-    z: 0.0
-    roll: 0.0
-    pitch: 0.0
-    yaw: 0.0
+    mesh_body_1: package://modular/src/modular/web/static/models/modular/meshes/space_cube.stl
+    mesh_collision_1: package://modular/src/modular/web/static/models/modular/meshes/space_cube.stl
+    tf_mesh_1:
+        x: 0.0
+        y: 0.0
+        z: 0.17
+        roll: 0.0
+        pitch: 0.0
+        yaw: 0.0
+    mesh_body_2: ''
+    mesh_collision_2: ''
+    tf_mesh_2:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        roll: 0.0
+        pitch: 0.0
+        yaw: 0.0
+gazebo: ''

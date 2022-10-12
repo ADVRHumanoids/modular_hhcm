@@ -491,16 +491,17 @@
             </link>
         
         </xacro:unless>
-
-        <gazebo reference="${name}">
-            <mu1>0.2</mu1>
-            <mu2>0.2</mu2>
-            <kp>1000000.0</kp>
-            <kd>1.0</kd>
-            <maxVel>0.0</maxVel>
-            <minDepth>0.0001</minDepth>
-            <material>Gazebo/White</material>
-        </gazebo>
+        <xacro:if value="${ GAZEBO_URDF }">
+            <gazebo reference="${name}">
+                <mu1>0.2</mu1>
+                <mu2>0.2</mu2>
+                <kp>1000000.0</kp>
+                <kd>1.0</kd>
+                <maxVel>0.0</maxVel>
+                <minDepth>0.0001</minDepth>
+                <material>Gazebo/White</material>
+            </gazebo>
+        </xacro:if>
 
     </xacro:macro>
 
@@ -534,16 +535,17 @@
                 izz="${mass / 2.0 * (radius*radius)}"/>
             </inertial>
         </link>
-
-        <gazebo reference="${name}">
-            <mu1>0.2</mu1>
-            <mu2>0.2</mu2>
-            <kp>1000000.0</kp>
-            <kd>1.0</kd>
-            <maxVel>0.0</maxVel>
-            <minDepth>0.0001</minDepth>
-            <material>Gazebo/White</material>
-        </gazebo>
+        <xacro:if value="${ GAZEBO_URDF }">
+            <gazebo reference="${name}">
+                <mu1>0.2</mu1>
+                <mu2>0.2</mu2>
+                <kp>1000000.0</kp>
+                <kd>1.0</kd>
+                <maxVel>0.0</maxVel>
+                <minDepth>0.0001</minDepth>
+                <material>Gazebo/White</material>
+            </gazebo>
+        </xacro:if>
 
     </xacro:macro>
 
@@ -659,15 +661,17 @@
         
         </xacro:unless>
 
-        <gazebo reference="${name}">
-            <mu1>0.2</mu1>
-            <mu2>0.2</mu2>
-            <kp>1000000.0</kp>
-            <kd>1.0</kd>
-            <maxVel>0.0</maxVel>
-            <minDepth>0.0001</minDepth>
-            <material>Gazebo/Grey</material>
-        </gazebo>
+        <xacro:if value="${ GAZEBO_URDF }">
+            <gazebo reference="${name}">
+                <mu1>0.2</mu1>
+                <mu2>0.2</mu2>
+                <kp>1000000.0</kp>
+                <kd>1.0</kd>
+                <maxVel>0.0</maxVel>
+                <minDepth>0.0001</minDepth>
+                <material>Gazebo/Grey</material>
+            </gazebo>
+        </xacro:if>
 
     </xacro:macro>
 
@@ -735,15 +739,17 @@
                 </geometry>
             </collision>
         </link>
-        <gazebo reference="${name}">
-            <mu1>0.2</mu1>
-            <mu2>0.2</mu2>
-            <kp>1000000.0</kp>
-            <kd>1.0</kd>
-            <maxVel>0.0</maxVel>
-            <minDepth>0.0001</minDepth>
-            <material>Gazebo/White</material>
-        </gazebo>
+        <xacro:if value="${ GAZEBO_URDF }">
+            <gazebo reference="${name}">
+                <mu1>0.2</mu1>
+                <mu2>0.2</mu2>
+                <kp>1000000.0</kp>
+                <kd>1.0</kd>
+                <maxVel>0.0</maxVel>
+                <minDepth>0.0001</minDepth>
+                <material>Gazebo/White</material>
+            </gazebo>
+        </xacro:if>
 
     </xacro:macro>
 
@@ -856,6 +862,53 @@
                     izz="${module['dynamics']['body_2']['inertia_tensor']['I_zz']}"/>
             </inertial>
         </link>
+        <xacro:if value="${ GAZEBO_URDF }">
+            <xacro:unless value="${ module['gazebo'] == '' }">
+                <gazebo reference="${name}">
+                    <material>${ module['gazebo']['material']}</material>
+                    <collision>
+                        <surface>
+                            <friction>
+                                <!-- <torsional>
+                                    <coefficient> 1.0 </coefficient>
+                                    <use_patch_radius>true</use_patch_radius>
+                                    <patch_radius>0.2</patch_radius>
+                                </torsional> -->
+                                <ode>
+                                    <mu>${ module['gazebo']['collision']['surface']['friction']['ode']['mu']}</mu>
+                                    <mu2>${ module['gazebo']['collision']['surface']['friction']['ode']['mu2']}</mu2>
+                                </ode>
+                                <bullet>
+                                    <friction>${ module['gazebo']['collision']['surface']['friction']['bullet']['friction']}</friction>
+                                    <friction2>${ module['gazebo']['collision']['surface']['friction']['bullet']['friction2']}</friction2>
+                                </bullet>
+                            </friction>
+                            <contact>
+                                <ode>
+                                    <kp>${ module['gazebo']['collision']['surface']['contact']['ode']['kp']}</kp>
+                                    <kd>${ module['gazebo']['collision']['surface']['contact']['ode']['kd']}</kd>
+                                    <max_vel>${ module['gazebo']['collision']['surface']['contact']['ode']['max_vel']}</max_vel>
+                                </ode>
+                                <bullet>
+                                    <soft_cfm>${ module['gazebo']['collision']['surface']['contact']['bullet']['soft_cfm']}</soft_cfm>
+                                    <soft_erp>${ module['gazebo']['collision']['surface']['contact']['bullet']['soft_erp']}</soft_erp>
+                                    <kp>${ module['gazebo']['collision']['surface']['contact']['bullet']['kp']}</kp>
+                                    <kd>${ module['gazebo']['collision']['surface']['contact']['bullet']['kd']}</kd>
+                                </bullet>
+                            </contact>
+                        </surface>
+                    </collision>
+                </gazebo>
+            </xacro:unless>
+        </xacro:if>
+    </xacro:macro>
+
+    <xacro:macro name="gazebo_element" params="name">
+        <xacro:property name="GAZEBO_URDF" value="$(arg gazebo_urdf)" />
+        <xacro:if value="${GAZEBO_URDF}">
+            <gazebo reference="${name}">
+            </gazebo>
+        </xacro:if>
     </xacro:macro>
 
     <xacro:macro name="add_tool_exchanger" params="type name filename">
@@ -1175,15 +1228,17 @@
 
             </link>
         </xacro:unless>
-        <gazebo reference="${name}">
-            <mu1>0.2</mu1>
-            <mu2>0.2</mu2>
-            <kp>1000000.0</kp>
-            <kd>1.0</kd>
-            <maxVel>0.0</maxVel>
-            <minDepth>0.0001</minDepth>
-            <material>Gazebo/Blue</material>
-        </gazebo>
+        <xacro:if value="${ GAZEBO_URDF }">
+            <gazebo reference="${name}">
+                <mu1>0.2</mu1>
+                <mu2>0.2</mu2>
+                <kp>1000000.0</kp>
+                <kd>1.0</kd>
+                <maxVel>0.0</maxVel>
+                <minDepth>0.0001</minDepth>
+                <material>Gazebo/Blue</material>
+            </gazebo>
+        </xacro:if>
 
     </xacro:macro>
 

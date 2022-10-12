@@ -1,120 +1,117 @@
-type: "joint"
-
+type: joint
 kinematics:
-  convention: "urdf"
-  joint:
-    proximal:
-      x: 0.0
-      y: 0.0
-      z: 0.246
-      roll: 0.0
-      pitch: 0.0
-      yaw: 0.0
-
-    distal:
-      x: 0.0
-      y: 0.0
-      z: 0.0
-      roll: 0.0
-      pitch: 0.0
-      yaw: 0.0
-
+    convention: urdf
     joint:
-      zero_offset: 0
-      type: "revolute"
-      lower_limit: -3.0
-      upper_limit: 3.0
-      effort: 314
-      velocity: 6.6
-
-  link:
-    a_l: 0
-    alpha_l: 0
-    p_l: 0
-    n_l: 0
-    delta_l_in: 0
-    delta_l_out: 0
-
+        proximal:
+            x: 0.0
+            y: 0.0
+            z: 0.246
+            roll: 0.0
+            pitch: 0.0
+            yaw: 0.0
+        distal:
+            x: 0.0
+            y: 0.0
+            z: 0.0
+            roll: 0.0
+            pitch: 0.0
+            yaw: 0.0
+        joint:
+            zero_offset: 0
+            type: revolute
+            lower_limit: -3.0
+            upper_limit: 3.0
+            effort: 314
+            velocity: 6.6
+    link:
+        a_l: 0
+        alpha_l: 0
+        p_l: 0
+        n_l: 0
+        delta_l_in: 0
+        delta_l_out: 0
 dynamics:
-  body_1:
-    mass: 3.4182295
-    inertia_tensor:
-      I_xx: 1.5416520e-02
-      I_yy: 1.5416968e-02
-      I_zz: 6.2736228e-03
-      I_xy: 3.1074303e-06
-      I_xz: 8.4972153e-05
-      I_yz: -3.5462082e-05
-    CoM:
-      x: 0.0
-      y: 0.0
-      z: 0.126
-
-  body_2:
-    mass: 0.38803798
-    inertia_tensor:
-      I_xx: 5.9852578e-04
-      I_yy: 5.9846057e-04
-      I_zz: 9.8955641e-04
-      I_xy: 0.0
-      I_xz: 0.0
-      I_yz: 0.0
-    CoM:
-      x: 0.0 
-      y: 0.0
-      z: -0.02
-
-  body_2_fast:
-    mass: 0.0
-    inertia_tensor:
-      I_xx: 0.0
-      I_yy: 0.0
-      I_zz: 0.0
-      I_xy: 0.0
-      I_xz: 0.0
-      I_yz: 0.0
-    CoM:
-      x: 0.0 
-      y: 0.0 
-      z: 0.0
-
+    body_1:
+        mass: 3.4182295
+        inertia_tensor:
+            I_xx: 0.01541652
+            I_yy: 0.015416968
+            I_zz: 0.0062736228
+            I_xy: 3.1074303e-06
+            I_xz: 8.4972153e-05
+            I_yz: -3.5462082e-05
+        CoM:
+            x: 0.0
+            y: 0.0
+            z: 0.126
+    body_2:
+        mass: 0.38803798
+        inertia_tensor:
+            I_xx: 0.00059852578
+            I_yy: 0.00059846057
+            I_zz: 0.00098955641
+            I_xy: 0.0
+            I_xz: 0.0
+            I_yz: 0.0
+        CoM:
+            x: 0.0
+            y: 0.0
+            z: -0.02
+    body_2_fast:
+        mass: 0.0
+        inertia_tensor:
+            I_xx: 0.0
+            I_yy: 0.0
+            I_zz: 0.0
+            I_xy: 0.0
+            I_xz: 0.0
+            I_yz: 0.0
+        CoM:
+            x: 0.0
+            y: 0.0
+            z: 0.0
 visual:
-  mesh_body_1: "package://modular/src/modular/web/static/models/modular/meshes/concert/concert_yaw-base.stl"
-  mesh_collision_1: "package://modular/src/modular/web/static/models/modular/meshes/concert/concert_yaw-base.stl"
-  tf_mesh_1:
-    x: 0.0
-    y: 0.0
-    z: 0.0
-    roll: 0.0
-    pitch: 0.0
-    yaw: 0.0
-  mesh_body_2: "package://modular/src/modular/web/static/models/modular/meshes/concert/concert_yaw-link.stl"
-  mesh_collision_2: "package://modular/src/modular/web/static/models/modular/meshes/concert/concert_yaw-link.stl"
-  tf_mesh_2:
-    x: 0.0
-    y: 0.0
-    z: 0.0
-    roll: 0.0
-    pitch: 0.0
-    yaw: 0.0
-
-size: "big"
-
+    mesh_body_1: package://modular/src/modular/web/static/models/modular/meshes/concert/concert_yaw-base.stl
+    mesh_collision_1: package://modular/src/modular/web/static/models/modular/meshes/concert/concert_yaw-base.stl
+    tf_mesh_1:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        roll: 0.0
+        pitch: 0.0
+        yaw: 0.0
+    mesh_body_2: package://modular/src/modular/web/static/models/modular/meshes/concert/concert_yaw-link.stl
+    mesh_collision_2: package://modular/src/modular/web/static/models/modular/meshes/concert/concert_yaw-link.stl
+    tf_mesh_2:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        roll: 0.0
+        pitch: 0.0
+        yaw: 0.0
+size: big
 control:
-  K_theta: 500
-  D_theta: 70
-  B: 0.000031
-  K_s: 80000
-  D_s: 2
-  D_m: 0.0000578
-  nu: 160
-
-
+    K_theta: 500
+    D_theta: 70
+    B: 3.1e-05
+    K_s: 80000
+    D_s: 2
+    D_m: 5.78e-05
+    nu: 160
 CentAcESC:
-  control_mode: impedance_d4 #pos_3b #impedance_d4 #idle
-  sign: 1
-  pos_offset: 0
-  max_current_A: 30.0
-  pid:
-    position: [1000.0, 0.0, 30.0]
-    impedance: [500.0, 20.0, 1.0, 0.025, 0.99]
+    control_mode: impedance_d4
+    sign: 1
+    pos_offset: 0
+    max_current_A: 30.0
+    pid:
+        position:
+        - 1000.0
+        - 0.0
+        - 30.0
+        impedance:
+        - 500.0
+        - 20.0
+        - 1.0
+        - 0.025
+        - 0.99
+gazebo: ''

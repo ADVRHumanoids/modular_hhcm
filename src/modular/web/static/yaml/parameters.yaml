@@ -1,48 +1,37 @@
-module_name: hexadecimal # name/identifying code of the module
-module_aux: hexadecimal # auxiliary value
-
-# Body 1
-m_1: float # mass of body 1
-
-I_xx_1: float # inertia matrix term for body 1
-I_yy_1: float # inertia matrix term for body 1
-I_zz_1: float # inertia matrix term for body 1
-I_xy_1: float # inertia matrix term for body 1
-I_yz_1: float # inertia matrix term for body 1
-I_xz_1: float # inertia matrix term for body 1
-
-rx_c_1: float # x coordinate of COM position vector for body 1
-ry_c_1: float # y coordinate of COM position vector for body 1
-rz_c_1: float # z coordinate of COM position vector for body 1
-
-rx_1: float # x coordinate of position vector for body 1 geometric transform
-ry_1: float # y coordinate of position vector for body 1 geometric transform
-rz_1: float # z coordinate of position vector for body 1 geometric transform
-
-q_w_1: float # quaternion w term for body 1 geometric transform
-q_x_1: float # quaternion x term for body 1 geometric transform
-q_y_1: float # quaternion y term for body 1 geometric transform
-q_z_1: float # quaternion z term for body 1 geometric transform
-
-# Body 2
-m_2: float # mass of body 2
-
-I_xx_2: float # inertia matrix term for body 2
-I_yy_2: float # inertia matrix term for body 2
-I_zz_2: float # inertia matrix term for body 2
-I_xy_2: float # inertia matrix term for body 2
-I_yz_2: float # inertia matrix term for body 2
-I_xz_2: float # inertia matrix term for body 2
-
-rx_c_2: float # x coordinate of COM position vector for body 2
-ry_c_2: float # y coordinate of COM position vector for body 2
-rz_c_2: float # z coordinate of COM position vector for body 2
-
-rx_2: float # x coordinate of position vector for body 2 geometric transform
-ry_2: float # y coordinate of position vector for body 2 geometric transform
-rz_2: float # z coordinate of position vector for body 2 geometric transform
-
-q_w_2: float # quaternion w term for body 2 geometric transform
-q_x_2: float # quaternion x term for body 2 geometric transform
-q_y_2: float # quaternion y term for body 2 geometric transform
-q_z_2: float # quaternion z term for body 2 geometric transform
+module_name: hexadecimal
+module_aux: hexadecimal
+m_1: float
+I_xx_1: float
+I_yy_1: float
+I_zz_1: float
+I_xy_1: float
+I_yz_1: float
+I_xz_1: float
+rx_c_1: float
+ry_c_1: float
+rz_c_1: float
+rx_1: float
+ry_1: float
+rz_1: float
+q_w_1: float
+q_x_1: float
+q_y_1: float
+q_z_1: float
+m_2: float
+I_xx_2: float
+I_yy_2: float
+I_zz_2: float
+I_xy_2: float
+I_yz_2: float
+I_xz_2: float
+rx_c_2: float
+ry_c_2: float
+rz_c_2: float
+rx_2: float
+ry_2: float
+rz_2: float
+q_w_2: float
+q_x_2: float
+q_y_2: float
+q_z_2: float
+gazebo: ''

@@ -1,127 +1,118 @@
 kinematics:
-  convention: "DH_ext"
-  joint:
-    proximal:
-      a_pl: 0
-      alpha_pl: -1.57
-      p_pl: 0.080
-      n_pl: 0.11391
-      delta_pl: 0
-
-    distal:
-      a_dl: 0
-      alpha_dl: 1.57
-      p_dl: 0.03609
-      n_dl: 0.080
-      delta_dl: 0
-
+    convention: DH_ext
     joint:
-      delta_j: 0
-      type: "revolute"
-      lower_limit: -2.0
-      upper_limit: 2.0
-      effort: 147
-      velocity: 3.9
-
-  link:
-    a_l: 0
-    alpha_l: 0
-    p_l: 0
-    n_l: 0
-    delta_l_in: 0
-    delta_l_out: 0
-
+        proximal:
+            a_pl: 0
+            alpha_pl: -1.57
+            p_pl: 0.08
+            n_pl: 0.11391
+            delta_pl: 0
+        distal:
+            a_dl: 0
+            alpha_dl: 1.57
+            p_dl: 0.03609
+            n_dl: 0.08
+            delta_dl: 0
+        joint:
+            delta_j: 0
+            type: revolute
+            lower_limit: -2.0
+            upper_limit: 2.0
+            effort: 147
+            velocity: 3.9
+    link:
+        a_l: 0
+        alpha_l: 0
+        p_l: 0
+        n_l: 0
+        delta_l_in: 0
+        delta_l_out: 0
 dynamics:
-  body_1:
-    mass: 1.3901014e+00
-    inertia_tensor:
-      I_xx: 6.1572e-03
-      I_yy: 4.0774e-03
-      I_zz: 4.7832e-03
-      I_xy: -0.0791e-03
-      I_xz: -0.1245e-03
-      I_yz: -1.7350e-03
-    CoM:
-      x: 0.0
-      y: 4.9639035e-02
-      z: 7.2349393e-02
-
-  body_2:
-    mass: 1.2544531e+00
-    inertia_tensor:
-      I_xx: 3.5349e-03
-      I_yy: 2.8930e-03
-      I_zz: 3.5861e-03
-      I_xy: 0.0797e-03
-      I_xz: 0.0060e-03
-      I_yz: 0.5583e-03
-    CoM:
-      x: 9.755e-04
-      y: -1.545e-02
-      z: 5.945e-03
-
-  body_2_fast:
-    mass: 1.9208493e-01
-    inertia_tensor:
-      I_xx: 0.1501e-03
-      I_yy: 0.1501e-03
-      I_zz: 0.0456e-03
-      I_xy: 0.0
-      I_xz: 0.0
-      I_yz: 0.0
-    CoM:
-      x: 0.0 
-      y: 0.0
-      z: -0.04225
-
+    body_1:
+        mass: 1.3901014
+        inertia_tensor:
+            I_xx: 0.0061572
+            I_yy: 0.0040774
+            I_zz: 0.0047832
+            I_xy: -7.91e-05
+            I_xz: -0.0001245
+            I_yz: -0.001735
+        CoM:
+            x: 0.0
+            y: 0.049639035
+            z: 0.072349393
+    body_2:
+        mass: 1.2544531
+        inertia_tensor:
+            I_xx: 0.0035349
+            I_yy: 0.002893
+            I_zz: 0.0035861
+            I_xy: 7.97e-05
+            I_xz: 6.0e-06
+            I_yz: 0.0005583
+        CoM:
+            x: 0.0009755
+            y: -0.01545
+            z: 0.005945
+    body_2_fast:
+        mass: 0.19208493
+        inertia_tensor:
+            I_xx: 0.0001501
+            I_yy: 0.0001501
+            I_zz: 4.56e-05
+            I_xy: 0.0
+            I_xz: 0.0
+            I_yz: 0.0
+        CoM:
+            x: 0.0
+            y: 0.0
+            z: -0.04225
 visual:
-  mesh_body_1: "package://modular/src/modular/web/static/models/modular/meshes/mesh_pitch-base.stl"
-  mesh_collision_1: "package://modular/src/modular/web/static/models/modular/meshes/mesh_pitch-base.stl"
-  tf_mesh_1:
-    x: 0.0
-    y: 0.11391
-    z: 0.080
-    roll: 0.0
-    pitch: 0.0
-    yaw: 3.14
-  mesh_body_2: "package://modular/src/modular/web/static/models/modular/meshes/mesh_pitch-link.stl"
-  mesh_collision_2: "package://modular/src/modular/web/static/models/modular/meshes/mesh_pitch-link.stl"
-  tf_mesh_2:
-    x: 0.0
-    y: -0.080
-    z: 0.03609
-    roll: -1.57
-    pitch: 0.0
-    yaw: 3.14
-
-size: "big"
-size_in:
-size_out:
-
-type: "joint"
-
+    mesh_body_1: package://modular/src/modular/web/static/models/modular/meshes/mesh_pitch-base.stl
+    mesh_collision_1: package://modular/src/modular/web/static/models/modular/meshes/mesh_pitch-base.stl
+    tf_mesh_1:
+        x: 0.0
+        y: 0.11391
+        z: 0.08
+        roll: 0.0
+        pitch: 0.0
+        yaw: 3.14
+    mesh_body_2: package://modular/src/modular/web/static/models/modular/meshes/mesh_pitch-link.stl
+    mesh_collision_2: package://modular/src/modular/web/static/models/modular/meshes/mesh_pitch-link.stl
+    tf_mesh_2:
+        x: 0.0
+        y: -0.08
+        z: 0.03609
+        roll: -1.57
+        pitch: 0.0
+        yaw: 3.14
+size: big
+size_in: null
+size_out: null
+type: joint
 control:
-  K_theta: 500
-  D_theta: 70
-  B: 0.000031
-  K_s: 80000
-  D_s: 2
-  D_m: 0.0000578
-  nu: 100
-
-urdf: "urdf/joint_module.urdf"
-
+    K_theta: 500
+    D_theta: 70
+    B: 3.1e-05
+    K_s: 80000
+    D_s: 2
+    D_m: 5.78e-05
+    nu: 100
+urdf: urdf/joint_module.urdf
 CentAcESC:
-  control_mode: impedance_d4 #pos_3b #impedance_d4 #idle
-  sign: 1
-  pos_offset: 0
-  max_current_A: 30.0
-  #ram_cmd: [38]
-  pid:
-    position: [1000.0, 0.0, 30.0]
-    # pos_Kp pos_Kd tor_Kp tor_Kd tor_Ki
-    #  .... tor_K divided by 10000 to respect the int range [0..65536]
-    impedance: [500.0, 20.0, 1.0, 0.01, 0.99]
-
-  # upd_params :
-  #   torqueFixedOffset : 0. # subtracted to torque measured
+    control_mode: impedance_d4
+    sign: 1
+    pos_offset: 0
+    max_current_A: 30.0
+    pid:
+        position:
+        - 1000.0
+        - 0.0
+        - 30.0
+        impedance:
+        - 500.0
+        - 20.0
+        - 1.0
+        - 0.01
+        - 0.99
+gazebo: ''
