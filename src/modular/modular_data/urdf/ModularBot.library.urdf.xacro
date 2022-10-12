@@ -809,9 +809,28 @@
                     <origin
                         rpy="${module['visual']['tf_mesh_2']['roll']} ${module['visual']['tf_mesh_2']['pitch']} ${module['visual']['tf_mesh_2']['yaw']}"
                         xyz="${module['visual']['tf_mesh_2']['x']} ${module['visual']['tf_mesh_2']['y']} ${module['visual']['tf_mesh_2']['z']}"/>
-                    <geometry>
-                        <mesh filename="${module['visual']['mesh_collision_2']}" scale="0.001 0.001 0.001"/>
-                    </geometry>
+                    <xacro:if value="${'type' in module['visual']['mesh_collision_2']}">
+                        <xacro:if value="${module['visual']['mesh_collision_2']['type'] == 'box'}">
+                            <geometry>
+                                <box size="${module['visual']['mesh_collision_2']['parameters']['size']}"/>
+                            </geometry>
+                        </xacro:if>
+                        <xacro:if value="${module['visual']['mesh_collision_2']['type'] == 'cylinder'}">
+                            <geometry>
+                                <cylinder radius="${module['visual']['mesh_collision_2']['parameters']['radius']}" length="${module['visual']['mesh_collision_2']['parameters']['length']}"/>
+                            </geometry>
+                        </xacro:if>
+                        <xacro:if value="${module['visual']['mesh_collision_2']['type'] == 'sphere'}">
+                            <geometry>
+                                <sphere radius="${module['visual']['mesh_collision_2']['parameters']['radius']}"/>
+                            </geometry>
+                        </xacro:if>
+                    </xacro:if>
+                    <xacro:unless value="${'type' in module['visual']['mesh_collision_2']}">
+                        <geometry>
+                            <mesh filename="${module['visual']['mesh_collision_2']}" scale="0.001 0.001 0.001"/>
+                        </geometry>
+                    </xacro:unless>
                 </collision>
             </xacro:if>
             <!--inertial parameters for ORANGE rotating part. wrt a point on one end of the rod-->
