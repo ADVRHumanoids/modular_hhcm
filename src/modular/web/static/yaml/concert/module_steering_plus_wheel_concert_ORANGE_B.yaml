@@ -105,7 +105,7 @@ dynamics:
             z: 0.0
 visual:
     mesh_body_1: package://modular/src/modular/web/static/models/modular/meshes/concert/concert_elbow-base.stl
-    mesh_collision_1: package://modular/src/modular/web/static/models/modular/meshes/concert/concert_elbow-base.stl
+    mesh_collision_1: package://modular/src/modular/web/static/models/modular/meshes/concert/simple/concert_elbow-base.stl
     tf_mesh_1:
         x: 0.0
         y: 0.0
@@ -114,7 +114,7 @@ visual:
         pitch: 0.0
         yaw: 0.0
     mesh_body_2: package://modular/src/modular/web/static/models/modular/meshes/concert/concert_elbow-link.stl
-    mesh_collision_2: package://modular/src/modular/web/static/models/modular/meshes/concert/concert_elbow-link.stl
+    mesh_collision_2: package://modular/src/modular/web/static/models/modular/meshes/concert/simple/concert_elbow-link.stl
     tf_mesh_2:
         x: 0.0
         y: 0.0
@@ -123,7 +123,7 @@ visual:
         pitch: 0.0
         yaw: 0.0
     mesh_body_3: package://modular/src/modular/web/static/models/modular/meshes/concert/concert_elbow-link.stl
-    mesh_collision_3: package://modular/src/modular/web/static/models/modular/meshes/concert/concert_elbow-link.stl
+    mesh_collision_3: package://modular/src/modular/web/static/models/modular/meshes/concert/simple/concert_elbow-link.stl
     tf_mesh_3:
         x: 0.0
         y: 0.0
