@@ -104,26 +104,28 @@ visual:
     yaw: 0.0
 
 gazebo:
-  material: 'Gazebo/Residential'
-  collision:
-    surface:
-      friction:
-        ode:
-          mu: 1.0
-          mu2: 1.0
-        bullet:
-          friction: 1.0
-          friction2: 1.0
-      contact:
-        ode:  
-          kp: 2100000
-          kd: 1
-          max_vel: 100
-        bullet: 
-          soft_cfm: 0.007
-          soft_erp: 0.25
-          kp: 1000000
-          kd: 5
+  body_1: ''
+  body_2:
+    material: 'Gazebo/Residential'
+    collision:
+      surface:
+        friction:
+          ode:
+            mu: 1.0
+            mu2: 1.0
+          bullet:
+            friction: 1.0
+            friction2: 1.0
+        contact:
+          ode:  
+            kp: 2100000
+            kd: 1
+            max_vel: 100
+          bullet: 
+            soft_cfm: 0.007
+            soft_erp: 0.25
+            kp: 1000000
+            kd: 5
 
 size: "big"
 

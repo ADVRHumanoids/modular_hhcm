@@ -1621,6 +1621,8 @@ class UrdfWriter:
             ET.SubElement(self.root, "xacro:add_slave_cube", type='cube', name=name, filename=filename)
             ET.SubElement(self.root, "xacro:add_connectors", type='connectors', name=name, filename=filename)
 
+            self.add_gazebo_element(slavecube.gazebo, slavecube.name)
+
             # # Get inverse of the transform of the connector
             # T_con_inv = tf.transformations.inverse_matrix(self.T_con)
 
@@ -1815,6 +1817,8 @@ class UrdfWriter:
                 #ET.SubElement(self.root, "xacro:add_connectors", type='connectors', name=name, filename=filename)
                 pass
 
+            self.add_gazebo_element(mastercube.gazebo, mastercube.name)
+
             # # instantate a ModuleNode for branch 1 connector
             # name_con1 = name + '_con1'
             # data1 = {'Homogeneous_tf': mastercube.Con_1_tf, 'type': "con", 'name': name_con1, 'i': 0, 'p': 0, 'size': 3}
@@ -1972,6 +1976,8 @@ class UrdfWriter:
             #ET.SubElement(self.root, "xacro:add_master_cube", type='cube', name=name, filename=filename)
             #ET.SubElement(self.root, "xacro:add_connectors", type='connectors', name=name, filename=filename)
             pass
+
+        self.add_gazebo_element(mobilebase.gazebo, mobilebase.name)
         
         if self.speedup:
             string = ""
@@ -2151,6 +2157,8 @@ class UrdfWriter:
                       size_z=new_socket.link_size_z,
                       size=str(new_socket.size))
 
+        self.add_gazebo_element(new_socket.gazebo , new_socket.name)
+
         if self.parent_module.type == 'cube' or self.parent_module.type == "mobile_base":
             if self.parent_module.is_structural:
                 parent_name = self.parent_module.name
@@ -2249,6 +2257,8 @@ class UrdfWriter:
                       type="simple_ee",
                       name=simple_ee.name,
                       size_z=str(z_offset))
+
+        self.add_gazebo_element(simple_ee.gazebo, simple_ee.name)
 
         # self.add_to_chain(simple_ee)
 
@@ -2456,16 +2466,19 @@ class UrdfWriter:
 
         return data
 
-    def add_gazebo_element(self, new_module):
+    def add_gazebo_element(self, new_module_gazebo, new_module_name):
         """
         Add a gazebo element to the new module
         """
         # Add the gazebo element to the new module
-        if new_module.gazebo != '':
-            gazebo_el = ET.SubElement(self.root, 
-                                    'xacro:gazebo_element',
-                                    name=new_module.name)
-            self.add_gazebo_element_children(new_module.gazebo, gazebo_el)
+        if new_module_gazebo != '':
+            gazebo_if_el = ET.SubElement(self.root, 
+                                    'xacro:if',
+                                    value="${GAZEBO_URDF}")
+            gazebo_el = ET.SubElement(gazebo_if_el, 
+                                    'gazebo',
+                                    reference=new_module_name)
+            self.add_gazebo_element_children(new_module_gazebo, gazebo_el)
                     
     def add_gazebo_element_children(self, new_module_gazebo, gazebo_element):
         """
@@ -2974,6 +2987,8 @@ class UrdfWriter:
                         #   size_out=new_Link.size_out
             )
             setattr(new_Link, 'size', new_Link.size_out)
+
+        self.add_gazebo_element(new_Link.gazebo, new_Link.name)
             
         if new_Link.type == 'tool_exchanger' or new_Link.type == 'gripper':
             fixed_joint_name = new_Link.name + '_fixed_joint'
@@ -3115,6 +3130,8 @@ class UrdfWriter:
                       size_z=new_Joint.joint_size_z,
                       size=str(new_Joint.size))
 
+        self.add_gazebo_element(new_Joint.gazebo.body_1, new_Joint.stator_name)
+
         joint_transform = ModuleNode.get_rototranslation(tf.transformations.identity_matrix(),
                                                          new_Joint.Proximal_tf)
         x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(joint_transform)
@@ -3162,6 +3179,8 @@ class UrdfWriter:
                       filename=new_Joint.filename)
 
         self.collision_elements.append((new_Joint.stator_name, new_Joint.distal_link_name))
+
+        self.add_gazebo_element(new_Joint.gazebo.body_2, new_Joint.distal_link_name)
 
         if reverse:
             new_Joint.Distal_tf = ModuleNode.get_rototranslation(new_Joint.Distal_tf,
