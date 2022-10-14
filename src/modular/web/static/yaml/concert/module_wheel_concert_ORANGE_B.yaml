@@ -22,8 +22,8 @@ kinematics:
     joint:
       zero_offset: 0
       type: "continuos"
-      lower_limit: -3.0
-      upper_limit: 3.0
+      lower_limit: -1e10
+      upper_limit: 1e10
       effort: 314
       velocity: 6.6
 
