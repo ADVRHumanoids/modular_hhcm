@@ -3498,7 +3498,7 @@ class UrdfWriter:
         return srdf
 
     # Function writin the urdf file after converting from .xacro (See xacro/__init__.py for reference)
-    def write_urdf(self):
+    def write_urdf(self, gazebo=False):
         """Returns the string with the URDF, after writing it to file"""
         global path_name  # , path_superbuild
 
@@ -3527,17 +3527,21 @@ class UrdfWriter:
         # write the URDF for Gazebo
         mappings['gazebo_urdf'] = 'true'
         doc = xacro.process_file(urdf_xacro_filename, mappings=mappings)
-        gazebo_out.write(doc.toprettyxml(indent='  ', encoding='utf-8').decode('utf-8'))
+        string_urdf_gz = doc.toprettyxml(indent='  ', encoding='utf-8').decode('utf-8')
+        gazebo_out.write(string_urdf_gz)
         gazebo_out.close()
 
         # write the URDF
         mappings['gazebo_urdf'] = 'false'
         doc = xacro.process_file(urdf_xacro_filename, mappings=mappings)
-        string = doc.toprettyxml(indent='  ', encoding='utf-8')
-        out.write(string.decode('utf-8'))
+        string_urdf_xbot = doc.toprettyxml(indent='  ', encoding='utf-8').decode('utf-8')
+        out.write(string_urdf_xbot)
         out.close()
 
-        return string
+        if gazebo:
+            return string_urdf_gz
+        else:
+            return string_urdf_xbot
 
     # Save URDF/SRDF etc. in a directory with the specified robot_name
     def deploy_robot(self, robot_name):
