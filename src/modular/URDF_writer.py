@@ -3544,10 +3544,12 @@ class UrdfWriter:
             return string_urdf_xbot
 
     # Save URDF/SRDF etc. in a directory with the specified robot_name
-    def deploy_robot(self, robot_name):
+    def deploy_robot(self, robot_name, deploy_dir=None):
         script = self.resource_finder.get_filename('deploy.sh', 'data_path')
-        deploy_dir = os.path.expanduser(self.resource_finder.cfg['deploy_dir'])
-        deploy_dir = os.path.expandvars(deploy_dir)
+
+        if deploy_dir is None:
+            deploy_dir = os.path.expanduser(self.resource_finder.cfg['deploy_dir'])
+            deploy_dir = os.path.expandvars(deploy_dir)
 
         if self.verbose:
             output = subprocess.check_output([script, robot_name, "--destination-folder", deploy_dir, "-v"])
@@ -3607,4 +3609,5 @@ class UrdfWriter:
                 #self.print('missing type', node.attrib['name'])
                 continue
         
+
         
