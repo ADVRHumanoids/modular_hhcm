@@ -3610,4 +3610,55 @@ class UrdfWriter:
                 continue
         
 
+from contextlib import contextmanager
+import sys, os
+
+
+@contextmanager
+def suppress_stdout():
+    """
+    context manager redirecting all output from stdout to
+    stderr
+    """
+    old_stdout = sys.stdout
+    sys.stdout = sys.stderr
+    try:  
+        yield
+    finally:
+        sys.stdout = old_stdout
+
+
+def write_file_to_stdout(urdf_writer: UrdfWriter, homing_map, robot_name='modularbot'):
+
+    import argparse
+    parser = argparse.ArgumentParser(prog='Modular URDF/SRDF generator and deployer', 
+                usage='./script_name.py --output urdf writes URDF to stdout \n./script_name.py --deploy deploy_dir generates a ros package at deploy_dir')
+
+    parser.add_argument('--output', '-o', required=False, choices=('urdf', 'urdf_gz', 'srdf'), help='write requested file to stdout and exit')
+    parser.add_argument('--deploy', '-d', required=False, help='directory where to deploy the package')
+    args = parser.parse_args()
+
+    content = None
+    with suppress_stdout():
         
+        urdf_writer.remove_connectors()
+
+        if args.output == 'urdf':
+            content = urdf_writer.write_urdf()
+            content = content.replace('package://modular/src/modular/web/static', 
+                                      'package://modular_resources')
+            open(f'/tmp/{robot_name}.urdf', 'w').write(content)
+        if args.output == 'urdf_gz':
+            content = urdf_writer.write_urdf(gazebo=True)
+            content = content.replace('package://modular/src/modular/web/static', 
+                                      'package://modular_resources')
+            open(f'/tmp/{robot_name}_gz.urdf', 'w').write(content)
+        elif args.output == 'srdf':
+            content = urdf_writer.write_srdf(homing_map)
+            open(f'/tmp/{robot_name}.srdf', 'w').write(content)
+    
+    if content is not None: 
+        print(content)
+
+    if args.deploy is not None:
+        urdf_writer.deploy_robot(robot_name, args.deploy)
