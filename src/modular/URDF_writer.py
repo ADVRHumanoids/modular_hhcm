@@ -672,9 +672,16 @@ class XBot2Plugin(Plugin):
         self.gain_node = ET.SubElement(self.pid_node, "gain", name='big_mot', p='1000', d='100')
         return self.pid_node
 
-    def add_joint(self, joint_name):
+    def add_joint(self, joint_name, control_params=None):
         #return ET.SubElement(self.pid_node, "xacro:add_xbot2_pid", name=joint_name, profile="small_mot")
-        return ET.SubElement(self.pid_node, "gain", name=joint_name, profile="medium_mot")
+        if control_params is not None:
+            if hasattr(control_params, 'pid'):
+                pid_node = ET.SubElement(self.pid_node, "gain", name=joint_name, p=str(control_params.pid.p), d=str(control_params.pid.d))
+            if hasattr(control_params, 'profile'):
+                pid_node = ET.SubElement(self.pid_node, "gain", name=joint_name, profile=str(control_params.pid.profile))
+        else:
+            pid_node = ET.SubElement(self.pid_node, "gain", name=joint_name, profile="medium_mot")
+        return pid_node
 
     def remove_joint(self, joint_name):
         for pid in self.pid_node.findall('./pid'):
@@ -3164,7 +3171,8 @@ class UrdfWriter:
 
         ####
         #ET.SubElement(self.xbot2_pid, "xacro:add_xbot2_pid", name=new_Joint.name, profile="small_mot")
-        self.control_plugin.add_joint(new_Joint.name)
+        self.control_plugin.add_joint(new_Joint.name, 
+                                    control_params=new_Joint.xbot_gz if hasattr(new_Joint, 'xbot_gz') else None)
         ####
 
         if reverse:

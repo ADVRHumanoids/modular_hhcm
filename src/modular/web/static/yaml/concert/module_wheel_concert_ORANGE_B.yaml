@@ -127,6 +127,11 @@ gazebo:
             kp: 1000000
             kd: 5
 
+xbot_gz:
+  pid:
+    p: 0
+    d: 50
+
 size: "big"
 
 control:
