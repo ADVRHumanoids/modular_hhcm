@@ -2258,7 +2258,10 @@ class UrdfWriter:
                       name=simple_ee.name,
                       size_z=str(z_offset))
 
-        self.add_gazebo_element(simple_ee.gazebo, simple_ee.name)
+        try:
+            self.add_gazebo_element(simple_ee.gazebo, simple_ee.name)
+        except AttributeError:
+            pass
 
         # self.add_to_chain(simple_ee)
 
