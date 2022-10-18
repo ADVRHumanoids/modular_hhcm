@@ -305,6 +305,7 @@ class Module(object):
         switcher = {
             'joint_mesh': self.get_proximal_distal_matrices,
             'joint': self.get_proximal_distal_matrices,
+            'wheel': self.get_proximal_distal_matrices,
             'link': self.get_homogeneous_matrix,
             'elbow': self.get_homogeneous_matrix,
             'size_adapter': self.get_homogeneous_matrix,

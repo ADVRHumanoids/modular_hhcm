@@ -1,4 +1,4 @@
-type: "joint"
+type: "wheel"
 
 kinematics:
   convention: "urdf"
@@ -145,10 +145,11 @@ control:
 
 
 CentAcESC:
-  control_mode: impedance_d4 #pos_3b #impedance_d4 #idle
+  control_mode: 71_motor_vel_ctrl #pos_3b #impedance_d4 #idle
   sign: 1
   pos_offset: 0
   max_current_A: 30.0
   pid:
     position: [1000.0, 0.0, 30.0]
+    velocity: [50.0, 0.0, 0.0]
     impedance: [500.0, 20.0, 1.0, 0.025, 0.99]

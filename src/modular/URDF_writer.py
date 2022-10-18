@@ -145,11 +145,20 @@ class Plugin:
     # SRDF
     @abstractmethod
     def add_gripper_to_srdf(self):
-        None
+        pass
 
     @abstractmethod
     def add_hand_group_to_srdf(self):
         pass
+
+    @abstractmethod
+    def add_wheel_to_srdf(self):
+        pass
+
+    @abstractmethod
+    def add_wheel_group_to_srdf(self):
+        pass
+
 
     # TODO: This should be fixed. Should not be here, probably a SRDFwriter class could be implemented
     def write_srdf(self, builder_joint_map=None):
@@ -165,6 +174,7 @@ class Plugin:
         groups = []
         chains = []
         joints = []
+        wheels = []
         end_effectors = []
         groups_in_chains_group = []
         groups_in_arms_group = []
@@ -187,7 +197,7 @@ class Plugin:
                 else:
                     tip_link = joints_chain[-1].children[0].name
             else:
-                tip_link = 'L_' + str(joints_chain[-1].i) + joints_chain[-1].tag
+                tip_link = joints_chain[-1].distal_link_name
                 if joints_chain[-1].type == 'tool_exchanger':
                     # tip_link = joints_chain[-1].name
                     tip_link = joints_chain[-1].pen_name
@@ -201,10 +211,10 @@ class Plugin:
         i = 0
         arms_group = ET.SubElement(root, 'group', name="arms")
         chains_group = ET.SubElement(root, 'group', name="chains")
+        wheels_group = self.add_wheel_group_to_srdf(root, "wheels")
         group_state = ET.SubElement(root, 'group_state', name="home", group="chains")
         for joints_chain in self.urdf_writer.listofchains:
             group_name = "chain" + self.urdf_writer.branch_switcher.get(i + 1)
-            hand_name = "hand" + self.urdf_writer.branch_switcher.get(i + 1)
             groups_in_chains_group.append(ET.SubElement(chains_group, 'group', name=group_name))
             groups_in_arms_group.append(ET.SubElement(arms_group, 'group', name=group_name))
             for joint_module in joints_chain:
@@ -216,15 +226,26 @@ class Plugin:
                         homing_value = 0.1
                     # self.urdf_writer.print(homing_value)
                     joints.append(ET.SubElement(group_state, 'joint', name=joint_module.name, value=str(homing_value)))
+                elif joint_module.type == 'wheel':
+                    # Homing state
+                    if builder_joint_map is not None:
+                        homing_value = float(builder_joint_map[joint_module.name]['angle'])
+                    else:
+                        homing_value = 0.1
+                    # self.urdf_writer.print(homing_value)
+                    joints.append(ET.SubElement(group_state, 'joint', name=joint_module.name, value=str(homing_value)))
+
+                    #wheel_name = "wheel" + self.urdf_writer.branch_switcher.get(i + 1)  # BUG: this is not correct. Probably better to get the tag from the name
+                    wheels += filter(lambda item: item is not None, [self.add_wheel_to_srdf(wheels_group, joint_module.name)])
                 elif joint_module.type == 'tool_exchanger':
                     tool_exchanger_group = ET.SubElement(root, 'group', name="ToolExchanger")
                     end_effectors.append(ET.SubElement(tool_exchanger_group, 'joint',
                                                        name=joint_module.name + '_fixed_joint'))
                 elif joint_module.type == 'gripper':
+                    hand_name = "hand" + self.urdf_writer.branch_switcher.get(i + 1)
                     self.add_hand_group_to_srdf(root, joint_module.name, hand_name)
                     # groups_in_hands_group.append(ET.SubElement(hands_group, 'group', name=hand_name))
-                    end_effectors += filter(None, [
-                        self.add_gripper_to_srdf(root, joint_module.name, hand_name, group_name)])
+                    end_effectors += filter(lambda item: item is not None, [self.add_gripper_to_srdf(root, joint_module.name, hand_name, group_name)])
             i += 1
 
         # Create folder if doesen't exist
@@ -341,6 +362,12 @@ class RosControlPlugin(Plugin):
 
         return hand_group
 
+    def add_wheel_to_srdf(self, wheel_group_name, wheel_name):
+        return None
+
+    def add_wheel_group_to_srdf(self, root, wheel_group_name):
+        pass
+
     def write_srdf(self, builder_joint_map=None):
         """Generates a basic srdf so that the model can be used right away with XBotCore"""
         # global path_name
@@ -437,7 +464,7 @@ class RosControlPlugin(Plugin):
             kinematics.update([(group_name, copy.deepcopy(tmp_kinematics['group_name']))])
             ompl.update([(group_name, copy.deepcopy(tmp_ompl['group_name']))])
             for joint_module in joints_chain:
-                if joint_module.type == 'joint':
+                if joint_module.type in {'joint', 'wheel'} :
                     # Homing state
                     if builder_joint_map is not None:
                         homing_value = float(builder_joint_map[joint_module.name]['angle'])
@@ -457,7 +484,7 @@ class RosControlPlugin(Plugin):
                 elif joint_module.type == 'gripper':
                     self.add_hand_group_to_srdf(root, joint_module.name, hand_name)
                     # groups_in_hands_group.append(ET.SubElement(hands_group, 'group', name=hand_name))
-                    end_effectors += filter(None, [self.add_gripper_to_srdf(root, joint_module.name, hand_name, group_name)])
+                    end_effectors += filter(lambda item: item is not None, [self.add_gripper_to_srdf(root, joint_module.name, hand_name, group_name)])
                     controller_list.append(OrderedDict([('name', 'fake_' + hand_name + '_controller'), ('joints', [])]))
                     controller_list[i+1]['joints'].append(joint_module.name+'_finger_joint1')
                     controller_list[i+1]['joints'].append(joint_module.name + '_finger_joint2')
@@ -570,9 +597,15 @@ class XBotCorePlugin(Plugin):
 
     # SRDF
     def add_gripper_to_srdf(self, root, gripper_name, hand_name, parent_group_name):
-        pass
+        return None
 
     def add_hand_group_to_srdf(self, root, gripper_name, hand_name):
+        pass
+
+    def add_wheel_to_srdf(self, wheel_group_name, wheel_name):
+        return None
+
+    def add_wheel_group_to_srdf(self, root, wheel_group_name):
         pass
 
     # CONFIG
@@ -603,7 +636,7 @@ class XBotCorePlugin(Plugin):
             # HACK
             p += 1
             for joint_module in joints_chain:
-                if joint_module.type == 'joint':
+                if joint_module.type in { 'joint', 'wheel' }:
                     i += 1
                     lowlevel_config['GazeboXBotPlugin']['gains'][joint_module.name] = OrderedDict(
                         [('p', 300), ('d', 20)])
@@ -690,10 +723,18 @@ class XBot2Plugin(Plugin):
 
     # SRDF     
     def add_gripper_to_srdf(self, root, gripper_name, hand_name, parent_group_name):
-        pass
+        return None
 
     def add_hand_group_to_srdf(self, root, gripper_name, hand_name):
         pass
+
+    def add_wheel_to_srdf(self, wheel_group, wheel_name):
+        wheel = ET.SubElement(wheel_group, 'joint', name=wheel_name)
+        return wheel
+
+    def add_wheel_group_to_srdf(self, root, wheel_group_name):
+        wheel_group = ET.SubElement(root, 'group', name=wheel_group_name)
+        return wheel_group
 
     # JOINT MAP
     def write_joint_map(self, use_robot_id=False):
@@ -859,6 +900,24 @@ class XBot2Plugin(Plugin):
                     # TODO: fix this
                     if p > 1:
                         value.pid.impedance = [500.0, 20.0, 1.0, 0.003, 0.99]
+
+                if joint_module.type == 'wheel':
+                    i += 1
+                    key = joint_module.name
+                    value = joint_module.CentAcESC
+                    impd4_joint_config[key] = copy.deepcopy(value)
+                    impd4_joint_config[key].control_mode = '71_motor_vel_ctrl'
+                    # Remove parameters that are now not used by XBot2 (they are handled by the EtherCat master on a different config file)
+                    del impd4_joint_config[key].sign 
+                    del impd4_joint_config[key].pos_offset 
+                    del impd4_joint_config[key].max_current_A 
+
+                    idle_joint_config[key] = copy.deepcopy(value)
+                    idle_joint_config[key].control_mode = 'idle'
+                    # Remove parameters that are now not used by XBot2 (they are handled by the EtherCat master on a different config file)   
+                    del idle_joint_config[key].sign 
+                    del idle_joint_config[key].pos_offset 
+                    del idle_joint_config[key].max_current_A 
 
                 elif joint_module.type == 'tool_exchanger':
                     key = joint_module.name
@@ -1643,7 +1702,7 @@ class UrdfWriter:
             data1 = {'Homogeneous_tf': T_con_inv, 'type': "con", 'name': name_con1, 'i': 0, 'p': 0, 'size': 3}
             self.print('T_con_inv:', T_con_inv)
 
-            if self.parent_module.type == 'joint':
+            if self.parent_module.type in { 'joint', 'wheel' }:
                 parent_distal_tf = self.parent_module.Distal_tf
             elif self.parent_module.type == 'cube' or self.parent_module.type == 'mobile_base':
                 if self.parent_module.selected_port == 1:
@@ -2411,7 +2470,7 @@ class UrdfWriter:
         #if self.parent_module.type == "base_link":
 
         if self.parent_module.type == 'joint':
-            if new_module.type == 'joint':
+            if new_module.type in { 'joint', 'wheel' }:
                 # joint + joint
                 self.print("joint + joint")
                 self.joint_after_joint(new_module, self.parent_module, angle_offset, reverse=reverse)
@@ -2421,8 +2480,11 @@ class UrdfWriter:
                 # joint + link
                 self.print("joint + link")
                 self.link_after_joint(new_module, self.parent_module, angle_offset, reverse=reverse)
+        elif self.parent_module.type == 'wheel':
+            # TODO: prevent adding modules after wheels in a better way (raise exception?)
+            return {'result': 'ERROR: module cannot be added after wheel module. Select another chain or remove the wheel module.'}
         elif self.parent_module.type == 'cube' or self.parent_module.type == "mobile_base":
-            if new_module.type == 'joint':
+            if new_module.type in { 'joint', 'wheel' }:
                 # cube + joint
                 self.joint_after_cube(new_module, self.parent_module, angle_offset, reverse=reverse)
                 # Add the joint to the list of chains
@@ -2431,7 +2493,7 @@ class UrdfWriter:
                 # cube + link
                 self.link_after_cube(new_module, self.parent_module, angle_offset, reverse=reverse)
         else:
-            if new_module.type == 'joint':
+            if new_module.type in { 'joint', 'wheel' }:
                 # link + joint
                 self.print("link + joint")
                 self.joint_after_link(new_module, self.parent_module, angle_offset, reverse=reverse)
@@ -2548,18 +2610,13 @@ class UrdfWriter:
         #self.gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
 
         # switch depending on module type
-        if selected_module.type == 'joint':
+        if selected_module.type in { 'joint', 'wheel' }:
             #remove the joints from the list of chains
             self.remove_from_chain(selected_module)
 
             # save parent of the module to remove. This will be the last element of the chain after removal,
             # and it'll be returned by the function
             father = selected_module.parent
-
-            # Generate names of the stator link and fixed joint to be removed from the xml tree
-            stator_name = selected_module.name + '_stator'
-            joint_stator_name = "fixed_" + selected_module.name
-            distal_link_name = 'L_' + str(selected_module.i) + selected_module.tag
 
             # From the list of xml elements find the ones with name corresponding to the relative joint, stator link
             # and fixed joint before the stator link and remove them from the xml tree
@@ -2569,7 +2626,7 @@ class UrdfWriter:
                         self.root.remove(node)
                     elif node.attrib['name'] == selected_module.stator_name:
                         self.root.remove(node)
-                    elif node.attrib['name'] == joint_stator_name:
+                    elif node.attrib['name'] == selected_module.fixed_joint_stator_name:
                         self.root.remove(node)
                     elif node.attrib['name'] == selected_module.distal_link_name:
                         self.root.remove(node)
@@ -3098,12 +3155,17 @@ class UrdfWriter:
     def add_joint(self, new_Joint, parent_name, transform, reverse):
         x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(transform)
 
-        setattr(new_Joint, 'name', 'J' + str(new_Joint.i) + new_Joint.tag)
+        if new_Joint.type == 'joint':
+            setattr(new_Joint, 'name', 'J' + str(new_Joint.i) + new_Joint.tag)
+            setattr(new_Joint, 'distal_link_name', 'L_' + str(new_Joint.i) + new_Joint.tag)
+        elif new_Joint.type == 'wheel':
+            setattr(new_Joint, 'name', 'J_wheel' + new_Joint.tag)
+            setattr(new_Joint, 'distal_link_name', 'wheel' + new_Joint.tag)
         setattr(new_Joint, 'stator_name', new_Joint.name + '_stator')
-        joint_stator_name = "fixed_" + new_Joint.name
+        setattr(new_Joint, 'fixed_joint_stator_name', "fixed_" + new_Joint.name)
         ET.SubElement(self.root, "xacro:add_fixed_joint",
                       type="fixed_joint_stator",
-                      name=joint_stator_name,
+                      name=new_Joint.fixed_joint_stator_name,
                       father=parent_name,  # TODO: check!
                       child=new_Joint.stator_name,
                       x=x,
@@ -3157,7 +3219,7 @@ class UrdfWriter:
                       type="joint",
                       name=new_Joint.name,
                       father=new_Joint.stator_name,
-                      child='L_' + str(new_Joint.i) + new_Joint.tag,
+                      child=new_Joint.distal_link_name,
                       x=x,
                       y=y,
                       z=z,
@@ -3182,7 +3244,6 @@ class UrdfWriter:
 
         x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(dist_mesh_transform)
 
-        setattr(new_Joint, 'distal_link_name', 'L_' + str(new_Joint.i) + new_Joint.tag)
         ET.SubElement(self.root,
                       "xacro:add_distal",
                       type="add_distal",
@@ -3202,9 +3263,9 @@ class UrdfWriter:
         ET.SubElement(self.root,
                       "xacro:add_fixed_joint",
                       type="fixed_joint",
-                      name="fixed_" + 'L_' + str(new_Joint.i) + new_Joint.tag + '_rotor_fast',
-                      father='L_' + str(new_Joint.i) + new_Joint.tag,  # stator_name, #
-                      child='L_' + str(new_Joint.i) + new_Joint.tag + '_rotor_fast',
+                      name="fixed_" + new_Joint.distal_link_name + '_rotor_fast',
+                      father=new_Joint.distal_link_name,  # stator_name, #
+                      child=new_Joint.distal_link_name + '_rotor_fast',
                       x=x,
                       y=y,
                       z=z,
@@ -3214,7 +3275,7 @@ class UrdfWriter:
         ET.SubElement(self.root,
                       "xacro:add_rotor_fast",
                       type="add_rotor_fast",
-                      name='L_' + str(new_Joint.i) + new_Joint.tag + '_rotor_fast',
+                      name=new_Joint.distal_link_name + '_rotor_fast',
                       filename=new_Joint.filename,
                       x=x,
                       y=y,
@@ -3400,10 +3461,12 @@ class UrdfWriter:
                 if joints_chain[-1].type == 'tool_exchanger':
                     # tip_link = joints_chain[-1].name
                     tip_link = joints_chain[-1].pen_name
-                if joints_chain[-1].type == 'gripper':
+                elif joints_chain[-1].type == 'gripper':
                     # tip_link = joints_chain[-1].name
                     tip_link = joints_chain[-1].TCP_name
                 elif joints_chain[-1].type == 'simple_ee':
+                    tip_link = joints_chain[-1].name
+                elif joints_chain[-1].type == 'wheel':
                     tip_link = joints_chain[-1].name
             probdesc[ee_name]['distal_link'] = tip_link
 
