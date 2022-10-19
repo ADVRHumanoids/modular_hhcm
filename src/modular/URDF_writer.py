@@ -197,12 +197,11 @@ class Plugin:
                 else:
                     tip_link = joints_chain[-1].children[0].name
             else:
-                tip_link = joints_chain[-1].distal_link_name
+                if joints_chain[-1].type in { 'joint', 'wheel' }:
+                    tip_link = joints_chain[-1].distal_link_name
                 if joints_chain[-1].type == 'tool_exchanger':
-                    # tip_link = joints_chain[-1].name
                     tip_link = joints_chain[-1].pen_name
                 if joints_chain[-1].type == 'gripper':
-                    # tip_link = joints_chain[-1].name
                     tip_link = joints_chain[-1].TCP_name
                 elif joints_chain[-1].type == 'simple_ee':
                     tip_link = joints_chain[-1].name
