@@ -51,18 +51,18 @@ dynamics:
       z: 0.0
 
   body_2:
-    mass: 3.8484652
+    mass: 4.0116207
     inertia_tensor:
-      I_xx: 2.8211687e-02
-      I_yy: 2.8211698e-02
-      I_zz: 4.4687978e-02
+      I_xx: 2.8580559e-02
+      I_yy: 2.8580559e-02
+      I_zz: 4.4954065e-02
       I_xy: 0.0
       I_xz: 0.0
       I_yz: 0.0
     CoM:
       x: 0.0
       y: 0.0
-      z: -4.8666383e-03
+      z: -0.005
 
   body_2_fast:
     mass: 0.0
@@ -88,7 +88,7 @@ visual:
     roll: 0.0
     pitch: 0.0
     yaw: 0.0
-  mesh_body_2: "package://modular/src/modular/web/static/models/modular/meshes/concert/simple/concert_wheel.stl"
+  mesh_body_2: "package://modular/src/modular/web/static/models/modular/meshes/concert/concert_wheel.stl"
   mesh_collision_2: 
     type: 'cylinder'
     parameters:
@@ -107,6 +107,7 @@ gazebo:
   body_1: ''
   body_2:
     material: 'Gazebo/Residential'
+    selfCollide: true
     collision:
       surface:
         friction:

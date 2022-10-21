@@ -4,51 +4,51 @@ kinematics:
         roll: 0.0
         pitch: -1.57
         yaw: 3.14
-        x: 0.38025
-        y: 0.315
-        z: -0.21
+        x: 0.37925
+        y: 0.31250
+        z: -0.19500
     connector_2:
         roll: 0.0
         pitch: -1.57
         yaw: 3.14
-        x: 0.38025
-        y: -0.315
-        z: -0.21
+        x: 0.37925
+        y: -0.31250
+        z: -0.19500
     connector_3:
         roll: 0.0
         pitch: -1.57
         yaw: 0.0
-        x: -0.38025
-        y: 0.315
-        z: -0.21
+        x: -0.37925
+        y: 0.31250
+        z: -0.19500
     connector_4:
         roll: 0.0
         pitch: -1.57
         yaw: 0.0
-        x: -0.38025
-        y: -0.315
-        z: -0.21
+        x: -0.37925
+        y: -0.31250
+        z: -0.19500
     connector_5:
         roll: 0.0
         pitch: 0.0
         yaw: 0.0
         x: 0.2
         y: 0.0
-        z: 0.0
+        z: 0.016
 dynamics:
     body_1:
-        mass: 103.95833
+        mass: 127.57599
         inertia_tensor:
-            I_xx: 8.6261624
-            I_yy: 9.8845242
-            I_zz: 10.924003
-            I_xy: -0.25971484
-            I_xz: -0.069796544
-            I_yz: 0.35441021
+            I_xx: 1.9025397e+01
+            I_yy: 1.3251602e+01
+            I_zz: 2.3575473e+01
+            I_xy: -6.2823044e-01
+            I_xz: -6.4261485e-02
+            I_yz: 9.1864796e-01
         CoM:
-            x: 0.0031233048
-            y: 0.018644386
-            z: -0.22333776
+            x: 0.012213513
+            y: 0.0
+            z: -0.21761073
 size: big
 type: mobile_base
 visual:
@@ -78,3 +78,4 @@ gazebo:
     maxVel: 0.0
     minDepth: 0.0001
     material: 'Gazebo/Grey'
+    selfCollide: true

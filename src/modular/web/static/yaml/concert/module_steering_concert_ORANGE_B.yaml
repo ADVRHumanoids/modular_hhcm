@@ -32,31 +32,32 @@ kinematics:
         delta_l_out: 0
 dynamics:
     body_1:
-        mass: 1.4161778
+        mass: 1.1813661
         inertia_tensor:
-            I_xx: 0.0036297902
-            I_yy: 0.0037972339
-            I_zz: 0.0032117794
+            I_xx: 2.6106263e-03
+            I_yy: 2.7438806e-03 
+            I_zz: 2.5223123e-03
             I_xy: 0.0
-            I_xz: 0.00028780035
+            I_xz: 1.7928188e-04
             I_yz: 0.0
         CoM:
-            x: -0.0087659895
+            x: -0.0079406061
             y: 0.0
-            z: 0.045978055
+            z: 0.037039629
     body_2:
-        mass: 7.395874
+        mass: 7.6995028
         inertia_tensor:
-            I_xx: 0.43332117
-            I_yy: 0.51158571
-            I_zz: 0.69708495
-            I_xy: -0.036680821
-            I_xz: 0.022994193
-            I_yz: -0.0026228477
+            I_xx: 4.4048889e-01
+            I_yy: 5.2073797e-01
+            I_zz: 6.9985532e-01
+            I_xy: -3.6685350e-02 
+            I_xz: 2.5595962e-02
+            I_yz: -2.6667139e-03
+
         CoM:
-            x: 0.093141833
+            x: 0.090718433
             y: 0.0
-            z: -0.23097778
+            z: -0.22670598
     body_2_fast:
         mass: 0.0
         inertia_tensor:
@@ -123,6 +124,7 @@ gazebo:
         maxVel: 0.0
         minDepth: 0.0001
         material: 'Gazebo/Blue'
+        selfCollide: true
     body_2:
         mu1: 0.2
         mu2: 0.2
@@ -131,3 +133,4 @@ gazebo:
         maxVel: 0.0
         minDepth: 0.0001
         material: 'Gazebo/White'
+        selfCollide: true

@@ -5,7 +5,7 @@ kinematics:
         proximal:
             x: 0.0
             y: 0.0
-            z: 0.246
+            z: 0.245
             roll: 0.0
             pitch: 0.0
             yaw: 0.0
@@ -32,26 +32,26 @@ kinematics:
         delta_l_out: 0
 dynamics:
     body_1:
-        mass: 3.4182295
+        mass: 3.5866810
         inertia_tensor:
-            I_xx: 0.01541652
-            I_yy: 0.015416968
-            I_zz: 0.0062736228
-            I_xy: 3.1074303e-06
-            I_xz: 8.4972153e-05
-            I_yz: -3.5462082e-05
+            I_xx: 1.7808349e-02
+            I_yy: 1.7503159e-02
+            I_zz: 6.8844202e-03
+            I_xy: 1.6625281e-06
+            I_xz: -1.8023262e-05
+            I_yz: -6.8557387e-05
         CoM:
             x: 0.0
             y: 0.0
-            z: 0.126
+            z: 0.121
     body_2:
-        mass: 0.38803798
+        mass: 0.56725368
         inertia_tensor:
-            I_xx: 0.00059852578
-            I_yy: 0.00059846057
-            I_zz: 0.00098955641
-            I_xy: 0.0
-            I_xz: 0.0
+            I_xx: 9.7738346e-04
+            I_yy: 9.7804563e-04
+            I_zz: 1.6176780e-03
+            I_xy: 9.0785180e-08
+            I_xz: 5.0589486e-08
             I_yz: 0.0
         CoM:
             x: 0.0
@@ -118,16 +118,18 @@ gazebo:
     body_1:
         mu1: 0.2
         mu2: 0.2
-        kp: 1000000.0
+        kp: 100000000.0
         kd: 1.0
         maxVel: 0.0
         minDepth: 0.0001
         material: 'Gazebo/Blue'
+        selfCollide: true
     body_2:
         mu1: 0.2
         mu2: 0.2
-        kp: 1000000.0
+        kp: 100000000.0
         kd: 1.0
         maxVel: 0.0
         minDepth: 0.0001
         material: 'Gazebo/White'
+        selfCollide: true
