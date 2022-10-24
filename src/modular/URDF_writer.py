@@ -2999,9 +2999,7 @@ class UrdfWriter:
                           "xacro:add_link",
                           type="link",
                           name=new_Link.name,
-                          filename=new_Link.filename,
-                          size_z=new_Link.link_size_z,
-                          size=str(new_Link.size))
+                          filename=new_Link.filename)
         elif new_Link.type == 'elbow':
             setattr(new_Link, 'name', 'L_' + str(new_Link.i) + '_elbow_' + str(new_Link.p) + new_Link.tag)
             ET.SubElement(self.root,

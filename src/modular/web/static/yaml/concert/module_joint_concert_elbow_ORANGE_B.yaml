@@ -23,13 +23,7 @@ kinematics:
             upper_limit: 3.0
             effort: 314
             velocity: 6.6
-    link:
-        a_l: 0
-        alpha_l: 0
-        p_l: 0
-        n_l: 0
-        delta_l_in: 0
-        delta_l_out: 0
+    link: null
 dynamics:
     body_1:
         mass: 3.6144181

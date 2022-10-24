@@ -1,82 +1,71 @@
 type: "wheel"
 
 kinematics:
-  convention: "urdf"
-  joint:
-    proximal:
-      x: 0.0
-      y: 0.0
-      z: 0.0
-      roll: 0.0
-      pitch: 0.0
-      yaw: 0.0
-
-    distal:
-      x: 0.0
-      y: 0.0
-      z: 0.0
-      roll: 0.0
-      pitch: 0.0
-      yaw: 0.0
-
+    convention: "urdf"
     joint:
-      zero_offset: 0
-      type: "continuos"
-      lower_limit: -1e10
-      upper_limit: 1e10
-      effort: 314
-      velocity: 6.6
-
-  link:
-    a_l: 0
-    alpha_l: 0
-    p_l: 0
-    n_l: 0
-    delta_l_in: 0
-    delta_l_out: 0
+        proximal:
+            x: 0.0
+            y: 0.0
+            z: 0.0
+            roll: 0.0
+            pitch: 0.0
+            yaw: 0.0
+        distal:
+            x: 0.0
+            y: 0.0
+            z: 0.0
+            roll: 0.0
+            pitch: 0.0
+            yaw: 0.0
+        joint:
+            zero_offset: 0
+            type: "continuos"
+            lower_limit: -1e10
+            upper_limit: 1e10
+            effort: 314
+            velocity: 6.6
+        link: null
 
 dynamics:
-  body_1:
-    mass: 0.0
-    inertia_tensor:
-      I_xx: 0.0
-      I_yy: 0.0
-      I_zz: 0.0
-      I_xy: 0.0
-      I_xz: 0.0
-      I_yz: 0.0
-    CoM:
-      x: 0.0
-      y: 0.0
-      z: 0.0
-
-  body_2:
-    mass: 4.0116207
-    inertia_tensor:
-      I_xx: 2.8580559e-02
-      I_yy: 2.8580559e-02
-      I_zz: 4.4954065e-02
-      I_xy: 0.0
-      I_xz: 0.0
-      I_yz: 0.0
-    CoM:
-      x: 0.0
-      y: 0.0
-      z: -0.005
-
-  body_2_fast:
-    mass: 0.0
-    inertia_tensor:
-      I_xx: 0.0
-      I_yy: 0.0
-      I_zz: 0.0
-      I_xy: 0.0
-      I_xz: 0.0
-      I_yz: 0.0
-    CoM:
-      x: 0.0 
-      y: 0.0 
-      z: 0.0
+    body_1:
+        mass: 0.0
+        inertia_tensor:
+            I_xx: 0.0
+            I_yy: 0.0
+            I_zz: 0.0
+            I_xy: 0.0
+            I_xz: 0.0
+            I_yz: 0.0
+        CoM:
+            x: 0.0
+            y: 0.0
+            z: 0.0
+    body_2:
+        mass: 4.0116207
+        inertia_tensor:
+            I_xx: 2.8580559e-02
+            I_yy: 2.8580559e-02
+            I_zz: 4.4954065e-02
+            I_xy: 0.0
+            I_xz: 0.0
+            I_yz: 0.0
+        CoM:
+            x: 0.0
+            y: 0.0
+            z: -0.005
+    body_2_fast:
+        mass: 0.0
+        inertia_tensor:
+            I_xx: 0.0
+            I_yy: 0.0
+            I_zz: 0.0
+            I_xy: 0.0
+            I_xz: 0.0
+            I_yz: 0.0
+        CoM:
+            x: 0.0 
+            y: 0.0 
+            z: 0.0
 
 visual:
     body_1: ''
@@ -86,27 +75,27 @@ visual:
             file: package://modular/src/modular/web/static/models/modular/meshes/concert/concert_wheel.stl
             scale: [0.001, 0.001, 0.001]
         pose:
-    x: 0.0
-    y: 0.0
-    z: 0.0
-    roll: 0.0
-    pitch: 0.0
-    yaw: 0.0
+            x: 0.0
+            y: 0.0
+            z: 0.0
+            roll: 0.0
+            pitch: 0.0
+            yaw: 0.0
         color: black
 collision:
     body_1: ''
     body_2:
-    type: 'cylinder'
-    parameters:
-      radius: 0.16
-      length: 0.1
+        type: 'cylinder'
+        parameters:
+            radius: 0.16
+            length: 0.1
         pose:
-    x: 0.0
-    y: 0.0
-    z: 0.0
-    roll: 0.0
-    pitch: 0.0
-    yaw: 0.0
+            x: 0.0
+            y: 0.0
+            z: 0.0
+            roll: 0.0
+            pitch: 0.0
+            yaw: 0.0
 
 gazebo:
   body_1: ''
