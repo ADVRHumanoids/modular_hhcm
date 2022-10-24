@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<robot name="ModularBot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <xacro:include filename="ModularBot.library.urdf.xacro"/>
+    <xacro:include filename="ModularBot.control.urdf.xacro"/>
+
+    <xacro:arg name="floating_joint" default="false"/>
+    <xacro:property name="ADD_FLOATING_BASE" value="$(arg floating_joint)" />
+
+    <xacro:arg name="gazebo_urdf" default="false"/>
+    <xacro:property name="GAZEBO_URDF" value="$(arg gazebo_urdf)" />
+
+    <!-- adding (or not) world link for Gazebo simulation -->
+    <xacro:if value="${ADD_FLOATING_BASE}">
+
+        <xacro:unless value="${GAZEBO_URDF}">
+            <link name="world"/>
+            <joint name="reference" type="floating">
+                <parent link="world"/>
+                <child link="base_link"/>
+            </joint>
+        </xacro:unless>
+
+        <origin xyz="0.0 0.0 0.8" rpy="0 0 0" />
+
+    </xacro:if>
+    <xacro:unless value="${ADD_FLOATING_BASE}">
+
+        <link name="world"/>
+        <joint name="reference" type="fixed">
+            <parent link="world"/>
+            <child link="base_link"/>
+        </joint>
+
+    </xacro:unless>
+
+    <link name="base_link">
+        <xacro:default_inertial mass="0.1"/>
+    </link>
+</robot>

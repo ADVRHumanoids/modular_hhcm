@@ -1,0 +1,87 @@
+# MoveIt-specific simulation settings
+moveit_sim_hw_interface:
+  joint_model_group: controllers_initial_group_
+  joint_model_group_pose: controllers_initial_pose_
+# Settings for ros_control control loop
+generic_hw_control_loop:
+  loop_hz: 300
+  cycle_time_error_threshold: 0.01
+# Settings for ros_control hardware interface
+hardware_interface:
+  joints:
+    - J1_A
+    - J2_A
+    - J3_A
+    - J4_A
+    - J5_A
+    - J6_A
+    - gripper_A_finger_joint1
+  sim_control_mode: 1 # 0: position, 1: velocity
+# Publish all joint states
+# Creates the /joint_states topic necessary in ROS
+joint_state_controller:
+  type: joint_state_controller/JointStateController
+  publish_rate: 50
+tree_arm_controller:
+  type: position_controllers/JointTrajectoryController
+  joints:
+    - J1_A
+    - J2_A
+    - J3_A
+    - J4_A
+    - J5_A
+    - J6_A
+  gains:
+    J1_A: { p: 12000, d: 50.0, i: 0.0, i_clamp: 10000 }
+    J2_A: { p: 30000, d: 20.0, i: 0.02, i_clamp: 10000 }
+    J3_A: { p: 18000, d: 20.0, i: 0.01, i_clamp: 1 }
+    J4_A: { p: 18000, d: 20.0, i: 0.02, i_clamp: 1 }
+    J5_A: { p: 7000, d: 20.0, i: 0.0, i_clamp: 1 }
+    J6_A: { p: 66, d: 2.2, i: 1320.0, i_clamp: 1 }
+
+  #constraints:
+    #goal_time: 2.0
+  state_publish_rate: 25
+
+tree_hand_controller:
+  type: position_controllers/JointTrajectoryController
+  joints:
+    - gripper_A_finger_joint1
+    - gripper_A_finger_joint2
+
+  gains:
+    gripper_A_finger_joint1: { p: 666, d: 0.5, i: 0.0, i_clamp: 1 }
+    gripper_A_finger_joint2: { p: 666, d: 0.5, i: 0.0, i_clamp: 1 }
+
+  state_publish_rate: 25
+
+controller_list:
+  - name: tree_arm_controller
+    action_ns: follow_joint_trajectory
+    type: FollowJointTrajectory
+    default: true
+    joints:
+      - J1_A
+      - J2_A
+      - J3_A
+      - J4_A
+      - J5_A
+      - J6_A
+  - name: tree_hand_controller
+    action_ns: follow_joint_trajectory
+    type: FollowJointTrajectory
+    default: true
+    joints:
+      - gripper_A_finger_joint1
+      - gripper_A_finger_joint2
+
+gazebo_ros_control:
+  pid_gains:
+    J1_A: { p: 12000, d: 50.0, i: 0.0, i_clamp: 10000 }
+    J2_A: { p: 30000, d: 20.0, i: 0.02, i_clamp: 10000 }
+    J3_A: { p: 18000, d: 20.0, i: 0.01, i_clamp: 1 }
+    J4_A: { p: 18000, d: 20.0, i: 0.02, i_clamp: 1 }
+    J5_A: { p: 7000, d: 20.0, i: 0.0, i_clamp: 1 }
+    J6_A: { p: 100, d: 3.3, i: 1320.0, i_clamp: 1 }
+    gripper_A_finger_joint1: {p: 666, d: 0.5, i: 0.0, i_clamp: 1 }
+    gripper_A_finger_joint2: { p: 666, d: 0.5, i: 0.0, i_clamp: 1 }

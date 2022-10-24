@@ -1,0 +1,10 @@
+xbotcore_devices:
+
+    joint_dummy:
+        names: [__joint_srdf__]
+        thread: rt_main
+
+    joint_master:
+        master: true  # this is a master device for 'joint'
+        thread: rt_main
+

@@ -1,0 +1,22 @@
+zmq_setup:
+  timeout: 1000
+
+#definitions:
+# - &default_imp [500.00, 20.0, 1.0, 0.025, 0.99]
+# - &ctrl_mode D4_impedance_ctrl
+
+##############################
+# Arm
+##############################
+
+#joint:
+#  control_mode: *ctrl_mode
+#  pid :
+#    position: [1000.0 , 0.0 , 30.0]
+#    #  .... tor_K divided by 10000 to respect the int range [0..65536]
+#    impedance:  *default_imp
+#
+#gripper_A_motor:
+#  control_mode : 3B_motor_pos_ctrl
+#  pid :
+#    position: [100000.0 , 0.0 , 1.0]
