@@ -416,6 +416,12 @@ class Module(object):
         # Add the transformation matrix for the Proximal part as attribute of the class
         setattr(self, 'Homogeneous_tf', H)
 
+        #TODO: To be implemented
+        if not reverse:
+            pass
+        else:
+            # TBD!!!
+            pass
 
     def get_hub_connections_tf(self, reverse):
         """Computes the homogeneous transformation matrices for the 4 cube connections"""
