@@ -102,6 +102,7 @@ Get the `RobotBuilder` app from the latest release and make it executable (`chmo
 
 ## Usage
 
+### Run the GUI
 To use modular you need to start the python server.
 
 1. If you installed with **pip install**:
@@ -122,6 +123,11 @@ run
 ```
 
 Then open <http://0.0.0.0:5000/> from a browser to acces the graphical interface.
+
+### Use the python API
+Examples of how to use the python API are provided in the `scripts` folder.
+- `create_modularbot.ipynb` shows an example of how to build a 6-DOF robot using Alberobotics modules and deploy URDF, SRDF, etc. into a ROS package
+- `generate_concert_robot.ipynb` shows how to build and deploy the CONCERT modular robot 
 
 ## Documentation
 
