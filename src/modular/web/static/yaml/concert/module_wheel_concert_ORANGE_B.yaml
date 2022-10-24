@@ -79,23 +79,28 @@ dynamics:
       z: 0.0
 
 visual:
-  mesh_body_1: ""
-  mesh_collision_1: ""
-  tf_mesh_1:
+    body_1: ''
+    body_2:
+        type: mesh
+        parameters:
+            file: package://modular/src/modular/web/static/models/modular/meshes/concert/concert_wheel.stl
+            scale: [0.001, 0.001, 0.001]
+        pose:
     x: 0.0
     y: 0.0
     z: 0.0
     roll: 0.0
     pitch: 0.0
     yaw: 0.0
-  mesh_body_2: "package://modular/src/modular/web/static/models/modular/meshes/concert/concert_wheel.stl"
-  mesh_collision_2: 
+        color: black
+collision:
+    body_1: ''
+    body_2:
     type: 'cylinder'
     parameters:
       radius: 0.16
       length: 0.1
-
-  tf_mesh_2:
+        pose:
     x: 0.0
     y: 0.0
     z: 0.0

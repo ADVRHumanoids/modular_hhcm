@@ -3196,10 +3196,7 @@ class UrdfWriter:
                       "xacro:add_joint_stator",
                       type="joint_stator",
                       name=new_Joint.stator_name,
-                      filename=new_Joint.filename,
-                      size_y=new_Joint.joint_size_y,
-                      size_z=new_Joint.joint_size_z,
-                      size=str(new_Joint.size))
+                      filename=new_Joint.filename)
 
         self.add_gazebo_element(new_Joint.gazebo.body_1, new_Joint.stator_name)
 

@@ -71,18 +71,51 @@ dynamics:
             y: 0.0
             z: 0.0
 visual:
-    mesh_body_1: package://modular/src/modular/web/static/models/modular/meshes/concert/concert_yaw-base.stl
-    mesh_collision_1: package://modular/src/modular/web/static/models/modular/meshes/concert/simple/concert_yaw-base.stl
-    tf_mesh_1:
+    body_1:
+        type: mesh
+        parameters:
+            file: package://modular/src/modular/web/static/models/modular/meshes/concert/concert_yaw-base.stl
+            scale: [0.001, 0.001, 0.001]
+        pose:
+            x: 0.0
+            y: 0.0
+            z: 0.0
+            roll: 0.0
+            pitch: 0.0
+            yaw: 0.0
+        color: blue
+    body_2:
+        type: mesh
+        parameters:
+            file: package://modular/src/modular/web/static/models/modular/meshes/concert/concert_yaw-link.stl
+            scale: [0.001, 0.001, 0.001]
+        pose:
+            x: 0.0
+            y: 0.0
+            z: 0.0
+            roll: 0.0
+            pitch: 0.0
+            yaw: 0.0
+        color: green
+collision:
+    body_1:
+        type: mesh
+        parameters:
+            file: package://modular/src/modular/web/static/models/modular/meshes/concert/simple/concert_yaw-base.stl
+            scale: [0.001, 0.001, 0.001]
+        pose:
         x: 0.0
         y: 0.0
         z: 0.0
         roll: 0.0
         pitch: 0.0
         yaw: 0.0
-    mesh_body_2: package://modular/src/modular/web/static/models/modular/meshes/concert/concert_yaw-link.stl
-    mesh_collision_2: package://modular/src/modular/web/static/models/modular/meshes/concert/simple/concert_yaw-link.stl
-    tf_mesh_2:
+    body_2:
+        type: mesh
+        parameters:
+            file: package://modular/src/modular/web/static/models/modular/meshes/concert/simple/concert_yaw-link.stl
+            scale: [0.001, 0.001, 0.001]
+        pose:
         x: 0.0
         y: 0.0
         z: 0.0
