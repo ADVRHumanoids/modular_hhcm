@@ -1,0 +1,25 @@
+# joints
+111: module_joint_yaw_ORANGE_B.yaml
+16: module_joint_yaw_ORANGE_B.yaml
+12: module_joint_yaw_ORANGE_B.yaml
+11: module_joint_yaw_ORANGE_B.yaml
+13: module_joint_double_elbow_ORANGE_B.yaml
+14: module_joint_double_elbow_ORANGE_B.yaml
+42: module_joint_double_elbow_ORANGE_B.yaml
+# fhi joints
+21: module_joint_yaw_ORANGE_B.yaml
+22: module_joint_yaw_ORANGE_B.yaml
+23: module_joint_yaw_ORANGE_B.yaml
+24: module_joint_double_elbow_ORANGE_B.yaml
+25: module_joint_double_elbow_ORANGE_B.yaml
+26: module_joint_double_elbow_ORANGE_B.yaml
+# end-effectors
+89: module_gripper_B.yaml
+19: module_gripper_B.yaml
+321: module_tool_exchanger_B.yaml
+315: module_tool_exchanger_heavy.yaml
+# Links
+500: module_link_elbow_90_B.yaml
+501: module_link_straight_140_B.yaml
+-1 : master_cube.yaml
+201: master_cube.yaml

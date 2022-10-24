@@ -1,0 +1,150 @@
+type: "wheel"
+
+kinematics:
+    convention: "urdf"
+    joint:
+        proximal:
+            x: 0.0
+            y: 0.0
+            z: 0.0
+            roll: 0.0
+            pitch: 0.0
+            yaw: 0.0
+        distal:
+            x: 0.0
+            y: 0.0
+            z: 0.0
+            roll: 0.0
+            pitch: 0.0
+            yaw: 0.0
+        joint:
+            zero_offset: 0
+            type: "continuos"
+            lower_limit: -1e10
+            upper_limit: 1e10
+            effort: 314
+            velocity: 6.6
+        link: null
+
+dynamics:
+    body_1:
+        mass: 0.0
+        inertia_tensor:
+            I_xx: 0.0
+            I_yy: 0.0
+            I_zz: 0.0
+            I_xy: 0.0
+            I_xz: 0.0
+            I_yz: 0.0
+        CoM:
+            x: 0.0
+            y: 0.0
+            z: 0.0
+    body_2:
+        mass: 4.0116207
+        inertia_tensor:
+            I_xx: 2.8580559e-02
+            I_yy: 2.8580559e-02
+            I_zz: 4.4954065e-02
+            I_xy: 0.0
+            I_xz: 0.0
+            I_yz: 0.0
+        CoM:
+            x: 0.0
+            y: 0.0
+            z: -0.005
+    body_2_fast:
+        mass: 0.0
+        inertia_tensor:
+            I_xx: 0.0
+            I_yy: 0.0
+            I_zz: 0.0
+            I_xy: 0.0
+            I_xz: 0.0
+            I_yz: 0.0
+        CoM:
+            x: 0.0 
+            y: 0.0 
+            z: 0.0
+
+visual:
+    body_1: ''
+    body_2:
+        type: mesh
+        parameters:
+            file: package://modular/src/modular/web/static/models/modular/meshes/concert/concert_wheel.stl
+            scale: [0.001, 0.001, 0.001]
+        pose:
+            x: 0.0
+            y: 0.0
+            z: 0.0
+            roll: 0.0
+            pitch: 0.0
+            yaw: 0.0
+        color: black
+collision:
+    body_1: ''
+    body_2:
+        type: 'cylinder'
+        parameters:
+            radius: 0.16
+            length: 0.1
+        pose:
+            x: 0.0
+            y: 0.0
+            z: 0.0
+            roll: 0.0
+            pitch: 0.0
+            yaw: 0.0
+
+gazebo:
+  body_1: ''
+  body_2:
+    material: 'Gazebo/Residential'
+    selfCollide: true
+    collision:
+      surface:
+        friction:
+          ode:
+            mu: 1.0
+            mu2: 1.0
+          bullet:
+            friction: 1.0
+            friction2: 1.0
+        contact:
+          ode:  
+            kp: 2100000
+            kd: 1
+            max_vel: 100
+          bullet: 
+            soft_cfm: 0.007
+            soft_erp: 0.25
+            kp: 1000000
+            kd: 5
+
+xbot_gz:
+  pid:
+    p: 0
+    d: 50
+
+size: "big"
+
+control:
+  K_theta: 500
+  D_theta: 70
+  B: 0.000031
+  K_s: 80000
+  D_s: 2
+  D_m: 0.0000578
+  nu: 160
+
+
+CentAcESC:
+  control_mode: 71_motor_vel_ctrl #pos_3b #impedance_d4 #idle
+  sign: 1
+  pos_offset: 0
+  max_current_A: 30.0
+  pid:
+    position: [1000.0, 0.0, 30.0]
+    velocity: [50.0, 0.0, 0.0]
+    impedance: [500.0, 20.0, 1.0, 0.025, 0.99]

@@ -1,0 +1,1409 @@
+<html lang="en">
+    <head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+        <link rel="icon" href="https://alberobotics.it/images/apple-touch-icon.png" />
+
+        <title>URDF builder</title>
+
+        <!-- <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"> -->
+        <link href="{{ url_for('static', filename='/material-design-icons-3.0.1/iconfont/material-icons.css') }}" rel="stylesheet">
+
+        <!-- <link rel="stylesheet" > -->
+
+        <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+	    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"> -->
+        <!-- <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous"> -->
+        <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"> -->
+
+        <link rel="stylesheet" type="text/css"
+        href="{{ url_for('static', filename='/css/bootstrap-4.2.1/bootstrap.min.css') }}">
+        
+        <link rel="stylesheet" type="text/css"
+        href="{{ url_for('static', filename='/css/font-awesome.min.css') }}">
+
+    </head>
+
+    <body>
+        <!-- NOTE: importing scripts works with relative path for standalone version or with "url_for_static" when called by FLASK!-->
+        <!-- <script src="../static/js/three.js"></script> -->
+        <script type="text/javascript" >
+            var CURRENT_PARENT = '';
+            
+            function updateShownButtons(lastModule_type, count, lastSize) {
+
+                if (count>0)
+                    removeLast.style.display="inline-flex";
+                else
+                    removeLast.style.display="none";
+                
+            }
+        </script>
+        
+        <script type="text/javascript" src="{{ url_for('static', filename='/js/three.js') }}"></script>
+        
+        <script type="text/javascript" src="{{ url_for('static', filename='/js/js-yaml.min.js') }}"></script>
+
+        <script type="text/javascript" src="{{ url_for('static', filename='URDF_viewer.js') }}"></script>
+        
+        <script type="text/javascript" src="{{ url_for('static', filename='/examples/js/controls/OrbitControls.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='/examples/js/controls/TransformControls.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='/examples/js/loaders/STLLoader.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='/examples/js/loaders/ColladaLoader.js') }}"></script>
+
+        <script type="text/javascript" src="{{ url_for('static', filename='/examples/js/renderers/Projector.js') }}"></script>
+
+        <script type="text/javascript" src="{{ url_for('static', filename='/js/dat.gui.min.js') }}"></script>
+        <!-- <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script> -->
+        <!-- <script type="text/javascript" src="{{ url_for('static', filename='/js/jquery-3.2.1.min.js') }}"></script> -->
+
+        <!-- <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+
+        <script type="text/javascript" src="http://static.robotwebtools.org/EventEmitter2/current/eventemitter2.min.js"></script>
+		<script type="text/javascript" src="http://static.robotwebtools.org/roslibjs/current/roslib.min.js"></script>
+
+        <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script> -->
+
+        <script type="text/javascript"
+			src="{{ url_for('static', filename='/js/jquery-3.3.1.min.js') }}"></script>
+
+        <script type="text/javascript"
+            src="{{ url_for('static', filename='/js/bootstrap-4.2.1/popper-1.14.6/popper.js') }}"></script>
+
+        <script type="text/javascript"
+            src="{{ url_for('static', filename='/js/bootstrap-4.2.1/bootstrap.min.js') }}"></script>
+
+        <script type="text/javascript" src="{{ url_for('static', filename='/js/robotwebtools/eventemitter2.min.js') }}"></script>
+        
+        <script type="text/javascript" src="{{ url_for('static', filename='/js/robotwebtools/roslib.min.js') }}"></script>
+
+        <script type=text/javascript>
+            $SCRIPT_ROOT = "{{ url_for('index', _external=True) }}";
+        </script>
+
+        <style type="text/css">
+            html, body {
+                height: 100%;
+                margin:0
+            }
+            #header {
+                position: relative;
+                top: 50%;
+                left: 50%;
+            }
+            #container {
+                width: 100%;
+                height: 100%;
+                position: relative;
+                min-height: 100%;
+                /* display: none; */
+            }
+            #renderer,
+            #sliders {
+                width: 30%;
+                height: 80%;
+                position: absolute;
+                top: 0;
+                left: 0;
+            }
+            #sliders {
+                z-index: 5;
+            }
+            /* #selector {
+                width: 20%;
+                height: 100%;
+                position: absolute;
+                top: 0;
+                right: 0;
+                float: right;
+                display: none;
+                /* float:right;
+                width:50px;
+            }
+            #selector {
+                z-index: 5;
+            } */
+
+            #selectModulesFamily{
+                width: 100%;
+                height: 100%
+            }
+
+            #familySelector{
+                width: 100%;
+                height: 10%;
+            }
+
+            .button-bar-container {
+                width: 20%;
+                height: 100%;
+                position: fixed;
+                z-index: 1;
+                top: 0;
+                right: 0;
+                float: right;
+                background-color:#495057;
+            }
+
+            #leftBar {
+                width: 100%;
+                height: 100%;
+                padding: 0px 10px 0px; 
+                /* position: fixed; */
+                z-index: 1;
+                /* top: 0;
+                right: 0; */
+                float: right;
+            }
+            
+            #header {
+                position: absolute;
+                top: 0;
+                left: 0;
+            }
+            #header {
+                z-index: 10;
+            }
+            #removeLast {
+                /* background-color: rgb(206, 33, 33); */
+                border: none;
+                position: absolute;
+                bottom: 0;
+                right: 20%;
+                font-size: 24px;
+                color: white;
+                padding: 12px 16px;
+                display: none;
+            }
+            /* #syncHardware {
+                background-color: rgb(31, 101, 206);
+                border: none;
+                position: absolute;
+                bottom: 0;
+                right: 35%;
+                font-size: 19px;
+                color: white;
+                padding: 11px 16px;
+                vertical-align: bottom;
+                display: none;
+            } */
+            #deploy {
+                /* background-color: rgb(66, 206, 31); */
+                border: none;
+                position: absolute;
+                bottom: 0;
+                left: 45%;
+                font-size: 24px;
+                color: white;
+                padding: 12px 16px;
+                /* vertical-align: bottom; */
+            }
+
+            #syncModel {
+                /* background-color: rgb(206, 101, 31); */
+                border: none;
+                position: absolute;
+                bottom: 0;
+                left: 25%;
+                font-size: 24px;
+                color: white;
+                padding: 11px 16px;
+                /* vertical-align: bottom; */
+                /* display: none; */
+            }
+
+            .btn-subgroup {
+                width:100%;
+                /* height:20%; */
+                padding:3px 0 3px 0;
+            }
+
+			.button-selector {
+                /* background-size: 100% 100%; */
+                height: 140px; 
+                /* height: fit-content; */
+                width: 100%;
+                padding-bottom: 10px;
+                /* text-align: center; */
+                /* text-decoration: none;
+                display: inline-block; */
+                font-size: 16px;
+            }
+            
+            /* button > div {
+                padding-top: 50%;
+            } */
+            
+            /* The switch - the box around the slider */
+            .switch {
+                position: relative;
+                display: inline-block;
+                width: 120px;
+                height: 50px;
+                /* background: rgb(31, 101, 206); */
+            }
+
+            /* Hide default HTML checkbox */
+            .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+            }
+
+            /* The slider */
+            .slider {
+            position: absolute;
+            /* display: none; */
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            -webkit-transition: .4s;
+            transition: .4s;
+            }
+
+            .slider:before {
+            position: absolute;
+            content: "";
+            height: 38px;
+            width: 38px;
+            left: 6px;
+            bottom: 6px;
+            background-color: white;
+            -webkit-transition: .4s;
+            transition: .4s;
+            }
+
+            input:not(:checked) + .slider{
+                background-color: rgb(31, 101, 206)
+            }
+
+            input:checked + .slider {
+            background-color: rgb(206, 33, 33);
+            }
+
+            input:focus + .slider {
+            box-shadow: 0 0 1px rgb(206, 33, 33);
+            }
+
+            input:checked + .slider:before {
+            -webkit-transform: translateX(70px);
+            -ms-transform: translateX(70px);
+            transform: translateX(70px);
+            }
+
+            /* Rounded sliders */
+            .slider.round {
+            border-radius: 34px;
+            }
+
+            .slider.round:before {
+            border-radius: 50%;
+            } 
+
+            /* divisions for text around toggle switch */
+            #div-switchWrapper {
+                /* border: solid; */
+                width: 350px;
+                position: absolute;
+                display: inline-block;
+                right: 40%;
+                /* padding-top: 10px;
+                padding-bottom: 10px; */
+                top: 0;
+                height: 90px;
+            }
+
+            #div-BuildingMode {
+                display: inline-block;
+                /* border: solid; */
+                width: 100px;
+                position: relative;
+                left: 0%;
+                top: 15px;
+                text-align: center;
+                font-size: 20px;
+                font-weight: bold;
+                font-family: Verdana, Geneva, Tahoma, sans-serif;
+                /* background-color: rgb(31, 101, 206); */
+                color: rgb(31, 101, 206);
+            }
+
+            #div-switch {
+                /* border: solid; */
+                display: inline-block;
+                width: 120px;
+                vertical-align: middle;
+            }
+
+            #div-DiscoveryMode {
+                display: inline-block;
+                /* border: solid; */
+                width: 100px;
+                position: relative;
+                right: 0%;
+                top: 15px;
+                text-align: center;
+                font-size: 20px;
+                font-weight: bold;
+                font-family: Verdana, Geneva, Tahoma, sans-serif;
+                /* background-color: rgb(206, 33, 33); */
+                color:  rgb(206, 33, 33);
+            }
+            
+            #content {
+				position: absolute;
+				top: 0; width: 100%;
+				z-index: 1;
+				padding: 3em 0 0 0;
+			}
+
+			#c {
+				position: absolute;
+				left: 0;
+				width: 100%;
+				height: 100%;
+			}
+
+			.list-item {
+				display: inline-block;
+				margin: 1em;
+				padding: 1em;
+				box-shadow: 1px 2px 4px 0px rgba(0,0,0,0.25);
+			}
+
+			.list-item .scene {
+				width: 200px;
+				height: 200px;
+			}
+
+			.list-item .description {
+				color: #888;
+				font-family: sans-serif;
+				font-size: large;
+				width: 200px;
+				margin-top: 0.5em;
+			}
+
+            #waitOverlay {
+                position: fixed; /* Sit on top of the page content */
+                visibility: hidden; /* Hidden by default */
+                width: 100%; /* Full width (cover the whole page) */
+                height: 100%; /* Full height (cover the whole page) */
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: rgba(0,0,0,0.5); /* Black background with opacity */
+                z-index: 5; /* Specify a stack order in case you're using a different order for other elements */
+                cursor: pointer; /* Add a pointer on hover */
+            }
+
+        </style>
+        
+        
+        <!-- <pre id="fileDisplayArea"></pre> -->
+        <div id = "container">
+            <div id="waitOverlay" class="d-flex justify-content-center align-self-center align-items-center flex-column">
+                <div class="spinner-border m-5" style="width: 7rem; height: 7rem; color: #1dc092;" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+                <strong style="font-size: xxx-large; color: #1dc092;">Loading...</strong>
+            </div> 
+            <div id="header" style="overflow-y:auto;">
+                Select a text file: 
+                <input type="file" id="fileInput">
+            </div>
+            <div id="renderer"></div>
+            <div id="sliders" style="overflow-y:auto;">
+                <ul></ul>
+            </div>
+            <!-- Rounded switch -->
+            <div id="div-switchWrapper">
+                <div id="div-BuildingMode">Building Mode</div>
+                <div id="div-switch">
+                    <label class="switch" id="modeSwitch" style="overflow-y:auto;">
+                        <input type="checkbox" id="modeInput" checked>
+                        <span class="slider round" id="modeSwitchSlider" style="overflow-y:auto;"></span>
+                    </label>
+                </div>
+                <div id="div-DiscoveryMode">Discovery Mode</div>
+            </div>
+            <button id=removeLast class="btn btn-danger">
+                <i class="material-icons" style="font-size: 30px; padding-top: 4px; padding-right: 4px;">delete</i>Remove Module
+            </button>
+            <!-- <button id=syncHardware class="btn"><span style="padding-right: 4px"><i class="material-icons">developer_board</i></span>Sync with hardware</button> -->
+            <button id=deploy class="btn btn-success">
+                <i class="material-icons" style="font-size: 30px; padding-top: 4px; padding-right: 4px;">done</i>Deploy Robot
+            </button>
+            <button id=syncModel class="btn btn-primary">
+                <i class="material-icons" style="font-size: 30px; padding-top: 4px; padding-right: 4px;">power_settings_new</i>Generate model
+            </button>
+            
+            <div id=barContainer class="button-bar-container">
+                <div id="leftBar" class="btn-group-vertical" > 
+                    <!-- style="overflow-y:auto;" -->
+                    <div id="familySelector"  class="btn-group-vertical"  >
+                        <!-- class="btn-group-vertical" style="overflow-y:auto;" -->
+                        
+                        <!-- <label for="selectModulesFamily">Modules Family:</label>
+                        <select name="selectModulesFamily" id="selectModulesFamily" class="selectpicker">
+                            <option value="alberobotics">Alberobotics Modules</option>
+                            <option value="innowelle">Innowelle Modules</option>
+                        </select> -->
+                        <div id="selectModulesFamily" class="btn-group dropleft">
+                            <button id="selectModulesFamilyBtn" type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown" data-prefix="Selected family: " aria-haspopup="true" aria-expanded="false">
+                                Select a family of modules:
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+                                <li><a href="#" class="dropdown-item" data-value="Concert">Concert Modules</a></li>
+                                <li><a href="#" class="dropdown-item" data-value="Alberobotics">Alberobotics Modules</a></li>
+                                <!-- <li><a href="#" class="dropdown-item" data-value="Innowelle">Innowelle Modules</a></li> -->
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- <input type="file" id="moduleInput"> -->
+
+                    <!-- Select a module to add:  -->
+                    <div id='alberoboticsModules' class="btn-group-vertical btn-subgroup overflow-auto" style="display:none">
+                        <button type="button" id="addSocketBase" class="btn btn-dark button-selector"><div>Add Socket Base</div></button>
+                        <button type="button" id="addSlaveCube" class="btn btn-dark button-selector"><div>Add Slave Cube</div></button>
+                        <button type="button" id="addYawJoint" class="btn btn-dark button-selector"><div>Add Straight Joint</div></button>
+                        <button type="button" id="addDoubleElbowJoint" class="btn btn-dark button-selector"><div>Add Elbow Joint</div></button>
+                        <button type="button" id="addToolExchanger" class="btn btn-dark button-selector"><div>Add Tool Exchanger</div></button>
+                        <button type="button" id="addGripper" class="btn btn-dark button-selector"><div>Add Gripper</div></button>
+                    </div>
+
+                    <div id='innowelleModules' class="btn-group-vertical btn-subgroup overflow-auto" style="display:none">
+                        <button type="button" id="add_3011_ICM_14_v4" class="btn btn-dark button-selector"><div>Add 3011_ICM_14_v4</div></button>
+                        <button type="button" id="add_3011_ICM_17_v3" class="btn btn-dark button-selector"><div>Add 3011_ICM_17_v3</div></button>
+                        <button type="button" id="add_3011_ICM_20_v2" class="btn btn-dark button-selector"><div>Add 3011_ICM_20_v2</div></button>
+                        <button type="button" id="add_3011_ICM_25_v3" class="btn btn-dark button-selector"><div>Add 3011_ICM_25_v3</div></button>
+                        <button type="button" id="add_3011_ICM_32_v2" class="btn btn-dark button-selector"><div>Add 3011_ICM_32_v2</div></button>
+                        <button type="button" id="add_size_adapter_MtoS" class="btn btn-dark button-selector"><div>Add Size Adapter 17 to 14</div></button>
+                        <button type="button" id="add_size_adapter_BtoM" class="btn btn-dark button-selector"><div>Add Size Adapter 20 to 17</div></button>
+                        <button type="button" id="add_size_adapter_LtoB" class="btn btn-dark button-selector"><div>Add Size Adapter 25 to 20</div></button>
+                        <button type="button" id="add_size_adapter_XLtoL" class="btn btn-dark button-selector"><div>Add Size Adapter 32 to 25</div></button>
+                        <button type="button" id="add_innowelle_link" class="btn btn-dark button-selector"><div>Add Dummy Link</div></button>
+                        <button type="button" id="add_goose_neck" class="btn btn-dark button-selector"><div>Add Goose Neck</div></button>
+                    </div>
+
+                    <div id='concertModules' class="btn-group-vertical btn-subgroup overflow-auto" >
+                        <button type="button" id="addMobileBase" class="btn btn-dark button-selector"><div>Add Mobile Base</div></button>
+                        <button type="button" id="addConcertYawJoint" class="btn btn-dark button-selector"><div>Add Concert Straight Joint</div></button>
+                        <button type="button" id="addConcertElbowJoint" class="btn btn-dark button-selector"><div>Add Concert Elbow Joint</div></button>
+                        <button type="button" id="addConcertWheel" class="btn btn-dark button-selector"><div>Add Concert Wheel</div></button>
+                        <button type="button" id="addPassiveLink10" class="btn btn-dark button-selector"><div>Add 10cm passive link</div></button>
+                        <button type="button" id="addPassiveLink20" class="btn btn-dark button-selector"><div>Add 20cm passive link</div></button>
+                        <button type="button" id="addPassiveLink50" class="btn btn-dark button-selector"><div>Add 50cm passive link</div></button>
+                    </div>
+                </div>
+            </div>
+		</div>
+		
+        <!-- <canvas id="c"></canvas>
+        <div id="content">
+            <div id="info"><a href="http://threejs.org" target="_blank" rel="noopener">three.js</a> - multiple elements - webgl</div>
+        </div>
+        
+        <script id="template" type="notjs">
+            <div class="scene"></div>
+            <div class="description">Scene $</div>
+        </script>
+
+        <script type="module">
+
+			var canvas;
+
+			var scenes = [], renderer;
+
+			init();
+			console.log(scenes)
+			animate();
+
+			function init() {
+
+				canvas = document.getElementById( "c" );
+
+				var geometries = [
+					new THREE.BoxBufferGeometry( 1, 1, 1 ),
+					new THREE.SphereBufferGeometry( 0.5, 12, 8 ),
+					new THREE.DodecahedronBufferGeometry( 0.5 ),
+					new THREE.CylinderBufferGeometry( 0.5, 0.5, 1, 12 )
+				];
+
+				var template = document.getElementById( "template" ).text;
+				var content = document.getElementById( "content" );
+
+				for ( var i = 0; i < 40; i ++ ) {
+
+					var scene = new THREE.Scene();
+
+					// make a list item
+					var element = document.createElement( "div" );
+					element.className = "list-item";
+					element.innerHTML = template.replace( '$', i + 1 );
+
+					// Look up the element that represents the area
+					// we want to render the scene
+					scene.userData.element = element.querySelector( ".scene" );
+					content.appendChild( element );
+
+					var camera = new THREE.PerspectiveCamera( 50, 1, 1, 10 );
+					camera.position.z = 2;
+					scene.userData.camera = camera;
+
+					var controls = new THREE.OrbitControls( scene.userData.camera, scene.userData.element );
+					controls.minDistance = 2;
+					controls.maxDistance = 5;
+					controls.enablePan = false;
+					controls.enableZoom = false;
+					scene.userData.controls = controls;
+
+					// add one random mesh to each scene
+					var geometry = geometries[ geometries.length * Math.random() | 0 ];
+
+					var material = new THREE.MeshStandardMaterial( {
+
+						color: new THREE.Color().setHSL( Math.random(), 1, 0.75 ),
+						roughness: 0.5,
+						metalness: 0,
+						flatShading: true
+
+					} );
+
+					scene.add( new THREE.Mesh( geometry, material ) );
+
+					scene.add( new THREE.HemisphereLight( 0xaaaaaa, 0x444444 ) );
+
+					var light = new THREE.DirectionalLight( 0xffffff, 0.5 );
+					light.position.set( 1, 1, 1 );
+					scene.add( light );
+
+					scenes.push( scene );
+
+				}
+
+
+				renderer = new THREE.WebGLRenderer( { canvas: canvas, antialias: true } );
+				renderer.setClearColor( 0xffffff, 1 );
+				renderer.setPixelRatio( window.devicePixelRatio );
+
+			}
+
+			function updateSize() {
+
+				var width = canvas.clientWidth;
+				var height = canvas.clientHeight;
+
+				if ( canvas.width !== width || canvas.height !== height ) {
+
+					renderer.setSize( width, height, false );
+
+				}
+
+			}
+
+			function animate() {
+
+				render();
+				requestAnimationFrame( animate );
+
+			}
+
+			function render() {
+
+				updateSize();
+
+				canvas.style.transform = `translateY(${window.scrollY}px)`;
+
+				renderer.setClearColor( 0xffffff );
+				renderer.setScissorTest( false );
+				renderer.clear();
+
+				renderer.setClearColor( 0xe0e0e0 );
+				renderer.setScissorTest( true );
+
+				scenes.forEach( function ( scene ) {
+
+					// so something moves
+					scene.children[ 0 ].rotation.y = Date.now() * 0.001;
+
+					// get the element that is a place holder for where we want to
+					// draw the scene
+					var element = scene.userData.element;
+
+					// get its position relative to the page's viewport
+					var rect = element.getBoundingClientRect();
+
+					// check if it's offscreen. If so skip it
+					if ( rect.bottom < 0 || rect.top > renderer.domElement.clientHeight ||
+						rect.right < 0 || rect.left > renderer.domElement.clientWidth ) {
+
+						return; // it's off screen
+
+					}
+
+					// set the viewport
+					var width = rect.right - rect.left;
+					var height = rect.bottom - rect.top;
+					var left = rect.left;
+					var bottom = renderer.domElement.clientHeight - rect.bottom;
+
+					renderer.setViewport( left, bottom, width, height );
+					renderer.setScissor( left, bottom, width, height );
+
+					var camera = scene.userData.camera;
+
+					//camera.aspect = width / height; // not changing in this example
+					//camera.updateProjectionMatrix();
+
+					//scene.userData.controls.update();
+
+					renderer.render( scene, camera );
+
+				} );
+
+			}
+
+        </script> -->
+
+
+
+
+        <script>
+            var flag, reader, robots, doc;
+            var size = 3;
+            var buildingModeON;
+            var erasePrevious = false;
+            var link_positions, joint_names;
+            var i=0;
+
+            
+            
+            window.onload = function() {
+                var fileInput = document.getElementById('fileInput');
+                var header = document.getElementById('header');
+                var modeInput = document.getElementById('modeInput');
+                buildingModeON = !modeInput.checked;
+                console.log(buildingModeON);
+                //var fileDisplayArea = document.getElementById('fileDisplayArea');
+                //var moduleInput = document.getElementById('moduleInput');
+                var barContainer = document.getElementById('barContainer')
+                var selectModulesFamily = document.getElementById("selectModulesFamily");
+
+                var addJoint = document.getElementById('addJoint');
+                var add_3011_ICM_14_v4 = document.getElementById('add_3011_ICM_14_v4');
+                var add_3011_ICM_17_v3 = document.getElementById('add_3011_ICM_17_v3');
+                var add_3011_ICM_20_v2 = document.getElementById('add_3011_ICM_20_v2');
+                var add_3011_ICM_25_v3 = document.getElementById('add_3011_ICM_25_v3');
+                var add_3011_ICM_32_v2 = document.getElementById('add_3011_ICM_32_v2');
+                var add_size_adapter_MtoS = document.getElementById('add_size_adapter_MtoS');
+                var add_size_adapter_BtoM = document.getElementById('add_size_adapter_BtoM');
+                var add_size_adapter_LtoB = document.getElementById('add_size_adapter_LtoB');
+                var add_size_adapter_XLtoL = document.getElementById('add_size_adapter_XLtoL');
+                var add_innowelle_link = document.getElementById('add_innowelle_link');
+                var add_goose_neck = document.getElementById('add_goose_neck');
+
+                var addElbow = document.getElementById('addElbow');
+                var addLink = document.getElementById('addLink');
+                var addLink500 = document.getElementById('addLink500mm');
+                var addLink700 = document.getElementById('addLink700mm');
+                var addSizeAdapter_Big2Medium = document.getElementById('addSizeAdapter_Big2Medium');
+                var addSizeAdapter_Big2Small = document.getElementById('addSizeAdapter_Big2Small');
+                var addSizeAdapter_Medium2Small = document.getElementById('addSizeAdapter_Medium2Small');
+
+                var addMobileBase = document.getElementById('addMobileBase');
+                var addSlaveCube = document.getElementById('addSlaveCube');
+                var addSocketBase = document.getElementById('addSocketBase');
+                var addToolExchanger = document.getElementById('addToolExchanger');
+                var addGripper = document.getElementById('addGripper');
+                var removeLast = document.getElementById('removeLast');
+                // var syncHardware = document.getElementById('syncHardware');
+                var deploy = document.getElementById('deploy');
+                var syncModel = document.getElementById('syncModel');
+                var modeSwitch = document.getElementById('modeSwitch');
+                var modeSwitchSlider = document.getElementById('modeSwitchSlider');
+                var addYawJoint = document.getElementById('addYawJoint');
+                var addConcertYawJoint = document.getElementById('addConcertYawJoint');
+                var addDoubleElbowJoint = document.getElementById('addDoubleElbowJoint');
+                var addConcertElbowJoint = document.getElementById('addConcertElbowJoint');
+                var addConcertWheel = document.getElementById('addConcertWheel');
+                var addPassiveLink10 = document.getElementById('addPassiveLink10');
+                var addPassiveLink20 = document.getElementById('addPassiveLink20');
+                var addPassiveLink50 = document.getElementById('addPassiveLink50');
+
+                var URDFChangeEventHandler = new URDF_change_eventHandler();
+
+                // var gui = new dat.GUI();
+
+                // Initialize the urdfViewer class: create a scene, renderer, etc.
+                urdfViewer._init();
+                requestURDF();
+                barContainer.style.display = 'block';
+                header.style.display = 'none';
+                // syncHardware.style.display = 'inline-flex';
+                syncModel.style.display = 'inline-flex';
+                deploy.style.display = 'inline-flex';
+            
+                if(buildingModeON){
+                    barContainer.style.display = 'block';
+                    header.style.display = 'none';                    
+                }
+                else {
+                    barContainer.style.display = 'none'; 
+                    header.style.display = 'none';                
+                }
+
+                fileInput.addEventListener('change', function(e) {
+                    var file = fileInput.files[0];
+                    console.log(file)
+                    reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        //fileDisplayArea.innerText = reader.result;
+                        document.getElementById('header').style.display="none";
+                        //robots = urdfViewer.showURDF(reader);
+                        // barContainer.style.display = 'block';
+                        // modeSwitch.style.display = 'inline-block';
+                        // modeSwitchSlider.style.display = 'block';
+                        // syncHardware.style.display = 'inline-flex';
+
+                        //console.log(reader.result)
+                        $.ajax({
+                            url: $SCRIPT_ROOT + 'openFile/',
+                            data: {'file': reader.result},
+                            method: 'POST',
+                            // contentType: false,
+                            // processData: false,
+                            success: function(data) {
+                                // Initialize the urdfViewer class: create a scene, renderer, etc.
+                                urdfViewer._init();
+                                console.log(data['string'])
+                                robots = urdfViewer.showURDF(data['string']);
+                            },
+                            async: true
+                        });
+                    }
+                    
+                    reader.readAsText(file);  
+
+                });
+
+                modeInput.addEventListener('change', function(e) {
+                    buildingModeON = !modeInput.checked;
+                    $.ajax({
+                        url: $SCRIPT_ROOT + 'changeMode/',
+                        data: {'buildingModeON': buildingModeON},
+                        method: 'POST',
+                        success: function(data) {
+                            console.log(modeInput.checked)
+                            if(urdfViewer.robots[1]) {
+                                urdfViewer.removeLastURDF()
+                            }
+                            urdfViewer.removeLastURDF();
+                            console.log(data['building mode'])
+                            //robots = urdfViewer.showURDF(data['string']);
+                            //var buildingModeON = !modeInput.checked;
+                            if(modeInput.checked) {
+                                console.log("Discovery mode on")
+                                // buildingModeON = false;
+                                barContainer.style.display = 'none';
+                                header.style.display = 'none';
+                            }
+                            else {
+                                console.log("Building mode on")
+                                // use modeInput.checked instead
+                                // buildingModeON = true;
+                                erasePrevious = false;
+                                requestURDF();
+                                barContainer.style.display = 'block';
+                                header.style.display = 'none';
+                            }
+                        
+
+                            console.log(buildingModeON);
+                        },
+                        async: true
+                    }); 
+                });
+
+
+                //Old way used for adding a module: the urdf file is picked manually by the user
+                //
+                // moduleInput.addEventListener('change', function(e) {
+                //     var file = moduleInput.files[0];    
+                //     reader = new FileReader();    
+                //     reader.onload = function(e) {
+                //         //fileDisplayArea.innerText = reader.result;
+                //         urdfViewer.addModule(reader);
+                //     }    
+                //     reader.readAsText(file);      
+                // });
+                addMobileBase.onclick = function() {addMobilePlatform("concert/mobile_platform", size_value=3)};
+
+                addSlaveCube.onclick = function() {addCube("mastercube", size_value=3)};
+
+                addSocketBase.onclick = function() {addSocket()};
+
+                removeLast.onclick = function() {removeModule()};
+
+                // syncHardware.onclick = function() {syncHW()};
+
+                deploy.onclick = function() {writeDeploy()};
+
+                syncModel.onclick = function() {
+                    activateWaitOverlay();
+                    // startMaster(false, function() {
+                    syncHW(true, function(){
+                        deactivateWaitOverlay();
+                        // stopMaster(false, function() {})
+                        // URDFChangeEventHandler.addEventListener('urdf-change', function (event) {
+                        // });
+
+                        });
+                    // });
+                };
+
+                // $(document).on('change', '#selectModulesFamilyBtn', function () {
+                //     // var dropdownToggle = $(this).parents('.btn-group').find('.dropdown-toggle')
+                //     if($('#selectModulesFamilyBtn option:selected').val() == "Innowelle") {
+                //         $('#innowelleModules').show()
+                //         $('#alberoboticsModules').hide()
+                //     }
+                //     else {
+                //         $('#innowelleModules').hide()
+                //         $('#alberoboticsModules').show()
+                //     }
+                // })
+
+                $( ".dropdown-menu" ).on( "click", "a", function( event ) {
+					event.preventDefault();  //do not follow link of anchor element
+					console.log('Selection')
+					var selText = $(this).text();
+					console.log( $(this).text())
+                    console.log($(this).parents('.btn-group'))
+  					var dropdownToggle = $(this).parents('.btn-group').find('.dropdown-toggle')
+					dropdownToggle.html(dropdownToggle.data('prefix')+selText+'  <span class="caret"></span>');
+					dropdownToggle.val($(this).data('value'));
+                    dropdownToggle.change();
+                    console.log(dropdownToggle.val())
+                    
+                    if(dropdownToggle.val() == "Innowelle") {
+                        $('#innowelleModules').show()
+                        $('#alberoboticsModules').hide()
+                        $('#concertModules').hide()
+                    }
+                    else if(dropdownToggle.val() == "Alberobotics") {
+                        $('#innowelleModules').hide()
+                        $('#alberoboticsModules').show()
+                        $('#concertModules').hide()
+                    }
+                    else if(dropdownToggle.val() == "Concert") {
+                        $('#innowelleModules').hide()
+                        $('#alberoboticsModules').hide()
+                        $('#concertModules').show()
+                    }
+				});
+
+                addToolExchanger.onclick = function() {addModule("module_tool_exchanger_heavy", size_value=3)};
+                addGripper.onclick = function() {addModule("module_gripper", size_value=3)};
+
+                add_3011_ICM_14_v4.onclick = function() {addModule("innowelle/3011_ICM_14_v4", size_value=1)};
+                add_3011_ICM_17_v3.onclick = function() {addModule("innowelle/3011_ICM_17_v3", size_value=2)};
+                add_3011_ICM_20_v2.onclick = function() {addModule("innowelle/3011_ICM_20_v2", size_value=3)};
+                add_3011_ICM_25_v3.onclick = function() {addModule("innowelle/3011_ICM_25_PRELIMINARY_v3", size_value=4)};
+                add_3011_ICM_32_v2.onclick = function() {addModule("innowelle/3011_ICM_32_PRELIMINARY_v2", size_value=5)};
+                add_size_adapter_MtoS.onclick = function() {addModule("innowelle/module_size_adapter_MtoS", size)};
+                add_size_adapter_BtoM.onclick = function() {addModule("innowelle/module_size_adapter_BtoM", size)};
+                add_size_adapter_LtoB.onclick = function() {addModule("innowelle/module_size_adapter_LtoB", size)};
+                add_size_adapter_XLtoL.onclick = function() {addModule("innowelle/module_size_adapter_XLtoL", size)};
+                add_innowelle_link.onclick = function() {addModule("innowelle/module_link", size)};
+                add_goose_neck.onclick = function() {addModule("innowelle/module_goose_neck", size_value=2)};
+                
+                
+                addYawJoint.onclick = function() {addModule("module_joint_yaw_ORANGE", size_value=3)};
+                addConcertYawJoint.onclick = function() {addModule("concert/module_joint_concert_yaw_ORANGE", size_value=3)};
+
+                addDoubleElbowJoint.onclick = function() {addModule("module_joint_double_elbow_ORANGE", size_value=3)};
+                addConcertElbowJoint.onclick = function() {addModule("concert/module_joint_concert_elbow_ORANGE", size_value=3)};
+                addConcertWheel.onclick = function() {addWheel("concert/module_wheel_concert_ORANGE", "concert/module_steering_concert_ORANGE", size_value=3)};
+                addPassiveLink10.onclick = function() {addModule("concert/module_link_concert_straight_10_ORANGE", size_value=3)};
+                addPassiveLink20.onclick = function() {addModule("concert/module_link_concert_straight_20_ORANGE", size_value=3)};
+                addPassiveLink50.onclick = function() {addModule("concert/module_link_concert_straight_50_ORANGE", size_value=3)};
+                
+                var ros = new ROSLIB.Ros({
+                    url : 'ws://10.24.8.100:9090'
+                });
+
+                ros.on('connection', function() {
+                    console.log('Connected to websocket server.');
+                });
+
+                ros.on('error', function(error) {
+                    console.log('Error connecting to websocket server: ', error);
+                });
+
+                ros.on('close', function() {
+                    console.log('Connection to websocket server closed.');
+                });
+
+                var jointstate_listener = new ROSLIB.Topic({
+                    ros : ros,
+                    name : '/xbotcore/joint_states',
+                    messageType : 'xbot_msgs/JointState'
+                });
+
+                jointstate_listener.subscribe(function(m) {
+                    link_positions = m.link_position;
+                    joint_names = m.name;
+                    
+                    joint_names.forEach(function(name, index){
+                        urdfViewer.setAngle(name, link_positions[index]);
+                    });
+
+                });
+            }
+
+            // window.onbeforeunload = function() {
+            //     return "leaving";
+            // }
+
+            //Function to add a new module. Called at the click of the linked button
+            function    addModule(modulename, size_value) {
+                var offset = parseFloat(prompt("Enter the angle offset for the module:", "0"));
+                var reverse = confirm("Do you want to connect it backwards?");
+                
+                //opening YAML file containing kin. and dyn. parameters and URDF path
+                //var url = $SCRIPT_ROOT + 'yaml/' + filename;
+                //openfile(url, callBack_YAML)  
+                switch (size_value) {
+                    case 5:
+                        size_tag = '_XL';
+                        break;
+                    case 4:
+                        size_tag = '_L';
+                        break;
+                    case 3:
+                        size_tag = '_B';
+                        break;
+                    case 2:
+                        size_tag = '_M';
+                        break;
+                    case 1:
+                        size_tag = '_S';
+                        break;
+                }
+                
+                if (modulename.indexOf("module_size_adapter") >= 0) {
+                    filename = modulename + '.yaml'
+                } else {
+                    filename = modulename + size_tag + '.yaml'
+                }
+                
+                //making an ajax request to the server to proceed to write the modified URDF
+                //
+                $.ajax({
+                    url: $SCRIPT_ROOT + 'changeURDF/',
+                    data: {'module_name': filename, 'parent': CURRENT_PARENT, 'angle_offset': offset, 'reverse': reverse},
+                    method: 'POST',
+                    success: function(data) { //data is a JSON returned by the server containing 'result', which is the modified URDF
+                        console.log(data)
+                        robots = urdfViewer.updateURDF(data['result'])//, data['lastModule_name'])
+                        // Update size
+                        size = data['size']
+                        updateShownButtons(data['lastModule_type'], data['count'], data['size'])
+                        console.log(size)
+                        CURRENT_PARENT = data['lastModule_name']
+                        //write the file
+                        writeRequest(data['result'], true, function(){})
+                    },
+                    async: true
+                });
+
+            };
+
+            //Function to add a new module. Called at the click of the linked button
+            function    addWheel(wheel_module_name, steering_module_name, size_value) {
+                var offset = parseFloat(prompt("Enter the angle offset for the module:", "0"));
+                var reverse = confirm("Do you want to connect it backwards?");
+                
+                //opening YAML file containing kin. and dyn. parameters and URDF path
+                //var url = $SCRIPT_ROOT + 'yaml/' + filename;
+                //openfile(url, callBack_YAML)  
+                switch (size_value) {
+                    case 5:
+                        size_tag = '_XL';
+                        break;
+                    case 4:
+                        size_tag = '_L';
+                        break;
+                    case 3:
+                        size_tag = '_B';
+                        break;
+                    case 2:
+                        size_tag = '_M';
+                        break;
+                    case 1:
+                        size_tag = '_S';
+                        break;
+                }
+                
+                wheel_filename = wheel_module_name + size_tag + '.yaml'
+                steering_filename = steering_module_name + size_tag + '.yaml'
+                
+                //making an ajax request to the server to proceed to write the modified URDF
+                $.ajax({
+                    url: $SCRIPT_ROOT + 'addWheel/',
+                    data: {'wheel_module_name': wheel_filename, 'steering_module_name': steering_filename, 'parent': CURRENT_PARENT, 'angle_offset': offset, 'reverse': reverse},
+                    method: 'POST',
+                    success: function(data) {
+                        console.log(data)
+                        robots = urdfViewer.updateURDF(data['result'])//, data['lastModule_name'])
+                        // Update size
+                        size = data['size']
+                        updateShownButtons(data['lastModule_type'], data['count'], data['size'])
+                        console.log(size)
+                        CURRENT_PARENT = data['lastModule_name']
+                        //write the file
+                        writeRequest(data['result'], true, function(){})
+                    },
+                    async: true
+                });
+
+            };
+
+            function requestURDF(){
+                $.ajax({
+                    url: $SCRIPT_ROOT + 'requestURDF/',
+                    data: {'mode': buildingModeON},
+                    method: 'POST',
+                    success: function(data) {
+                        
+                        //urdfViewer._init();
+                        console.log(data['string'])
+                        robots = urdfViewer.showURDF(data['string']);
+                        
+                    },
+                    async: true
+                });
+            }
+
+            function getSimpleJointMap(){
+                var jointMap = urdfViewer.robots[0].urdf.joints
+                var simplified_jointMap = {}
+                Object.keys(jointMap).forEach(j =>{
+                    simplified_jointMap[jointMap[j].name] = jointMap[j].urdf
+                })
+                json_jointMap = JSON.stringify(simplified_jointMap)
+                return json_jointMap
+            }
+
+            function writeRequest(URDF_string, async_bool, callback){
+                var json_jointMap = getSimpleJointMap()
+                $.ajax({
+                    url: $SCRIPT_ROOT + 'writeURDF/',
+                    data: {'string': URDF_string, 'jointMap': json_jointMap, 'buildingModeON': buildingModeON},
+                    method: 'POST',
+                    success: function(data) {
+                        console.log(data)
+                        callback()    
+                    },
+                    async: async_bool //true
+                });
+            }
+
+            function syncHW(async_bool, callback) {
+                $.ajax({
+                    url: $SCRIPT_ROOT + 'syncHW/',
+                    method: 'POST',
+                    success: function(data) {
+                        console.log(buildingModeON)
+                        if(buildingModeON){
+                            // If there is already a "red URDF" shown, erase it before adding the new one.
+                            if(erasePrevious) {
+                                urdfViewer.removeLastURDF()
+                            }
+                            console.log(data['string'])
+                            robots = urdfViewer.addURDF(data['string'])//, data['lastModule_name'])
+                            erasePrevious = true;
+                            // writeRequest(data['result'], true, function(){})
+                        }
+                        else {
+                            urdfViewer.removeLastURDF()
+                            console.log(data['string'])
+                            robots = urdfViewer.showURDF(data['string']);
+                            if(urdfViewer.linkMap['L_0_B']) {
+                            
+                                if(confirm("Do you want to calibrate the position of the 2nd base?")) {
+                                    // TBD
+                                }
+                                else {
+                                    var x_offset = parseFloat(prompt("Please set manually the position of the 2nd base then?\nEnter the x offset for the socket:", "0.4"));
+                                    var y_offset = parseFloat(prompt("Enter the y offset for the socket:", "0.4"));
+                                    var z_offset = 0.0
+                                    var angle_offset = parseFloat(prompt("Enter the angle offset for the socket:", "1.57"))
+                                    var values= {'offset': {x_offset, y_offset, z_offset}, 'angle_offset': angle_offset}
+
+                                    $.ajax({
+                                        url: $SCRIPT_ROOT + 'moveSocket/',
+                                        data: { 'values' : JSON.stringify(values) },
+                                        method: 'POST',
+                                        success: function(data) {
+                                            console.log(data)
+                                            urdfViewer.removeLastURDF()
+                                            console.log(data['result'])
+                                            robots = urdfViewer.showURDF(data['result']);
+                                            //write the file
+                                            writeRequest(data['result'], true, function(){})
+                                        },
+                                        async: true
+                                    });
+                                }
+                            }
+                        }
+
+                        callback();
+                    },
+                    async: async_bool //true
+                });
+            }
+
+            function addSocket() {
+                //making an ajax request to the server to add a Socket
+                var x_offset = parseFloat(prompt("Enter the x offset for the socket:", "0"));
+                var y_offset = parseFloat(prompt("Enter the yoffset for the socket:", "0"));
+                var z_offset = 0.0
+                var angle_offset = parseFloat(prompt("Enter the angle offset for the socket:", "0"))
+                var values= {'offset': {x_offset, y_offset, z_offset}, 'angle_offset': angle_offset}
+
+                $.ajax({
+                    url: $SCRIPT_ROOT + 'addSocket/',
+                    data: { 'values' : JSON.stringify(values), 'buildingModeON' : buildingModeON },
+                    method: 'POST',
+                    success: function(data) {
+                        console.log(data)
+                        robots = urdfViewer.updateURDF(data['result'])//, data['lastModule_name'])
+                        // Update size
+                        size = data['size']
+                        updateShownButtons(data['lastModule_type'], data['count'], data['size'])
+                        console.log(size)
+                        CURRENT_PARENT = data['lastModule_name']
+                        
+                        //write the file
+                        writeRequest(data['result'], true, function(){})
+                    },
+                    async: true
+                });
+
+            };
+
+            function addCube(modulename) {
+                //making an ajax request to the server to add a Cube
+                var offset = parseFloat(prompt("Enter the angle offset for the module:", "0"));
+                
+                filename = modulename + '.yaml'
+                $.ajax({
+                    url: $SCRIPT_ROOT + 'addMasterCube/',
+                    data: {'module_name': filename, 'parent': CURRENT_PARENT, 'angle_offset': offset},
+                    method: 'POST',
+                    success: function(data) {
+                        console.log(data)
+                        robots = urdfViewer.updateURDF(data['result'])//, data['lastModule_name'])
+                        // Update size
+                        size = data['size']
+                        updateShownButtons(data['lastModule_type'], data['count'], data['size'])
+                        console.log(size)
+                        CURRENT_PARENT = data['lastModule_name']
+                        //write the file
+                        writeRequest(data['result'], true, function(){})
+                    },
+                    async: true
+                });
+
+            };
+
+            function addMobilePlatform(modulename) {
+                //making an ajax request to the server to add a Cube
+                var offset = parseFloat(prompt("Enter the angle offset for the module:", "0"));
+                
+                filename = modulename + '.yaml'
+                $.ajax({
+                    url: $SCRIPT_ROOT + 'addMobilePlatform/',
+                    data: {'module_name': filename, 'parent': CURRENT_PARENT, 'angle_offset': offset},
+                    method: 'POST',
+                    success: function(data) {
+                        console.log(data)
+                        robots = urdfViewer.updateURDF(data['result'])//, data['lastModule_name'])
+                        // Update size
+                        size = data['size']
+                        updateShownButtons(data['lastModule_type'], data['count'], data['size'])
+                        console.log(size)
+                        CURRENT_PARENT = data['lastModule_name']
+                        //write the file
+                        writeRequest(data['result'], true, function(){})
+                    },
+                    async: true
+                });
+
+            };
+
+            function removeModule() {
+                $.ajax({
+                    url: $SCRIPT_ROOT + 'removeModule/',
+                    data: {'parent': CURRENT_PARENT},
+                    method: 'POST',
+                    success: function(data) {
+                        console.log(data)
+                        robots = urdfViewer.updateURDF(data['result'])
+                        // Update size
+                        size = data['size']
+                        updateShownButtons(data['lastModule_type'], data['count'], data['size'])
+                        console.log(size)
+                        CURRENT_PARENT = data['lastModule_name']
+                        //write the file
+                        writeRequest(data['result'], true, function(){})
+                    },
+                    async: true
+                });
+            }
+
+            function writeDeploy() {
+                if(buildingModeON){
+                    var name = prompt("Enter the name of the Robot to deploy:", "ModularBot");
+                }
+                else {
+                    var name = "ModularBot"
+                }
+                removeConnectors(false, function(){
+                    writeRequest("", true, function(){
+                        deployRobot(name, true, function(){})
+                    });
+                });
+            }
+
+            function removeConnectors(async_bool, callback){
+                $.ajax({
+                    url: $SCRIPT_ROOT + 'removeConnectors/',
+                    data: {'buildingModeON': buildingModeON},
+                    method: 'POST',
+                    success: function(data) {
+                        console.log(data)
+                        callback()                        
+                    },
+                    async: async_bool //false
+                });
+            }
+
+            function deployRobot(name, async_bool, callback){
+                $.ajax({
+                    url: $SCRIPT_ROOT + 'deployRobot/',
+                    data: {'name': name, 'buildingModeON': buildingModeON},
+                    method: 'POST',
+                    success: function(data) {
+                        console.log(data)
+                        callback()           
+                    },
+                    async: async_bool
+                });  
+            }
+
+            function startMaster(async_bool, callback) {
+                $.ajax({
+                    url: $SCRIPT_ROOT + 'pub_cmd/',
+                    data: {'cmd': 'START_ECAT'},
+                    method: 'POST',
+                    success: function(data) {
+                        console.log(data)
+                        callback();    
+                    },
+                    async: async_bool //true
+                });
+            }
+
+            // TODO: merge it with stopXBOT -> cmd:RESET
+            function stopMaster(async_bool, callback) {
+                $.ajax({
+                    url: $SCRIPT_ROOT + 'pub_cmd/',
+                    data: {'cmd': 'STOP_XBOT'},
+                    method: 'POST',
+                    success: function(data) {
+                        console.log(data)
+                        callback();    
+                    },
+                    async: async_bool //true
+                });
+            }
+
+			function activateWaitOverlay() {
+				document.getElementById("waitOverlay").style.visibility = "visible";
+			}
+
+			function deactivateWaitOverlay() {
+				document.getElementById("waitOverlay").style.visibility = "hidden";
+			}
+
+            // //Function to open a file on the server side from the HTML page
+            // function openfile(url, cB) {
+            //     function updateProgress (oEvent) {
+            //         if (oEvent.lengthComputable) {
+            //             var percentComplete = oEvent.loaded / oEvent.total * 100;
+            //             // ...
+            //         } else {
+            //             // Unable to compute progress information since the total size is unknown
+            //         }
+            //     }
+            //     function onloaded (evt) {
+            //         //console.log("The transfer is complete.");
+            //         //console.log(this.responseText); 
+            //         cB(xhr, url)
+            //     }
+            //     function transferFailed(evt) {
+            //         console.log("An error occurred while transferring the file.");
+            //     }
+                
+            //     function transferCanceled(evt) {
+            //         console.log("The transfer has been canceled by the user.");
+            //     }
+
+            //     var xhr = new XMLHttpRequest();
+            //     xhr.responseType = "text"
+            //     xhr.addEventListener( "load", onloaded, true );
+            //     xhr.addEventListener("progress", updateProgress);
+            //     xhr.addEventListener("error", transferFailed);
+            //     xhr.addEventListener("abort", transferCanceled);
+            //     xhr.open( "GET", url, true );
+            //     xhr.send();
+            // }
+    
+            // //Function called when the YAML file has been opened
+            // function callBack_YAML(xhr, yaml_url) {
+            //     //console.log(yaml_url)
+            //     doc = jsyaml.load(xhr.responseText);
+            //     //console.log(doc.urdf)
+            //     var urdf_url = $SCRIPT_ROOT + doc.urdf;
+            //     //console.log(urdf_url)
+                
+            //     //opening URDF file
+            //     openfile(urdf_url, callBack_URDF)
+            // }
+
+            // //Function called when the URDF file has been opened
+            // function callBack_URDF(xhr, urdf_url) {
+            //     var URDF_string = xhr.responseText 
+            //     //console.log(URDF_string)
+                
+            //     //Finally addModuleYAML gets called. THREE.js 3D model gets updated
+            //     robots = urdfViewer.addModuleYAML(doc, URDF_string);
+            // }
+
+            
+        </script>
+
+        
+    </body>
+</html>

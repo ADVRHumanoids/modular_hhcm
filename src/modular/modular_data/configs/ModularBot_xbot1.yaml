@@ -1,0 +1,35 @@
+XBotCore:
+  config_path: "robots/PACKAGE_NAME/configs/ModularBot.yaml"
+
+XBotInterface:
+  urdf_path: "robots/PACKAGE_NAME/urdf/ModularBot.urdf"
+  srdf_path: "robots/PACKAGE_NAME/srdf/ModularBot.srdf"
+  joint_map_path: "robots/PACKAGE_NAME/joint_map/ModularBot_joint_map.yaml"
+
+RobotInterface:
+  framework_name: "ROS"
+
+ModelInterface:
+  model_type: "RBDL"
+  is_model_floating_base: "false"
+
+RobotInterfaceROS:
+  publish_tf: true
+
+MasterCommunicationInterface:
+  framework_name: "ROS"
+
+XBotRTPlugins:
+  plugins: ["HomingExample", "CartesianImpedancePlugin", "ToolExchangerPlugin", "GripperPlugin"]
+  io_plugins: ["CartesianImpedanceIO"]
+
+NRTPlugins:
+  plugins: []
+
+#WebServer:
+  #enable: "true"
+  #address: "10.24.7.100"
+  #port: "8081"
+
+SimulationOptions:
+  verbose_mode: "false"

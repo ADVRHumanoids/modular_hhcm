@@ -1,0 +1,73 @@
+## XBotInterface related configs
+
+XBotInterface:
+  urdf_path: "$(rospack find PACKAGE_NAME)/urdf/ModularBot.urdf"
+  srdf_path: "$(rospack find PACKAGE_NAME)/srdf/ModularBot.srdf"
+  joint_map_path: "$(rospack find PACKAGE_NAME)/joint_map/ModularBot_joint_map.yaml"
+
+ModelInterface:
+  model_type: "RBDL"
+  is_model_floating_base: "false"
+
+## XBot2 related configuration
+
+# hal
+xbotcore_device_configs:
+    sim: $(rospack find PACKAGE_NAME)/config/hal/ModularBot_gz.yaml
+    dummy: $(rospack find PACKAGE_NAME)/config/hal/ModularBot_dummy.yaml
+    ec_imp: $(rospack find PACKAGE_NAME)/config/hal/ModularBot_ec_all.yaml
+    
+    # ec: $(rospack find PACKAGE_NAME)/config/hal/ModularBot_ec_all.yaml
+    # ec_hybr: $(rospack find PACKAGE_NAME)/config/hal/ModularBot_ec_all.yaml
+    ec_idle: $(rospack find PACKAGE_NAME)/config/hal/ModularBot_ec_all.yaml
+
+# define threads to be created
+xbotcore_threads:
+  rt_main: { sched: fifo, prio: 60, period: 0.001}
+  nrt_main: { sched: other, prio: 0, period: 0.005 }
+  iolink_main: { sched: other, prio: 0, period: 0.005 } # Use this to avoid problem when reading/writing parameters that require some time
+
+# define plugins to be loaded
+xbotcore_plugins:
+  # this plugin is shipped with xbot2, and it generates the
+  # ROS api for the framework
+  # it is not designed to be real-time safe, so it must executed
+  # inside a thread with `other` priority
+  ros_io: { thread: nrt_main, type: ros_io }
+  ros_ctrl: { thread: nrt_main, type: ros_control }
+
+  # notice that you can reuse the same plugin, by providing
+  # different names and possibly different parameters
+  homing:
+    thread: rt_main
+    type: homing_example
+    params:
+      time: { value: 5, type: double }
+
+  cartesio: 
+      thread: rt_main 
+      type: albero_cartesio_rt
+      params:
+        problem_description:
+          value: $(rospack find PACKAGE_NAME)/cartesio/ModularBot_cartesio_config.yaml
+          type: file
+        solver: {value: AlberoImpedance, type: string}
+        enable_feedback: {value: true, type: bool}
+        fc_map: {value: {grav: 0.2, dfl: 0.9}, type: map<double>}
+    
+  gripper: 
+    thread: rt_main 
+    type: albero_gripper_rt
+  
+  digital_io:
+    thread: rt_main
+    type: digital_io_rt
+
+  iolink:
+    thread: iolink_main
+    type: iolink_rt
+
+# additional parameters that don't relate to any plugin
+xbotcore_param:
+  /jm/tx_filter_autostart: { value: true, type: bool } # autostart joint filter
+  /jm/tx_filter_cutoff: { value: 2.0, type: double } # set default filter bandwidth
