@@ -169,36 +169,48 @@ class Module(object):
 
         link = self.kinematics.link
 
-        if not reverse:
-            # TO BE CHECKED!!!
-            H1 = tf.transformations.rotation_matrix(link.delta_l_in, zaxis)
-            H2 = tf.transformations.translation_matrix((0, 0, link.p_l))
-            H3 = tf.transformations.translation_matrix((link.a_l, 0, 0))
-            H4 = tf.transformations.rotation_matrix(link.alpha_l, xaxis)
-            H5 = tf.transformations.translation_matrix((0, 0, link.n_l))
-            H6 = tf.transformations.rotation_matrix(link.delta_l_out, zaxis)
-        else:
-            # TO BE CHECKED!!!
-            H1 = tf.transformations.rotation_matrix(-link.delta_l_out, zaxis)
-            H2 = tf.transformations.translation_matrix((0, 0, -link.n_l))
-            H3 = tf.transformations.rotation_matrix(-link.alpha_l, xaxis)
-            H4 = tf.transformations.translation_matrix((-link.a_l, 0, 0))
-            H5 = tf.transformations.translation_matrix((0, 0, -link.p_l))
-            H6 = tf.transformations.rotation_matrix(-link.delta_l_in, zaxis)
+        if self.kinematics.convention == "urdf":
+            H1 = tf.transformations.translation_matrix((link.x, link.y, link.z))
+            H2 = tf.transformations.rotation_matrix(link.roll, xaxis)
+            H3 = tf.transformations.rotation_matrix(link.pitch, yaxis)
+            H4 = tf.transformations.rotation_matrix(link.yaw, zaxis)
+            # R = tf.transformations.euler_matrix(link.roll, link.pitch, link.yaw, 'sxyz')
+            
+            H = tf.transformations.concatenate_matrices(H1, H2, H3, H4)
+            if reverse:
+                H = tf.transformations.inverse_matrix(H)
 
-        H = tf.transformations.concatenate_matrices(H1, H2, H3, H4, H5, H6)
+        else:
+            if not reverse:
+                # TO BE CHECKED!!!
+                H1 = tf.transformations.rotation_matrix(link.delta_l_in, zaxis)
+                H2 = tf.transformations.translation_matrix((0, 0, link.p_l))
+                H3 = tf.transformations.translation_matrix((link.a_l, 0, 0))
+                H4 = tf.transformations.rotation_matrix(link.alpha_l, xaxis)
+                H5 = tf.transformations.translation_matrix((0, 0, link.n_l))
+                H6 = tf.transformations.rotation_matrix(link.delta_l_out, zaxis)
+            else:
+                # TO BE CHECKED!!!
+                H1 = tf.transformations.rotation_matrix(-link.delta_l_out, zaxis)
+                H2 = tf.transformations.translation_matrix((0, 0, -link.n_l))
+                H3 = tf.transformations.rotation_matrix(-link.alpha_l, xaxis)
+                H4 = tf.transformations.translation_matrix((-link.a_l, 0, 0))
+                H5 = tf.transformations.translation_matrix((0, 0, -link.p_l))
+                H6 = tf.transformations.rotation_matrix(-link.delta_l_in, zaxis)
+
+            H = tf.transformations.concatenate_matrices(H1, H2, H3, H4, H5, H6)
+            
+            # TODO: Obsolete
+            size_x = 0
+            size_y = link.p_l
+            size_z = link.n_l
+            # Set the size of the link
+            setattr(self, 'link_size_x', str(size_x))
+            setattr(self, 'link_size_y', str(size_y))
+            setattr(self, 'link_size_z', str(size_z))
 
         # Add the transformation matrix for the Proximal part as attribute of the class
         setattr(self, 'Homogeneous_tf', H)
-
-        size_x = 0
-        size_y = link.p_l
-        size_z = link.n_l
-
-        # Set the size of the link
-        setattr(self, 'link_size_x', str(size_x))
-        setattr(self, 'link_size_y', str(size_y))
-        setattr(self, 'link_size_z', str(size_z))
 
     # 
     # noinspection PyPep8Naming

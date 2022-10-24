@@ -497,6 +497,9 @@
                         <button type="button" id="addConcertYawJoint" class="btn btn-dark button-selector"><div>Add Concert Straight Joint</div></button>
                         <button type="button" id="addConcertElbowJoint" class="btn btn-dark button-selector"><div>Add Concert Elbow Joint</div></button>
                         <button type="button" id="addConcertWheel" class="btn btn-dark button-selector"><div>Add Concert Wheel</div></button>
+                        <button type="button" id="addPassiveLink10" class="btn btn-dark button-selector"><div>Add 10cm passive link</div></button>
+                        <button type="button" id="addPassiveLink20" class="btn btn-dark button-selector"><div>Add 20cm passive link</div></button>
+                        <button type="button" id="addPassiveLink50" class="btn btn-dark button-selector"><div>Add 50cm passive link</div></button>
                     </div>
                 </div>
             </div>
@@ -730,6 +733,9 @@
                 var addDoubleElbowJoint = document.getElementById('addDoubleElbowJoint');
                 var addConcertElbowJoint = document.getElementById('addConcertElbowJoint');
                 var addConcertWheel = document.getElementById('addConcertWheel');
+                var addPassiveLink10 = document.getElementById('addPassiveLink10');
+                var addPassiveLink20 = document.getElementById('addPassiveLink20');
+                var addPassiveLink50 = document.getElementById('addPassiveLink50');
 
                 var URDFChangeEventHandler = new URDF_change_eventHandler();
 
@@ -926,7 +932,10 @@
                 addDoubleElbowJoint.onclick = function() {addModule("module_joint_double_elbow_ORANGE", size_value=3)};
                 addConcertElbowJoint.onclick = function() {addModule("concert/module_joint_concert_elbow_ORANGE", size_value=3)};
                 addConcertWheel.onclick = function() {addWheel("concert/module_wheel_concert_ORANGE", "concert/module_steering_concert_ORANGE", size_value=3)};
-
+                addPassiveLink10.onclick = function() {addModule("concert/module_link_concert_straight_10_ORANGE", size_value=3)};
+                addPassiveLink20.onclick = function() {addModule("concert/module_link_concert_straight_20_ORANGE", size_value=3)};
+                addPassiveLink50.onclick = function() {addModule("concert/module_link_concert_straight_50_ORANGE", size_value=3)};
+                
                 var ros = new ROSLIB.Ros({
                     url : 'ws://10.24.8.100:9090'
                 });
