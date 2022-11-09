@@ -3666,8 +3666,7 @@ class UrdfWriter:
                 node_type = node.attrib['type']
                 if node_type == 'cube' or node_type == 'mobile_base':
                     name = node.attrib['name']
-                    filename = path_name + '/web/static/yaml/master_cube.yaml'
-                    #filename = self.resource_finder.get_filename('master_cube.yaml', 'yaml_path')
+                    filename = self.resource_finder.get_filename('master_cube.yaml', 'yaml_path')
 
                     ET.SubElement(self.root, "xacro:add_connectors", type='connectors', name=name, filename=filename)
             except KeyError:
