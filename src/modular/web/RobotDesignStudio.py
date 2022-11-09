@@ -293,11 +293,18 @@ def requestURDF():
     data = jsonify(data)
     return data
 
+# NOTE: this should not be needed anymore! Setting the static folder in the app constructor should be enough
+# # upload on the server the /static folder
+# @app.route('/<path:path>')
+# def send_file(path):
+#     return send_from_directory(app.static_folder, path)
 
-# upload on the server the /static folder
-@app.route('/<path:path>')
+
+# upload on the server the /modular_resources folder. 
+# This is needed to load the meshes of the modules (withot the need to put them in the /static folder)
+@app.route('/modular_resources/<path:path>')
 def send_file(path):
-    return send_from_directory(app.static_folder, path)
+    return send_from_directory('/home/eromiti/modular/src/modular/modular_data/modular_resources', path)
 
 
 #TODO: to be included in the next versions (or to be removed)

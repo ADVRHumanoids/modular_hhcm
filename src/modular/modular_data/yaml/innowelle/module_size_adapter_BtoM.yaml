@@ -24,7 +24,7 @@ dynamics:
     body_2: null
     body_2_fast: null
 visual:
-    mesh_body_1: package://modular/src/modular/web/static/models/modular/meshes/innowelle/adapter_20_17_v3.stl
+    mesh_body_1: package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/innowelle/adapter_20_17_v3.stl
     tf_mesh_1:
         x: 0.0
         y: 0.0
@@ -40,7 +40,7 @@ visual:
         roll: 1.57
         pitch: 0.0
         yaw: 0.0
-    mesh_collision_1: package://modular/src/modular/web/static/models/modular/meshes/innowelle/adapter_20_17_v3.stl
+    mesh_collision_1: package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/innowelle/adapter_20_17_v3.stl
     mesh_collision_2: ''
 size: null
 size_in: big
