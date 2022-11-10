@@ -1686,7 +1686,7 @@ class UrdfWriter:
             ET.SubElement(self.root, "xacro:add_slave_cube", type='cube', name=name, filename=filename)
             ET.SubElement(self.root, "xacro:add_connectors", type='connectors', name=name, filename=filename)
 
-            self.add_gazebo_element(slavecube.gazebo, slavecube.name)
+            self.add_gazebo_element(slavecube.gazebo.body_1, slavecube.name)
 
             # # Get inverse of the transform of the connector
             # T_con_inv = tf.transformations.inverse_matrix(self.T_con)
@@ -1766,10 +1766,7 @@ class UrdfWriter:
             )
 
             # # call the method that reads the yaml file describing the cube and instantiate a new module object
-            # # cube_path = '/'.join((yaml_path, 'master_cube.yaml'))
-            # # filename = pkg_resources.resource_string(resource_package, cube_path)
             # filename = self.resource_finder.get_filename('master_cube.yaml', 'yaml_path')
-            # # filename = path_name + '/web/static/yaml/master_cube.yaml'
             # slavecube = ModuleNode.slavecube_from_yaml(filename, slavecube_con1)
 
             # # set attributes of the newly added module object
@@ -1858,7 +1855,6 @@ class UrdfWriter:
             # self.T_con = tf.transformations.translation_matrix((0, 0, 0.1))
             # self.T_con = self.mastercube.geometry.connector_length))
 
-            # filename = path_name + '/web/static/yaml/master_cube.yaml'
             filename = self.resource_finder.get_filename('master_cube.yaml', 'yaml_path')
 
             # call the method that reads the yaml file describing the cube and instantiate a new module object
@@ -1882,7 +1878,7 @@ class UrdfWriter:
                 #ET.SubElement(self.root, "xacro:add_connectors", type='connectors', name=name, filename=filename)
                 pass
 
-            self.add_gazebo_element(mastercube.gazebo, mastercube.name)
+            self.add_gazebo_element(mastercube.gazebo.body_1, mastercube.name)
 
             # # instantate a ModuleNode for branch 1 connector
             # name_con1 = name + '_con1'
@@ -2017,7 +2013,6 @@ class UrdfWriter:
         # Generate name according to the # of cubes already in the tree
         name = 'mobile_base'
 
-        # filename = path_name + '/web/static/yaml/master_cube.yaml'
         filename = self.resource_finder.get_filename('concert/mobile_platform.yaml', 'yaml_path')
 
         # call the method that reads the yaml file describing the cube and instantiate a new module object
@@ -2042,7 +2037,7 @@ class UrdfWriter:
             #ET.SubElement(self.root, "xacro:add_connectors", type='connectors', name=name, filename=filename)
             pass
 
-        self.add_gazebo_element(mobilebase.gazebo, mobilebase.name)
+        self.add_gazebo_element(mobilebase.gazebo.body_1, mobilebase.name)
         
         if self.speedup:
             string = ""
@@ -2178,7 +2173,6 @@ class UrdfWriter:
     def add_socket(self, x_offset=0.0, y_offset=0.0, z_offset=0.0, angle_offset=0.0):
         filename = 'socket.yaml'
         # Generate the path to the required YAML file
-        # module_name = path_name + '/web/static/yaml/' + filename
         module_name = self.resource_finder.get_filename(filename, 'yaml_path')
 
         # Set base_link as parent
@@ -2222,7 +2216,7 @@ class UrdfWriter:
                       size_z=new_socket.link_size_z,
                       size=str(new_socket.size))
 
-        self.add_gazebo_element(new_socket.gazebo , new_socket.name)
+        self.add_gazebo_element(new_socket.gazebo.body_1 , new_socket.name)
 
         if self.parent_module.type == 'cube' or self.parent_module.type == "mobile_base":
             if self.parent_module.is_structural:
@@ -2324,7 +2318,7 @@ class UrdfWriter:
                       size_z=str(z_offset))
 
         try:
-            self.add_gazebo_element(simple_ee.gazebo, simple_ee.name)
+            self.add_gazebo_element(simple_ee.gazebo.body_1, simple_ee.name)
         except AttributeError:
             pass
 
@@ -2412,13 +2406,19 @@ class UrdfWriter:
         # global tag, parent_module
         self.print(path_name)
         self.print(filename)
-        # Generate the path to the required YAML file
-        module_name = self.resource_finder.get_filename(filename, 'yaml_path')
-        # module_name = path_name + '/web/static/yaml/' + filename
 
-        # Load the module from YAML and create a ModuleNode instance
-        new_module = ModuleNode.module_from_yaml(module_name, self.parent_module, reverse)
-        self.print("Module loaded from YAML: " + new_module.name)
+        if filename.lower().endswith(('.yaml', '.yml')):
+            # Generate the path to the required YAML file
+            module_name = self.resource_finder.get_filename(filename, 'yaml_path')
+            # Load the module from YAML and create a ModuleNode instance
+            new_module = ModuleNode.module_from_yaml(module_name, self.parent_module, reverse)
+            self.print("Module loaded from YAML: " + new_module.name)
+        elif filename.lower().endswith(('.json')):
+            # Generate the path to the required YAML file
+            module_name = self.resource_finder.get_filename(filename, 'json_path')
+            # Load the module from YAML and create a ModuleNode instance
+            new_module = ModuleNode.module_from_json(module_name, self.parent_module, reverse)
+            self.print("Module loaded from JSON: " + new_module.name)
 
         # self.print(angle_offset)
 
@@ -3052,7 +3052,7 @@ class UrdfWriter:
             )
             setattr(new_Link, 'size', new_Link.size_out)
 
-        self.add_gazebo_element(new_Link.gazebo, new_Link.name)
+        self.add_gazebo_element(new_Link.gazebo.body_1, new_Link.name)
             
         if new_Link.type == 'tool_exchanger' or new_Link.type == 'gripper':
             fixed_joint_name = new_Link.name + '_fixed_joint'

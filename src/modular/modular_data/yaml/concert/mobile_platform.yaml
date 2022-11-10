@@ -82,11 +82,12 @@ collision:
     body_2: ''
     
 gazebo:
-    mu1: 0.2
-    mu2: 0.2
-    kp: 1000000.0
-    kd: 1.0
-    maxVel: 0.0
-    minDepth: 0.0001
-    material: 'Gazebo/Grey'
-    selfCollide: true
+    body_1:
+        mu1: 0.2
+        mu2: 0.2
+        kp: 1000000.0
+        kd: 1.0
+        maxVel: 0.0
+        minDepth: 0.0001
+        material: 'Gazebo/Grey'
+        selfCollide: true
