@@ -319,7 +319,6 @@ class Module(object):
             'joint': self.get_proximal_distal_matrices,
             'wheel': self.get_proximal_distal_matrices,
             'link': self.get_homogeneous_matrix,
-            'elbow': self.get_homogeneous_matrix,
             'size_adapter': self.get_homogeneous_matrix,
             'tool_exchanger': self.get_homogeneous_matrix,
             'gripper': self.get_homogeneous_matrix,

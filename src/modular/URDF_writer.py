@@ -3000,15 +3000,6 @@ class UrdfWriter:
                           type="link",
                           name=new_Link.name,
                           filename=new_Link.filename)
-        elif new_Link.type == 'elbow':
-            setattr(new_Link, 'name', 'L_' + str(new_Link.i) + '_elbow_' + str(new_Link.p) + new_Link.tag)
-            ET.SubElement(self.root,
-                          "xacro:add_elbow",
-                          type="elbow",
-                          name=new_Link.name,
-                          size_y=new_Link.link_size_y,
-                          size_z=new_Link.link_size_z,
-                          size=str(new_Link.size))
         elif new_Link.type == 'tool_exchanger':
             setattr(new_Link, 'name', 'tool_exchanger' + new_Link.tag)
             ET.SubElement(self.root,
