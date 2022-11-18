@@ -1,6 +1,6 @@
 type: link
+kinematics_convention: urdf
 kinematics:
-    convention: urdf
     joint:
         proximal: null
         distal: null

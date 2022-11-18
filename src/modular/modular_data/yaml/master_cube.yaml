@@ -1,8 +1,5 @@
-geometry:
-    cube_size: 0.34
-    connector_length: 0.1
+kinematics_convention: urdf
 kinematics:
-    convention: urdf
     connector_1:
         roll: 3.14
         pitch: 0.0
@@ -32,32 +29,50 @@ kinematics:
         y: 0.0
         z: 0.17
 dynamics:
-    joint: null
-    link:
-        mass: '0.5'
-        inertia_tensor: null
-        CoM: null
+    body_1:
+        mass: null
+        inertia_tensor:
+            I_xx: null
+            I_yy: null
+            I_zz: null
+            I_xy: null
+            I_xz: null
+            I_yz: null
+        CoM:
+            x: null
+            y: null
+            z: null
 size: big
 type: cube
 visual:
-    mesh_body_1: package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/space_cube.stl
-    mesh_collision_1: package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/space_cube.stl
-    tf_mesh_1:
-        x: 0.0
-        y: 0.0
-        z: 0.17
-        roll: 0.0
-        pitch: 0.0
-        yaw: 0.0
-    mesh_body_2: ''
-    mesh_collision_2: ''
-    tf_mesh_2:
-        x: 0.0
-        y: 0.0
-        z: 0.0
-        roll: 0.0
-        pitch: 0.0
-        yaw: 0.0
+    body_1:
+        type: mesh
+        parameters:
+            file: package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/space_cube.stl
+            scale: [0.001, 0.001, 0.001]
+        pose:
+            x: 0.0
+            y: 0.0
+            z: 0.17
+            roll: 0.0
+            pitch: 0.0
+            yaw: 0.0
+        color: ''
+    body_2: null
+collision:
+    body_1:
+        type: mesh
+        parameters:
+            file: package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/space_cube.stl
+            scale: [0.001, 0.001, 0.001]
+        pose:
+            x: 0.0
+            y: 0.0
+            z: 0.0
+            roll: 0.0
+            pitch: 0.0
+            yaw: 0.0
+    body_2: null
 gazebo:
     body_1:
         mu1: 0.2
@@ -67,3 +82,4 @@ gazebo:
         maxVel: 0.0
         minDepth: 0.0001
         material: 'Gazebo/Grey'
+        selfCollide: true

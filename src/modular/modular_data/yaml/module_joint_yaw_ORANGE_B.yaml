@@ -1,5 +1,5 @@
+kinematics_convention: DH_ext
 kinematics:
-    convention: DH_ext
     joint:
         proximal:
             a_pl: 0
@@ -13,13 +13,6 @@ kinematics:
             p_dl: 0
             n_dl: 0
             delta_dl: 0
-        joint:
-            delta_j: 0
-            type: revolute
-            lower_limit: -2.8
-            upper_limit: 2.8
-            effort: 147
-            velocity: 3.9
     link:
         a_l: 0
         alpha_l: 0
@@ -27,6 +20,14 @@ kinematics:
         n_l: 0
         delta_l_in: 0
         delta_l_out: 0
+actuator_data:
+    zero_offset: 0
+    type: revolute
+    lower_limit: -2.8
+    upper_limit: 2.8
+    effort: 147
+    velocity: 3.9
+    gear_ratio: 100
 dynamics:
     body_1:
         mass: 2.0554934
@@ -123,14 +124,6 @@ size: big
 size_in: null
 size_out: null
 type: joint
-control:
-    K_theta: 500
-    D_theta: 70
-    B: 3.1e-05
-    K_s: 80000
-    D_s: 2
-    D_m: 5.78e-05
-    nu: 100
 urdf: urdf/joint_module.urdf
 CentAcESC:
     control_mode: impedance_d4
@@ -157,6 +150,7 @@ gazebo:
         maxVel: 0.0
         minDepth: 0.0001
         material: 'Gazebo/Blue'
+        selfCollide: true
     body_2:
         mu1: 0.2
         mu2: 0.2
@@ -165,3 +159,4 @@ gazebo:
         maxVel: 0.0
         minDepth: 0.0001
         material: 'Gazebo/White'
+        selfCollide: true

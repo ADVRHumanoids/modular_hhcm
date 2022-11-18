@@ -1,5 +1,5 @@
+kinematics_convention: DH_ext
 kinematics:
-    convention: DH_ext
     joint:
         proximal:
             a_pl: 0.0
@@ -13,13 +13,6 @@ kinematics:
             p_dl: 0.071
             n_dl: 0.0
             delta_dl: 0.0
-        joint:
-            delta_j: 0.0
-            type: fixed
-            lower_limit: 0.0
-            upper_limit: 0.05
-            effort: 20.0
-            velocity: 0.2
     link:
         a_l: 0.0
         alpha_l: 0.0
@@ -27,6 +20,14 @@ kinematics:
         n_l: 0.0
         delta_l_in: 0.0
         delta_l_out: 0.0
+actuator_data:
+    zero_offset: 0.0
+    type: fixed
+    lower_limit: 0.0
+    upper_limit: 0.05
+    effort: 20.0
+    velocity: 0.2
+    gear_ratio: 100
 dynamics:
     body_1:
         mass: 1.182
@@ -90,14 +91,6 @@ size: big
 size_in: null
 size_out: null
 type: gripper
-control:
-    K_theta: 500
-    D_theta: 70
-    B: 3.1e-05
-    K_s: 80000
-    D_s: 2
-    D_m: 5.78e-05
-    nu: 100
 urdf: urdf/joint_module.urdf
 LpESC:
     sign: 1
@@ -118,3 +111,4 @@ gazebo:
         maxVel: 0.0
         minDepth: 0.0001
         material: 'Gazebo/Grey'
+        selfCollide: true

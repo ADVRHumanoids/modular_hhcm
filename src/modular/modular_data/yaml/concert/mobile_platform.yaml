@@ -1,5 +1,5 @@
+kinematics_convention: urdf
 kinematics:
-    convention: urdf
     connector_1:
         roll: 0.0
         pitch: -1.57
@@ -65,7 +65,7 @@ visual:
             pitch: 0.0
             yaw: 0.0
         color: grey
-    body_2: ''
+    body_2: null
 collision:
     body_1:
         type: mesh
@@ -79,7 +79,7 @@ collision:
             roll: 0.0
             pitch: 0.0
             yaw: 0.0
-    body_2: ''
+    body_2: null
     
 gazebo:
     body_1:

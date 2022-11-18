@@ -1,3 +1,4 @@
+kinematics_convention: DH_ext
 kinematics:
     joint: null
     link:

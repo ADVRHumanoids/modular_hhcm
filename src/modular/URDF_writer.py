@@ -3193,11 +3193,11 @@ class UrdfWriter:
                                                          new_Joint.Proximal_tf)
         x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(joint_transform)
 
-        joint_data = new_Joint.kinematics.joint.joint
-        upper_lim = str(joint_data.upper_limit)
-        lower_lim = str(joint_data.lower_limit)
-        effort = str(joint_data.effort)
-        velocity = str(joint_data.velocity)
+        actuator_data = new_Joint.actuator_data
+        upper_lim = str(actuator_data.upper_limit)
+        lower_lim = str(actuator_data.lower_limit)
+        effort = str(actuator_data.effort)
+        velocity = str(actuator_data.velocity)
 
         ET.SubElement(self.root,
                       "xacro:add_joint",

@@ -180,7 +180,7 @@
     <xacro:macro name="add_rotor_fast" params="type name filename x y z roll pitch yaw">
 
         <xacro:property name="module" value="${xacro.load_yaml(filename)}"/>
-        <xacro:property name="gear_ratio" value="${module['control']['nu']}"/>
+        <xacro:property name="gear_ratio" value="${module['actuator_data']['gear_ratio']}"/>
 
         <link name="${name}">
             <inertial>
