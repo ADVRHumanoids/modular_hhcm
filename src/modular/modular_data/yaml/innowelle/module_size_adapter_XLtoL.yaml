@@ -1,0 +1,67 @@
+kinematics_convention: DH_ext
+kinematics:
+    joint: null
+    link:
+        a_l: 0
+        alpha_l: 0
+        p_l: 0
+        n_l: 0.015
+        delta_l_in: 0
+        delta_l_out: 0
+dynamics:
+    body_1:
+        mass: 0.890557
+        inertia_tensor:
+            I_xx: 0.001172126
+            I_yy: 0.000792081
+            I_zz: 0.001115561
+            I_xy: 0.0
+            I_xz: 0.0
+            I_yz: 0.0
+        CoM:
+            x: 0.0
+            y: 0.027416
+            z: 0.055419
+    body_2: null
+    body_2_fast: null
+visual:
+    mesh_body_1: package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/innowelle/adapter_32_25_v2.stl
+    tf_mesh_1:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        roll: 1.57
+        pitch: 0.0
+        yaw: 0.0
+    mesh_body_2: ''
+    tf_mesh_2:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        roll: 1.57
+        pitch: 0.0
+        yaw: 0.0
+    mesh_collision_1: package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/innowelle/adapter_32_25_v2.stl
+    mesh_collision_2: ''
+size: null
+size_in: extra-large
+size_out: large
+type: size_adapter
+urdf: urdf/joint_module.urdf
+CentAcESC:
+    control_mode: impedance_d4
+    sign: 1
+    pos_offset: 0
+    max_current_A: 30.0
+    pid:
+        position:
+        - 1000.0
+        - 0.0
+        - 30.0
+        impedance:
+        - 500.0
+        - 5.0
+        - 1.0
+        - 0.025
+        - 0.99
+gazebo: ''

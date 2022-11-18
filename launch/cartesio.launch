@@ -1,0 +1,19 @@
+<launch>
+
+    <arg name="solver" default="OpenSot"/>
+    <arg name="prefix" default=""/>
+    <param name="robot_description" textfile="$(find modular)/urdf/ModularBot.urdf"/>
+    <param name="robot_description_semantic" textfile="$(find modular)/srdf/ModularBot.srdf"/>
+    <param name="problem_description" textfile="$(find modular)/cartesio/ModularBot.yaml"/>
+    
+
+    <node pkg="cartesian_interface" type="ros_server_node" name="ros_server_node" required="true" output="screen" launch-prefix="$(arg prefix)">
+        <param name="is_model_floating_base" type="bool" value="false"/>
+        <param name="model_type" value="RBDL"/>
+        <param name="solver" value="$(arg solver)"/>
+        <param name="rate" value="100"/>
+    </node>
+
+    <node pkg="cartesian_interface" type="marker_spawner" name="interactive_markers" output="screen"/>
+
+</launch>

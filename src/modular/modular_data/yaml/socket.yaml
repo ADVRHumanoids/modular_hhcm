@@ -1,0 +1,65 @@
+kinematics_convention: DH_ext
+kinematics:
+    joint: null
+    link:
+        a_l: 0.0
+        alpha_l: 0.0
+        p_l: 0.0
+        n_l: 0.06
+        delta_l_in: 0.0
+        delta_l_out: 0.0
+dynamics:
+    body_1:
+        mass: 0.76
+        inertia_tensor:
+            I_xx: 0.005
+            I_yy: 0.005
+            I_zz: 0.002
+            I_xy: 5.0e-06
+            I_xz: 5.0e-06
+            I_yz: 5.0e-06
+        CoM:
+            x: 0.0
+            y: 0.0
+            z: 0.035
+visual:
+    body_1:
+        type: cylinder
+        parameters:
+            radius: 0.045
+            length: 0.06
+        pose:
+            x: 0.0
+            y: 0.0
+            z: 0.03
+            roll: 0.0
+            pitch: 0.0
+            yaw: 0.0
+        color: tree_green
+collision:
+    body_1:
+        type: cylinder
+        parameters:
+            radius: 0.045
+            length: 0.06
+        pose:
+            x: 0.0
+            y: 0.0
+            z: 0.03
+            roll: 0.0
+            pitch: 0.0
+            yaw: 0.0
+size: big
+size_in: null
+size_out: null
+type: link
+gazebo:
+    body_1:
+        mu1: 0.2
+        mu2: 0.2
+        kp: 1000000.0
+        kd: 1.0
+        maxVel: 0.0
+        minDepth: 0.0001
+        material: 'Gazebo/Gray'
+        selfCollide: true
