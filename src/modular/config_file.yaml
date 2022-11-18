@@ -1,4 +1,5 @@
 data_path: 'modular_data'
 yaml_path: 'modular_data/yaml'
+json_path: 'modular_data/json'
 modularbot_path: 'modular_data/ModularBot'
 deploy_dir: '~/robots'

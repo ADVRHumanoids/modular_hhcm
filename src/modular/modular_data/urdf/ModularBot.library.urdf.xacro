@@ -19,7 +19,7 @@
     <xacro:property name="len1" value="0.4" />
     <xacro:property name="len2" value="0.6" />
     <xacro:property name="len3" value="0.8" />
-    <xacro:property name="mass" value="0.5" />
+    <xacro:property name="mass" value="0.001" />
     <!-- <xacro:property name="pi" value="3.1415" /> -->
 
     <material name="blue">
@@ -58,7 +58,7 @@
     <xacro:macro name="default_inertial" params="mass">
         <inertial>
             <mass value="${mass}" />
-            <inertia ixx="1.0e-03" ixy="0.0" ixz="0.0" iyy="1.0e-03" iyz="0.0" izz="1.0e-03" />
+            <inertia ixx="1.0e-06" ixy="0.0" ixz="0.0" iyy="1.0e-06" iyz="0.0" izz="1.0e-06" />
         </inertial>
     </xacro:macro>
 
@@ -88,25 +88,34 @@
     <xacro:macro name="add_link_element" params="name type module body_name">
         
         <xacro:property name="visual_bool" value="false"/>
-        <xacro:unless value="${module['visual'][body_name] == '' }">
+        <xacro:unless value="${not module['visual'][body_name]}">
             <xacro:property name="visual_bool" value="true"/>
             <xacro:property name="visual_body" value="${module['visual'][body_name]}"/>
         </xacro:unless>
 
         <xacro:property name="collision_bool" value="false"/>
-        <xacro:unless value="${module['collision'][body_name] == '' }">
+        <xacro:unless value="${not module['collision'][body_name]}">
             <xacro:property name="collision_bool" value="true"/>
             <xacro:property name="collision_body" value="${module['collision'][body_name]}"/>
         </xacro:unless>
 
-        <xacro:property name="dynamics_body" value="${module['dynamics'][body_name]}"/>
+        <xacro:property name="dynamics_bool" value="false"/>
+        <xacro:unless value="${module['dynamics'][body_name]['mass'] is None }">
+            <xacro:property name="dynamics_bool" value="true"/>
+            <xacro:property name="dynamics_body" value="${module['dynamics'][body_name]}"/>
+        </xacro:unless>
         
         <link name="${name}">
             <xacro:unless value="${visual_bool == 0}">
                 <visual>
                     <xacro:add_origin body_pose="${visual_body['pose']}"/>
                     <xacro:add_geometry body="${visual_body}"/>
-                    <material name="${visual_body['color']}"/>
+                    <!-- <xacro:unless value="${visual_body['color'] is None }">    
+                        <material name="${visual_body['color']}"/>
+                    </xacro:unless> -->
+                    <xacro:if value="${'color' in visual_body}">
+                        <material name="${visual_body['color']}"/>
+                    </xacro:if> 
                 </visual>
             </xacro:unless>
             <xacro:unless value="${collision_bool == 0}">
@@ -115,10 +124,10 @@
                     <xacro:add_geometry body="${collision_body}"/>
                 </collision>
             </xacro:unless>
-            <xacro:if value="${dynamics_body['mass'] == 0.0}">
+            <xacro:if value="${dynamics_bool == 0}">
                 <xacro:default_inertial mass="${mass}"/>
             </xacro:if>
-            <xacro:unless value="${dynamics_body['mass'] == 0.0}">
+            <xacro:unless value="${dynamics_bool == 0}">
                 <inertial>
                     <origin
                         xyz="${dynamics_body['CoM']['x']} ${dynamics_body['CoM']['y']} ${dynamics_body['CoM']['z']}"
@@ -232,7 +241,10 @@
             <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
         </joint>
 
-        <link name="${name}">
+        <xacro:property name="body_name" value="body_1"/>
+        <xacro:add_link_element name="${name}" type="${type}" module="${module}" body_name="${body_name}"/>
+
+        <!-- <link name="${name}">
             <visual>
                 <origin rpy="${module['visual']['tf_mesh_1']['roll']} ${module['visual']['tf_mesh_1']['pitch']} ${module['visual']['tf_mesh_1']['yaw']}"
                         xyz="${module['visual']['tf_mesh_1']['x']} ${module['visual']['tf_mesh_1']['y']} ${module['visual']['tf_mesh_1']['z']}"/>
@@ -248,7 +260,7 @@
                 </geometry>
             </collision>
             <xacro:default_inertial mass="2"/>
-        </link>
+        </link> -->
 
     </xacro:macro>
 
@@ -363,7 +375,10 @@
 
         <xacro:property name="module" value="${xacro.load_yaml(filename)}"/>
 
-        <link name="${name}">
+        <xacro:property name="body_name" value="body_1"/>
+        <xacro:add_link_element name="${name}" type="${type}" module="${module}" body_name="${body_name}"/>
+
+        <!-- <link name="${name}">
             <visual>
                 <origin rpy="${module['visual']['tf_mesh_1']['roll']} ${module['visual']['tf_mesh_1']['pitch']} ${module['visual']['tf_mesh_1']['yaw']}"
                         xyz="${module['visual']['tf_mesh_1']['x']} ${module['visual']['tf_mesh_1']['y']} ${module['visual']['tf_mesh_1']['z']}"/>
@@ -379,7 +394,7 @@
                 </geometry>
             </collision>
             <xacro:default_inertial mass="2.0"/>
-        </link>
+        </link> -->
 
         <xacro:add_connectors name="${name}" filename="${filename}" type="${type}"/>
 
@@ -459,13 +474,16 @@
     </xacro:macro>
 
     <!-- Macro for adding a socket -->
-    <xacro:macro name="add_socket" params="name type filename size_z size">
+    <xacro:macro name="add_socket" params="name type filename size">
 
         <xacro:property name="module" value="${xacro.load_yaml(filename)}"/>
+        <xacro:property name="body_name" value="body_1"/>
+        <xacro:add_link_element name="${name}" type="${type}" module="${module}" body_name="${body_name}"/>
+
 
         <xacro:property name="radius" value="${size_interface}" />
 
-        <link name="${name}">
+        <!-- <link name="${name}">
             <visual>
                 <origin xyz="0 0 ${size_z/2}" rpy="0 0 0" />
                 <geometry>
@@ -487,7 +505,7 @@
                 iyy="${mass / 12.0 * (size_z*size_z + 3*radius*radius)}" iyz="0.0"
                 izz="${mass / 2.0 * (radius*radius)}"/>
             </inertial>
-        </link>
+        </link> -->
 
     </xacro:macro>
 

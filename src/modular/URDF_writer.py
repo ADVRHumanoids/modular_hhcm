@@ -25,7 +25,7 @@ import copy
 from collections import OrderedDict
 
 from modular.utils import ResourceFinder
-import modular.ModuleNode  as ModuleNode# import module_from_yaml, ModuleNode, mastercube_from_yaml, slavecube_from_yaml
+import modular.ModuleNode  as ModuleNode
 import argparse
 
 import rospy
@@ -710,7 +710,7 @@ class XBot2Plugin(Plugin):
             if hasattr(control_params, 'pid'):
                 pid_node = ET.SubElement(self.pid_node, "gain", name=joint_name, p=str(control_params.pid.p), d=str(control_params.pid.d))
             if hasattr(control_params, 'profile'):
-                pid_node = ET.SubElement(self.pid_node, "gain", name=joint_name, profile=str(control_params.pid.profile))
+                pid_node = ET.SubElement(self.pid_node, "gain", name=joint_name, profile=str(control_params.profile))
         else:
             pid_node = ET.SubElement(self.pid_node, "gain", name=joint_name, profile="medium_mot")
         return pid_node
@@ -879,19 +879,19 @@ class XBot2Plugin(Plugin):
                     i += 1
                     key = joint_module.name
                     value = joint_module.CentAcESC
+                    # Remove parameters that are now not used by XBot2 (they are handled by the EtherCat master on a different config file)
+                    if hasattr(value, 'sign'):
+                        del value.sign 
+                    if hasattr(value, 'pos_offset'):
+                        del value.pos_offset 
+                    if hasattr(value, 'max_current_A'):
+                        del value.max_current_A 
+
                     impd4_joint_config[key] = copy.deepcopy(value)
                     impd4_joint_config[key].control_mode = 'D4_impedance_ctrl'
-                    # Remove parameters that are now not used by XBot2 (they are handled by the EtherCat master on a different config file)
-                    del impd4_joint_config[key].sign 
-                    del impd4_joint_config[key].pos_offset 
-                    del impd4_joint_config[key].max_current_A 
 
                     idle_joint_config[key] = copy.deepcopy(value)
                     idle_joint_config[key].control_mode = 'idle'
-                    # Remove parameters that are now not used by XBot2 (they are handled by the EtherCat master on a different config file)   
-                    del idle_joint_config[key].sign 
-                    del idle_joint_config[key].pos_offset 
-                    del idle_joint_config[key].max_current_A 
 
                     # HACK: Every joint on 2nd, 3rd, etc. chains have the torque loop damping set very low.
                     # This is to handle chains with only one joint and low inertia after it.
@@ -904,19 +904,19 @@ class XBot2Plugin(Plugin):
                     i += 1
                     key = joint_module.name
                     value = joint_module.CentAcESC
+                    # Remove parameters that are now not used by XBot2 (they are handled by the EtherCat master on a different config file)
+                    if hasattr(value, 'sign'):
+                        del value.sign 
+                    if hasattr(value, 'pos_offset'):
+                        del value.pos_offset 
+                    if hasattr(value, 'max_current_A'):
+                        del value.max_current_A 
+
                     impd4_joint_config[key] = copy.deepcopy(value)
                     impd4_joint_config[key].control_mode = '71_motor_vel_ctrl'
-                    # Remove parameters that are now not used by XBot2 (they are handled by the EtherCat master on a different config file)
-                    del impd4_joint_config[key].sign 
-                    del impd4_joint_config[key].pos_offset 
-                    del impd4_joint_config[key].max_current_A 
 
                     idle_joint_config[key] = copy.deepcopy(value)
                     idle_joint_config[key].control_mode = 'idle'
-                    # Remove parameters that are now not used by XBot2 (they are handled by the EtherCat master on a different config file)   
-                    del idle_joint_config[key].sign 
-                    del idle_joint_config[key].pos_offset 
-                    del idle_joint_config[key].max_current_A 
 
                 elif joint_module.type == 'tool_exchanger':
                     key = joint_module.name
@@ -925,19 +925,19 @@ class XBot2Plugin(Plugin):
                 elif joint_module.type == 'gripper':
                     key = joint_module.name + '_motor'
                     value = joint_module.LpESC
+                    # Remove parameters that are now not used by XBot2 (they are handled by the EtherCat master on a different config file)
+                    if hasattr(value, 'sign'):
+                        del value.sign 
+                    if hasattr(value, 'pos_offset'):
+                        del value.pos_offset 
+                    if hasattr(value, 'max_current_A'):
+                        del value.max_current_A 
+
                     impd4_joint_config[key] = copy.deepcopy(value)
                     impd4_joint_config[key].control_mode = '3B_motor_pos_ctrl'
-                    # Remove parameters that are now not used by XBot2 (they are handled by the EtherCat master on a different config file)   
-                    del impd4_joint_config[key].sign 
-                    del impd4_joint_config[key].pos_offset 
-                    del impd4_joint_config[key].max_current_A 
 
                     idle_joint_config[key] = copy.deepcopy(value)
                     idle_joint_config[key].control_mode = 'idle'
-                    # Remove parameters that are now not used by XBot2 (they are handled by the EtherCat master on a different config file)   
-                    del idle_joint_config[key].sign 
-                    del idle_joint_config[key].pos_offset 
-                    del idle_joint_config[key].max_current_A 
                     
                 elif joint_module.type == 'simple_ee':
                     continue
@@ -1116,7 +1116,7 @@ class UrdfWriter:
         # add attribute corresponding to the connector transform
         self.T_con = tf.transformations.translation_matrix((0, 0, 0.0))  # self.slavecube.geometry.connector_length))
 
-        data = {'type': "base_link", 'name': "base_link"}
+        data = {'type': "base_link", 'name': "base_link", 'kinematics_convention': "urdf"}
 
         self.base_link = ModuleNode.ModuleNode(data, "base_link")
         setattr(self.base_link, 'name', "base_link")
@@ -1667,9 +1667,10 @@ class UrdfWriter:
             self.n_cubes += 1
 
             filename = self.resource_finder.get_filename('master_cube.yaml', 'yaml_path')
+            template_name = self.resource_finder.get_filename('template.yaml', 'yaml_path')
 
             # call the method that reads the yaml file describing the cube and instantiate a new module object
-            slavecube = ModuleNode.mastercube_from_yaml(filename, self.parent_module)
+            slavecube = ModuleNode.module_from_yaml(filename, self.parent_module, template_name)
 
             setattr(slavecube, 'name', name)
 
@@ -1767,7 +1768,7 @@ class UrdfWriter:
 
             # # call the method that reads the yaml file describing the cube and instantiate a new module object
             # filename = self.resource_finder.get_filename('master_cube.yaml', 'yaml_path')
-            # slavecube = ModuleNode.slavecube_from_yaml(filename, slavecube_con1)
+            # slavecube = ModuleNode.module_from_yaml(filename, slavecube_con1)
 
             # # set attributes of the newly added module object
             # setattr(slavecube, 'name', name)
@@ -1856,9 +1857,10 @@ class UrdfWriter:
             # self.T_con = self.mastercube.geometry.connector_length))
 
             filename = self.resource_finder.get_filename('master_cube.yaml', 'yaml_path')
+            template_name = self.resource_finder.get_filename('template.yaml', 'yaml_path')
 
             # call the method that reads the yaml file describing the cube and instantiate a new module object
-            mastercube = ModuleNode.mastercube_from_yaml(filename, self.parent_module)
+            mastercube = ModuleNode.module_from_yaml(filename, self.parent_module, template_name)
 
             # set attributes of the newly added module object
             setattr(mastercube, 'name', name)
@@ -2014,9 +2016,10 @@ class UrdfWriter:
         name = 'mobile_base'
 
         filename = self.resource_finder.get_filename('concert/mobile_platform.yaml', 'yaml_path')
+        template_name = self.resource_finder.get_filename('template.yaml', 'yaml_path')
 
         # call the method that reads the yaml file describing the cube and instantiate a new module object
-        mobilebase = ModuleNode.mastercube_from_yaml(filename, self.parent_module)
+        mobilebase = ModuleNode.module_from_yaml(filename, self.parent_module, template_name)
 
         # set attributes of the newly added module object
         setattr(mobilebase, 'name', name)
@@ -2063,11 +2066,11 @@ class UrdfWriter:
 
         self.parent_module = mobilebase
 
-        # self.listofhubs.append(mobilebase)
+        # self.listofhubs.append(mobile_base)
 
         # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
         data = {'result': string,
-                'lastModule_type': 'mobilebase',
+                'lastModule_type': 'mobile_base',
                 'lastModule_name': name,
                 'size': 3,
                 'count': 1}
@@ -2174,12 +2177,13 @@ class UrdfWriter:
         filename = 'socket.yaml'
         # Generate the path to the required YAML file
         module_name = self.resource_finder.get_filename(filename, 'yaml_path')
+        template_name = self.resource_finder.get_filename('template.yaml', 'yaml_path')
 
         # Set base_link as parent
         self.parent_module = self.base_link
 
         # create a ModuleNode instance for the socket
-        new_socket = ModuleNode.module_from_yaml(module_name, self.parent_module, reverse=0)
+        new_socket = ModuleNode.module_from_yaml(module_name, self.parent_module, template_name, reverse=0)
 
         # assign a new tag to the chain
         tag_letter = self.branch_switcher.get(self.tag_num)
@@ -2213,7 +2217,6 @@ class UrdfWriter:
                       type="link",
                       name=new_socket.name,
                       filename=new_socket.filename,
-                      size_z=new_socket.link_size_z,
                       size=str(new_socket.size))
 
         self.add_gazebo_element(new_socket.gazebo.body_1 , new_socket.name)
@@ -2297,7 +2300,7 @@ class UrdfWriter:
 
     def add_simple_ee(self, x_offset=0.0, y_offset=0.0, z_offset=0.0, angle_offset=0.0):
         # TODO: treat this as a link in the link_after_* methods!
-        data = {'type': "simple_ee", 'name': "simple_ee"}
+        data = {'type': "simple_ee", 'name': "simple_ee", 'kinematics_convention': "urdf"}
 
         #self.print("Parent module:")
         #self.print(self.parent_module.name)
@@ -2407,17 +2410,19 @@ class UrdfWriter:
         self.print(path_name)
         self.print(filename)
 
+        template_name = self.resource_finder.get_filename('template.yaml', 'yaml_path')
+
         if filename.lower().endswith(('.yaml', '.yml')):
             # Generate the path to the required YAML file
             module_name = self.resource_finder.get_filename(filename, 'yaml_path')
             # Load the module from YAML and create a ModuleNode instance
-            new_module = ModuleNode.module_from_yaml(module_name, self.parent_module, reverse)
+            new_module = ModuleNode.module_from_yaml(module_name, self.parent_module, template_name, reverse)
             self.print("Module loaded from YAML: " + new_module.name)
         elif filename.lower().endswith(('.json')):
             # Generate the path to the required YAML file
             module_name = self.resource_finder.get_filename(filename, 'json_path')
             # Load the module from YAML and create a ModuleNode instance
-            new_module = ModuleNode.module_from_json(module_name, self.parent_module, reverse)
+            new_module = ModuleNode.module_from_json(module_name, self.parent_module, template_name, reverse)
             self.print("Module loaded from JSON: " + new_module.name)
 
         # self.print(angle_offset)
@@ -2542,7 +2547,7 @@ class UrdfWriter:
         Add a gazebo element to the new module
         """
         # Add the gazebo element to the new module
-        if new_module_gazebo != '':
+        if new_module_gazebo is not None:
             gazebo_if_el = ET.SubElement(self.root, 
                                     'xacro:if',
                                     value="${GAZEBO_URDF}")
@@ -2557,7 +2562,7 @@ class UrdfWriter:
         """
         for key, value in vars(new_module_gazebo).items():
             gazebo_child_el = ET.SubElement(gazebo_element, key)
-            if isinstance(value, ModuleNode.Module):
+            if isinstance(value, ModuleNode.Module.Attribute):
                 self.print(vars(value))
                 self.add_gazebo_element_children(value, gazebo_child_el)
             else:
@@ -3032,12 +3037,13 @@ class UrdfWriter:
             self.control_plugin.add_joint(new_Link.name + '_finger_joint2')
         elif new_Link.type == 'size_adapter':
             setattr(new_Link, 'name', 'L_' + str(new_Link.i) + '_size_adapter_' + str(new_Link.p) + new_Link.tag)
+            #TODO: to be fixed
             ET.SubElement(self.root,
                             "xacro:add_size_adapter",
                             type="size_adapter",
                             name=new_Link.name,
                             filename=new_Link.filename,
-                            size_z=new_Link.link_size_z,
+                            size_z=new_Link.kinematics.link.n_l,
                         #   size_in=new_Link.size_in,
                         #   size_out=new_Link.size_out
             )
@@ -3245,29 +3251,30 @@ class UrdfWriter:
 
         # add the fast rotor part to the inertia of the link/rotor part as a new link. NOTE: right now this is
         # attached at the rotating part not to the fixed one (change it so to follow Pholus robot approach)
-        ET.SubElement(self.root,
-                      "xacro:add_fixed_joint",
-                      type="fixed_joint",
-                      name="fixed_" + new_Joint.distal_link_name + '_rotor_fast',
-                      father=new_Joint.distal_link_name,  # stator_name, #
-                      child=new_Joint.distal_link_name + '_rotor_fast',
-                      x=x,
-                      y=y,
-                      z=z,
-                      roll=roll,
-                      pitch=pitch,
-                      yaw=yaw)
-        ET.SubElement(self.root,
-                      "xacro:add_rotor_fast",
-                      type="add_rotor_fast",
-                      name=new_Joint.distal_link_name + '_rotor_fast',
-                      filename=new_Joint.filename,
-                      x=x,
-                      y=y,
-                      z=z,
-                      roll=roll,
-                      pitch=pitch,
-                      yaw=yaw)
+        if hasattr(new_Joint.dynamics, 'body_2_fast'):
+            ET.SubElement(self.root,
+                        "xacro:add_fixed_joint",
+                        type="fixed_joint",
+                        name="fixed_" + new_Joint.distal_link_name + '_rotor_fast',
+                        father=new_Joint.distal_link_name,  # stator_name, #
+                        child=new_Joint.distal_link_name + '_rotor_fast',
+                        x=x,
+                        y=y,
+                        z=z,
+                        roll=roll,
+                        pitch=pitch,
+                        yaw=yaw)
+            ET.SubElement(self.root,
+                        "xacro:add_rotor_fast",
+                        type="add_rotor_fast",
+                        name=new_Joint.distal_link_name + '_rotor_fast',
+                        filename=new_Joint.filename,
+                        x=x,
+                        y=y,
+                        z=z,
+                        roll=roll,
+                        pitch=pitch,
+                        yaw=yaw)
 
 
     # noinspection PyPep8Naming
