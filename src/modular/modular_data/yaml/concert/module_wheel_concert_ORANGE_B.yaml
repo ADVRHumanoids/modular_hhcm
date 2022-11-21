@@ -1,7 +1,7 @@
 type: "wheel"
 
+kinematics_convention: "urdf"
 kinematics:
-    convention: "urdf"
     joint:
         proximal:
             x: 0.0
@@ -17,29 +17,30 @@ kinematics:
             roll: 0.0
             pitch: 0.0
             yaw: 0.0
-        joint:
-            zero_offset: 0
-            type: "continuos"
-            lower_limit: -1e10
-            upper_limit: 1e10
-            effort: 314
-            velocity: 6.6
         link: null
+actuator_data:
+    zero_offset: 0
+    type: "revolute"
+    lower_limit: -1e10
+    upper_limit: 1e10
+    effort: 314
+    velocity: 6.6
+    gear_ratio: 120
 
 dynamics:
     body_1:
-        mass: 0.0
+        mass: null
         inertia_tensor:
-            I_xx: 0.0
-            I_yy: 0.0
-            I_zz: 0.0
-            I_xy: 0.0
-            I_xz: 0.0
-            I_yz: 0.0
+            I_xx: null
+            I_yy: null
+            I_zz: null
+            I_xy: null
+            I_xz: null
+            I_yz: null
         CoM:
-            x: 0.0
-            y: 0.0
-            z: 0.0
+            x: null
+            y: null
+            z: null
     body_2:
         mass: 4.0116207
         inertia_tensor:
@@ -68,11 +69,11 @@ dynamics:
             z: 0.0
 
 visual:
-    body_1: ''
+    body_1: null
     body_2:
         type: mesh
         parameters:
-            file: package://modular/src/modular/web/static/models/modular/meshes/concert/concert_wheel.stl
+            file: package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/concert/concert_wheel.stl
             scale: [0.001, 0.001, 0.001]
         pose:
             x: 0.0
@@ -83,7 +84,7 @@ visual:
             yaw: 0.0
         color: black
 collision:
-    body_1: ''
+    body_1: null
     body_2:
         type: 'cylinder'
         parameters:
@@ -98,7 +99,7 @@ collision:
             yaw: 0.0
 
 gazebo:
-  body_1: ''
+  body_1: null
   body_2:
     material: 'Gazebo/Residential'
     selfCollide: true
@@ -128,16 +129,6 @@ xbot_gz:
     d: 50
 
 size: "big"
-
-control:
-  K_theta: 500
-  D_theta: 70
-  B: 0.000031
-  K_s: 80000
-  D_s: 2
-  D_m: 0.0000578
-  nu: 160
-
 
 CentAcESC:
   control_mode: 71_motor_vel_ctrl #pos_3b #impedance_d4 #idle

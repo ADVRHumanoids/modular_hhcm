@@ -1,13 +1,13 @@
+kinematics_convention: DH_ext
 kinematics:
-    convention: DH_ext
     joint: null
     link:
-        a_l: 0
-        alpha_l: 0
-        p_l: 0
-        n_l: 0.07
-        delta_l_in: 0
-        delta_l_out: 0
+        a_l: 0.0
+        alpha_l: 0.0
+        p_l: 0.0
+        n_l: 0.06
+        delta_l_in: 0.0
+        delta_l_out: 0.0
 dynamics:
     body_1:
         mass: 0.76
@@ -24,28 +24,28 @@ dynamics:
             z: 0.035
 visual:
     body_1:
-        type: mesh
+        type: cylinder
         parameters:
-            file: package://modular/src/modular/web/static/models/modular/meshes/passive_link_straight_70.stl
-            scale: [0.001, 0.001, 0.001]
+            radius: 0.045
+            length: 0.06
         pose:
             x: 0.0
             y: 0.0
-            z: 0.0
+            z: 0.03
             roll: 0.0
             pitch: 0.0
             yaw: 0.0
-        color: grey
+        color: tree_green
 collision:
     body_1:
-        type: mesh
+        type: cylinder
         parameters:
-            file: package://modular/src/modular/web/static/models/modular/meshes/passive_link_straight_70.stl
-            scale: [0.001, 0.001, 0.001]
+            radius: 0.045
+            length: 0.06
         pose:
             x: 0.0
             y: 0.0
-            z: 0.0
+            z: 0.03
             roll: 0.0
             pitch: 0.0
             yaw: 0.0
@@ -54,10 +54,12 @@ size_in: null
 size_out: null
 type: link
 gazebo:
-    mu1: 0.2
-    mu2: 0.2
-    kp: 1000000.0
-    kd: 1.0
-    maxVel: 0.0
-    minDepth: 0.0001
-    material: 'Gazebo/Grey'
+    body_1:
+        mu1: 0.2
+        mu2: 0.2
+        kp: 1000000.0
+        kd: 1.0
+        maxVel: 0.0
+        minDepth: 0.0001
+        material: 'Gazebo/Gray'
+        selfCollide: true

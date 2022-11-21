@@ -1,5 +1,5 @@
+kinematics_convention: urdf
 kinematics:
-    convention: urdf
     connector_1:
         roll: 0.0
         pitch: -1.57
@@ -55,7 +55,7 @@ visual:
     body_1:
         type: mesh
         parameters:
-            file: package://modular/src/modular/web/static/models/modular/meshes/concert/concert_central_body.stl
+            file: package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/concert/concert_central_body.stl
             scale: [0.001, 0.001, 0.001]
         pose:
             x: 0.0
@@ -65,12 +65,12 @@ visual:
             pitch: 0.0
             yaw: 0.0
         color: grey
-    body_2: ''
+    body_2: null
 collision:
     body_1:
         type: mesh
         parameters:
-            file: package://modular/src/modular/web/static/models/modular/meshes/concert/simple/concert_central_body.stl
+            file: package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/concert/simple/concert_central_body.stl
             scale: [0.001, 0.001, 0.001]
         pose:
             x: 0.0
@@ -79,14 +79,15 @@ collision:
             roll: 0.0
             pitch: 0.0
             yaw: 0.0
-    body_2: ''
+    body_2: null
     
 gazebo:
-    mu1: 0.2
-    mu2: 0.2
-    kp: 1000000.0
-    kd: 1.0
-    maxVel: 0.0
-    minDepth: 0.0001
-    material: 'Gazebo/Grey'
-    selfCollide: true
+    body_1:
+        mu1: 0.2
+        mu2: 0.2
+        kp: 1000000.0
+        kd: 1.0
+        maxVel: 0.0
+        minDepth: 0.0001
+        material: 'Gazebo/Grey'
+        selfCollide: true

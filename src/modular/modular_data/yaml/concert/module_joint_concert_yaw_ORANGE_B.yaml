@@ -1,57 +1,57 @@
 type: joint
+kinematics_convention: urdf
 kinematics:
-    convention: urdf
     joint:
         proximal:
-            x: -0.022
+            x: 0.0
             y: 0.0
-            z: 0.06075
+            z: 0.245
             roll: 0.0
-            pitch: 1.57
+            pitch: 0.0
             yaw: 0.0
         distal:
             x: 0.0
             y: 0.0
-            z: -0.37015
+            z: 0.0
             roll: 0.0
-            pitch: -1.57
+            pitch: 0.0
             yaw: 0.0
-        joint:
-            zero_offset: 0
-            type: revolute
-            lower_limit: -3.0
-            upper_limit: 3.0
-            effort: 314
-            velocity: 6.6
     link: null
+actuator_data:
+    zero_offset: 0
+    type: revolute
+    lower_limit: -3.0
+    upper_limit: 3.0
+    effort: 314
+    velocity: 6.6
+    gear_ratio: 120
 dynamics:
     body_1:
-        mass: 1.1813661
+        mass: 3.5866810
         inertia_tensor:
-            I_xx: 2.6106263e-03
-            I_yy: 2.7438806e-03 
-            I_zz: 2.5223123e-03
-            I_xy: 0.0
-            I_xz: 1.7928188e-04
+            I_xx: 1.7808349e-02
+            I_yy: 1.7503159e-02
+            I_zz: 6.8844202e-03
+            I_xy: 1.6625281e-06
+            I_xz: -1.8023262e-05
+            I_yz: -6.8557387e-05
+        CoM:
+            x: 0.0
+            y: 0.0
+            z: 0.121
+    body_2:
+        mass: 0.56725368
+        inertia_tensor:
+            I_xx: 9.7738346e-04
+            I_yy: 9.7804563e-04
+            I_zz: 1.6176780e-03
+            I_xy: 9.0785180e-08
+            I_xz: 5.0589486e-08
             I_yz: 0.0
         CoM:
-            x: -0.0079406061
+            x: 0.0
             y: 0.0
-            z: 0.037039629
-    body_2:
-        mass: 7.6995028
-        inertia_tensor:
-            I_xx: 4.4048889e-01
-            I_yy: 5.2073797e-01
-            I_zz: 6.9985532e-01
-            I_xy: -3.6685350e-02 
-            I_xz: 2.5595962e-02
-            I_yz: -2.6667139e-03
-
-        CoM:
-            x: 0.090718433
-            y: 0.0
-            z: -0.22670598
+            z: -0.02
     body_2_fast:
         mass: 0.0
         inertia_tensor:
@@ -69,7 +69,7 @@ visual:
     body_1:
         type: mesh
         parameters:
-            file: package://modular/src/modular/web/static/models/modular/meshes/concert/concert_steering_connection_module.stl
+            file: package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/concert/concert_yaw-base.stl
             scale: [0.001, 0.001, 0.001]
         pose:
             x: 0.0
@@ -82,7 +82,7 @@ visual:
     body_2:
         type: mesh
         parameters:
-            file: package://modular/src/modular/web/static/models/modular/meshes/concert/concert_steering_module_frame.stl
+            file: package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/concert/concert_yaw-link.stl
             scale: [0.001, 0.001, 0.001]
         pose:
             x: 0.0
@@ -96,7 +96,7 @@ collision:
     body_1:
         type: mesh
         parameters:
-            file: package://modular/src/modular/web/static/models/modular/meshes/concert/simple/concert_steering_connection_module.stl
+            file: package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/concert/simple/concert_yaw-base.stl
             scale: [0.001, 0.001, 0.001]
         pose:
             x: 0.0
@@ -108,7 +108,7 @@ collision:
     body_2:
         type: mesh
         parameters:
-            file: package://modular/src/modular/web/static/models/modular/meshes/concert/simple/concert_steering_module_frame.stl
+            file: package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/concert/simple/concert_yaw-link.stl
             scale: [0.001, 0.001, 0.001]
         pose:
             x: 0.0
@@ -118,14 +118,6 @@ collision:
             pitch: 0.0
             yaw: 0.0
 size: big
-control:
-    K_theta: 500
-    D_theta: 70
-    B: 3.1e-05
-    K_s: 80000
-    D_s: 2
-    D_m: 5.78e-05
-    nu: 160
 CentAcESC:
     control_mode: impedance_d4
     sign: 1
@@ -146,7 +138,7 @@ gazebo:
     body_1:
         mu1: 0.2
         mu2: 0.2
-        kp: 1000000.0
+        kp: 100000000.0
         kd: 1.0
         maxVel: 0.0
         minDepth: 0.0001
@@ -155,7 +147,7 @@ gazebo:
     body_2:
         mu1: 0.2
         mu2: 0.2
-        kp: 1000000.0
+        kp: 100000000.0
         kd: 1.0
         maxVel: 0.0
         minDepth: 0.0001

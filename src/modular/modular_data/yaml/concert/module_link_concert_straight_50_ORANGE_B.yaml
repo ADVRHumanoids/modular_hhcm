@@ -1,6 +1,6 @@
 type: link
+kinematics_convention: urdf
 kinematics:
-    convention: urdf
     joint:
         proximal: null
         distal: null
@@ -8,24 +8,24 @@ kinematics:
     link: 
         x: 0.0
         y: 0.0
-        z: 0.2
+        z: 0.5
         roll: 0
         pitch: 0
         yaw: 0
 dynamics:
     body_1:
-        mass: 1.0657798
+        mass: 1.6377171
         inertia_tensor:
-            I_xx: 7.4651361e-03
-            I_yy: 7.4781542e-03
-            I_zz: 2.2984636e-03
-            I_xy: 3.1355726e-06
-            I_xz: -6.5578466e-07
-            I_yz: -5.6379122e-07
+            I_xx: 1.5464024e-01
+            I_yy: 1.5465326e-01
+            I_zz: 3.9667989e-03
+            I_xy: -3.1348037e-06
+            I_xz: -3.1136436e-06
+            I_yz: 0.0
         CoM:
             x: 0.0
             y: 0.0
-            z: 0.093
+            z: 0.241
 
 visual:
     body_1:
@@ -33,11 +33,11 @@ visual:
         parameters:
             parameters:
             radius: 0.0675
-            length: 0.2
+            length: 0.5
         pose:
             x: 0.0
             y: 0.0
-            z: 0.1
+            z: 0.25
             roll: 0.0
             pitch: 0.0
             yaw: 0.0
@@ -49,11 +49,11 @@ collision:
         parameters:
             parameters:
             radius: 0.0675
-            length: 0.2
+            length: 0.5
         pose:
             x: 0.0
             y: 0.0
-            z: 0.1
+            z: 0.25
             roll: 0.0
             pitch: 0.0
             yaw: 0.0
@@ -61,11 +61,12 @@ collision:
 size: big
 
 gazebo:
-    mu1: 0.2
-    mu2: 0.2
-    kp: 1000000.0
-    kd: 1.0
-    maxVel: 0.0
-    minDepth: 0.0001
-    material: 'Gazebo/Grey'
-    selfCollide: true
+    body_1:
+        mu1: 0.2
+        mu2: 0.2
+        kp: 1000000.0
+        kd: 1.0
+        maxVel: 0.0
+        minDepth: 0.0001
+        material: 'Gazebo/Grey'
+        selfCollide: true

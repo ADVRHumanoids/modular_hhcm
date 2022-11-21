@@ -1,6 +1,6 @@
 type: link
+kinematics_convention: urdf
 kinematics:
-    convention: urdf
     joint:
         proximal: null
         distal: null
@@ -31,7 +31,6 @@ visual:
     body_1:
         type: cylinder
         parameters:
-            parameters:
             radius: 0.0675
             length: 0.1
         pose:
@@ -47,7 +46,6 @@ collision:
     body_1:
         type: cylinder
         parameters:
-            parameters:
             radius: 0.0675
             length: 0.1
         pose:
@@ -61,11 +59,12 @@ collision:
 size: big
 
 gazebo:
-    mu1: 0.2
-    mu2: 0.2
-    kp: 1000000.0
-    kd: 1.0
-    maxVel: 0.0
-    minDepth: 0.0001
-    material: 'Gazebo/Grey'
-    selfCollide: true
+    body_1:
+        mu1: 0.2
+        mu2: 0.2
+        kp: 1000000.0
+        kd: 1.0
+        maxVel: 0.0
+        minDepth: 0.0001
+        material: 'Gazebo/Grey'
+        selfCollide: true
