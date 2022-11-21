@@ -72,7 +72,7 @@ visual:
     body_1:
         type: mesh
         parameters:
-            file: package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/elbow_base.stl
+            file: package://modular/src/modular/modular_resources/models/modular/meshes/alberobotics/elbow_base.stl
             scale: [0.001, 0.001, 0.001]
         pose:
             x: 0.0
@@ -85,7 +85,7 @@ visual:
     body_2:
         type: mesh
         parameters:
-            file: package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/elbow_link.stl
+            file: package://modular/src/modular/modular_resources/models/modular/meshes/alberobotics/elbow_link.stl
             scale: [0.001, 0.001, 0.001]
         pose:
             x: 0.0
@@ -99,7 +99,7 @@ collision:
     body_1:
         type: mesh
         parameters:
-            file: package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/simple/elbow_base.stl
+            file: package://modular/src/modular/modular_resources/models/modular/meshes/alberobotics/simple/elbow_base.stl
             scale: [0.001, 0.001, 0.001]
         pose:
             x: 0.0
@@ -111,7 +111,7 @@ collision:
     body_2:
         type: mesh
         parameters:
-            file: package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/simple/elbow_link.stl
+            file: package://modular/src/modular/modular_resources/models/modular/meshes/alberobotics/simple/elbow_link.stl
             scale: [0.001, 0.001, 0.001]
         pose:
             x: 0.0

@@ -4,50 +4,49 @@ kinematics:
         proximal:
             a_pl: 0.0
             alpha_pl: 0.0
-            p_pl: 0.1275
+            p_pl: 0.0
             n_pl: 0.0
             delta_pl: 0.0
         distal:
             a_dl: 0.0
             alpha_dl: 0.0
-            p_dl: 0.071
+            p_dl: 0.0
             n_dl: 0.0
             delta_dl: 0.0
     link:
         a_l: 0.0
         alpha_l: 0.0
         p_l: 0.0
-        n_l: 0.0
+        n_l: 0.233
         delta_l_in: 0.0
         delta_l_out: 0.0
 actuator_data:
     zero_offset: 0.0
-    type: fixed
+    type: ''
     lower_limit: 0.0
-    upper_limit: 0.05
-    effort: 20.0
-    velocity: 0.2
-    gear_ratio: 100
+    upper_limit: 0.0
+    effort: 0.0
+    velocity: 0.0
 dynamics:
     body_1:
-        mass: 1.182
+        mass: 1.305
         inertia_tensor:
-            I_xx: 0.0025968127
-            I_yy: 0.0020344466
-            I_zz: 0.0014696895
+            I_xx: 0.0018769887
+            I_yy: 0.0022629779
+            I_zz: 0.001888755
             I_xy: 0.0
             I_xz: 0.0
             I_yz: 0.0
         CoM:
-            x: 0.0
+            x: -0.007
             y: 0.0
-            z: 0.0798
+            z: 0.044
     body_2:
-        mass: 0.001
+        mass: 0.0
         inertia_tensor:
-            I_xx: 1.0e-05
-            I_yy: 1.0e-05
-            I_zz: 1.0e-05
+            I_xx: 0.0
+            I_yy: 0.0
+            I_zz: 0.0
             I_xy: 0.0
             I_xz: 0.0
             I_yz: 0.0
@@ -69,39 +68,31 @@ dynamics:
             y: 0.0
             z: 0.0
 visual:
-    mesh_body_1: package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/gripper_outer_assembly_simplified.stl
-    mesh_collision_1: package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/simple/gripper_outer_assembly_simplified.stl
+    mesh_body_1: package://modular/src/modular/modular_resources/models/modular/meshes/alberobotics/tool_exchanger.stl
+    mesh_collision_1: package://modular/src/modular/modular_resources/models/modular/meshes/alberobotics/tool_exchanger.stl
     tf_mesh_1:
         x: 0.0
         y: 0.0
         z: 0.0
         roll: 0.0
         pitch: 0.0
-        yaw: 0.0
-    mesh_body_2: package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/fingerup_7_raised.stl
-    mesh_collision_2: package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/simple/fingerup_7_raised.stl
+        yaw: 3.14
+    mesh_body_2: ''
+    mesh_collision_2: ''
     tf_mesh_2:
         x: 0.0
         y: 0.0
         z: 0.0
         roll: 0.0
         pitch: 0.0
-        yaw: 0.0
+        yaw: 3.14
 size: big
 size_in: null
 size_out: null
-type: gripper
+type: tool_exchanger
 urdf: urdf/joint_module.urdf
-LpESC:
-    sign: 1
-    pos_offset: 0
-    control_mode: pos_3b
-    max_current_A: 10.0
-    pid:
-        position:
-        - 100000.0
-        - 0.0
-        - 1.0
+AinMsp432ESC:
+    analog_sample_freq_HZ: 1000
 gazebo:
     body_1:
         mu1: 0.2

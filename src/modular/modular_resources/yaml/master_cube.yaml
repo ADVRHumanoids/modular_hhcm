@@ -48,7 +48,7 @@ visual:
     body_1:
         type: mesh
         parameters:
-            file: package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/space_cube.stl
+            file: package://modular/src/modular/modular_resources/models/modular/meshes/alberobotics/space_cube.stl
             scale: [0.001, 0.001, 0.001]
         pose:
             x: 0.0
@@ -63,7 +63,7 @@ collision:
     body_1:
         type: mesh
         parameters:
-            file: package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/space_cube.stl
+            file: package://modular/src/modular/modular_resources/models/modular/meshes/alberobotics/space_cube.stl
             scale: [0.001, 0.001, 0.001]
         pose:
             x: 0.0

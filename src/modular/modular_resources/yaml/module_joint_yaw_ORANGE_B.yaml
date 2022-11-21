@@ -1,76 +1,78 @@
-type: joint
-kinematics_convention: urdf
+kinematics_convention: DH_ext
 kinematics:
     joint:
         proximal:
-            x: -0.022
-            y: 0.0
-            z: 0.06075
-            roll: 0.0
-            pitch: 1.57
-            yaw: 0.0
+            a_pl: 0
+            alpha_pl: 0
+            p_pl: 0.214
+            n_pl: 0.0
+            delta_pl: 0
         distal:
-            x: 0.0
-            y: 0.0
-            z: -0.37015
-            roll: 0.0
-            pitch: -1.57
-            yaw: 0.0
-    link: null
+            a_dl: 0
+            alpha_dl: 0
+            p_dl: 0
+            n_dl: 0
+            delta_dl: 0
+    link:
+        a_l: 0
+        alpha_l: 0
+        p_l: 0
+        n_l: 0
+        delta_l_in: 0
+        delta_l_out: 0
 actuator_data:
     zero_offset: 0
     type: revolute
-    lower_limit: -3.0
-    upper_limit: 3.0
-    effort: 314
-    velocity: 6.6
-    gear_ratio: 120
+    lower_limit: -2.8
+    upper_limit: 2.8
+    effort: 147
+    velocity: 3.9
+    gear_ratio: 100
 dynamics:
     body_1:
-        mass: 1.1813661
+        mass: 2.0554934
         inertia_tensor:
-            I_xx: 2.6106263e-03
-            I_yy: 2.7438806e-03 
-            I_zz: 2.5223123e-03
-            I_xy: 0.0
-            I_xz: 1.7928188e-04
-            I_yz: 0.0
-        CoM:
-            x: -0.0079406061
-            y: 0.0
-            z: 0.037039629
-    body_2:
-        mass: 7.6995028
-        inertia_tensor:
-            I_xx: 4.4048889e-01
-            I_yy: 5.2073797e-01
-            I_zz: 6.9985532e-01
-            I_xy: -3.6685350e-02 
-            I_xz: 2.5595962e-02
-            I_yz: -2.6667139e-03
-
-        CoM:
-            x: 0.090718433
-            y: 0.0
-            z: -0.22670598
-    body_2_fast:
-        mass: 0.0
-        inertia_tensor:
-            I_xx: 0.0
-            I_yy: 0.0
-            I_zz: 0.0
-            I_xy: 0.0
-            I_xz: 0.0
-            I_yz: 0.0
+            I_xx: 0.01068855
+            I_yy: 0.010584907
+            I_zz: 0.0032026258
+            I_xy: -1.14168e-05
+            I_xz: 2.71689e-06
+            I_yz: 8.76312e-05
         CoM:
             x: 0.0
             y: 0.0
-            z: 0.0
+            z: 0.10614489
+    body_2:
+        mass: 0.42322395
+        inertia_tensor:
+            I_xx: 0.00063746146
+            I_yy: 0.00064218987
+            I_zz: 0.001009674
+            I_xy: 1.1903424e-05
+            I_xz: 6.7230372e-07
+            I_yz: 2.203073e-05
+        CoM:
+            x: 0.0
+            y: 0.0
+            z: -0.024438213
+    body_2_fast:
+        mass: 0.197124
+        inertia_tensor:
+            I_xx: 0.00016128216
+            I_yy: 0.00016138868
+            I_zz: 1.287638e-05
+            I_xy: -2.4229e-07
+            I_xz: 3.771218e-06
+            I_yz: -2.4900687e-06
+        CoM:
+            x: 0.0
+            y: 0.0
+            z: -0.0978986
 visual:
     body_1:
         type: mesh
         parameters:
-            file: package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/concert/concert_steering_connection_module.stl
+            file: package://modular/src/modular/modular_resources/models/modular/meshes/alberobotics/yaw_base.stl
             scale: [0.001, 0.001, 0.001]
         pose:
             x: 0.0
@@ -79,11 +81,11 @@ visual:
             roll: 0.0
             pitch: 0.0
             yaw: 0.0
-        color: blue
+        color: tree_green
     body_2:
         type: mesh
         parameters:
-            file: package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/concert/concert_steering_module_frame.stl
+            file: package://modular/src/modular/modular_resources/models/modular/meshes/alberobotics/yaw_link.stl
             scale: [0.001, 0.001, 0.001]
         pose:
             x: 0.0
@@ -92,12 +94,12 @@ visual:
             roll: 0.0
             pitch: 0.0
             yaw: 0.0
-        color: green
+        color: tree_green
 collision:
     body_1:
         type: mesh
         parameters:
-            file: package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/concert/simple/concert_steering_connection_module.stl
+            file: package://modular/src/modular/modular_resources/models/modular/meshes/alberobotics/simple/yaw_base.stl
             scale: [0.001, 0.001, 0.001]
         pose:
             x: 0.0
@@ -109,7 +111,7 @@ collision:
     body_2:
         type: mesh
         parameters:
-            file: package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/concert/simple/concert_steering_module_frame.stl
+            file: package://modular/src/modular/modular_resources/models/modular/meshes/alberobotics/simple/yaw_link.stl
             scale: [0.001, 0.001, 0.001]
         pose:
             x: 0.0
@@ -119,11 +121,15 @@ collision:
             pitch: 0.0
             yaw: 0.0
 size: big
+size_in: null
+size_out: null
+type: joint
+urdf: urdf/joint_module.urdf
 CentAcESC:
     control_mode: impedance_d4
     sign: 1
     pos_offset: 0
-    max_current_A: 30.0
+    max_current_A: 20.0
     pid:
         position:
         - 1000.0

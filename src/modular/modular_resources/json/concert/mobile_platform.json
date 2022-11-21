@@ -24,7 +24,7 @@
           {
             "type":"mesh",
             "parameters": {
-              "file": "package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/concert/concert_central_body.stl",
+              "file": "package://modular/src/modular/modular_resources/models/modular/meshes/concert/concert_central_body.stl",
               "scale": [0.001, 0.001, 0.001]
             },
             "pose": [
@@ -39,7 +39,7 @@
           {
             "type":"mesh",
             "parameters": {
-              "file": "package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/concert/simple/concert_central_body.stl",
+              "file": "package://modular/src/modular/modular_resources/models/modular/meshes/concert/simple/concert_central_body.stl",
               "scale": [0.001, 0.001, 0.001]
             },
             "pose": [

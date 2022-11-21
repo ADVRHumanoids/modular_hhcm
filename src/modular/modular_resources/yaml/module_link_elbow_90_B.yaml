@@ -2,31 +2,31 @@ kinematics_convention: DH_ext
 kinematics:
     joint: null
     link:
-        a_l: 0
-        alpha_l: -2.36
+        a_l: 0.0
+        alpha_l: -1.57
         p_l: 0.083
         n_l: 0.083
         delta_l_in: 0
-        delta_l_out: 0
+        delta_l_out: 3.14
 dynamics:
     body_1:
-        mass: 1.2
+        mass: 1.04
         inertia_tensor:
-            I_xx: 0.012
+            I_xx: 0.007
             I_yy: 0.006
-            I_zz: 0.009
+            I_zz: 0.004
             I_xy: -5.0e-06
             I_xz: 5.0e-06
-            I_yz: -0.004
+            I_yz: 5.0e-06
         CoM:
             x: 0.0
-            y: 0.048
+            y: 0.025
             z: 0.05
 visual:
     body_1:
         type: mesh
         parameters:
-            file: package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/passive_link_l_135.stl
+            file: package://modular/src/modular/modular_resources/models/modular/meshes/alberobotics/passive_link_l_90.stl
             scale: [0.001, 0.001, 0.001]
         pose:
             x: 0.0
@@ -40,7 +40,7 @@ collision:
     body_1:
         type: mesh
         parameters:
-            file: package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/passive_link_l_135.stl
+            file: package://modular/src/modular/modular_resources/models/modular/meshes/alberobotics/passive_link_l_90.stl
             scale: [0.001, 0.001, 0.001]
         pose:
             x: 0.0

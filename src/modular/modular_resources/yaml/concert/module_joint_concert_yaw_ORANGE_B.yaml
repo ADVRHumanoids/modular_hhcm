@@ -1,78 +1,75 @@
-kinematics_convention: DH_ext
+type: joint
+kinematics_convention: urdf
 kinematics:
     joint:
         proximal:
-            a_pl: 0
-            alpha_pl: 0
-            p_pl: 0.214
-            n_pl: 0.0
-            delta_pl: 0
+            x: 0.0
+            y: 0.0
+            z: 0.245
+            roll: 0.0
+            pitch: 0.0
+            yaw: 0.0
         distal:
-            a_dl: 0
-            alpha_dl: 0
-            p_dl: 0
-            n_dl: 0
-            delta_dl: 0
-    link:
-        a_l: 0
-        alpha_l: 0
-        p_l: 0
-        n_l: 0
-        delta_l_in: 0
-        delta_l_out: 0
+            x: 0.0
+            y: 0.0
+            z: 0.0
+            roll: 0.0
+            pitch: 0.0
+            yaw: 0.0
+    link: null
 actuator_data:
     zero_offset: 0
     type: revolute
-    lower_limit: -2.8
-    upper_limit: 2.8
-    effort: 147
-    velocity: 3.9
-    gear_ratio: 100
+    lower_limit: -3.0
+    upper_limit: 3.0
+    effort: 314
+    velocity: 6.6
+    gear_ratio: 120
 dynamics:
     body_1:
-        mass: 2.0554934
+        mass: 3.5866810
         inertia_tensor:
-            I_xx: 0.01068855
-            I_yy: 0.010584907
-            I_zz: 0.0032026258
-            I_xy: -1.14168e-05
-            I_xz: 2.71689e-06
-            I_yz: 8.76312e-05
+            I_xx: 1.7808349e-02
+            I_yy: 1.7503159e-02
+            I_zz: 6.8844202e-03
+            I_xy: 1.6625281e-06
+            I_xz: -1.8023262e-05
+            I_yz: -6.8557387e-05
         CoM:
             x: 0.0
             y: 0.0
-            z: 0.10614489
+            z: 0.121
     body_2:
-        mass: 0.42322395
+        mass: 0.56725368
         inertia_tensor:
-            I_xx: 0.00063746146
-            I_yy: 0.00064218987
-            I_zz: 0.001009674
-            I_xy: 1.1903424e-05
-            I_xz: 6.7230372e-07
-            I_yz: 2.203073e-05
+            I_xx: 9.7738346e-04
+            I_yy: 9.7804563e-04
+            I_zz: 1.6176780e-03
+            I_xy: 9.0785180e-08
+            I_xz: 5.0589486e-08
+            I_yz: 0.0
         CoM:
             x: 0.0
             y: 0.0
-            z: -0.024438213
+            z: -0.02
     body_2_fast:
-        mass: 0.197124
+        mass: 0.0
         inertia_tensor:
-            I_xx: 0.00016128216
-            I_yy: 0.00016138868
-            I_zz: 1.287638e-05
-            I_xy: -2.4229e-07
-            I_xz: 3.771218e-06
-            I_yz: -2.4900687e-06
+            I_xx: 0.0
+            I_yy: 0.0
+            I_zz: 0.0
+            I_xy: 0.0
+            I_xz: 0.0
+            I_yz: 0.0
         CoM:
             x: 0.0
             y: 0.0
-            z: -0.0978986
+            z: 0.0
 visual:
     body_1:
         type: mesh
         parameters:
-            file: package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/yaw_base.stl
+            file: package://modular/src/modular/modular_resources/models/modular/meshes/concert/concert_yaw-base.stl
             scale: [0.001, 0.001, 0.001]
         pose:
             x: 0.0
@@ -81,11 +78,11 @@ visual:
             roll: 0.0
             pitch: 0.0
             yaw: 0.0
-        color: tree_green
+        color: blue
     body_2:
         type: mesh
         parameters:
-            file: package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/yaw_link.stl
+            file: package://modular/src/modular/modular_resources/models/modular/meshes/concert/concert_yaw-link.stl
             scale: [0.001, 0.001, 0.001]
         pose:
             x: 0.0
@@ -94,12 +91,12 @@ visual:
             roll: 0.0
             pitch: 0.0
             yaw: 0.0
-        color: tree_green
+        color: green
 collision:
     body_1:
         type: mesh
         parameters:
-            file: package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/simple/yaw_base.stl
+            file: package://modular/src/modular/modular_resources/models/modular/meshes/concert/simple/concert_yaw-base.stl
             scale: [0.001, 0.001, 0.001]
         pose:
             x: 0.0
@@ -111,7 +108,7 @@ collision:
     body_2:
         type: mesh
         parameters:
-            file: package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/simple/yaw_link.stl
+            file: package://modular/src/modular/modular_resources/models/modular/meshes/concert/simple/concert_yaw-link.stl
             scale: [0.001, 0.001, 0.001]
         pose:
             x: 0.0
@@ -121,15 +118,11 @@ collision:
             pitch: 0.0
             yaw: 0.0
 size: big
-size_in: null
-size_out: null
-type: joint
-urdf: urdf/joint_module.urdf
 CentAcESC:
     control_mode: impedance_d4
     sign: 1
     pos_offset: 0
-    max_current_A: 20.0
+    max_current_A: 30.0
     pid:
         position:
         - 1000.0
@@ -145,7 +138,7 @@ gazebo:
     body_1:
         mu1: 0.2
         mu2: 0.2
-        kp: 1000000.0
+        kp: 100000000.0
         kd: 1.0
         maxVel: 0.0
         minDepth: 0.0001
@@ -154,7 +147,7 @@ gazebo:
     body_2:
         mu1: 0.2
         mu2: 0.2
-        kp: 1000000.0
+        kp: 100000000.0
         kd: 1.0
         maxVel: 0.0
         minDepth: 0.0001

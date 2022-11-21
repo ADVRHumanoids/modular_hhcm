@@ -5,15 +5,15 @@ kinematics:
         a_l: 0
         alpha_l: 0
         p_l: 0
-        n_l: 0.07
+        n_l: 0.14
         delta_l_in: 0
-        delta_l_out: 0
+        delta_l_out: 3.14
 dynamics:
     body_1:
-        mass: 0.76
+        mass: 0.93
         inertia_tensor:
-            I_xx: 0.005
-            I_yy: 0.005
+            I_xx: 0.007
+            I_yy: 0.007
             I_zz: 0.002
             I_xy: 5.0e-06
             I_xz: 5.0e-06
@@ -21,12 +21,12 @@ dynamics:
         CoM:
             x: 0.0
             y: 0.0
-            z: 0.035
+            z: 0.07
 visual:
     body_1:
         type: mesh
         parameters:
-            file: package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/passive_link_straight_70.stl
+            file: package://modular/src/modular/modular_resources/models/modular/meshes/alberobotics/passive_link_straight_140.stl
             scale: [0.001, 0.001, 0.001]
         pose:
             x: 0.0
@@ -40,7 +40,7 @@ collision:
     body_1:
         type: mesh
         parameters:
-            file: package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/passive_link_straight_70.stl
+            file: package://modular/src/modular/modular_resources/models/modular/meshes/alberobotics/passive_link_straight_140.stl
             scale: [0.001, 0.001, 0.001]
         pose:
             x: 0.0

@@ -289,7 +289,7 @@ def requestURDF():
 # This is needed to load the meshes of the modules (withot the need to put them in the /static folder)
 @app.route('/modular_resources/<path:path>')
 def send_file(path):
-    return send_from_directory('/home/eromiti/modular/src/modular/modular_data/modular_resources', path)
+    return send_from_directory('/home/eromiti/modular/src/modular/modular_resources', path)
 
 
 #TODO: to be included in the next versions (requires ROS etc.)

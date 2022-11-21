@@ -68,8 +68,8 @@ dynamics:
             y: 0.0
             z: 0.0
 visual:
-    mesh_body_1: package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/tool_exchanger.stl
-    mesh_collision_1: package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/tool_exchanger.stl
+    mesh_body_1: package://modular/src/modular/modular_resources/models/modular/meshes/alberobotics/tool_exchanger.stl
+    mesh_collision_1: package://modular/src/modular/modular_resources/models/modular/meshes/alberobotics/tool_exchanger.stl
     tf_mesh_1:
         x: 0.0
         y: 0.0

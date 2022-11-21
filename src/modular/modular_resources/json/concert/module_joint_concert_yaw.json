@@ -1,7 +1,7 @@
 {
   "Header": {
-    "ID": "2",
-    "name": "concert_elbow_joint",
+    "ID": "1",
+    "name": "concert_yaw_joint",
     "date":"16/11/2022",
     "author": "EdaordoRomiti",
     "affiliation": "IIT",
@@ -11,20 +11,20 @@
   },
   "Bodies": [
     {
-      "ID": "2_proximal",
-      "mass": 3.6144181,
+      "ID": "1_proximal",
+      "mass": 3.5866810,
       "inertia": [ 
-        [1.5371313e-02,   -9.9563906e-05, 9.0045644e-06],
-        [-9.9563906e-05,  8.6766316e-03,  -1.8673171e-03],
-        [9.0045644e-06,   -1.8673171e-03, 1.3320926e-02]
+        [1.7808349e-02,  1.6625281e-06, -1.8023262e-05],
+        [1.6625281e-06,  1.7503159e-02, -6.8557387e-05],
+        [-1.8023262e-05, -6.8557387e-05,  6.8844202e-03]
       ],
-      "r_com": [-0.0011492150, 0.042825109, 0.076804506],
+      "r_com": [0.0, 0.0, 0.121],
       "Geometry": {
         "Visual": [
           {
             "type":"mesh",
             "parameters": {
-              "file": "package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/concert/concert_elbow-base.stl",
+              "file": "package://modular/src/modular/modular_resources/models/modular/meshes/concert/concert_yaw-base.stl",
               "scale": [0.001, 0.001, 0.001]
             },
             "pose": [
@@ -39,7 +39,7 @@
           {
             "type":"mesh",
             "parameters": {
-              "file": "package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/concert/simple/concert_elbow-base.stl",
+              "file": "package://modular/src/modular/modular_resources/models/modular/meshes/concert/simple/concert_yaw-base.stl",
               "scale": [0.001, 0.001, 0.001]
             },
             "pose": [
@@ -53,7 +53,7 @@
       },
       "Connectors": [
         {
-          "ID": "2_input",
+          "ID": "1_input",
           "pose": [
             [1,0,0,0],
             [0,1,0,0],
@@ -79,20 +79,20 @@
       ]
     },
     {
-      "ID": "2_distal",
-      "mass": 1.1481338,
+      "ID": "1_distal",
+      "mass": 0.56725368,
       "inertia": [
-        [3.4928397e-03,   -1.0903971e-05, 6.2736548e-06],
-        [-1.0903971e-05,  2.9687575e-03,  3.1199793e-04],
-        [6.2736548e-06,   3.1199793e-04,  4.2223026e-03]
+        [9.7738346e-04,   9.0785180e-08,   5.0589486e-08],
+        [9.0785180e-08,  9.7804563e-04,    0.0000000e+00],
+        [5.0589486e-08,   0.0000000e+00,    1.6176780e-03]
       ],
-      "r_com": [0.0, -0.028238874, 0.017527776],
+      "r_com": [0.0, 0.0,-0.02],
       "Geometry": {
         "Visual": [
           {
             "type":"mesh",
             "parameters": {
-              "file": "package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/concert/concert_elbow-link.stl",
+              "file": "package://modular/src/modular/modular_resources/models/modular/meshes/concert/concert_yaw-link.stl",
               "scale": [0.001, 0.001, 0.001]
             },
             "pose": [
@@ -107,7 +107,7 @@
           {
             "type":"mesh",
             "parameters": {
-              "file": "package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/concert/simple/concert_elbow-link.stl",
+              "file": "package://modular/src/modular/modular_resources/models/modular/meshes/concert/simple/concert_yaw-link.stl",
               "scale": [0.001, 0.001, 0.001]
             },
             "pose": [
@@ -121,7 +121,7 @@
       },
       "Connectors": [
         {
-          "ID": "2_output",
+          "ID": "1_output",
           "pose": [
             [1,0,0,0],
             [0,1,0,0],
@@ -149,21 +149,21 @@
   ],
   "Joints": [
     {
-      "ID": "2_joint",
-      "parent": "2_proximal",
-      "child": "2_distal",
+      "ID": "1_joint",
+      "parent": "1_proximal",
+      "child": "1_distal",
       "type": "revolute",
       "passive": "false",
       "pose_parent": [
         [1.0,   0.0,    0.0,    0.0     ],
-        [0.0,   0.0,    1.0,    0.13666   ],
-        [0.0,   -1.0,   0.0,    0.0875  ],
+        [0.0,   1.0,    0.0,    0.0     ],
+        [0.0,   0.0,    1.0,    0.245   ],
         [0.0,   0.0,    0.0,    1.0     ]
       ],
       "pose_child": [
-        [-1.0,  0.0,    0.0,    0.0     ],
-        [0.0,   0.0,    -1.0,   -0.0875 ],
-        [0.0,   -1.0,   0.0,    0.0195  ],
+        [1.0,   0.0,    0.0,    0.0     ],
+        [0.0,   1.0,    0.0,    0.0     ],
+        [0.0,   0.0,    1.0,    0.0     ],
         [0.0,   0.0,    0.0,    1.0     ]
       ],
       "limits": {
