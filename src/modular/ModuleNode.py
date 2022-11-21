@@ -311,9 +311,10 @@ class Module(object):
             #print(self.size_out)
             setattr(self, 'size_out', switcher.get(self.size_out, "Invalid size"))
         else:
-            #print(self.size)
-            setattr(self, 'size', switcher.get(self.size, "Invalid size"))
-
+            if hasattr(self, 'size'):
+                setattr(self, 'size', switcher.get(self.size, "Invalid size"))
+            else:
+                pass
     #
     # noinspection PyPep8Naming
     def get_proximal_distal_matrices(self, reverse):
@@ -498,7 +499,7 @@ class ModuleNode(Module, anytree.NodeMixin):
     def __init__(self, dictionary, filename=None, format=ModuleDescriptionFormat.YAML, parent=None, template_dictionary={}):
         """When instantiated the __init__ from the inherited class is called. Name and parent attributes are updated"""
         # when calling a method of a class that has been extended super is needed
-        super(ModuleNode, self).__init__(dictionary, filename, format=format, template_dictionary={})
+        super(ModuleNode, self).__init__(dictionary, filename, format=format, template_d=template_dictionary)
         self.name = filename
         # self.filename = filename
         self.parent = parent
