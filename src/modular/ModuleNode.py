@@ -311,9 +311,10 @@ class Module(object):
             #print(self.size_out)
             setattr(self, 'size_out', switcher.get(self.size_out, "Invalid size"))
         else:
-            #print(self.size)
-            setattr(self, 'size', switcher.get(self.size, "Invalid size"))
-
+            if hasattr(self, 'size'):
+                setattr(self, 'size', switcher.get(self.size, "Invalid size"))
+            else:
+                pass
     #
     # noinspection PyPep8Naming
     def get_proximal_distal_matrices(self, reverse):
