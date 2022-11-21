@@ -1,0 +1,194 @@
+{
+  "Header": {
+    "ID": "1",
+    "name": "concert_yaw_joint",
+    "date":"16/11/2022",
+    "author": "EdaordoRomiti",
+    "affiliation": "IIT",
+    "authorEMail": "edoardo.romiti@iit.it",
+    "cost": 0,
+    "type": "joint"
+  },
+  "Bodies": [
+    {
+      "ID": "1_proximal",
+      "mass": 3.5866810,
+      "inertia": [ 
+        [1.7808349e-02,  1.6625281e-06, -1.8023262e-05],
+        [1.6625281e-06,  1.7503159e-02, -6.8557387e-05],
+        [-1.8023262e-05, -6.8557387e-05,  6.8844202e-03]
+      ],
+      "r_com": [0.0, 0.0, 0.121],
+      "Geometry": {
+        "Visual": [
+          {
+            "type":"mesh",
+            "parameters": {
+              "file": "package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/concert/concert_yaw-base.stl",
+              "scale": [0.001, 0.001, 0.001]
+            },
+            "pose": [
+              [1,0,0,0],
+              [0,1,0,0],
+              [0,0,1,0],
+              [0,0,0,1]
+            ]
+          }
+        ],
+        "Collision": [
+          {
+            "type":"mesh",
+            "parameters": {
+              "file": "package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/concert/simple/concert_yaw-base.stl",
+              "scale": [0.001, 0.001, 0.001]
+            },
+            "pose": [
+              [1,0,0,0],
+              [0,1,0,0],
+              [0,0,1,0],
+              [0,0,0,1]
+            ]
+          }
+        ]
+      },
+      "Connectors": [
+        {
+          "ID": "1_input",
+          "pose": [
+            [1,0,0,0],
+            [0,1,0,0],
+            [0,0,1,0],
+            [0,0,0,1]
+          ],
+          "gender": "f",
+          "type": "clamp",
+          "size": "big"
+        }
+      ],
+      "Gazebo": [
+        {
+          "mu1": 0.2,
+          "mu2": 0.2,
+          "kp": 100000000.0,
+          "kd": 1.0,
+          "maxVel": 0.0,
+          "minDepth": 0.0001,
+          "material": "Gazebo/Blue",
+          "selfCollide": true
+        }
+      ]
+    },
+    {
+      "ID": "1_distal",
+      "mass": 0.56725368,
+      "inertia": [
+        [9.7738346e-04,   9.0785180e-08,   5.0589486e-08],
+        [9.0785180e-08,  9.7804563e-04,    0.0000000e+00],
+        [5.0589486e-08,   0.0000000e+00,    1.6176780e-03]
+      ],
+      "r_com": [0.0, 0.0,-0.02],
+      "Geometry": {
+        "Visual": [
+          {
+            "type":"mesh",
+            "parameters": {
+              "file": "package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/concert/concert_yaw-link.stl",
+              "scale": [0.001, 0.001, 0.001]
+            },
+            "pose": [
+              [1,0,0,0],
+              [0,1,0,0],
+              [0,0,1,0],
+              [0,0,0,1]
+            ]
+          }
+        ],
+        "Collision": [
+          {
+            "type":"mesh",
+            "parameters": {
+              "file": "package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/concert/simple/concert_yaw-link.stl",
+              "scale": [0.001, 0.001, 0.001]
+            },
+            "pose": [
+              [1,0,0,0],
+              [0,1,0,0],
+              [0,0,1,0],
+              [0,0,0,1]
+            ]
+          }
+        ]
+      },
+      "Connectors": [
+        {
+          "ID": "1_output",
+          "pose": [
+            [1,0,0,0],
+            [0,1,0,0],
+            [0,0,1,0],
+            [0,0,0,1]
+          ],
+          "gender": "m",
+          "type": "clamp",
+          "size": "big"
+        }
+      ],
+      "Gazebo": [
+        {
+          "mu1": 0.2,
+          "mu2": 0.2,
+          "kp": 100000000.0,
+          "kd": 1.0,
+          "maxVel": 0.0,
+          "minDepth": 0.0001,
+          "material": "Gazebo/White",
+          "selfCollide": true
+        }
+      ]
+    }
+  ],
+  "Joints": [
+    {
+      "ID": "1_joint",
+      "parent": "1_proximal",
+      "child": "1_distal",
+      "type": "revolute",
+      "passive": "false",
+      "pose_parent": [
+        [1.0,   0.0,    0.0,    0.0     ],
+        [0.0,   1.0,    0.0,    0.0     ],
+        [0.0,   0.0,    1.0,    0.245   ],
+        [0.0,   0.0,    0.0,    1.0     ]
+      ],
+      "pose_child": [
+        [1.0,   0.0,    0.0,    0.0     ],
+        [0.0,   1.0,    0.0,    0.0     ],
+        [0.0,   0.0,    1.0,    0.0     ],
+        [0.0,   0.0,    0.0,    1.0     ]
+      ],
+      "limits": {
+        "position_upper": 3.0,
+        "position_lower": -3.0,
+        "peak_torque": 314.0,
+        "velocity": 6.6,
+        "acceleration": null
+      },
+      "gear_ratio": 120.0,
+      "motor_inertia": 0.0,
+      "friction_coulomb": 0.0,
+      "friction_viscous": 1.0,
+      "control_parameters": {
+        "xbot": {
+          "control_mode": "impedance_d4",
+          "pid": {
+            "position": [1000.0, 0.0, 30.0],
+            "impedance": [500.0, 20.0, 1.0, 0.025, 0.99]
+          }
+        },
+        "xbot_gz": {
+          "profile": "medium_mot"
+        }
+      }
+    }
+  ]
+}

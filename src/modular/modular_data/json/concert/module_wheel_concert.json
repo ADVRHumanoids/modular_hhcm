@@ -1,0 +1,182 @@
+{
+  "Header": {
+    "ID": "4",
+    "name": "concert_wheel_module",
+    "date":"16/11/2022",
+    "author": "EdaordoRomiti",
+    "affiliation": "IIT",
+    "authorEMail": "edoardo.romiti@iit.it",
+    "cost": 0,
+    "type": "wheel"
+  },
+  "Bodies": [
+    {
+      "ID": "4_proximal",
+      "mass": null,
+      "inertia": null,
+      "r_com": null,
+      "Geometry": {
+        "Visual": [
+          {}
+        ],
+        "Collision": [
+          {}
+        ]
+      },
+      "Connectors": [
+        {
+          "ID": "4_input",
+          "pose": [
+            [1,0,0,0],
+            [0,1,0,0],
+            [0,0,1,0],
+            [0,0,0,1]
+          ],
+          "gender": "f",
+          "type": "clamp",
+          "size": "big"
+        }
+      ],
+      "Gazebo": [ 
+        {}
+      ]
+    },
+    {
+      "ID": "4_distal",
+      "mass": 4.0116207,
+      "inertia": [
+        [2.8580559e-02,   0.0,            0.0],
+        [0.0,             2.8580559e-02,  0.0],
+        [0.0,             0.0,            4.4954065e-02]
+      ],
+      "r_com": [0.0, 0.0, -0.005],
+      "Geometry": {
+        "Visual": [
+          {
+            "type":"mesh",
+            "parameters": {
+              "file": "package://modular/src/modular/modular_data/modular_resources/models/modular/meshes/concert/concert_wheel.stl",
+              "scale": [0.001, 0.001, 0.001]
+            },
+            "pose": [
+              [1,0,0,0],
+              [0,1,0,0],
+              [0,0,1,0],
+              [0,0,0,1]
+            ]
+          }
+        ],
+        "Collision": [
+          {
+            "type":"cylinder",
+            "parameters": {
+              "radius": 0.16,
+              "length": 0.1
+            },
+            "pose": [
+              [1,0,0,0],
+              [0,1,0,0],
+              [0,0,1,0],
+              [0,0,0,1]
+            ]
+          }
+        ]
+      },
+      "Connectors": [
+        {
+          "ID": "4_output",
+          "pose": [
+            [1,0,0,0],
+            [0,1,0,0],
+            [0,0,1,0],
+            [0,0,0,1]
+          ],
+          "gender": "m",
+          "type": "clamp",
+          "size": "big"
+        }
+      ],
+      "Gazebo": [
+        {
+          "material": "Gazebo/Residential",
+          "selfCollide": true,
+          "collision": {
+            "surface": {
+              "friction": {
+                "ode": {
+                  "mu": 1.0,
+                  "mu2": 1.0
+                },
+                "bullet": {
+                  "friction": 1.0,
+                  "friction2": 1.0
+                }
+              },
+              "contact": {
+                "ode": {
+                  "kp": 2100000,
+                  "kd": 1,
+                  "max_vel": 100
+                },
+                "bullet": { 
+                  "soft_cfm": 0.007,
+                  "soft_erp": 0.25,
+                  "kp": 1000000,
+                  "kd": 5
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "Joints": [
+    {
+      "ID": "4_joint",
+      "parent": "4_proximal",
+      "child": "4_distal",
+      "type": "revolute",
+      "passive": "false",
+      "pose_parent": [
+        [1.0,   0.0,    0.0,    0.0 ],
+        [0.0,   1.0,    0.0,    0.0 ],
+        [0.0,   0.0,    1.0,    0.0 ],
+        [0.0,   0.0,    0.0,    1.0 ]
+      ],
+      "pose_child": [
+        [1.0,   0.0,    0.0,    0.0 ],
+        [0.0,   1.0,    0.0,    0.0 ],
+        [0.0,   0.0,    1.0,    0.0 ],
+        [0.0,   0.0,    0.0,    1.0 ]
+      ],
+      "limits": {
+        "position_upper": 1e10,
+        "position_lower": -1e10,
+        "peak_torque": 314.0,
+        "velocity": 6.6,
+        "acceleration": null
+      },
+      "gear_ratio": 120.0,
+      "motor_inertia": 0.0,
+      "friction_coulomb": 0.0,
+      "friction_viscous": 1.0,
+      "control_parameters": {
+        "xbot": {
+          "control_mode": "71_motor_vel_ctrl",
+          "pid": {
+            "position": [1000.0, 0.0, 30.0],
+            "velocity": [50.0, 0.0, 0.0],
+            "impedance": [500.0, 20.0, 1.0, 0.025, 0.99]
+          }
+        },
+        "xbot_gz": {
+          "pid": {
+            "p": 0,
+            "d": 50
+          }
+        }
+      }
+    }
+  ]
+}
