@@ -1,5 +1,6 @@
 import pkg_resources
 import yaml
+import os
 
 class ResourceFinder:
     def __init__(self, config_file='config_file.yaml'):
@@ -8,6 +9,14 @@ class ResourceFinder:
     def find_resource_path(self, resource_name, relative_path=None):
         if relative_path:
             resource_path = '/'.join((self.cfg[relative_path], resource_name))
+        else:
+            resource_path = resource_name
+        return resource_path
+    
+    def find_resource_absolute_path(self, resource_name, relative_path=None):
+        if relative_path:
+            curr_dir = os.path.dirname(os.path.abspath(__file__))
+            resource_path = '/'.join((curr_dir, self.cfg[relative_path], resource_name))
         else:
             resource_path = resource_name
         return resource_path
