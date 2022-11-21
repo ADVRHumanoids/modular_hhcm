@@ -1,0 +1,3 @@
+[submodule "src/modular/modular_resources"]
+	path = src/modular/modular_resources
+	url = git@github.com:ADVRHumanoids/modular_resources.git
