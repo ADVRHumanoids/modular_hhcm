@@ -1505,8 +1505,8 @@ class UrdfWriter:
             name = 'L_0' + self.cube_switcher.get(self.n_cubes)
             self.n_cubes += 1
 
-            filename = self.resource_finder.get_filename('master_cube.yaml', 'yaml_path')
-            template_name = self.resource_finder.get_filename('template.yaml', 'yaml_path')
+            filename = self.resource_finder.get_filename('yaml/master_cube.yaml', 'resources_path')
+            template_name = self.resource_finder.get_filename('yaml/template.yaml', 'resources_path')
 
             # call the method that reads the yaml file describing the cube and instantiate a new module object
             slavecube = ModuleNode.module_from_yaml(filename, self.parent_module, template_name)
@@ -1658,8 +1658,8 @@ class UrdfWriter:
             # self.T_con = tf.transformations.translation_matrix((0, 0, 0.1))
             # self.T_con = self.mastercube.geometry.connector_length))
 
-            filename = self.resource_finder.get_filename('master_cube.yaml', 'yaml_path')
-            template_name = self.resource_finder.get_filename('template.yaml', 'yaml_path')
+            filename = self.resource_finder.get_filename('yaml/master_cube.yaml', 'resources_path')
+            template_name = self.resource_finder.get_filename('yaml/template.yaml', 'resources_path')
 
             # call the method that reads the yaml file describing the cube and instantiate a new module object
             mastercube = ModuleNode.module_from_yaml(filename, self.parent_module, template_name)
@@ -1817,8 +1817,8 @@ class UrdfWriter:
         # Generate name according to the # of cubes already in the tree
         name = 'mobile_base'
 
-        filename = self.resource_finder.get_filename('concert/mobile_platform.yaml', 'yaml_path')
-        template_name = self.resource_finder.get_filename('template.yaml', 'yaml_path')
+        filename = self.resource_finder.get_filename('yaml/concert/mobile_platform.yaml', 'resources_path')
+        template_name = self.resource_finder.get_filename('yaml/template.yaml', 'resources_path')
 
         # call the method that reads the yaml file describing the cube and instantiate a new module object
         mobilebase = ModuleNode.module_from_yaml(filename, self.parent_module, template_name)
@@ -1978,8 +1978,8 @@ class UrdfWriter:
     def add_socket(self, x_offset=0.0, y_offset=0.0, z_offset=0.0, angle_offset=0.0):
         filename = 'socket.yaml'
         # Generate the path to the required YAML file
-        module_name = self.resource_finder.get_filename(filename, 'yaml_path')
-        template_name = self.resource_finder.get_filename('template.yaml', 'yaml_path')
+        module_name = self.resource_finder.get_filename('yaml/'+filename, 'resources_path')
+        template_name = self.resource_finder.get_filename('yaml/template.yaml', 'resources_path')
 
         # Set base_link as parent
         self.parent_module = self.base_link
@@ -2212,17 +2212,17 @@ class UrdfWriter:
         self.print(path_name)
         self.print(filename)
 
-        template_name = self.resource_finder.get_filename('template.yaml', 'yaml_path')
+        template_name = self.resource_finder.get_filename('yaml/template.yaml', 'resources_path')
 
         if filename.lower().endswith(('.yaml', '.yml')):
             # Generate the path to the required YAML file
-            module_name = self.resource_finder.get_filename(filename, 'yaml_path')
+            module_name = self.resource_finder.get_filename('yaml/'+filename, 'resources_path')
             # Load the module from YAML and create a ModuleNode instance
             new_module = ModuleNode.module_from_yaml(module_name, self.parent_module, template_name, reverse)
             self.print("Module loaded from YAML: " + new_module.name)
         elif filename.lower().endswith(('.json')):
             # Generate the path to the required YAML file
-            module_name = self.resource_finder.get_filename(filename, 'json_path')
+            module_name = self.resource_finder.get_filename('json/'+filename, 'resources_path')
             # Load the module from YAML and create a ModuleNode instance
             new_module = ModuleNode.module_from_json(module_name, self.parent_module, template_name, reverse)
             self.print("Module loaded from JSON: " + new_module.name)
@@ -3464,7 +3464,7 @@ class UrdfWriter:
                 node_type = node.attrib['type']
                 if node_type == 'cube' or node_type == 'mobile_base':
                     name = node.attrib['name']
-                    filename = self.resource_finder.get_filename('master_cube.yaml', 'yaml_path')
+                    filename = self.resource_finder.get_filename('yaml/master_cube.yaml', 'resources_path')
 
                     ET.SubElement(self.root, "xacro:add_connectors", type='connectors', name=name, filename=filename)
             except KeyError:
