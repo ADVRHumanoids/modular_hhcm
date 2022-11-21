@@ -34,7 +34,7 @@
 *.app
 
 
-*.json
+# *.json
 
 
 #### Python
@@ -157,3 +157,6 @@ venv.bak/
 #src/modular/modular_data/ModularBot/*
 
 # Wheel files
+
+# VS Code folder
+.vscode/*
