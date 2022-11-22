@@ -6,10 +6,10 @@
 1: # joint module
     256: # straight
         32: #size B
-            0: module_joint_yaw_ORANGE_B.yaml # rev 0
+            0: module_joint_yaw_ORANGE.yaml # rev 0
     512: # elbow
         32: #size B
-            0: module_joint_double_elbow_ORANGE_B.yaml # rev 0
+            0: module_joint_double_elbow_ORANGE.yaml # rev 0
     # ...
 
 2: # hub module
@@ -24,14 +24,14 @@
             0: module_tool_exchanger_heavy.yaml # rev 0
     512: # gripper
         32: #size B
-            0: module_gripper_B.yaml # rev 0
+            0: module_gripper.yaml # rev 0
     # ...
 
 4: #passive link module
     256: # straight
         32: #size B
-            0: module_link_straight_140_B.yaml # rev 0
+            0: module_link_straight_140.yaml # rev 0
     512: # elbow
         32: #size B
-            0: module_link_elbow_90_B.yaml # rev 0
+            0: module_link_elbow_90.yaml # rev 0
     # ...

@@ -1817,7 +1817,7 @@ class UrdfWriter:
         # Generate name according to the # of cubes already in the tree
         name = 'mobile_base'
 
-        filename = self.resource_finder.get_filename('yaml/concert/mobile_platform.yaml', 'resources_path')
+        filename = self.resource_finder.get_filename('yaml/concert/mobile_platform_concert.yaml', 'resources_path')
         template_name = self.resource_finder.get_filename('yaml/template.yaml', 'resources_path')
 
         # call the method that reads the yaml file describing the cube and instantiate a new module object
