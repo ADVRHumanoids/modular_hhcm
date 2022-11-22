@@ -1021,7 +1021,10 @@ class UrdfWriter:
 
         self.set_floating_base(floating_base)
 
-        self.logger = logger
+        if logger is None:
+            self.logger = logging.getLogger('URDF_writer') 
+        else:
+            self.logger = logger
         
         self.verbose = verbose
         if self.verbose and self.logger is not None:
@@ -3507,14 +3510,16 @@ def write_file_to_stdout(urdf_writer: UrdfWriter, homing_map, robot_name='modula
 
         if args.output == 'urdf':
             content = urdf_writer.write_urdf()
-            content = content.replace('package://modular/src/modular/web/static', 
+            content = content.replace('package://modular/src/modular/modular_resources', 
                                       'package://modular_resources')
             open(f'/tmp/{robot_name}.urdf', 'w').write(content)
+
         if args.output == 'urdf_gz':
             content = urdf_writer.write_urdf(gazebo=True)
-            content = content.replace('package://modular/src/modular/web/static', 
+            content = content.replace('package://modular/src/modular/modular_resources', 
                                       'package://modular_resources')
             open(f'/tmp/{robot_name}_gz.urdf', 'w').write(content)
+
         elif args.output == 'srdf':
             content = urdf_writer.write_srdf(homing_map)
             open(f'/tmp/{robot_name}.srdf', 'w').write(content)
