@@ -69,22 +69,22 @@ class JSONInterpreter(object):
     def parse_dict(self, d):
         """Parse the dictionary d and set the attributes of the owner module"""
         self.owner.kinematics_convention = KinematicsConvention.AFFINE
-        self.owner.type = ModuleType(d['Header']['type'])
+        self.owner.type = ModuleType(d['header']['type'])
         self.type_dispatcher(d)
 
     def type_dispatcher(self, d):
         """Dispatch the parsing of the dictionary d according to the module type"""
         if self.owner.type in {ModuleType.LINK, ModuleType.GRIPPER, ModuleType.TOOL_EXCHANGER, ModuleType.SIZE_ADAPTER}:
-            if len(d['Joints']) != 0:
+            if len(d['joints']) != 0:
                 raise ValueError('A link must have no joints')
-            if len(d['Bodies']) != 1:
+            if len(d['bodies']) != 1:
                 raise ValueError('A link must have exactly one body')
-            if len(d['Bodies'][0]['Connectors']) != 2:
+            if len(d['bodies'][0]['connectors']) != 2:
                 raise ValueError('A link must have exactly 2 connectors')
-            dict_body_1 = d['Bodies'][0]
+            dict_body_1 = d['bodies'][0]
             # kinematics
             #HACK: We assume that the output connector is the last one. Otherwise, we should check the ID
-            output_connector = dict_body_1['Connectors'][-1]
+            output_connector = dict_body_1['connectors'][-1]
             # for con in dict_body_1['Connectors']:
             #     if con['ID'] == 'out':
             #         output_connector = con
@@ -102,19 +102,19 @@ class JSONInterpreter(object):
             output_size = output_connector['size']
             if self.owner.type is ModuleType.SIZE_ADAPTER:
                 self.owner.size_out = output_size
-                self.owner.size_in = d['Bodies'][0]['Connectors'][0]['size']
+                self.owner.size_in = d['bodies'][0]['connectors'][0]['size']
             else:
                 self.owner.size = output_size 
         elif self.owner.type in {ModuleType.JOINT, ModuleType.WHEEL}:
-            if len(d['Joints']) != 1:
+            if len(d['joints']) != 1:
                 raise ValueError('A joint must have exactly one joint')
-            if len(d['Bodies']) != 2:
+            if len(d['bodies']) != 2:
                 raise ValueError('A joint must have exactly two bodies')
-            if len(d['Bodies'][0]['Connectors']) != 1 and len(d['Bodies'][1]['Connectors']) != 1:
+            if len(d['bodies'][0]['connectors']) != 1 and len(d['bodies'][1]['connectors']) != 1:
                 raise ValueError('A joint must have exactly one connector for each body')
-            dict_joint = d['Joints'][0]
-            dict_body_1 = d['Bodies'][0]
-            dict_body_2 = d['Bodies'][-1]
+            dict_joint = d['joints'][0]
+            dict_body_1 = d['bodies'][0]
+            dict_body_2 = d['bodies'][-1]
 
             # kinematics
             proximal_pose = Module.Attribute({'pose': dict_joint['pose_parent']}) 
@@ -148,21 +148,21 @@ class JSONInterpreter(object):
             self.set_gazebo_properties(self.owner.gazebo.body_1, dict_body_1)
             self.set_gazebo_properties(self.owner.gazebo.body_2, dict_body_2)
             # size
-            output_connector = dict_body_2['Connectors'][-1]
+            output_connector = dict_body_2['connectors'][-1]
             self.owner.size = output_connector['size']
             # CentAcESC
             self.owner.CentAcESC = Module.Attribute(dict_joint['control_parameters']['xbot'])
             # xbot_gz
             self.owner.xbot_gz = Module.Attribute(dict_joint['control_parameters']['xbot_gz'])
         elif self.owner.type in {ModuleType.CUBE, ModuleType.MOBILE_BASE}:
-            if len(d['Joints']) != 0:
+            if len(d['joints']) != 0:
                 raise ValueError('A hub must have no joints')
-            if len(d['Bodies']) != 1:
+            if len(d['bodies']) != 1:
                 raise ValueError('A hub must have exactly one body')
             # if len(d['Bodies'][0]['Connectors']) != 5:
             #     raise ValueError('A hub must have exactly 5 connectors')
-            body_1 = d['Bodies'][0]
-            for idx, con in enumerate(body_1['Connectors']):             
+            body_1 = d['bodies'][0]
+            for idx, con in enumerate(body_1['connectors']):             
                 setattr(self.owner.kinematics, 'connector_{}'.format(idx), None)
                 con_obj = getattr(self.owner.kinematics, 'connector_{}'.format(idx))
                 attr = Module.Attribute(con['pose'])  
@@ -178,7 +178,7 @@ class JSONInterpreter(object):
             self.set_gazebo_properties(self.owner.gazebo.body_1, body_1)
             # size
             #HACK: We assume the size is the same for all the connectors and load it from the last connector (which we assume to be the connector for the arm)
-            self.owner.size = body_1['Connectors'][-1]['size']
+            self.owner.size = body_1['connectors'][-1]['size']
 
     @staticmethod
     def set_dynamic_properties(body, dict_body):
@@ -198,9 +198,9 @@ class JSONInterpreter(object):
     @staticmethod
     def set_visual_properties(body, dict_body):
         """Set the visual properties of a body from a dictionary"""
-        if len(dict_body['Geometry']['Visual']) != 1:
+        if len(dict_body['visual']) != 1:
             raise ValueError('A body must have exactly one visual property')
-        visual = dict_body['Geometry']['Visual'][0]
+        visual = dict_body['visual'][0]
         attr = Module.Attribute(visual)
         if visual:
             # NOTE: pose of visual properties should be expressed in urdf format at the moment
@@ -211,9 +211,9 @@ class JSONInterpreter(object):
     @staticmethod
     def set_collision_properties(body, dict_body):
         """Set the collision properties of a body from a dictionary"""
-        if len(dict_body['Geometry']['Collision']) != 1:
+        if len(dict_body['collision']) != 1:
             raise ValueError('A body must have exactly one collision property')
-        collision = dict_body['Geometry']['Collision'][0]
+        collision = dict_body['collision'][0]
         attr = Module.Attribute(collision) 
         if collision:
             # NOTE: pose of collision properties should be expressed in urdf format at the moment
@@ -225,9 +225,9 @@ class JSONInterpreter(object):
     def set_gazebo_properties(body, dict_body):
         """Set the gazebo properties of a body from a dictionary"""
         try:
-            if len(dict_body['Gazebo']) != 1:
+            if len(dict_body['gazebo']) != 1:
                 raise ValueError('A body must have exactly one gazebo property')
-            gazebo = dict_body['Gazebo'][0]
+            gazebo = dict_body['gazebo'][0]
             attr = Module.Attribute(gazebo)  
             update_nested_dict(body.__dict__, attr.__dict__)
         except KeyError:
