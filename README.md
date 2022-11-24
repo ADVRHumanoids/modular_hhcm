@@ -10,7 +10,7 @@
 <!-- PROJECT LOGO -->
 <br />
 <p align="center">
-  <a href="https://github.com/ADVRHumanoids/modular">
+  <a href="https://github.com/ADVRHumanoids/modular_concert">
     <img src="https://alberobotics.it/images/apple-touch-icon.png" alt="Logo" width="80" height="80">
   </a>
 
@@ -21,9 +21,9 @@
     <br />
     <a href="https://www.youtube.com/channel/UCNyqcpavE5nsVidipXZQ8OQ">View Demo</a>
     ·
-    <a href="https://github.com/ADVRHumanoids/modular/issues">Request Feature</a>
+    <a href="https://github.com/ADVRHumanoids/modular_concert/issues">Request Feature</a>
     ·
-    <a href="https://github.com/ADVRHumanoids/modular/issues">Report Bug</a>
+    <a href="https://github.com/ADVRHumanoids/modular_concert/issues">Report Bug</a>
     <br />
     <a href="#documentation"><strong>Explore the docs »</strong></a>
   </p>
@@ -67,9 +67,11 @@ This app will genereate URDF, SRDF and a complete ROS package, which can be used
 
 This is handled in 2 different scenarios: online or offline.
 
-In the offline approach (Building Mode), a user sets up a robot with our reconfigurable modules in the virtual environment: the user selects modules from a library, assembles them to form a mechanism that is immediateley visualised in 3D.
+In the offline approach (**Building Mode**), a user sets up a robot with our reconfigurable modules in the virtual environment: the user selects modules from a library, assembles them to form a mechanism that is immediateley visualised in 3D.
 
-An online approach (Discovery Mode) is also provided that allows the user to query the EtherCAT master for a description of the network topology graph. The  robot built from real physical modules is therefore recognized and displayed in 3D. 
+An online approach (**Discovery Mode**) is also provided that allows the user to query the EtherCAT master for a description of the network topology graph. The  robot built from real physical modules is therefore recognized and displayed in 3D.
+
+Moreover, a **Python API** to programmatically build a robot model from a Python script is also provided. Some example of [how to use the API](#use-the-python-api) are provided in the [scripts](https://github.com/ADVRHumanoids/modular_concert/tree/master/scripts) directory. For using the Python API install with [Option 1](#option-1-pip-install)
 
 <!--
 ### Built With:
@@ -85,13 +87,17 @@ An online approach (Discovery Mode) is also provided that allows the user to que
 
 ## Installation
 
-Currently we only support Python3 (for the last version supporting Python2 see [v.0.0.4](https://github.com/ADVRHumanoids/modular/releases/tag/v0.0.4)) and it's recommended to have pip version 21.3 or newer if you plan use editable installs (see below).
+Currently we only support Python3 and it's recommended to have pip version 21.3 or newer if you plan use editable installs (see below).
 
 There are 2 ways to install modular:
 
 ### Option 1. **pip install**
 
-After cloning the repo, from the main directory run:
+1. __Get the code__. Clone the repo using:
+`git clone --recursive git@github.com:ADVRHumanoids/modular_concert.git`.
+This will ensure the git submodule [modular_resources](git@github.com:ADVRHumanoids/modular_resources.git) is correctly initialized and cloned. (In alternative you can run `git submodule update --init --recursive` from the top directory after cloning)
+
+2. __Install__. After cloning the repo, from the main directory run:
 `pip install .`
 The package can be installed in system, local, or virtualenv site-packages directory.
 If you plan to make modifications it and don't want to re-install it every time, install it in 'editable mode' :
@@ -108,7 +114,7 @@ To use modular you need to start the python server.
 1. If you installed with **pip install**:
 
 ```bash
-python modular/src/modular/web/RobotDesignStudio.py
+python src/modular/web/RobotDesignStudio.py
 ```
 or even better, run:
 ```
@@ -125,13 +131,13 @@ run
 Then open <http://0.0.0.0:5000/> from a browser to acces the graphical interface.
 
 ### Use the python API
-Examples of how to use the python API are provided in the `scripts` folder.
+Examples of how to use the python API are provided in the [scripts](https://github.com/ADVRHumanoids/modular_concert/tree/master/scripts) folder.
 - `create_modularbot.ipynb` shows an example of how to build a 6-DOF robot using Alberobotics modules and deploy URDF, SRDF, etc. into a ROS package
 - `generate_concert_robot.ipynb` shows how to build and deploy the CONCERT modular robot 
 
-## Documentation
+<!-- ## Documentation
 
-Static documentation for API calls has been added and is stored in the `modular/src/modular/web/docs` directory.
+Static documentation for API calls has been added and is stored in the `src/modular/web/docs` directory.
 It can be accessed locally as follow:
 
 1. clone the repo and navigate to the docs folder:
@@ -147,15 +153,15 @@ It can be accessed locally as follow:
    python -m http.server
    ```
 
-3. open <http://0.0.0.0:8000/> from a browser
+3. open <http://0.0.0.0:8000/> from a browser -->
 
 <!-- ROADMAP -->
 
 ## Roadmap
 
-See the [open issues](https://github.com/ADVRHumanoids/modular/issues) for a list of proposed features (and known issues).
+See the [open issues](https://github.com/ADVRHumanoids/modular_concert/issues) for a list of proposed features (and known issues).
 
-<!--See the [Roadmap kanban](https://github.com/ADVRHumanoids/modular/projects/1) for the state of the development. -->
+<!--See the [Roadmap kanban](https://github.com/ADVRHumanoids/modular_concert/projects/1) for the state of the development. -->
 
 <!-- CONTRIBUTING -->
 
@@ -180,7 +186,7 @@ Distributed under the MIT License. See `LICENSE` for more information. -->
 
 Alberobotics team - alberobotics@iit.it
 
-Project Link: [https://github.com/ADVRHumanoids/modular](https://github.com/ADVRHumanoids/modular)
+Project Link: [https://github.com/ADVRHumanoids/modular_concert](https://github.com/ADVRHumanoids/modular_concert)
 
 <!-- ACKNOWLEDGEMENTS - ->
 ## Acknowledgements -->
