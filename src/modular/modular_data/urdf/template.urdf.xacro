@@ -3,8 +3,8 @@
     <xacro:include filename="ModularBot.library.urdf.xacro"/>
     <xacro:include filename="ModularBot.control.urdf.xacro"/>
 
-    <xacro:arg name="floating_joint" default="false"/>
-    <xacro:property name="ADD_FLOATING_BASE" value="$(arg floating_joint)" />
+    <xacro:arg name="floating_base" default="false"/>
+    <xacro:property name="ADD_FLOATING_BASE" value="$(arg floating_base)" />
 
     <xacro:arg name="gazebo_urdf" default="false"/>
     <xacro:property name="GAZEBO_URDF" value="$(arg gazebo_urdf)" />

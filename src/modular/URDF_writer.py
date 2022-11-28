@@ -1016,7 +1016,7 @@ class UrdfWriter:
         self.parent = parent
 
         # xacro mappings to perform args substitution (see template.urdf.xacro)
-        self.xacro_mappings = {'floating_joint': 'false',
+        self.default_xacro_mappings = {'floating_base': 'false',
                                 'gazebo_urdf': 'false'}
 
         self.set_floating_base(floating_base)
@@ -1138,15 +1138,15 @@ class UrdfWriter:
     def set_floating_base(self, floating_base):
         """Set the floating base flag"""
         self.floating_base = floating_base
-        self.update_xacro_mappings()
+        self.update_default_xacro_mappings()
 
-    def update_xacro_mappings(self):
+    def update_default_xacro_mappings(self):
         """Update the xacro mappings to perform args substitution (see template.urdf.xacro).
         To be called when the floating base status changes."""
         if self.floating_base:
-            self.xacro_mappings['floating_joint'] = 'true'
+            self.default_xacro_mappings['floating_base'] = 'true'
         else:
-            self.xacro_mappings['floating_joint'] = 'false'
+            self.default_xacro_mappings['floating_base'] = 'false'
 
     def print(self, *args):
         if isinstance(self.logger, logging.Logger):
@@ -1412,10 +1412,8 @@ class UrdfWriter:
         data = {'string': string}
         return data
 
-    def process_urdf(self):
+    def process_urdf(self, xacro_mappings={}):
         """Process the urdf to convert from xacro and perform macro substitutions. Returns urdf string"""
-        #TODO: this is used just by the front-end to show the urdf. It should be removed and 'merged' with write_urdf
-        # global urdf_tree
         
         # write the urdf tree to a string
         xmlstr = xml.dom.minidom.parseString(ET.tostring(self.urdf_tree.getroot())).toprettyxml(indent="   ")
@@ -1424,10 +1422,15 @@ class UrdfWriter:
         # parse the string to convert from xacro
         doc = xacro.parse(xmlstr)
 
-        # perform macro replacement
-        xacro.process_doc(doc, mappings=self.xacro_mappings)
+        # mappings = self.default_xacro_mappings if xacro_mappings else xacro_mappings
+        mappings = copy.deepcopy(self.default_xacro_mappings)
+        mappings.update(xacro_mappings)
 
-        string = doc.toprettyxml(indent='  ')
+        # perform macro replacement
+        xacro.process_doc(doc, mappings=mappings)
+
+        # string = doc.toprettyxml(indent='  ')
+        string = doc.toprettyxml(indent='  ', encoding='utf-8').decode('utf-8')
 
         return string
 
