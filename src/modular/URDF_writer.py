@@ -3493,9 +3493,20 @@ def write_file_to_stdout(urdf_writer: UrdfWriter, homing_map, robot_name='modula
     parser = argparse.ArgumentParser(prog='Modular URDF/SRDF generator and deployer', 
                 usage='./script_name.py --output urdf writes URDF to stdout \n./script_name.py --deploy deploy_dir generates a ros package at deploy_dir')
 
-    parser.add_argument('--output', '-o', required=False, choices=('urdf', 'urdf_gz', 'srdf'), help='write requested file to stdout and exit')
+    parser.add_argument('--output', '-o', required=False, choices=('urdf', 'srdf'),      help='write requested file to stdout and exit')
+    parser.add_argument('--xacro-args', '-a', required=False, nargs='*', help='xacro arguments in key:=value format')
     parser.add_argument('--deploy', '-d', required=False, help='directory where to deploy the package')
+    parser.add_argument('--robot-name', '-r', required=False, help='name of the robot')
     args = parser.parse_args()
+
+    if args.robot_name is not None:
+        robot_name = args.robot_name
+
+    xacro_mappings = {}
+    if args.xacro_args:
+        for arg in args.xacro_args:
+            key, value = arg.split(':=')
+            xacro_mappings[key] = value
 
     content = None
     with suppress_stdout():
@@ -3503,16 +3514,10 @@ def write_file_to_stdout(urdf_writer: UrdfWriter, homing_map, robot_name='modula
         urdf_writer.remove_connectors()
 
         if args.output == 'urdf':
-            content = urdf_writer.write_urdf()
+            content = urdf_writer.process_urdf(xacro_mappings=xacro_mappings)
             content = content.replace('package://modular/src/modular/modular_resources', 
                                       'package://modular_resources')
             open(f'/tmp/{robot_name}.urdf', 'w').write(content)
-
-        if args.output == 'urdf_gz':
-            content = urdf_writer.write_urdf(gazebo=True)
-            content = content.replace('package://modular/src/modular/modular_resources', 
-                                      'package://modular_resources')
-            open(f'/tmp/{robot_name}_gz.urdf', 'w').write(content)
 
         elif args.output == 'srdf':
             content = urdf_writer.write_srdf(homing_map)
