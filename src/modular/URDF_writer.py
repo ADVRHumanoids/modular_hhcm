@@ -1017,7 +1017,9 @@ class UrdfWriter:
 
         # xacro mappings to perform args substitution (see template.urdf.xacro)
         self.default_xacro_mappings = {'floating_base': 'false',
-                                'gazebo_urdf': 'false'}
+                                'gazebo_urdf': 'false',
+                                'velodyne': 'false',
+                                'realsense': 'false'}
 
         self.set_floating_base(floating_base)
 
@@ -3392,16 +3394,16 @@ class UrdfWriter:
         preprocessed_out.close()
 
         # write the URDF for Gazebo
-        string_urdf_gz = self.process_urdf(mappings={'gazebo_urdf': 'true', 'velodyne': 'true', 'realsense': 'true'})
+        string_urdf_gz = self.process_urdf(xacro_mappings={'gazebo_urdf': 'true', 'velodyne': 'true', 'realsense': 'true'})
         gazebo_out.write(string_urdf_gz)
         gazebo_out.close()
 
         # write the URDF
-        string_urdf_xbot = self.process_urdf(mappings={'gazebo_urdf': 'false', 'velodyne': 'false', 'realsense': 'false'})
+        string_urdf_xbot = self.process_urdf(xacro_mappings={'gazebo_urdf': 'false', 'velodyne': 'false', 'realsense': 'false'})
         out.write(string_urdf_xbot)
         out.close()
 
-            return string_urdf_xbot
+        return string_urdf_xbot
 
     # Save URDF/SRDF etc. in a directory with the specified robot_name
     def deploy_robot(self, robot_name, deploy_dir=None):
@@ -3527,4 +3529,10 @@ def write_file_to_stdout(urdf_writer: UrdfWriter, homing_map, robot_name='modula
         print(content)
 
     if args.deploy is not None:
+        urdf_writer.write_urdf()
+        urdf_writer.write_lowlevel_config()
+        urdf_writer.write_problem_description_multi()
+        urdf_writer.write_srdf(homing_map)
+        urdf_writer.write_joint_map()
+
         urdf_writer.deploy_robot(robot_name, args.deploy)

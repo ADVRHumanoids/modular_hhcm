@@ -1,13 +1,16 @@
 <?xml version="1.0"?>
 <robot name="ModularBot" xmlns:xacro="http://www.ros.org/wiki/xacro">
-    <xacro:include filename="ModularBot.library.urdf.xacro"/>
-    <xacro:include filename="ModularBot.control.urdf.xacro"/>
+    <xacro:include filename="$(find modular)/src/modular/modular_data/urdf/ModularBot.library.urdf.xacro"/>
+    <xacro:include filename="$(find modular)/src/modular/modular_data/urdf/ModularBot.control.urdf.xacro"/>
 
     <xacro:arg name="floating_base" default="false"/>
     <xacro:property name="ADD_FLOATING_BASE" value="$(arg floating_base)" />
 
     <xacro:arg name="gazebo_urdf" default="false"/>
     <xacro:property name="GAZEBO_URDF" value="$(arg gazebo_urdf)" />
+
+    <xacro:arg name="realsense" default="false"/>
+    <xacro:property name="ADD_CAMERAS" value="$(arg realsense)" />
 
     <!-- adding (or not) world link for Gazebo simulation -->
     <xacro:if value="${ADD_FLOATING_BASE}">
@@ -34,6 +37,7 @@
     </xacro:unless>
 
     <link name="base_link">
-        <xacro:default_inertial mass="0.1"/>
+        <xacro:default_inertial mass="0.001"/>
     </link>
+
 </robot>
