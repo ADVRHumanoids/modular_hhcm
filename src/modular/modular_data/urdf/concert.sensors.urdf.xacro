@@ -242,6 +242,70 @@
         <link name="${velodyne_back_name}_base_link"/>
     </xacro:unless>
 
+    <!-- Add front-left Bosch USS5 -->
+    <joint name="bosch_uss5_front_left_joint" type="fixed">
+        <origin xyz="0.5105 0.315 -0.129" rpy="0.0 1.963496 0.0"/>
+        <parent link="${parent_name}"/>
+        <child link="bosch_uss5_front_left"/>
+    </joint>
+    <link name="bosch_uss5_front_left"/>
+
+    <!-- Add front-right Bosch USS5 -->
+    <joint name="bosch_uss5_front_right_joint" type="fixed">
+        <origin xyz="0.5105 -0.315 -0.129" rpy="0.0 1.963496 0.0"/>
+        <parent link="${parent_name}"/>
+        <child link="bosch_uss5_front_right"/>
+    </joint>
+    <link name="bosch_uss5_front_right"/>
+
+    <!-- Add back-left Bosch USS5 -->
+    <joint name="bosch_uss5_back_left_joint" type="fixed">
+        <origin xyz="-0.5105 0.315 -0.129" rpy="0.0 1.963496 3.141593"/>
+        <parent link="${parent_name}"/>
+        <child link="bosch_uss5_back_left"/>
+    </joint>
+    <link name="bosch_uss5_back_left"/>
+
+    <!-- Add back-right Bosch USS5 -->
+    <joint name="bosch_uss5_back_right_joint" type="fixed">
+        <origin xyz="-0.5105 -0.315 -0.129" rpy="0.0 1.963496 3.141593"/>
+        <parent link="${parent_name}"/>
+        <child link="bosch_uss5_back_right"/>
+    </joint>
+    <link name="bosch_uss5_back_right"/>
+
+    <!-- Add left-front Bosch USS5 -->
+    <joint name="bosch_uss5_left_front_joint" type="fixed">
+        <origin xyz="0.4515 0.365 -0.117" rpy="0.0 1.963496 1.570796"/>
+        <parent link="${parent_name}"/>
+        <child link="bosch_uss5_left_front"/>
+    </joint>
+    <link name="bosch_uss5_left_front"/>
+
+    <!-- Add left-back Bosch USS5 -->
+    <joint name="bosch_uss5_left_back_joint" type="fixed">
+        <origin xyz="-0.4515 0.365 -0.117" rpy="0.0 1.963496 1.570796"/>
+        <parent link="${parent_name}"/>
+        <child link="bosch_uss5_left_back"/>
+    </joint>
+    <link name="bosch_uss5_left_back"/>
+
+    <!-- Add right-front Bosch USS5 -->
+    <joint name="bosch_uss5_right_front_joint" type="fixed">
+        <origin xyz="0.4515 -0.365 -0.117" rpy="0.0 1.963496 -1.570796"/>
+        <parent link="${parent_name}"/>
+        <child link="bosch_uss5_right_front"/>
+    </joint>
+    <link name="bosch_uss5_right_front"/>
+
+    <!-- Add right-back Bosch USS5 -->
+    <joint name="bosch_uss5_right_back_joint" type="fixed">
+        <origin xyz="-0.4515 -0.365 -0.117" rpy="0.0 1.963496 -1.570796"/>
+        <parent link="${parent_name}"/>
+        <child link="bosch_uss5_right_back"/>
+    </joint>
+    <link name="bosch_uss5_right_back"/>
+
 </xacro:macro>
 
 </robot>
