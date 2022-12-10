@@ -67,7 +67,7 @@ This app will genereate URDF, SRDF and a complete ROS package, which can be used
 
 This is handled in 2 different scenarios: online or offline.
 
-In the offline approach (**Building Mode**), a user sets up a robot with our reconfigurable modules in the virtual environment: the user selects modules from a library, assembles them to form a mechanism that is immediateley visualised in 3D.
+In the offline approach (Building Mode), a user sets up a robot with our reconfigurable modules in the virtual environment: the user selects modules from a library, assembles them to form a mechanism that is immediateley visualised in 3D.
 
 An online approach (**Discovery Mode**) is also provided that allows the user to query the EtherCAT master for a description of the network topology graph. The  robot built from real physical modules is therefore recognized and displayed in 3D.
 
@@ -87,7 +87,7 @@ Moreover, a **Python API** to programmatically build a robot model from a Python
 
 ## Installation
 
-Currently we only support Python3 and it's recommended to have pip version 21.3 or newer if you plan use editable installs (see below).
+Currently we only support Python3 (for the last version supporting Python2 see [v.0.0.4](https://github.com/ADVRHumanoids/modular/releases/tag/v0.0.4)) and it's recommended to have pip version 21.3 or newer if you plan use editable installs (see below).
 
 There are 2 ways to install modular:
 
@@ -114,7 +114,7 @@ To use modular you need to start the python server.
 1. If you installed with **pip install**:
 
 ```bash
-python src/modular/web/RobotDesignStudio.py
+python modular/src/modular/web/RobotDesignStudio.py
 ```
 or even better, run:
 ```
@@ -135,9 +135,9 @@ Examples of how to use the python API are provided in the [scripts](https://gith
 - `create_modularbot.ipynb` shows an example of how to build a 6-DOF robot using Alberobotics modules and deploy URDF, SRDF, etc. into a ROS package
 - `generate_concert_robot.ipynb` shows how to build and deploy the CONCERT modular robot 
 
-<!-- ## Documentation
+## Documentation
 
-Static documentation for API calls has been added and is stored in the `src/modular/web/docs` directory.
+Static documentation for API calls has been added and is stored in the `modular/src/modular/web/docs` directory.
 It can be accessed locally as follow:
 
 1. clone the repo and navigate to the docs folder:
@@ -153,7 +153,7 @@ It can be accessed locally as follow:
    python -m http.server
    ```
 
-3. open <http://0.0.0.0:8000/> from a browser -->
+3. open <http://0.0.0.0:8000/> from a browser
 
 <!-- ROADMAP -->
 

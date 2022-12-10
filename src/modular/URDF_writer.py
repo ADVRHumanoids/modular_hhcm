@@ -1016,8 +1016,10 @@ class UrdfWriter:
         self.parent = parent
 
         # xacro mappings to perform args substitution (see template.urdf.xacro)
-        self.xacro_mappings = {'floating_joint': 'false',
-                                'gazebo_urdf': 'false'}
+        self.default_xacro_mappings = {'floating_base': 'false',
+                                'gazebo_urdf': 'false',
+                                'velodyne': 'false',
+                                'realsense': 'false'}
 
         self.set_floating_base(floating_base)
 
@@ -1138,15 +1140,15 @@ class UrdfWriter:
     def set_floating_base(self, floating_base):
         """Set the floating base flag"""
         self.floating_base = floating_base
-        self.update_xacro_mappings()
+        self.update_default_xacro_mappings()
 
-    def update_xacro_mappings(self):
+    def update_default_xacro_mappings(self):
         """Update the xacro mappings to perform args substitution (see template.urdf.xacro).
         To be called when the floating base status changes."""
         if self.floating_base:
-            self.xacro_mappings['floating_joint'] = 'true'
+            self.default_xacro_mappings['floating_base'] = 'true'
         else:
-            self.xacro_mappings['floating_joint'] = 'false'
+            self.default_xacro_mappings['floating_base'] = 'false'
 
     def print(self, *args):
         if isinstance(self.logger, logging.Logger):
@@ -1412,10 +1414,8 @@ class UrdfWriter:
         data = {'string': string}
         return data
 
-    def process_urdf(self):
+    def process_urdf(self, xacro_mappings={}):
         """Process the urdf to convert from xacro and perform macro substitutions. Returns urdf string"""
-        #TODO: this is used just by the front-end to show the urdf. It should be removed and 'merged' with write_urdf
-        # global urdf_tree
         
         # write the urdf tree to a string
         xmlstr = xml.dom.minidom.parseString(ET.tostring(self.urdf_tree.getroot())).toprettyxml(indent="   ")
@@ -1424,10 +1424,15 @@ class UrdfWriter:
         # parse the string to convert from xacro
         doc = xacro.parse(xmlstr)
 
-        # perform macro replacement
-        xacro.process_doc(doc, mappings=self.xacro_mappings)
+        # mappings = self.default_xacro_mappings if xacro_mappings else xacro_mappings
+        mappings = copy.deepcopy(self.default_xacro_mappings)
+        mappings.update(xacro_mappings)
 
-        string = doc.toprettyxml(indent='  ')
+        # perform macro replacement
+        xacro.process_doc(doc, mappings=mappings)
+
+        # string = doc.toprettyxml(indent='  ')
+        string = doc.toprettyxml(indent='  ', encoding='utf-8').decode('utf-8')
 
         return string
 
@@ -3364,7 +3369,7 @@ class UrdfWriter:
         return srdf
 
     # Function writin the urdf file after converting from .xacro (See xacro/__init__.py for reference)
-    def write_urdf(self, gazebo=False):
+    def write_urdf(self):
         """Returns the string with the URDF, after writing it to file"""
         global path_name  # , path_superbuild
 
@@ -3388,26 +3393,17 @@ class UrdfWriter:
         preprocessed_out.write(xmlstr)
         preprocessed_out.close()
 
-        mappings = copy.deepcopy(self.xacro_mappings)
-        
         # write the URDF for Gazebo
-        mappings['gazebo_urdf'] = 'true'
-        doc = xacro.process_file(urdf_xacro_filename, mappings=mappings)
-        string_urdf_gz = doc.toprettyxml(indent='  ', encoding='utf-8').decode('utf-8')
+        string_urdf_gz = self.process_urdf(xacro_mappings={'gazebo_urdf': 'true', 'velodyne': 'true', 'realsense': 'true'})
         gazebo_out.write(string_urdf_gz)
         gazebo_out.close()
 
         # write the URDF
-        mappings['gazebo_urdf'] = 'false'
-        doc = xacro.process_file(urdf_xacro_filename, mappings=mappings)
-        string_urdf_xbot = doc.toprettyxml(indent='  ', encoding='utf-8').decode('utf-8')
+        string_urdf_xbot = self.process_urdf(xacro_mappings={'gazebo_urdf': 'false', 'velodyne': 'false', 'realsense': 'false'})
         out.write(string_urdf_xbot)
         out.close()
 
-        if gazebo:
-            return string_urdf_gz
-        else:
-            return string_urdf_xbot
+        return string_urdf_xbot
 
     # Save URDF/SRDF etc. in a directory with the specified robot_name
     def deploy_robot(self, robot_name, deploy_dir=None):
@@ -3499,9 +3495,20 @@ def write_file_to_stdout(urdf_writer: UrdfWriter, homing_map, robot_name='modula
     parser = argparse.ArgumentParser(prog='Modular URDF/SRDF generator and deployer', 
                 usage='./script_name.py --output urdf writes URDF to stdout \n./script_name.py --deploy deploy_dir generates a ros package at deploy_dir')
 
-    parser.add_argument('--output', '-o', required=False, choices=('urdf', 'urdf_gz', 'srdf'), help='write requested file to stdout and exit')
+    parser.add_argument('--output', '-o', required=False, choices=('urdf', 'srdf'),      help='write requested file to stdout and exit')
+    parser.add_argument('--xacro-args', '-a', required=False, nargs='*', help='xacro arguments in key:=value format')
     parser.add_argument('--deploy', '-d', required=False, help='directory where to deploy the package')
+    parser.add_argument('--robot-name', '-r', required=False, help='name of the robot')
     args = parser.parse_args()
+
+    if args.robot_name is not None:
+        robot_name = args.robot_name
+
+    xacro_mappings = {}
+    if args.xacro_args:
+        for arg in args.xacro_args:
+            key, value = arg.split(':=')
+            xacro_mappings[key] = value
 
     content = None
     with suppress_stdout():
@@ -3509,16 +3516,10 @@ def write_file_to_stdout(urdf_writer: UrdfWriter, homing_map, robot_name='modula
         urdf_writer.remove_connectors()
 
         if args.output == 'urdf':
-            content = urdf_writer.write_urdf()
+            content = urdf_writer.process_urdf(xacro_mappings=xacro_mappings)
             content = content.replace('package://modular/src/modular/modular_resources', 
                                       'package://modular_resources')
             open(f'/tmp/{robot_name}.urdf', 'w').write(content)
-
-        if args.output == 'urdf_gz':
-            content = urdf_writer.write_urdf(gazebo=True)
-            content = content.replace('package://modular/src/modular/modular_resources', 
-                                      'package://modular_resources')
-            open(f'/tmp/{robot_name}_gz.urdf', 'w').write(content)
 
         elif args.output == 'srdf':
             content = urdf_writer.write_srdf(homing_map)
@@ -3528,4 +3529,10 @@ def write_file_to_stdout(urdf_writer: UrdfWriter, homing_map, robot_name='modula
         print(content)
 
     if args.deploy is not None:
+        urdf_writer.write_urdf()
+        urdf_writer.write_lowlevel_config()
+        urdf_writer.write_problem_description_multi()
+        urdf_writer.write_srdf(homing_map)
+        urdf_writer.write_joint_map()
+
         urdf_writer.deploy_robot(robot_name, args.deploy)

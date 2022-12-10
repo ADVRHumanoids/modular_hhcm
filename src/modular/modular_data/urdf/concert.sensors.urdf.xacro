@@ -1,0 +1,311 @@
+<?xml version="1.0"?>
+<robot name="ModularBot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<xacro:property name="ADD_D435I_FRONT" value="false" />
+<xacro:property name="ADD_D435I_BACK" value="false" />
+<xacro:property name="ADD_T265_LEFT" value="false" />
+<xacro:property name="ADD_T265_RIGHT" value="false" />
+
+<xacro:if value="${ADD_CAMERAS}">
+    <xacro:property name="ADD_D435I_FRONT" value="true" />
+    <xacro:property name="ADD_D435I_BACK" value="true" />
+    <xacro:property name="ADD_T265_LEFT" value="true" />
+    <xacro:property name="ADD_T265_RIGHT" value="true" />
+</xacro:if>
+
+<xacro:property name="ADD_VELODYNE_FRONT" value="false" />
+<xacro:property name="ADD_VELODYNE_BACK" value="false" />
+
+<xacro:if value="${ADD_VELODYNE}">
+    <xacro:property name="ADD_VELODYNE_FRONT" value="true" />
+    <xacro:property name="ADD_VELODYNE_BACK" value="true" />
+</xacro:if>
+
+<xacro:macro name="add_mobile_base_sensors" params="parent_name">
+    <!-- Add front D435i camera -->
+    <xacro:property name="d435i_front_name" value="D435i_camera_front" />
+    <xacro:property name="d435i_front_parent_name" value="${parent_name}" />
+    <xacro:property name="d435i_front_origin">
+        <origin xyz="0.402872 0.0 -0.078218" rpy="0 0.261799 0"/>
+    </xacro:property>
+
+    <xacro:if value="${ADD_D435I_FRONT}">
+        <xacro:include filename="$(find realsense_gazebo_description)/urdf/_d435i.urdf.xacro" />
+        
+        <xacro:sensor_d435i parent="${d435i_front_parent_name}"
+                            name="${d435i_front_name}" 
+                            topics_ns="${d435i_front_name}" 
+
+                            enable_pointCloud="true" 
+                            align_depth="true"
+                            unite_imu_method="false"
+                            
+                            visualize="true"
+                                    
+                            accel_fps="300"
+                            gyro_fps="300"
+
+                            depth_width="1280"
+                            depth_height="720"
+                            depth_fps="90"
+
+                            infra_width="1280"
+                            infra_height="720"
+                            infra_fps="90"
+
+                            color_width="1280"
+                            color_height="720"
+                            color_fps="30">
+            <xacro:insert_block name="d435i_front_origin" />
+        </xacro:sensor_d435i>
+    </xacro:if>
+    <xacro:unless value="${ADD_D435I_FRONT}">
+        <!-- camera body, with origin at bottom screw mount -->
+        <joint name="${d435i_front_name}_joint" type="fixed">
+            <xacro:insert_block name="d435i_front_origin"/>
+            <parent link="${d435i_front_parent_name}"/>
+            <child link="${d435i_front_name}_bottom_screw_frame"/>
+        </joint>
+        <link name="${d435i_front_name}_bottom_screw_frame"/>
+    </xacro:unless>
+
+    <!-- Add back D435i camera -->
+    <xacro:property name="d435i_back_name" value="D435i_camera_back" />
+    <xacro:property name="d435i_back_parent_name" value="${parent_name}" />
+    <xacro:property name="d435i_back_origin">
+        <origin xyz="-0.402872 0.0 -0.078218" rpy="0 0.261799 3.141593"/>
+    </xacro:property>
+
+    <xacro:if value="${ADD_D435I_BACK}">
+        <xacro:include filename="$(find realsense_gazebo_description)/urdf/_d435i.urdf.xacro" />
+        
+        <xacro:sensor_d435i parent="${d435i_back_parent_name}"
+                            name="${d435i_back_name}" 
+                            topics_ns="${d435i_back_name}" 
+
+                            enable_pointCloud="true" 
+                            align_depth="true"
+                            unite_imu_method="false"
+                            
+                            visualize="true"
+                                    
+                            accel_fps="300"
+                            gyro_fps="300"
+
+                            depth_width="1280"
+                            depth_height="720"
+                            depth_fps="90"
+
+                            infra_width="1280"
+                            infra_height="720"
+                            infra_fps="90"
+
+                            color_width="1280"
+                            color_height="720"
+                            color_fps="30">
+            <xacro:insert_block name="d435i_back_origin" />
+        </xacro:sensor_d435i>
+    </xacro:if>
+    <xacro:unless value="${ADD_D435I_BACK}">
+        <!-- camera body, with origin at bottom screw mount -->
+        <joint name="${d435i_back_name}_joint" type="fixed">
+            <xacro:insert_block name="d435i_back_origin"/>
+            <parent link="${d435i_back_parent_name}"/>
+            <child link="${d435i_back_name}_bottom_screw_frame"/>
+        </joint>
+        <link name="${d435i_back_name}_bottom_screw_frame"/>
+    </xacro:unless>
+
+    <!-- Add left T265 camera -->
+    <xacro:property name="t265_left_name" value="T265_camera_left" />
+    <xacro:property name="t265_left_parent_name" value="${parent_name}" />
+    <xacro:property name="t265_left_origin">
+        <origin xyz="-0.02375 0.37245 -0.062" rpy="0 0.0 1.570796"/>
+    </xacro:property>
+
+    <xacro:if value="${ADD_T265_LEFT}">
+        <xacro:include filename="$(find realsense_gazebo_description)/urdf/_t265.urdf.xacro" />
+
+        <xacro:sensor_t265  parent="${t265_left_parent_name}" 
+                            name="${t265_left_name}" 
+                            topics_ns="${t265_left_name}"                  
+                                
+                            odom_xyz="0.0 0.0 0.25"
+                            odom_rpy="0.0 0.0 0.0"
+                            odom_fps="262"
+
+                            fisheye_width="848"
+                            fisheye_height="800"
+                            fisheye_fps="30"
+
+                            unite_imu_method="false"
+                            accel_fps="62.5"
+                            gyro_fps="200">
+            
+            <xacro:insert_block name="t265_left_origin" />
+        </xacro:sensor_t265>
+    </xacro:if>
+    <xacro:unless value="${ADD_T265_LEFT}">
+        <!-- camera body, with origin at bottom screw mount -->
+        <joint name="${t265_left_name}_joint" type="fixed">
+            <xacro:insert_block name="t265_left_origin"/>
+            <parent link="${t265_left_parent_name}"/>
+            <child link="${t265_left_name}_bottom_screw_frame"/>
+        </joint>
+        <link name="${t265_left_name}_bottom_screw_frame"/>
+    </xacro:unless>
+
+    <!-- Add right T265 camera -->
+    <xacro:property name="t265_right_name" value="T265_camera_right" />
+    <xacro:property name="t265_right_parent_name" value="${parent_name}" />
+    <xacro:property name="t265_right_origin">
+        <origin xyz="0.02375 -0.37245 -0.062" rpy="0 0.0 -1.570796"/>
+    </xacro:property>
+
+    <xacro:if value="${ADD_T265_RIGHT}">
+        <xacro:include filename="$(find realsense_gazebo_description)/urdf/_t265.urdf.xacro" />
+
+        <xacro:sensor_t265  parent="${t265_right_parent_name}" 
+                            name="${t265_right_name}" 
+                            topics_ns="${t265_right_name}"                  
+                                
+                            odom_xyz="0.0 0.0 0.25"
+                            odom_rpy="0.0 0.0 0.0"
+                            odom_fps="262"
+
+                            fisheye_width="848"
+                            fisheye_height="800"
+                            fisheye_fps="30"
+
+                            unite_imu_method="false"
+                            accel_fps="62.5"
+                            gyro_fps="200">
+            
+            <xacro:insert_block name="t265_right_origin" />
+        </xacro:sensor_t265>
+    </xacro:if>
+    <xacro:unless value="${ADD_T265_RIGHT}">
+        <!-- camera body, with origin at bottom screw mount -->
+        <joint name="${t265_right_name}_joint" type="fixed">
+            <xacro:insert_block name="t265_right_origin"/>
+            <parent link="${t265_right_parent_name}"/>
+            <child link="${t265_right_name}_bottom_screw_frame"/>
+        </joint>
+        <link name="${t265_right_name}_bottom_screw_frame"/>
+    </xacro:unless>
+
+    <!-- Add Velodyne front -->
+    <xacro:property name="velodyne_front_name" value="velodyne_front" />
+    <xacro:property name="velodyne_front_parent_name" value="${parent_name}" />
+    <xacro:property name="velodyne_front_origin">
+        <origin xyz="0.5305 0.315 -0.1" rpy="0.0 0.0 -1.570796"/>
+    </xacro:property>
+    
+    <xacro:if value="${ADD_VELODYNE_FRONT}">
+        <xacro:include filename="$(find velodyne_description)/urdf/VLP-16.urdf.xacro"/>
+        
+        <xacro:VLP-16 parent="${velodyne_front_parent_name}" name="${velodyne_front_name}" topic="/${velodyne_front_name}_points" hz="10" samples="440">
+            <xacro:insert_block name="velodyne_front_origin" />
+        </xacro:VLP-16>
+    </xacro:if>
+    <xacro:unless value="${ADD_VELODYNE_FRONT}">
+        <!-- camera body, with origin at bottom screw mount -->
+        <joint name="${velodyne_front_name}_base_mount_joint" type="fixed">
+            <xacro:insert_block name="velodyne_front_origin"/>
+            <parent link="${velodyne_front_parent_name}"/>
+            <child link="${velodyne_front_name}_base_link"/>
+        </joint>
+        <link name="${velodyne_front_name}_base_link"/>
+    </xacro:unless>
+
+    <!-- Add Velodyne back -->
+    <xacro:property name="velodyne_back_name" value="velodyne_back" />
+    <xacro:property name="velodyne_back_parent_name" value="${parent_name}" />
+    <xacro:property name="velodyne_back_origin">
+        <origin xyz="-0.5305 -0.315 -0.1" rpy="0.0 0.0 1.570796"/>
+    </xacro:property>
+
+    <xacro:if value="${ADD_VELODYNE_BACK}">
+        <xacro:include filename="$(find velodyne_description)/urdf/VLP-16.urdf.xacro"/>
+        
+        <xacro:VLP-16 parent="${velodyne_back_parent_name}" name="${velodyne_back_name}" topic="/${velodyne_back_name}_points" hz="10" samples="440">
+            <xacro:insert_block name="velodyne_back_origin" />
+        </xacro:VLP-16>
+    </xacro:if>
+    <xacro:unless value="${ADD_VELODYNE_BACK}">
+        <!-- camera body, with origin at bottom screw mount -->
+        <joint name="${velodyne_back_name}_base_mount_joint" type="fixed">
+            <xacro:insert_block name="velodyne_back_origin"/>
+            <parent link="${velodyne_back_parent_name}"/>
+            <child link="${velodyne_back_name}_base_link"/>
+        </joint>
+        <link name="${velodyne_back_name}_base_link"/>
+    </xacro:unless>
+
+    <!-- Add front-left Bosch USS5 -->
+    <joint name="bosch_uss5_front_left_joint" type="fixed">
+        <origin xyz="0.5105 0.315 -0.129" rpy="0.0 1.963496 0.0"/>
+        <parent link="${parent_name}"/>
+        <child link="bosch_uss5_front_left"/>
+    </joint>
+    <link name="bosch_uss5_front_left"/>
+
+    <!-- Add front-right Bosch USS5 -->
+    <joint name="bosch_uss5_front_right_joint" type="fixed">
+        <origin xyz="0.5105 -0.315 -0.129" rpy="0.0 1.963496 0.0"/>
+        <parent link="${parent_name}"/>
+        <child link="bosch_uss5_front_right"/>
+    </joint>
+    <link name="bosch_uss5_front_right"/>
+
+    <!-- Add back-left Bosch USS5 -->
+    <joint name="bosch_uss5_back_left_joint" type="fixed">
+        <origin xyz="-0.5105 0.315 -0.129" rpy="0.0 1.963496 3.141593"/>
+        <parent link="${parent_name}"/>
+        <child link="bosch_uss5_back_left"/>
+    </joint>
+    <link name="bosch_uss5_back_left"/>
+
+    <!-- Add back-right Bosch USS5 -->
+    <joint name="bosch_uss5_back_right_joint" type="fixed">
+        <origin xyz="-0.5105 -0.315 -0.129" rpy="0.0 1.963496 3.141593"/>
+        <parent link="${parent_name}"/>
+        <child link="bosch_uss5_back_right"/>
+    </joint>
+    <link name="bosch_uss5_back_right"/>
+
+    <!-- Add left-front Bosch USS5 -->
+    <joint name="bosch_uss5_left_front_joint" type="fixed">
+        <origin xyz="0.4515 0.365 -0.117" rpy="0.0 1.963496 1.570796"/>
+        <parent link="${parent_name}"/>
+        <child link="bosch_uss5_left_front"/>
+    </joint>
+    <link name="bosch_uss5_left_front"/>
+
+    <!-- Add left-back Bosch USS5 -->
+    <joint name="bosch_uss5_left_back_joint" type="fixed">
+        <origin xyz="-0.4515 0.365 -0.117" rpy="0.0 1.963496 1.570796"/>
+        <parent link="${parent_name}"/>
+        <child link="bosch_uss5_left_back"/>
+    </joint>
+    <link name="bosch_uss5_left_back"/>
+
+    <!-- Add right-front Bosch USS5 -->
+    <joint name="bosch_uss5_right_front_joint" type="fixed">
+        <origin xyz="0.4515 -0.365 -0.117" rpy="0.0 1.963496 -1.570796"/>
+        <parent link="${parent_name}"/>
+        <child link="bosch_uss5_right_front"/>
+    </joint>
+    <link name="bosch_uss5_right_front"/>
+
+    <!-- Add right-back Bosch USS5 -->
+    <joint name="bosch_uss5_right_back_joint" type="fixed">
+        <origin xyz="-0.4515 -0.365 -0.117" rpy="0.0 1.963496 -1.570796"/>
+        <parent link="${parent_name}"/>
+        <child link="bosch_uss5_right_back"/>
+    </joint>
+    <link name="bosch_uss5_right_back"/>
+
+</xacro:macro>
+
+</robot>
