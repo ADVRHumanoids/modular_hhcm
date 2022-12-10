@@ -13,6 +13,14 @@
     <xacro:property name="ADD_T265_RIGHT" value="true" />
 </xacro:if>
 
+<xacro:property name="ADD_VELODYNE_FRONT" value="false" />
+<xacro:property name="ADD_VELODYNE_BACK" value="false" />
+
+<xacro:if value="${ADD_VELODYNE}">
+    <xacro:property name="ADD_VELODYNE_FRONT" value="true" />
+    <xacro:property name="ADD_VELODYNE_BACK" value="true" />
+</xacro:if>
+
 <xacro:macro name="add_mobile_base_sensors" params="parent_name">
     <!-- Add front D435i camera -->
     <xacro:property name="d435i_front_name" value="D435i_camera_front" />
@@ -185,6 +193,55 @@
         </joint>
         <link name="${t265_right_name}_bottom_screw_frame"/>
     </xacro:unless>
+
+    <!-- Add Velodyne front -->
+    <xacro:property name="velodyne_front_name" value="velodyne_front" />
+    <xacro:property name="velodyne_front_parent_name" value="${parent_name}" />
+    <xacro:property name="velodyne_front_origin">
+        <origin xyz="0.5305 0.315 -0.1" rpy="0.0 0.0 -1.570796"/>
+    </xacro:property>
+    
+    <xacro:if value="${ADD_VELODYNE_FRONT}">
+        <xacro:include filename="$(find velodyne_description)/urdf/VLP-16.urdf.xacro"/>
+        
+        <xacro:VLP-16 parent="${velodyne_front_parent_name}" name="${velodyne_front_name}" topic="/${velodyne_front_name}_points" hz="10" samples="440">
+            <xacro:insert_block name="velodyne_front_origin" />
+        </xacro:VLP-16>
+    </xacro:if>
+    <xacro:unless value="${ADD_VELODYNE_FRONT}">
+        <!-- camera body, with origin at bottom screw mount -->
+        <joint name="${velodyne_front_name}_base_mount_joint" type="fixed">
+            <xacro:insert_block name="velodyne_front_origin"/>
+            <parent link="${velodyne_front_parent_name}"/>
+            <child link="${velodyne_front_name}_base_link"/>
+        </joint>
+        <link name="${velodyne_front_name}_base_link"/>
+    </xacro:unless>
+
+    <!-- Add Velodyne back -->
+    <xacro:property name="velodyne_back_name" value="velodyne_back" />
+    <xacro:property name="velodyne_back_parent_name" value="${parent_name}" />
+    <xacro:property name="velodyne_back_origin">
+        <origin xyz="-0.5305 -0.315 -0.1" rpy="0.0 0.0 1.570796"/>
+    </xacro:property>
+
+    <xacro:if value="${ADD_VELODYNE_BACK}">
+        <xacro:include filename="$(find velodyne_description)/urdf/VLP-16.urdf.xacro"/>
+        
+        <xacro:VLP-16 parent="${velodyne_back_parent_name}" name="${velodyne_back_name}" topic="/${velodyne_back_name}_points" hz="10" samples="440">
+            <xacro:insert_block name="velodyne_back_origin" />
+        </xacro:VLP-16>
+    </xacro:if>
+    <xacro:unless value="${ADD_VELODYNE_BACK}">
+        <!-- camera body, with origin at bottom screw mount -->
+        <joint name="${velodyne_back_name}_base_mount_joint" type="fixed">
+            <xacro:insert_block name="velodyne_back_origin"/>
+            <parent link="${velodyne_back_parent_name}"/>
+            <child link="${velodyne_back_name}_base_link"/>
+        </joint>
+        <link name="${velodyne_back_name}_base_link"/>
+    </xacro:unless>
+
 </xacro:macro>
 
 </robot>

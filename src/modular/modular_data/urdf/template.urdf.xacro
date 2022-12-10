@@ -12,6 +12,9 @@
     <xacro:arg name="realsense" default="false"/>
     <xacro:property name="ADD_CAMERAS" value="$(arg realsense)" />
 
+    <xacro:arg name="velodyne" default="false"/>
+    <xacro:property name="ADD_VELODYNE" value="$(arg velodyne)" />
+
     <!-- adding (or not) world link for Gazebo simulation -->
     <xacro:if value="${ADD_FLOATING_BASE}">
 
