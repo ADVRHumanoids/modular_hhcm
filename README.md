@@ -10,7 +10,7 @@
 <!-- PROJECT LOGO -->
 <br />
 <p align="center">
-  <a href="https://github.com/ADVRHumanoids/modular_concert">
+  <a href="https://github.com/ADVRHumanoids/modular_hhcm">
     <img src="https://alberobotics.it/images/apple-touch-icon.png" alt="Logo" width="80" height="80">
   </a>
 
@@ -21,9 +21,9 @@
     <br />
     <a href="https://www.youtube.com/channel/UCNyqcpavE5nsVidipXZQ8OQ">View Demo</a>
     ·
-    <a href="https://github.com/ADVRHumanoids/modular_concert/issues">Request Feature</a>
+    <a href="https://github.com/ADVRHumanoids/modular_hhcm/issues">Request Feature</a>
     ·
-    <a href="https://github.com/ADVRHumanoids/modular_concert/issues">Report Bug</a>
+    <a href="https://github.com/ADVRHumanoids/modular_hhcm/issues">Report Bug</a>
     <br />
     <a href="#documentation"><strong>Explore the docs »</strong></a>
   </p>
@@ -71,7 +71,7 @@ In the offline approach (**Building Mode**), a user sets up a robot with our rec
 
 An online approach (**Discovery Mode**) is also provided that allows the user to query the EtherCAT master for a description of the network topology graph. The  robot built from real physical modules is therefore recognized and displayed in 3D.
 
-Moreover, a **Python API** to programmatically build a robot model from a Python script is also provided. Some example of [how to use the API](#use-the-python-api) are provided in the [scripts](https://github.com/ADVRHumanoids/modular_concert/tree/master/scripts) directory. For using the Python API install with [Option 1](#option-1-pip-install)
+Moreover, a **Python API** to programmatically build a robot model from a Python script is also provided. Some example of [how to use the API](#use-the-python-api) are provided in the [scripts](https://github.com/ADVRHumanoids/modular_hhcm/tree/master/scripts) directory. For using the Python API install with [Option 1](#option-1-pip-install)
 
 <!--
 ### Built With:
@@ -94,7 +94,7 @@ There are 2 ways to install modular:
 ### Option 1. **pip install**
 
 1. __Get the code__. Clone the repo using:
-`git clone --recursive git@github.com:ADVRHumanoids/modular_concert.git`.
+`git clone --recursive git@github.com:ADVRHumanoids/modular_hhcm.git`.
 This will ensure the git submodule [modular_resources](git@github.com:ADVRHumanoids/modular_resources.git) is correctly initialized and cloned. (In alternative you can run `git submodule update --init --recursive` from the top directory after cloning)
 
 2. __Install__. After cloning the repo, from the main directory run:
@@ -131,7 +131,7 @@ run
 Then open <http://0.0.0.0:5000/> from a browser to acces the graphical interface.
 
 ### Use the python API
-Examples of how to use the python API are provided in the [scripts](https://github.com/ADVRHumanoids/modular_concert/tree/master/scripts) folder.
+Examples of how to use the python API are provided in the [scripts](https://github.com/ADVRHumanoids/modular_hhcm/tree/master/scripts) folder.
 - `create_modularbot.ipynb` shows an example of how to build a 6-DOF robot using Alberobotics modules and deploy URDF, SRDF, etc. into a ROS package
 - `generate_concert_robot.ipynb` shows how to build and deploy the CONCERT modular robot 
 
@@ -159,9 +159,9 @@ It can be accessed locally as follow:
 
 ## Roadmap
 
-See the [open issues](https://github.com/ADVRHumanoids/modular_concert/issues) for a list of proposed features (and known issues).
+See the [open issues](https://github.com/ADVRHumanoids/modular_hhcm/issues) for a list of proposed features (and known issues).
 
-<!--See the [Roadmap kanban](https://github.com/ADVRHumanoids/modular_concert/projects/1) for the state of the development. -->
+<!--See the [Roadmap kanban](https://github.com/ADVRHumanoids/modular_hhcm/projects/1) for the state of the development. -->
 
 <!-- CONTRIBUTING -->
 
@@ -186,7 +186,7 @@ Distributed under the MIT License. See `LICENSE` for more information. -->
 
 Alberobotics team - alberobotics@iit.it
 
-Project Link: [https://github.com/ADVRHumanoids/modular_concert](https://github.com/ADVRHumanoids/modular_concert)
+Project Link: [https://github.com/ADVRHumanoids/modular_hhcm](https://github.com/ADVRHumanoids/modular_hhcm)
 
 <!-- ACKNOWLEDGEMENTS - ->
 ## Acknowledgements -->
