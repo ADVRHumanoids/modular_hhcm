@@ -150,9 +150,9 @@
         <joint name="${t265_left_name}_joint" type="fixed">
             <xacro:insert_block name="t265_left_origin"/>
             <parent link="${t265_left_parent_name}"/>
-            <child link="${t265_left_name}_bottom_screw_frame"/>
+            <child link="${t265_left_name}_pose_frame"/>
         </joint>
-        <link name="${t265_left_name}_bottom_screw_frame"/>
+        <link name="${t265_left_name}_pose_frame"/>
     </xacro:unless>
 
     <!-- Add right T265 camera -->
@@ -189,9 +189,9 @@
         <joint name="${t265_right_name}_joint" type="fixed">
             <xacro:insert_block name="t265_right_origin"/>
             <parent link="${t265_right_parent_name}"/>
-            <child link="${t265_right_name}_bottom_screw_frame"/>
+            <child link="${t265_right_name}_pose_frame"/>
         </joint>
-        <link name="${t265_right_name}_bottom_screw_frame"/>
+        <link name="${t265_right_name}_pose_frame"/>
     </xacro:unless>
 
     <!-- Add Velodyne front -->
