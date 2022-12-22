@@ -3,8 +3,8 @@
     <xacro:arg name="modular_path" default="missing_argument_modular_path"/>
     <xacro:property name="MODULAR_PATH" value="$(arg modular_path)" />
 
-    <xacro:include filename="${MODULAR_PATH}/src/modular/modular_data/urdf/ModularBot.library.urdf.xacro"/>
-    <xacro:include filename="${MODULAR_PATH}/src/modular/modular_data/urdf/ModularBot.control.urdf.xacro"/>
+    <xacro:include filename="${MODULAR_PATH}/modular_data/urdf/ModularBot.library.urdf.xacro"/>
+    <xacro:include filename="${MODULAR_PATH}/modular_data/urdf/ModularBot.control.urdf.xacro"/>
 
     <xacro:arg name="floating_base" default="false"/>
     <xacro:property name="ADD_FLOATING_BASE" value="$(arg floating_base)" />

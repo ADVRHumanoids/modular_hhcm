@@ -1016,7 +1016,7 @@ class UrdfWriter:
         self.parent = parent
 
         # xacro mappings to perform args substitution (see template.urdf.xacro)
-        self.default_xacro_mappings = {'modular_path': os.path.dirname(os.path.realpath(__file__))+'/../..',
+        self.default_xacro_mappings = {'modular_path': os.path.dirname(os.path.realpath(__file__)),
                                 'floating_base': 'false',
                                 'gazebo_urdf': 'false',
                                 'velodyne': 'false',

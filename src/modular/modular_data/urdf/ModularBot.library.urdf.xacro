@@ -227,7 +227,7 @@
         <xacro:property name="body_name" value="body_1"/>
         <xacro:add_link_element name="${name}" type="${type}" module="${module}" body_name="${body_name}"/>
         
-        <xacro:include filename="${MODULAR_PATH}/src/modular/modular_data/urdf/concert.sensors.urdf.xacro"/>
+        <xacro:include filename="${MODULAR_PATH}/modular_data/urdf/concert.sensors.urdf.xacro"/>
         <xacro:add_mobile_base_sensors parent_name="${name}"/>
 
     </xacro:macro>
