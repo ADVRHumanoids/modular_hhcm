@@ -3518,8 +3518,6 @@ def write_file_to_stdout(urdf_writer: UrdfWriter, homing_map, robot_name='modula
 
         if args.output == 'urdf':
             content = urdf_writer.process_urdf(xacro_mappings=xacro_mappings)
-            content = content.replace('package://modular/src/modular/modular_resources', 
-                                      'package://modular_resources')
             open(f'/tmp/{robot_name}.urdf', 'w').write(content)
 
         elif args.output == 'srdf':
