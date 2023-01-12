@@ -129,8 +129,8 @@ class JSONInterpreter(object):
             
             # joint data
             self.owner.actuator_data.type = dict_joint['type']
-            self.owner.actuator_data.upper_limit = dict_joint['limits']['position_upper']
-            self.owner.actuator_data.lower_limit = dict_joint['limits']['position_lower']
+            self.owner.actuator_data.upper_limit = dict_joint['limits']['positionUpper']
+            self.owner.actuator_data.lower_limit = dict_joint['limits']['positionLower']
             self.owner.actuator_data.velocity = dict_joint['limits']['velocity']
             self.owner.actuator_data.effort = dict_joint['limits']['peak_torque']
             self.owner.actuator_data.gear_ratio = dict_joint['gear_ratio']
@@ -183,43 +183,48 @@ class JSONInterpreter(object):
     @staticmethod
     def set_dynamic_properties(body, dict_body):
         """Set the dynamic properties of a body from a dictionary"""
-        if dict_body['mass'] is not None:
-            body.mass = dict_body['mass']
-            body.inertia_tensor.I_xx = dict_body['inertia'][0][0]
-            body.inertia_tensor.I_yy = dict_body['inertia'][1][1]
-            body.inertia_tensor.I_zz = dict_body['inertia'][2][2]
-            body.inertia_tensor.I_xy = dict_body['inertia'][0][1]
-            body.inertia_tensor.I_xz = dict_body['inertia'][0][2]
-            body.inertia_tensor.I_yz = dict_body['inertia'][1][2]
-            body.CoM.x = dict_body['r_com'][0]
-            body.CoM.y = dict_body['r_com'][1]
-            body.CoM.z = dict_body['r_com'][2]
+        body.mass = dict_body['mass']
+        body.inertia_tensor.I_xx = dict_body['inertia'][0][0]
+        body.inertia_tensor.I_yy = dict_body['inertia'][1][1]
+        body.inertia_tensor.I_zz = dict_body['inertia'][2][2]
+        body.inertia_tensor.I_xy = dict_body['inertia'][0][1]
+        body.inertia_tensor.I_xz = dict_body['inertia'][0][2]
+        body.inertia_tensor.I_yz = dict_body['inertia'][1][2]
+        body.CoM.x = dict_body['r_com'][0]
+        body.CoM.y = dict_body['r_com'][1]
+        body.CoM.z = dict_body['r_com'][2]
 
     @staticmethod
     def set_visual_properties(body, dict_body):
         """Set the visual properties of a body from a dictionary"""
-        if len(dict_body['visual']) != 1:
-            raise ValueError('A body must have exactly one visual property')
-        visual = dict_body['visual'][0]
-        attr = Module.Attribute(visual)
-        if visual:
-            # NOTE: pose of visual properties should be expressed in urdf format at the moment
-            x, y, z, roll, pitch, yaw = get_xyzrpy(tf.transformations.numpy.array(visual['pose']))
-            attr.pose = Module.Attribute({'x': x, 'y': y, 'z': z, 'roll': roll, 'pitch': pitch, 'yaw': yaw})
-        update_nested_dict(body.__dict__, attr.__dict__)
+        try:
+            if len(dict_body['visual']) != 1:
+                raise ValueError('A body must have exactly one visual property')
+            visual = dict_body['visual'][0]
+            attr = Module.Attribute(visual)
+            if visual:
+                # NOTE: pose of visual properties should be expressed in urdf format at the moment
+                x, y, z, roll, pitch, yaw = get_xyzrpy(tf.transformations.numpy.array(visual['pose']))
+                attr.pose = Module.Attribute({'x': x, 'y': y, 'z': z, 'roll': roll, 'pitch': pitch, 'yaw': yaw})
+            update_nested_dict(body.__dict__, attr.__dict__)
+        except KeyError:
+            pass
 
     @staticmethod
     def set_collision_properties(body, dict_body):
         """Set the collision properties of a body from a dictionary"""
-        if len(dict_body['collision']) != 1:
-            raise ValueError('A body must have exactly one collision property')
-        collision = dict_body['collision'][0]
-        attr = Module.Attribute(collision) 
-        if collision:
-            # NOTE: pose of collision properties should be expressed in urdf format at the moment
-            x, y, z, roll, pitch, yaw = get_xyzrpy(tf.transformations.numpy.array(collision['pose']))
-            attr.pose = Module.Attribute({'x': x, 'y': y, 'z': z, 'roll': roll, 'pitch': pitch, 'yaw': yaw})
-        update_nested_dict(body.__dict__, attr.__dict__)
+        try:
+            if len(dict_body['collision']) != 1:
+                raise ValueError('A body must have exactly one collision property')
+            collision = dict_body['collision'][0]
+            attr = Module.Attribute(collision) 
+            if collision:
+                # NOTE: pose of collision properties should be expressed in urdf format at the moment
+                x, y, z, roll, pitch, yaw = get_xyzrpy(tf.transformations.numpy.array(collision['pose']))
+                attr.pose = Module.Attribute({'x': x, 'y': y, 'z': z, 'roll': roll, 'pitch': pitch, 'yaw': yaw})
+            update_nested_dict(body.__dict__, attr.__dict__)
+        except KeyError:
+            pass
 
     @staticmethod
     def set_gazebo_properties(body, dict_body):

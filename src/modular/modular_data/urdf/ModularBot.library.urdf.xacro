@@ -100,7 +100,7 @@
         </xacro:unless>
 
         <xacro:property name="dynamics_bool" value="false"/>
-        <xacro:unless value="${module['dynamics'][body_name]['mass'] is None }">
+        <xacro:unless value="${module['dynamics'][body_name]['mass'] == 0 }">
             <xacro:property name="dynamics_bool" value="true"/>
             <xacro:property name="dynamics_body" value="${module['dynamics'][body_name]}"/>
         </xacro:unless>
