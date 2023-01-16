@@ -527,14 +527,16 @@ def get_rototranslation(distal_previous, proximal):
 
 def get_xyzrpy(transform):
     #print(transform)
-    scale, shear, angles, trans, persp = tf.transformations.decompose_matrix(transform)
+    t = transform[:3, -1].transpose()
+    r = transform[:3, :3]
+    roll, pitch, yaw = tf.transformations.euler_from_matrix(r, 'sxyz')
 
-    x = str(trans[0])
-    y = str(trans[1])
-    z = str(trans[2])
-    roll = str(angles[0])
-    pitch = str(angles[1])
-    yaw = str(angles[2])
+    x = str(t[0])
+    y = str(t[1])
+    z = str(t[2])
+    roll = str(roll)
+    pitch = str(pitch)
+    yaw = str(yaw)
 
     return x, y, z, roll, pitch, yaw
 
