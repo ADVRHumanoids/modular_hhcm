@@ -163,9 +163,11 @@ class JSONInterpreter(object):
             #     raise ValueError('A hub must have exactly 5 connectors')
             body_1 = d['bodies'][0]
             for idx, con in enumerate(body_1['connectors']):             
-                setattr(self.owner.kinematics, 'connector_{}'.format(idx), None)
-                con_obj = getattr(self.owner.kinematics, 'connector_{}'.format(idx))
-                attr = Module.Attribute(con['pose'])  
+                attr = Module.Attribute({'pose': con['pose']})
+                prefix = d['header']['ID']+'_'
+                con_name = con['ID'][len(prefix):] if con['ID'].startswith(prefix) else con['ID']
+                setattr(self.owner.kinematics, con_name, Module.Attribute({}))
+                con_obj = getattr(self.owner.kinematics, con_name)
                 update_nested_dict(con_obj.__dict__, attr.__dict__)
                 # Module.Attribute(con_obj, con['pose'])
             # dynamics

@@ -1826,11 +1826,11 @@ class UrdfWriter:
         # Generate name according to the # of cubes already in the tree
         name = 'mobile_base'
 
-        filename = self.resource_finder.get_filename('yaml/concert/mobile_platform_concert.yaml', 'resources_path')
+        filename = self.resource_finder.get_filename('json/concert/mobile_platform_concert.json', 'resources_path')
         template_name = self.resource_finder.get_filename('yaml/template.yaml', 'resources_path')
 
         # call the method that reads the yaml file describing the cube and instantiate a new module object
-        mobilebase = ModuleNode.module_from_yaml(filename, self.parent_module, template_name)
+        mobilebase = ModuleNode.module_from_json(filename, self.parent_module, template_name)
 
         # set attributes of the newly added module object
         setattr(mobilebase, 'name', name)
@@ -1843,8 +1843,8 @@ class UrdfWriter:
         setattr(mobilebase, 'is_structural', is_structural)
         if is_structural:
             # add the master cube to the xml tree
-            ET.SubElement(self.root, "xacro:add_mobile_base", type='mobile_base', name=name, filename=filename)
-            ET.SubElement(self.root, "xacro:add_connectors", type='connectors', name=name, filename=filename)
+            ET.SubElement(self.root, "xacro:add_mobile_base", type='mobile_base', name=mobilebase.name, filename=mobilebase.filename)
+            ET.SubElement(self.root, "xacro:add_connectors", type='connectors', name=mobilebase.name, filename=mobilebase.filename)
         else:
             # add the master cube to the xml tree
             #ET.SubElement(self.root, "xacro:add_master_cube", type='cube', name=name, filename=filename)
