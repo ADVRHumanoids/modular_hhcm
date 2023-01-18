@@ -204,7 +204,7 @@
     <xacro:if value="${ADD_VELODYNE_FRONT}">
         <xacro:include filename="$(find velodyne_description)/urdf/VLP-16.urdf.xacro"/>
         
-        <xacro:VLP-16 parent="${velodyne_front_parent_name}" name="${velodyne_front_name}" topic="/${velodyne_front_name}_points" hz="10" samples="440">
+        <xacro:VLP-16 parent="${velodyne_front_parent_name}" name="${velodyne_front_name}" topic="/${velodyne_front_name}_points" hz="10" samples="440" gpu="${USE_GPU_RAY}">
             <xacro:insert_block name="velodyne_front_origin" />
         </xacro:VLP-16>
     </xacro:if>
@@ -228,7 +228,7 @@
     <xacro:if value="${ADD_VELODYNE_BACK}">
         <xacro:include filename="$(find velodyne_description)/urdf/VLP-16.urdf.xacro"/>
         
-        <xacro:VLP-16 parent="${velodyne_back_parent_name}" name="${velodyne_back_name}" topic="/${velodyne_back_name}_points" hz="10" samples="440">
+        <xacro:VLP-16 parent="${velodyne_back_parent_name}" name="${velodyne_back_name}" topic="/${velodyne_back_name}_points" hz="10" samples="440" gpu="${USE_GPU_RAY}">
             <xacro:insert_block name="velodyne_back_origin" />
         </xacro:VLP-16>
     </xacro:if>

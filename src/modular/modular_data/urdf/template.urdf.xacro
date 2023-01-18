@@ -18,6 +18,9 @@
     <xacro:arg name="velodyne" default="false"/>
     <xacro:property name="ADD_VELODYNE" value="$(arg velodyne)" />
 
+    <xacro:arg name="use_gpu_ray" default="false"/>
+    <xacro:property name="USE_GPU_RAY" value="$(arg use_gpu_ray)" />
+
     <!-- adding (or not) world link for Gazebo simulation -->
     <xacro:if value="${ADD_FLOATING_BASE}">
 

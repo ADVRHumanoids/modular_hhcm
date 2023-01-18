@@ -1020,7 +1020,8 @@ class UrdfWriter:
                                 'floating_base': 'false',
                                 'gazebo_urdf': 'false',
                                 'velodyne': 'false',
-                                'realsense': 'false'}
+                                'realsense': 'false',
+                                'use_gpu_ray': 'false'}
 
         self.set_floating_base(floating_base)
 
