@@ -120,7 +120,7 @@
     <xacro:property name="t265_left_name" value="T265_camera_left" />
     <xacro:property name="t265_left_parent_name" value="${parent_name}" />
     <xacro:property name="t265_left_origin">
-        <origin xyz="-0.02375 0.37245 -0.062" rpy="0 0.0 1.570796"/>
+        <origin xyz="0.02375 0.37245 -0.062" rpy="3.141593 0.0 1.570796"/>
     </xacro:property>
 
     <xacro:if value="${ADD_T265_LEFT}">
