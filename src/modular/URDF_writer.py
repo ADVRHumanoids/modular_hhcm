@@ -1534,7 +1534,7 @@ class UrdfWriter:
 
             # add the master cube to the xml tree
             ET.SubElement(self.root, "xacro:add_slave_cube", type='cube', name=name, filename=filename)
-            ET.SubElement(self.root, "xacro:add_connectors", type='connectors', name=name, filename=filename)
+            self.add_connectors(slavecube)
 
             self.add_gazebo_element(slavecube.gazebo.body_1, slavecube.name)
 
@@ -1685,7 +1685,7 @@ class UrdfWriter:
             if is_structural:
                 # add the master cube to the xml tree
                 ET.SubElement(self.root, "xacro:add_master_cube", type='cube', name=name, filename=filename)
-                ET.SubElement(self.root, "xacro:add_connectors", type='connectors', name=name, filename=filename)
+                self.add_connectors(mastercube)
             else:
                 # add the master cube to the xml tree
                 #ET.SubElement(self.root, "xacro:add_master_cube", type='cube', name=name, filename=filename)
@@ -1845,7 +1845,7 @@ class UrdfWriter:
         if is_structural:
             # add the master cube to the xml tree
             ET.SubElement(self.root, "xacro:add_mobile_base", type='mobile_base', name=mobilebase.name, filename=mobilebase.filename)
-            ET.SubElement(self.root, "xacro:add_connectors", type='connectors', name=mobilebase.name, filename=mobilebase.filename)
+            self.add_connectors(mobilebase)
         else:
             # add the master cube to the xml tree
             #ET.SubElement(self.root, "xacro:add_master_cube", type='cube', name=name, filename=filename)
@@ -3422,7 +3422,10 @@ class UrdfWriter:
         
         self.info_print(str(output, 'utf-8', 'ignore'))
 
-        self.add_connectors()
+        hubs = self.findall_by_type(types=['cube', 'mobile_base'])
+        if hubs is not None:
+            for hub_module in hubs:
+                self.add_connectors(hub_module)
 
         return robot_name
 
@@ -3455,23 +3458,30 @@ class UrdfWriter:
 
         return string
 
-    def add_connectors(self):
-
-        # update generator expression
-        self.update_generator()
-
-        for node in self.gen:
-            try:
-                node_type = node.attrib['type']
-                if node_type == 'cube' or node_type == 'mobile_base':
-                    name = node.attrib['name']
-                    filename = self.resource_finder.get_filename('yaml/master_cube.yaml', 'resources_path')
-
-                    ET.SubElement(self.root, "xacro:add_connectors", type='connectors', name=name, filename=filename)
-            except KeyError:
-                #self.print('missing type', node.attrib['name'])
-                continue
+    def findall_by_type(self, types=[]):
+        # Serch the tree by name for the selected module
+        modulenodes = anytree.search.findall(self.base_link, filter_=lambda node: node.type in types)
+        return modulenodes
         
+    def add_connectors(self, modulenode):
+        max_num_con = 10
+        for i in range(1, max_num_con):
+            if hasattr(modulenode, 'Con_{}_tf'.format(i)):
+                con_tf = getattr(modulenode, 'Con_{}_tf'.format(i))
+                x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(con_tf)
+                con_name = modulenode.name + '_con{}'.format(i)
+                ET.SubElement(self.root, 
+                                "xacro:add_connector", 
+                                name=con_name,
+                                type='connectors', 
+                                parent_name=modulenode.name, 
+                                x=x, 
+                                y=y, 
+                                z=z, 
+                                roll=roll, 
+                                pitch=pitch, 
+                                yaw=yaw)
+
 
 from contextlib import contextmanager
 import sys, os
