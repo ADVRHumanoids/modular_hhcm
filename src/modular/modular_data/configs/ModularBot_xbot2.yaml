@@ -25,7 +25,6 @@ xbotcore_device_configs:
 xbotcore_threads:
   rt_main: { sched: fifo, prio: 60, period: 0.001}
   nrt_main: { sched: other, prio: 0, period: 0.005 }
-  iolink_main: { sched: other, prio: 0, period: 0.005 } # Use this to avoid problem when reading/writing parameters that require some time
 
 # define plugins to be loaded
 xbotcore_plugins:
@@ -43,29 +42,6 @@ xbotcore_plugins:
     type: homing_example
     params:
       time: { value: 5, type: double }
-
-  cartesio: 
-      thread: rt_main 
-      type: albero_cartesio_rt
-      params:
-        problem_description:
-          value: $(rospack find PACKAGE_NAME)/cartesio/ModularBot_cartesio_config.yaml
-          type: file
-        solver: {value: AlberoImpedance, type: string}
-        enable_feedback: {value: true, type: bool}
-        fc_map: {value: {grav: 0.2, dfl: 0.9}, type: map<double>}
-    
-  gripper: 
-    thread: rt_main 
-    type: albero_gripper_rt
-  
-  digital_io:
-    thread: rt_main
-    type: digital_io_rt
-
-  iolink:
-    thread: iolink_main
-    type: iolink_rt
 
 # additional parameters that don't relate to any plugin
 xbotcore_param:
