@@ -1,28 +1,57 @@
-name: Enable automerge on PRs
-
-on:
-  # See note below about using pull_request_target
-  pull_request_target:
-    types: [assigned, opened, synchronize, reopened]
-    branches:
-      - 'alberobotics'   # the target is the base branch
+on: 
+  push:
+    branches: [master]
 
 jobs:
-  automerge:
-    name: Enable automerge on PRs
-    runs-on: ubuntu-latest
+  merge-master-into-alberobotics:
+    runs-on: ubuntu-20.04
+    env: 
+      CI_COMMIT_MESSAGE: Continuous Integration Build Artifacts
+      CI_COMMIT_AUTHOR: Continuous Integration
+
     steps:
-      - name: Enable automerge on PRs
-        uses: daneden/enable-automerge-action@v1
-        with:
-          # A personal access token that you have generated and saved in the
-          # repo or org’s encrypted secrets
-          github-token: ${{ secrets.AUTOMERGE_SECRET }}
+    - uses: actions/checkout@v3
 
-          # The name of the PR author to enable automerge for
-          # Defaults to dependabot[bot]
-          allowed-author: "marcoruzzon"
+    - name: Set Git config
+      run: |
+          git config --global user.name "${{ env.CI_COMMIT_AUTHOR }}"
+          git config --global user.email "marcoruzzon@users.noreply.github.com"
+    
+    - name: Get changed files
+      id: changed-files
+      uses: tj-actions/changed-files@v35
+    
+    - name: Merge master into alberobotics
+      run: |
+          git fetch --unshallow 
+          git checkout alberobotics
+          git pull 
+          
+          if ! git merge --no-ff master -m "Auto-merge master into alberobotics"; then
 
-          # Allowed values: MERGE | SQUASH | REBASE
-          # Defaults to MERGE
-          merge-method: MERGE
+            to_check=(
+            "src/modular/modular_data/configs/ModularBot_xbot2.yaml"
+            "src/modular/modular_data/configs/low_level/hal/ModularBot_dummy.yaml"
+            "src/modular/modular_data/configs/low_level/hal/ModularBot_ec_all.yaml"
+            "src/modular/modular_data/configs/low_level/hal/ModularBot_gz.yaml"
+            "src/modular/modular_data/configs/low_level/joint_config/ModularBot_idle.yaml"
+            "src/modular/modular_data/configs/low_level/joint_config/ModularBot_impd4.yaml"
+            "src/modular/modular_data/cartesio/ModularBot_cartesio_config.yaml"
+            "src/modular/modular_data/cartesio/ModularBot_cartesio_IK_config.yaml"
+            "src/modular/modular_data/cartesio/ModularBot_cartesio_Interaction_config.yaml"
+            "src/modular/modular_data/cartesio/ModularBot_cartesio_multichain_config.yaml")
+
+            for file in ${!to_check[@]}; do
+              git checkout --ours $file
+            done
+
+          fi
+
+          if ! git merge --continue; then
+            exit 1
+          fi
+          
+          git push 
+
+
+
