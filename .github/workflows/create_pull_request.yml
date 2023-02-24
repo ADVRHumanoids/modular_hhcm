@@ -3,7 +3,7 @@ name: Create pull request
 on:
   push:
     branches:
-      - 'main'
+      - 'master'
 
 jobs:
   create_pull_request:
