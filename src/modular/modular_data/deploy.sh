@@ -183,10 +183,11 @@ printf "${GREEN}[4/9] Deployed ModularBot launch files${NC}\n"
 #cp -TRf $SCRIPT_ROOT/moveit_launch ./launch $VERBOSITY || end_exec
 #printf "${GREEN}[4.5/9] Deployed moveit configs and launch files${NC}\n"
 
-# Deply meshes
 mkdir -p -p ./database/${package_name}_fixed_base
-cp -TRf $SCRIPT_ROOT/../modular_resources/models ./database $VERBOSITY || end_exec
-printf "${GREEN}[5/9] Deployed meshes${NC}\n"
+# Deply meshes 
+#NOTE: currently meshes are not deployed and instead taken from the modular_resources or concert_resources packages
+# cp -TRf $SCRIPT_ROOT/../modular_resources/models ./database $VERBOSITY || end_exec
+# printf "${GREEN}[5/9] Deployed meshes${NC}\n"
 
 # Deploy joint_map
 mkdir -p ./joint_map
@@ -205,12 +206,12 @@ mkdir -p ./urdf
 cp /tmp/ModularBot/urdf/ModularBot.urdf ./urdf/ModularBot.urdf $VERBOSITY || end_exec
 sed -i -e "s+ModularBot+${package_name}+g" ./urdf/ModularBot.urdf
 sed -i -e "s+/tmp/ModularBot+package://${package_name}+g" ./urdf/ModularBot.urdf
-sed -i -e "s+package://modular/src/modular/modular_resources/models/modular/meshes+package://${package_name}/database/modular/meshes+g" ./urdf/ModularBot.urdf
+# sed -i -e "s+package://modular/src/modular/modular_resources/models/modular/meshes+package://${package_name}/database/modular/meshes+g" ./urdf/ModularBot.urdf
 # - ModularBot.gazebo.urdf
 cp /tmp/ModularBot/urdf/ModularBot.gazebo.urdf ./urdf/ModularBot.gazebo.urdf $VERBOSITY || end_exec
 sed -i -e "s+ModularBot+${package_name}+g" ./urdf/ModularBot.gazebo.urdf
 sed -i -e "s+/tmp/ModularBot+package://${package_name}+g" ./urdf/ModularBot.gazebo.urdf
-sed -i -e "s+package://modular/src/modular/modular_resources/models/modular/meshes+package://${package_name}/database/modular/meshes+g" ./urdf/ModularBot.gazebo.urdf
+# sed -i -e "s+package://modular/src/modular/modular_resources/models/modular/meshes+package://${package_name}/database/modular/meshes+g" ./urdf/ModularBot.gazebo.urdf
 printf "${GREEN}[8/9] Deployed URDF${NC}\n"
 
 # Deploy gazebo model

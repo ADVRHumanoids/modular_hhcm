@@ -13,9 +13,10 @@ import sys
 from importlib import reload, util
 
 import rospy
-from flask import Flask, Response, render_template, request, jsonify, send_from_directory
+from flask import Flask, Response, render_template, request, jsonify, send_from_directory, abort
 from flask.logging import create_logger
 import zmq
+import werkzeug
 
 from modular.URDF_writer import UrdfWriter
 ec_srvs_spec = util.find_spec('ec_srvs')
@@ -289,8 +290,23 @@ def requestURDF():
 # This is needed to load the meshes of the modules (withot the need to put them in the /static folder)
 @app.route('/modular_resources/<path:path>')
 def send_file(path):
-    resource_path = urdf_writer.resource_finder.find_resource_absolute_path('', 'resources_path')
-    return send_from_directory(resource_path, path)
+    resources_paths = []
+    resources_paths += [urdf_writer.resource_finder.find_resource_absolute_path('', ['resources_path'])]
+
+    # upload also external resources (concert_resources, etc.)
+    external_paths_dict = urdf_writer.resource_finder.nested_access(['external_resources'])
+    external_paths = [ urdf_writer.resource_finder.get_expanded_path(['external_resources', p]) for p in external_paths_dict]
+    resources_paths += external_paths
+
+    # if isinstance(resources_path, str):
+    #     return send_from_directory(resources_path, path)
+    # else:
+    for res_path in resources_paths:    
+        try:
+            return send_from_directory(res_path, path)
+        except werkzeug.exceptions.NotFound:
+            continue
+    abort(404)
 
 
 #TODO: to be included in the next versions (requires ROS etc.)

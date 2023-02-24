@@ -394,7 +394,7 @@ class RosControlPlugin(Plugin):
         hardware_interface_joints = []
 
         #kinematics.yaml
-        template_kinematics_filename = self.urdf_writer.resource_finder.get_filename('moveit_config/kinematics.yaml', 'data_path')
+        template_kinematics_filename = self.urdf_writer.resource_finder.get_filename('moveit_config/kinematics.yaml', ['data_path'])
         kinematics_filename = path_name + "/moveit_config/kinematics.yaml"
         # kinematics_filename = "/tmp/modular/moveit_config/kinematics.yaml"
         tmp_kinematics = OrderedDict([])
@@ -406,7 +406,7 @@ class RosControlPlugin(Plugin):
                 self.urdf_writer.print(exc)
 
         #ompl_planning.yaml
-        template_ompl_filename = self.urdf_writer.get_filename('moveit_config/ompl_planning.yaml', 'data_path')
+        template_ompl_filename = self.urdf_writer.get_filename('moveit_config/ompl_planning.yaml', ['data_path'])
         ompl_filename = path_name + "/moveit_config/ompl_planning.yaml"
         # ompl_filename = "/tmp/modular/moveit_config/ompl_planning.yaml"
         tmp_ompl = OrderedDict([])
@@ -612,7 +612,7 @@ class XBotCorePlugin(Plugin):
         """Creates the low level config file needed by XBotCore """
 
         # basic_config_filename = path_name + '/configs/ModularBot.yaml'
-        basic_config_filename = self.urdf_writer.resource_finder.get_filename('configs/ModularBot.yaml', 'data_path')
+        basic_config_filename = self.urdf_writer.resource_finder.get_filename('configs/ModularBot.yaml', ['data_path'])
         lowlevel_config_filename = path_name + '/ModularBot/configs/ModularBot.yaml'
         ## lowlevel_config_filename = self.urdf_writer.resource_finder.get_filename('configs/ModularBot.yaml', 'modularbot_path')
         # lowlevel_config_filename = "/tmp/modular/configs/ModularBot.yaml"
@@ -798,7 +798,7 @@ class XBot2Plugin(Plugin):
     def write_lowlevel_config(self, use_robot_id=False):
         """Creates the low level config file needed by XBotCore """
         # HAL config ModularBot_ec_all
-        hal_config_template = self.urdf_writer.resource_finder.get_filename('configs/low_level/hal/ModularBot_ec_all.yaml', 'data_path')
+        hal_config_template = self.urdf_writer.resource_finder.get_filename('configs/low_level/hal/ModularBot_ec_all.yaml', ['data_path'])
         hal_config_filename = path_name + '/ModularBot/config/hal/ModularBot_ec_all.yaml'
         # hal_config_filename = self.urdf_writer.resource_finder.get_filename('config/hal/ModularBot_ec_all.yaml', 'modularbot_path')
         # hal_config_filename = "/tmp/modular/config/hal/ModularBot_ec_all.yaml"
@@ -841,15 +841,15 @@ class XBot2Plugin(Plugin):
 
         # HAL config ModularBot_idle
         idle_joint_config_template = self.urdf_writer.resource_finder.get_filename(
-            'configs/low_level/joint_config/ModularBot_idle.yaml', 'data_path')
+            'configs/low_level/joint_config/ModularBot_idle.yaml', ['data_path'])
         idle_joint_config_filename = path_name + '/ModularBot/config/joint_config/ModularBot_idle.yaml'
         # HAL config ModularBot_impd4
         impd4_joint_config_template = self.urdf_writer.resource_finder.get_filename(
-            'configs/low_level/joint_config/ModularBot_impd4.yaml', 'data_path')
+            'configs/low_level/joint_config/ModularBot_impd4.yaml', ['data_path'])
         impd4_joint_config_filename = path_name + '/ModularBot/config/joint_config/ModularBot_impd4.yaml'
         # XBot2 config
         xbot2_config_template = self.urdf_writer.resource_finder.get_filename(
-            'configs/ModularBot_xbot2.yaml', 'data_path')
+            'configs/ModularBot_xbot2.yaml', ['data_path'])
         xbot2_config_filename = path_name + '/ModularBot/config/ModularBot.yaml'
 
         idle_joint_config = OrderedDict([])
@@ -1039,6 +1039,7 @@ class UrdfWriter:
         self.config_file = config_file
 
         self.resource_finder = ResourceFinder(self.config_file)
+        self.resources_paths = [['resources_path'], ['external_resources', 'concert_resources_path']]
 
         self.collision_elements = []
 
@@ -1053,7 +1054,7 @@ class UrdfWriter:
 
         if elementree is None:
             ## Open the template xacro file
-            template = self.resource_finder.get_string('urdf/template.urdf.xacro', 'data_path')
+            template = self.resource_finder.get_string('urdf/template.urdf.xacro', ['data_path'])
             # we load the template as a ET Element. Store the 'robot' element as root
             self.root = ET.fromstring(template)
             # Open the base xacro file
@@ -1067,8 +1068,8 @@ class UrdfWriter:
             self.urdf_tree = ET.ElementTree(self.root)
             
             # change path to xacro library
-            library_filename = self.resource_finder.get_filename('urdf/ModularBot.library.urdf.xacro', 'data_path')
-            control_filename = self.resource_finder.get_filename('urdf/ModularBot.control.urdf.xacro', 'data_path')
+            library_filename = self.resource_finder.get_filename('urdf/ModularBot.library.urdf.xacro', ['data_path'])
+            control_filename = self.resource_finder.get_filename('urdf/ModularBot.control.urdf.xacro', ['data_path'])
             for include in self.root.findall('xacro:include', ns):
                 if include.attrib['filename'] == 'ModularBot.library.urdf.xacro':
                     include.attrib['filename'] = library_filename
@@ -1240,10 +1241,10 @@ class UrdfWriter:
         # Load the robot_id dictionary from yaml file
         # opts = repl_option()
         # robot_id_dict = yaml.safe_load(open(opts["robot_id_yaml"], 'r'))
-        robot_id_yaml = self.resource_finder.get_filename('robot_id.yaml', '')
+        robot_id_yaml = self.resource_finder.get_filename('robot_id.yaml')
         robot_id_dict = yaml.safe_load(open(robot_id_yaml, 'r'))
 
-        module_params_yaml = self.resource_finder.get_filename('module_params.yaml', '')
+        module_params_yaml = self.resource_finder.get_filename('module_params.yaml')
         module_params_dict = yaml.safe_load(open(module_params_yaml, 'r'))
 
         # Process the modules described in the json to create the tree
@@ -1515,11 +1516,18 @@ class UrdfWriter:
             name = 'L_0' + self.cube_switcher.get(self.n_cubes)
             self.n_cubes += 1
 
-            filename = self.resource_finder.get_filename('yaml/master_cube.yaml', 'resources_path')
-            template_name = self.resource_finder.get_filename('yaml/template.yaml', 'resources_path')
+            slavecube = None
+            for resource_path in self.resources_paths:
+                filename = self.resource_finder.get_filename('yaml/master_cube.yaml', resource_path)
+                template_name = self.resource_finder.get_filename('yaml/template.yaml', ['resources_path'])
 
-            # call the method that reads the yaml file describing the cube and instantiate a new module object
-            slavecube = ModuleNode.module_from_yaml(filename, self.parent_module, template_name)
+                # call the method that reads the yaml file describing the cube and instantiate a new module object
+                try:
+                    slavecube = ModuleNode.module_from_yaml(filename, self.parent_module, template_name)
+                except FileNotFoundError:
+                    continue
+            if slavecube is None:
+                raise FileNotFoundError(filename+' was not found in the available resources')
 
             setattr(slavecube, 'name', name)
 
@@ -1668,11 +1676,18 @@ class UrdfWriter:
             # self.T_con = tf.transformations.translation_matrix((0, 0, 0.1))
             # self.T_con = self.mastercube.geometry.connector_length))
 
-            filename = self.resource_finder.get_filename('yaml/master_cube.yaml', 'resources_path')
-            template_name = self.resource_finder.get_filename('yaml/template.yaml', 'resources_path')
+            mastercube = None
+            for resource_path in self.resources_paths:
+                filename = self.resource_finder.get_filename('yaml/master_cube.yaml', resource_path)
+                template_name = self.resource_finder.get_filename('yaml/template.yaml', ['resources_path'])
 
-            # call the method that reads the yaml file describing the cube and instantiate a new module object
-            mastercube = ModuleNode.module_from_yaml(filename, self.parent_module, template_name)
+                # call the method that reads the yaml file describing the cube and instantiate a new module object
+                try:
+                    mastercube = ModuleNode.module_from_yaml(filename, self.parent_module, template_name)
+                except FileNotFoundError:
+                    continue
+            if mastercube is None:
+                raise FileNotFoundError(filename+' was not found in the available resources')
 
             # set attributes of the newly added module object
             setattr(mastercube, 'name', name)
@@ -1827,11 +1842,18 @@ class UrdfWriter:
         # Generate name according to the # of cubes already in the tree
         name = 'mobile_base'
 
-        filename = self.resource_finder.get_filename('json/concert/mobile_platform_concert.json', 'resources_path')
-        template_name = self.resource_finder.get_filename('yaml/template.yaml', 'resources_path')
+        mobilebase = None
+        for resource_path in self.resources_paths:
+            filename = self.resource_finder.get_filename('json/concert/mobile_platform_concert.json', resource_path)
+            template_name = self.resource_finder.get_filename('yaml/template.yaml', ['resources_path'])
 
-        # call the method that reads the yaml file describing the cube and instantiate a new module object
-        mobilebase = ModuleNode.module_from_json(filename, self.parent_module, template_name)
+            # call the method that reads the yaml file describing the cube and instantiate a new module object
+            try:
+                mobilebase = ModuleNode.module_from_json(filename, self.parent_module, template_name)
+            except FileNotFoundError:
+                continue
+        if mobilebase is None:
+            raise FileNotFoundError(filename+' was not found in the available resources')
 
         # set attributes of the newly added module object
         setattr(mobilebase, 'name', name)
@@ -1987,15 +2009,22 @@ class UrdfWriter:
 
     def add_socket(self, x_offset=0.0, y_offset=0.0, z_offset=0.0, angle_offset=0.0):
         filename = 'socket.yaml'
-        # Generate the path to the required YAML file
-        module_name = self.resource_finder.get_filename('yaml/'+filename, 'resources_path')
-        template_name = self.resource_finder.get_filename('yaml/template.yaml', 'resources_path')
-
         # Set base_link as parent
         self.parent_module = self.base_link
 
-        # create a ModuleNode instance for the socket
-        new_socket = ModuleNode.module_from_yaml(module_name, self.parent_module, template_name, reverse=0)
+        new_socket = None
+        # Generate the path to the required YAML file
+        for resource_path in self.resources_paths:
+            module_name = self.resource_finder.get_filename('yaml/'+filename, resource_path)
+            template_name = self.resource_finder.get_filename('yaml/template.yaml', ['resources_path'])
+
+            # create a ModuleNode instance for the socket
+            try:
+                new_socket = ModuleNode.module_from_yaml(module_name, self.parent_module, template_name, reverse=0)
+            except FileNotFoundError:
+                continue
+        if new_socket is None:
+            raise FileNotFoundError(filename+' was not found in the available resources')
 
         # assign a new tag to the chain
         tag_letter = self.branch_switcher.get(self.tag_num)
@@ -2222,22 +2251,27 @@ class UrdfWriter:
         self.print(path_name)
         self.print(filename)
 
-        template_name = self.resource_finder.get_filename('yaml/template.yaml', 'resources_path')
-
-        if filename.lower().endswith(('.yaml', '.yml')):
-            # Generate the path to the required YAML file
-            module_name = self.resource_finder.get_filename('yaml/'+filename, 'resources_path')
-            # Load the module from YAML and create a ModuleNode instance
-            new_module = ModuleNode.module_from_yaml(module_name, self.parent_module, template_name, reverse)
-            self.print("Module loaded from YAML: " + new_module.name)
-        elif filename.lower().endswith(('.json')):
-            # Generate the path to the required YAML file
-            module_name = self.resource_finder.get_filename('json/'+filename, 'resources_path')
-            # Load the module from YAML and create a ModuleNode instance
-            new_module = ModuleNode.module_from_json(module_name, self.parent_module, template_name, reverse)
-            self.print("Module loaded from JSON: " + new_module.name)
-
-        # self.print(angle_offset)
+        new_module = None
+        # Generate the path and access the required YAML file
+        for resource_path in self.resources_paths:
+            template_name = self.resource_finder.get_filename('yaml/template.yaml', ['resources_path'])
+            try:
+                if filename.lower().endswith(('.yaml', '.yml')):
+                    # Generate the path to the required YAML file
+                    module_name = self.resource_finder.get_filename('yaml/'+filename, resource_path)
+                    # Load the module from YAML and create a ModuleNode instance
+                    new_module = ModuleNode.module_from_yaml(module_name, self.parent_module, template_name, reverse)
+                    self.print("Module loaded from YAML: " + new_module.name)
+                elif filename.lower().endswith(('.json')):
+                    # Generate the path to the required YAML file
+                    module_name = self.resource_finder.get_filename('json/'+filename, resource_path)
+                    # Load the module from YAML and create a ModuleNode instance
+                    new_module = ModuleNode.module_from_json(module_name, self.parent_module, template_name, reverse)
+                    self.print("Module loaded from JSON: " + new_module.name)
+            except FileNotFoundError:
+                continue
+        if new_module is None:
+            raise FileNotFoundError(filename+' was not found in the available resources')
 
         # If the parent is a connector module, it means we are starting a new branch from a cube.
         # Then assign the correct tag (A, B, C, ...) to the new module (and therefore start a new branch)
@@ -3227,7 +3261,7 @@ class UrdfWriter:
     # TODO: remove hard-coded values
     def write_problem_description_multi(self):
         basic_probdesc_filename = self.resource_finder.get_filename('cartesio/ModularBot_cartesio_IK_config.yaml',
-                                                          'data_path')
+                                                          ['data_path'])
         # basic_probdesc_filename = path_name + '/cartesio/ModularBot_cartesio_config.yaml'
         probdesc_filename = path_name + '/ModularBot/cartesio/ModularBot_cartesio_IK_config.yaml'
         # probdesc_filename = "/tmp/modular/cartesio/ModularBot_cartesio_multichain_config.yaml"
@@ -3303,7 +3337,7 @@ class UrdfWriter:
     # useful to run CartesianImpedanceController automatically
     def write_problem_description(self):
         basic_probdesc_filename = self.resource_finder.get_filename('cartesio/ModularBot_cartesio_config.yaml',
-                                                                   'data_path')
+                                                                   ['data_path'])
         # basic_probdesc_filename = path_name + '/cartesio/ModularBot_cartesio_config.yaml'
         probdesc_filename = path_name + '/ModularBot/cartesio/ModularBot_cartesio_config.yaml'
         ##probdesc_filename = self.resource_finder.get_filename('cartesio/ModularBot_cartesio_config.yaml',
@@ -3409,7 +3443,7 @@ class UrdfWriter:
 
     # Save URDF/SRDF etc. in a directory with the specified robot_name
     def deploy_robot(self, robot_name, deploy_dir=None):
-        script = self.resource_finder.get_filename('deploy.sh', 'data_path')
+        script = self.resource_finder.get_filename('deploy.sh', ['data_path'])
 
         if deploy_dir is None:
             deploy_dir = os.path.expanduser(self.resource_finder.cfg['deploy_dir'])
