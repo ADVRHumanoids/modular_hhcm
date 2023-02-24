@@ -1,0 +1,28 @@
+name: Enable automerge on PRs
+
+on:
+  # See note below about using pull_request_target
+  pull_request_target:
+    types: [assigned, opened, synchronize, reopened]
+    branches:
+      - 'alberobotics'   # the target is the base branch
+
+jobs:
+  automerge:
+    name: Enable automerge on PRs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enable automerge on PRs
+        uses: daneden/enable-automerge-action@v1
+        with:
+          # A personal access token that you have generated and saved in the
+          # repo or org’s encrypted secrets
+          github-token: ${{ secrets.AUTOMERGE_SECRET }}
+
+          # The name of the PR author to enable automerge for
+          # Defaults to dependabot[bot]
+          allowed-author: "marcoruzzon"
+
+          # Allowed values: MERGE | SQUASH | REBASE
+          # Defaults to MERGE
+          merge-method: MERGE
