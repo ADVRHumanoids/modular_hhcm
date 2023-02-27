@@ -1,0 +1,53 @@
+name: Automerge master into alberobotics
+
+on: 
+  push:
+    branches:
+      - "master"
+
+jobs:
+  merge-master-into-alberobotics:
+    runs-on: ubuntu-20.04
+    env: 
+      CI_COMMIT_MESSAGE: Continuous Integration Build Artifacts
+      CI_COMMIT_AUTHOR: Continuous Integration
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set Git config
+      run: |
+          git config --global user.name "${{ env.CI_COMMIT_AUTHOR }}"
+          git config --global user.email "marcoruzzon@users.noreply.github.com"
+    
+    - name: Get changed files
+      id: changed-files
+      uses: tj-actions/changed-files@v35
+    
+    - name: Merge master into alberobotics
+      run: |
+
+          declare -a to_keep=(
+            "src/modular/modular_data/configs/ModularBot_xbot2.yaml"
+            "src/modular/modular_data/configs/low_level/hal/ModularBot_dummy.yaml"
+            "src/modular/modular_data/configs/low_level/hal/ModularBot_ec_all.yaml"
+            "src/modular/modular_data/configs/low_level/hal/ModularBot_gz.yaml"
+            "src/modular/modular_data/configs/low_level/joint_config/ModularBot_idle.yaml"
+            "src/modular/modular_data/configs/low_level/joint_config/ModularBot_impd4.yaml"
+            "src/modular/modular_data/cartesio/ModularBot_cartesio_config.yaml"
+            "src/modular/modular_data/cartesio/ModularBot_cartesio_IK_config.yaml"
+            "src/modular/modular_data/cartesio/ModularBot_cartesio_Interaction_config.yaml"
+            "src/modular/modular_data/cartesio/ModularBot_cartesio_multichain_config.yaml"
+          )
+
+          git fetch --unshallow 
+          git checkout alberobotics
+
+          git merge --no-ff --no-commit master
+          for file in "${to_keep[@]}"; do
+            git reset HEAD $file
+            git checkout -- $file        
+          done
+
+          git commit -m "merged master"          
+          git push
