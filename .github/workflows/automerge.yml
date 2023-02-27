@@ -1,6 +1,9 @@
+name: Automerge master into alberobotics
+
 on: 
   push:
-    branches: [master]
+    branches:
+      - "master"
 
 jobs:
   merge-master-into-alberobotics:
@@ -23,13 +26,8 @@ jobs:
     
     - name: Merge master into alberobotics
       run: |
-          git fetch --unshallow 
-          git checkout alberobotics
-          git pull 
-          
-          if ! git merge --no-ff master -m "Auto-merge master into alberobotics"; then
 
-            to_check=(
+          declare -a to_keep=(
             "src/modular/modular_data/configs/ModularBot_xbot2.yaml"
             "src/modular/modular_data/configs/low_level/hal/ModularBot_dummy.yaml"
             "src/modular/modular_data/configs/low_level/hal/ModularBot_ec_all.yaml"
@@ -39,19 +37,17 @@ jobs:
             "src/modular/modular_data/cartesio/ModularBot_cartesio_config.yaml"
             "src/modular/modular_data/cartesio/ModularBot_cartesio_IK_config.yaml"
             "src/modular/modular_data/cartesio/ModularBot_cartesio_Interaction_config.yaml"
-            "src/modular/modular_data/cartesio/ModularBot_cartesio_multichain_config.yaml")
+            "src/modular/modular_data/cartesio/ModularBot_cartesio_multichain_config.yaml"
+          )
 
-            for file in ${!to_check[@]}; do
-              git checkout --ours $file
-            done
+          git fetch --unshallow 
+          git checkout alberobotics
 
-          fi
+          git merge --no-ff --no-commit master
+          for file in "${to_keep[@]}"; do
+            git reset HEAD $file
+            git checkout -- $file        
+          done
 
-          if ! git merge --continue; then
-            exit 1
-          fi
-          
-          git push 
-
-
-
+          git commit -m "merged master"          
+          git push
