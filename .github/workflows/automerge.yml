@@ -34,7 +34,6 @@ jobs:
             "src/modular/modular_data/configs/low_level/hal/ModularBot_gz.yaml"
             "src/modular/modular_data/configs/low_level/joint_config/ModularBot_idle.yaml"
             "src/modular/modular_data/configs/low_level/joint_config/ModularBot_impd4.yaml"
-            "src/modular/modular_data/cartesio/ModularBot_cartesio_config.yaml"
             "src/modular/modular_data/cartesio/ModularBot_cartesio_IK_config.yaml"
             "src/modular/modular_data/cartesio/ModularBot_cartesio_Interaction_config.yaml"
             "src/modular/modular_data/cartesio/ModularBot_cartesio_multichain_config.yaml"
