@@ -369,7 +369,7 @@ def deployRobot():
         app.logger.debug(name)
         data = urdf_writer.deploy_robot(name)
     else:
-        data = urdf_writer_fromHW.deploy_robot('ModularBot')
+        data = urdf_writer_fromHW.deploy_robot('modularbot')
     #time.sleep(10)
     return data
 
