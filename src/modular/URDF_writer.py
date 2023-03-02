@@ -847,6 +847,10 @@ class XBot2Plugin(Plugin):
         impd4_joint_config_template = self.urdf_writer.resource_finder.get_filename(
             'configs/low_level/joint_config/ModularBot_impd4.yaml', ['data_path'])
         impd4_joint_config_filename = path_name + '/ModularBot/config/joint_config/ModularBot_impd4.yaml'
+        # HAL config ModularBot_pos3b
+        pos3b_joint_config_template = self.urdf_writer.resource_finder.get_filename(
+            'configs/low_level/joint_config/ModularBot_pos3b.yaml', ['data_path'])
+        pos3b_joint_config_filename = path_name + '/ModularBot/config/joint_config/ModularBot_pos3b.yaml'
         # XBot2 config
         xbot2_config_template = self.urdf_writer.resource_finder.get_filename(
             'configs/ModularBot_xbot2.yaml', ['data_path'])
@@ -854,6 +858,7 @@ class XBot2Plugin(Plugin):
 
         idle_joint_config = OrderedDict([])
         impd4_joint_config = OrderedDict([])
+        pos3b_joint_config = OrderedDict([])
         xbot2_config = OrderedDict([])
 
         with open(idle_joint_config_template, 'r') as stream:
@@ -866,6 +871,12 @@ class XBot2Plugin(Plugin):
             try:
                 impd4_joint_config = ordered_load(stream, yaml.SafeLoader)
                 self.urdf_writer.print(list(impd4_joint_config.items())[0])
+            except yaml.YAMLError as exc:
+                self.urdf_writer.print(exc)
+        with open(pos3b_joint_config_template, 'r') as stream:
+            try:
+                pos3b_joint_config = ordered_load(stream, yaml.SafeLoader)
+                self.urdf_writer.print(list(pos3b_joint_config.items())[0])
             except yaml.YAMLError as exc:
                 self.urdf_writer.print(exc)
 
@@ -889,16 +900,34 @@ class XBot2Plugin(Plugin):
 
                     impd4_joint_config[key] = copy.deepcopy(value)
                     impd4_joint_config[key].control_mode = 'D4_impedance_ctrl'
+                    if hasattr(impd4_joint_config[key], 'pid'):
+                        if hasattr(impd4_joint_config[key].pid, 'position'):
+                            del impd4_joint_config[key].pid.position
+
+                    pos3b_joint_config[key] = copy.deepcopy(value)
+                    pos3b_joint_config[key].control_mode = '3B_motor_pos_ctrl'
+                    if hasattr(pos3b_joint_config[key], 'pid'):
+                        if hasattr(pos3b_joint_config[key].pid, 'impedance'):
+                            del pos3b_joint_config[key].pid.impedance
 
                     idle_joint_config[key] = copy.deepcopy(value)
                     idle_joint_config[key].control_mode = 'idle'
+                    if hasattr(idle_joint_config[key], 'pid'):
+                        if hasattr(idle_joint_config[key].pid, 'position'):
+                            del idle_joint_config[key].pid.position
+                    if hasattr(idle_joint_config[key], 'pid'):
+                        if hasattr(idle_joint_config[key].pid, 'impedance'):
+                            del idle_joint_config[key].pid.impedance
+                    if hasattr(idle_joint_config[key], 'pid'):
+                        if hasattr(idle_joint_config[key].pid, 'velocity'):
+                            del idle_joint_config[key].pid.velocity
 
-                    # HACK: Every joint on 2nd, 3rd, etc. chains have the torque loop damping set very low.
-                    # This is to handle chains with only one joint and low inertia after it.
-                    # If we build two big robots this could have catastrophic effects
-                    # TODO: fix this
-                    if p > 1:
-                        value.pid.impedance = [500.0, 20.0, 1.0, 0.003, 0.99]
+                    # # HACK: Every joint on 2nd, 3rd, etc. chains have the torque loop damping set very low.
+                    # # This is to handle chains with only one joint and low inertia after it.
+                    # # If we build two big robots this could have catastrophic effects
+                    # # TODO: fix this
+                    # if p > 1:
+                    #     value.pid.impedance = [500.0, 20.0, 1.0, 0.003, 0.99]
 
                 if joint_module.type == 'wheel':
                     i += 1
@@ -915,8 +944,14 @@ class XBot2Plugin(Plugin):
                     impd4_joint_config[key] = copy.deepcopy(value)
                     impd4_joint_config[key].control_mode = '71_motor_vel_ctrl'
 
+                    pos3b_joint_config[key] = copy.deepcopy(value)
+                    pos3b_joint_config[key].control_mode = '71_motor_vel_ctrl'
+
                     idle_joint_config[key] = copy.deepcopy(value)
                     idle_joint_config[key].control_mode = 'idle'
+                    if hasattr(idle_joint_config[key], 'pid'):
+                        if hasattr(idle_joint_config[key].pid, 'velocity'):
+                            del idle_joint_config[key].pid.velocity
 
                 elif joint_module.type == 'tool_exchanger':
                     key = joint_module.name
@@ -972,6 +1007,12 @@ class XBot2Plugin(Plugin):
             except OSError as exc:  # Guard against race condition
                 if exc.errno != errno.EEXIST:
                     raise
+        if not os.path.exists(os.path.dirname(pos3b_joint_config_filename)):
+            try:
+                os.makedirs(os.path.dirname(pos3b_joint_config_filename))
+            except OSError as exc:  # Guard against race condition
+                if exc.errno != errno.EEXIST:
+                    raise
         if not os.path.exists(os.path.dirname(xbot2_config_filename)):
             try:
                 os.makedirs(os.path.dirname(xbot2_config_filename))
@@ -987,6 +1028,11 @@ class XBot2Plugin(Plugin):
         with open(impd4_joint_config_filename, 'w') as outfile:
             # ordered_dump(impd4_joint_config, stream=outfile, Dumper=yaml.SafeDumper,  default_flow_style=False, line_break='\n\n', indent=4)
             ordered_dump(impd4_joint_config, stream=outfile, default_flow_style=False, line_break='\n\n', indent=4,
+                         canonical=False)
+
+        with open(pos3b_joint_config_filename, 'w') as outfile:
+            # ordered_dump(impd4_joint_config, stream=outfile, Dumper=yaml.SafeDumper,  default_flow_style=False, line_break='\n\n', indent=4)
+            ordered_dump(pos3b_joint_config, stream=outfile, default_flow_style=False, line_break='\n\n', indent=4,
                          canonical=False)
 
         with open(xbot2_config_filename, 'w') as outfile:
