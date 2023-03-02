@@ -21,25 +21,25 @@
 # Links
 500: module_link_elbow_90.yaml
 501: module_link_straight_140.yaml
--1 : master_cube.yaml
+# -1 : master_cube.yaml  # HACK: commented to work with CONCERT platform
 # 201: master_cube.yaml  # HACK: commented to work with CONCERT platform
 
 # CONCERT
 # mobile base
-201: mobile_platform_concert.json
-11: module_steering_concert_fr_rl.json # A0234
-12: module_wheel_concert.json  # A0235
-21: module_steering_concert_fl_rr.json # A0236
-22: module_wheel_concert.json # A0237
-31: module_steering_concert_fr_rl.json # A0238
-32: module_wheel_concert.json # A0239
-41: module_steering_concert_fl_rr.json # A0240
-42: module_wheel_concert.json # A0241
+201: concert/mobile_platform_concert.json
+# 11: concert/module_steering_concert_fr_rl.json # A0234
+# 12: concert/module_wheel_concert.json  # A0235
+# 21: concert/module_steering_concert_fl_rr.json # A0236
+# 22: concert/module_wheel_concert.json # A0237
+# 31: concert/module_steering_concert_fr_rl.json # A0238
+# 32: concert/module_wheel_concert.json # A0239
+# 41: concert/module_steering_concert_fl_rr.json # A0240
+# 42: concert/module_wheel_concert.json # A0241
 
 # manipulator
-51: module_joint_yaw_A_concert.json # A0242
-52: module_joint_elbow_A_concert.json # A0243
-53: module_joint_elbow_A_concert.json # A0244
-54: module_joint_elbow_B_concert.json # A0245
-55: module_joint_yaw_A_concert.json # A0246
-56: module_joint_yaw_A_concert.json # A0247
+51: concert/module_joint_yaw_A_concert.json # A0242
+52: concert/module_joint_elbow_A_concert.json # A0243
+53: concert/module_joint_elbow_A_concert.json # A0244
+54: concert/module_joint_elbow_B_concert.json # A0245
+55: concert/module_joint_yaw_A_concert.json # A0246
+56: concert/module_joint_yaw_A_concert.json # A0247

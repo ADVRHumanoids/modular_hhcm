@@ -1304,6 +1304,9 @@ class UrdfWriter:
             if parent_position :
                 parent = modules_list[parent_position -1]
                 self.print('parent:', parent)
+                # HACK: skip hub for discovery!
+                if parent['robot_id'] == -1:
+                    parent = modules_list[parent['position'] -2]
                 
                 parent_id = int(parent['robot_id'])
                 self.print('parent_id:', parent_id)
@@ -1341,6 +1344,10 @@ class UrdfWriter:
                     if parent_module.is_structural == False:
                         self.add_socket()
 
+                # HACK: for CONCERT mobile base select directly the connector for the manipulator. Discovery of the legs is skipped for now!
+                if parent_module.type == 'mobile_base':
+                    parent_module.selected_port = 5
+
             # get which ports in the ESC slave are active
             active_ports = int(module['active_ports'])
             self.print('active_ports:', active_ports)
@@ -1348,9 +1355,31 @@ class UrdfWriter:
             #add the module
             if mod_type == 2 or module_filename=='master_cube.yaml':
                 data = self.add_slave_cube(0, is_structural=False, robot_id=module_id, active_ports=active_ports)
+            elif module_filename=='concert/mobile_platform_concert.json':
+                data = self.add_mobile_platform(robot_id=module_id, active_ports=active_ports)
+                # leg + wheel 1
+                data = self.select_module_from_name('mobile_base_con1')
+                wheel_data, steering_data = self.add_wheel_module(wheel_filename='concert/module_wheel_concert.json', 
+                                                    steering_filename='concert/module_steering_concert_fl_rr.json', 
+                                                    angle_offset=0.0)
+                # leg + wheel 2
+                data = self.select_module_from_name('mobile_base_con2')
+                wheel_data, steering_data = self.add_wheel_module(wheel_filename='concert/module_wheel_concert.json', 
+                                                    steering_filename='concert/module_steering_concert_fr_rl.json', 
+                                                    angle_offset=0.0)
+                # leg + wheel 3
+                data = self.select_module_from_name('mobile_base_con3')
+                wheel_data, steering_data = self.add_wheel_module(wheel_filename='concert/module_wheel_concert.json', 
+                                                    steering_filename='concert/module_steering_concert_fr_rl.json', 
+                                                    angle_offset=0.0)
+                # leg + wheel 4
+                data = self.select_module_from_name('mobile_base_con4')
+                wheel_data, steering_data = self.add_wheel_module(wheel_filename='concert/module_wheel_concert.json', 
+                                                    steering_filename='concert/module_steering_concert_fl_rr.json', 
+                                                    angle_offset=0.0)
             else:
                 data = self.add_module(module_filename, 0, robot_id=module_id, active_ports=active_ports)
-            
+                
             if self.verbose:
                 for pre, _, node in RenderTree(self.base_link):
                     self.print(pre, node, node.name, node.robot_id)
@@ -1887,7 +1916,7 @@ class UrdfWriter:
         #    o           o           o           o
         #    |           |           |           |
         # com-exp   upper port  front port    nothing
-        setattr(mobilebase, 'selected_port', 2)
+        setattr(mobilebase, 'selected_port', 5)
         self.print('mobilebase.selected_port :', mobilebase.selected_port)
 
         # save the active ports as a binary string
