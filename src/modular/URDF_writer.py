@@ -1407,22 +1407,22 @@ class UrdfWriter:
                 data = self.select_module_from_name('mobile_base_con1')
                 wheel_data, steering_data = self.add_wheel_module(wheel_filename='concert/module_wheel_concert.json', 
                                                     steering_filename='concert/module_steering_concert_fl_rr.json', 
-                                                    angle_offset=0.0)
+                                                    angle_offset=0.0, robot_id=(21,22))
                 # leg + wheel 2
                 data = self.select_module_from_name('mobile_base_con2')
                 wheel_data, steering_data = self.add_wheel_module(wheel_filename='concert/module_wheel_concert.json', 
                                                     steering_filename='concert/module_steering_concert_fr_rl.json', 
-                                                    angle_offset=0.0)
+                                                    angle_offset=0.0, robot_id=(11,12))
                 # leg + wheel 3
                 data = self.select_module_from_name('mobile_base_con3')
                 wheel_data, steering_data = self.add_wheel_module(wheel_filename='concert/module_wheel_concert.json', 
                                                     steering_filename='concert/module_steering_concert_fr_rl.json', 
-                                                    angle_offset=0.0)
+                                                    angle_offset=0.0, robot_id=(31,32))
                 # leg + wheel 4
                 data = self.select_module_from_name('mobile_base_con4')
                 wheel_data, steering_data = self.add_wheel_module(wheel_filename='concert/module_wheel_concert.json', 
                                                     steering_filename='concert/module_steering_concert_fl_rr.json', 
-                                                    angle_offset=0.0)
+                                                    angle_offset=0.0, robot_id=(41,42))
             else:
                 data = self.add_module(module_filename, 0, robot_id=module_id, active_ports=active_ports)
                 
@@ -1975,7 +1975,7 @@ class UrdfWriter:
 
         self.parent_module = mobilebase
 
-        # self.listofhubs.append(mobile_base)
+        self.listofhubs.append(mobilebase)
 
         # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
         data = {'result': string,
@@ -2295,9 +2295,9 @@ class UrdfWriter:
         return data
 
 
-    def add_wheel_module(self, wheel_filename, steering_filename, angle_offset, reverse=False, robot_id=0):
-        steering_data = self.add_module(steering_filename, angle_offset, reverse, robot_id)
-        wheel_data = self.add_module(wheel_filename, angle_offset, reverse, robot_id)
+    def add_wheel_module(self, wheel_filename, steering_filename, angle_offset, reverse=False, robot_id=(0,0)):
+        steering_data = self.add_module(steering_filename, angle_offset, reverse, robot_id[0])
+        wheel_data = self.add_module(wheel_filename, angle_offset, reverse, robot_id[1])
 
         return wheel_data, steering_data
     
