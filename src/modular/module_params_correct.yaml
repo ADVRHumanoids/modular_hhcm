@@ -22,9 +22,12 @@
     6: # elbow CONCERT size A
         4: #size concert arm flage
             0: module_joint_elbow_concert_XL.yaml # rev 0
-    7: # CONCERT steering module
+    7: # CONCERT steering module front-right / rear-left
         5: #CONCERT leg flange size
-            0: module_steering_concert.yaml #rev 0
+            0: module_steering_concert_fr_rl.yaml #rev 0
+    8: # CONCERT steering module front-left / rear-right
+        5: #CONCERT leg flange size
+            0: module_steering_concert_fl_rr.yaml #rev 0
     # ...
 
 2: # hub module
