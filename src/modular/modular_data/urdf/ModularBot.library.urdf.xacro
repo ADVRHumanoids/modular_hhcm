@@ -754,11 +754,11 @@
             </collision>
             <inertial>
                 <origin xyz="-0.007 0 0.044" rpy="0 0 0"/>
-                <mass value="1.305"/>
+                <mass value="0.001305"/>
                 <inertia
-                        ixx="1.8769887e-03" ixy="0.0" ixz="0.0"
-                        iyy="2.2629779e-03" iyz="0.0"
-                        izz="1.8887550e-03"/>
+                        ixx="1.8769887e-05" ixy="0.0" ixz="0.0"
+                        iyy="2.2629779e-05" iyz="0.0"
+                        izz="1.8887550e-05"/>
             </inertial>
         </link>
     </xacro:macro>
