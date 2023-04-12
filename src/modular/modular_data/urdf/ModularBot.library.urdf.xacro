@@ -543,13 +543,15 @@
     <xacro:macro name="add_tool_exchanger" params="type name filename">
 
         <xacro:property name="module" value="${xacro.load_yaml(filename)}"/>
-
         <xacro:property name="mesh_bool" value="false"/>
-        <xacro:unless value="${ module['visual']['mesh_body_1'] == '' }">
+        <xacro:property name="body_name" value="body_1"/>
+        <xacro:unless value="${not module['visual'][body_name]}">
             <xacro:property name="mesh_bool" value="true"/>
         </xacro:unless>
 
-        <link name="${name}">
+        <xacro:add_link_element name="${name}" type="${type}" module="${module}" body_name="${body_name}"/>
+
+        <!-- <link name="${name}">
             <xacro:if value="${ mesh_bool }">
                 <visual>
                     <origin
@@ -582,7 +584,7 @@
                     iyz="${module['dynamics']['body_1']['inertia_tensor']['I_yz']}"
                     izz="${module['dynamics']['body_1']['inertia_tensor']['I_zz']}"/>
             </inertial>
-        </link>
+        </link> -->
     </xacro:macro>
 
     <!-- Add a pen to the tool-exchanger. Length may vary -->
@@ -599,18 +601,21 @@
     <xacro:macro name="add_gripper" params="type name filename">
         <xacro:property name="module" value="${xacro.load_yaml(filename)}"/>
         <xacro:property name="mesh_bool" value="false"/>
-        <xacro:unless value="${ module['visual']['mesh_body_1'] == '' }">
+        <xacro:property name="body_name" value="body_1"/>
+        <xacro:unless value="${not module['visual'][body_name]}">
             <xacro:property name="mesh_bool" value="true"/>
         </xacro:unless>
 
-        <link name="${name}">
+        <xacro:add_link_element name="${name}" type="${type}" module="${module}" body_name="${body_name}"/>
+
+        <!-- <link name="${name}">
             <xacro:if value="${ mesh_bool }">
                 <visual>
                     <origin
                         rpy="${module['visual']['tf_mesh_1']['roll']} ${module['visual']['tf_mesh_1']['pitch']} ${module['visual']['tf_mesh_1']['yaw']}"
                         xyz="${module['visual']['tf_mesh_1']['x']} ${module['visual']['tf_mesh_1']['y']} ${module['visual']['tf_mesh_1']['z']}"/>
                     <geometry>
-                        <mesh filename="${module['visual']['mesh_body_1']}" scale="0.001 0.001 0.001"/>
+                        <mesh filename="${module['visual'][body_1']['parameters']['file']}" scale="0.001 0.001 0.001"/>
                     </geometry>
                     <material name="tree_green"/>
                 </visual>
@@ -619,7 +624,7 @@
                         rpy="${module['visual']['tf_mesh_1']['roll']} ${module['visual']['tf_mesh_1']['pitch']} ${module['visual']['tf_mesh_1']['yaw']}"
                         xyz="${module['visual']['tf_mesh_1']['x']} ${module['visual']['tf_mesh_1']['y']} ${module['visual']['tf_mesh_1']['z']}"/>
                     <geometry>
-                        <mesh filename="${module['visual']['mesh_collision_1']}" scale="0.001 0.001 0.001"/>
+                        <mesh filename="${module['collision'][body_1']['parameters']['file']}" scale="0.001 0.001 0.001"/>
                     </geometry>
                 </collision>
             </xacro:if>
@@ -637,7 +642,7 @@
                     iyz="${module['dynamics']['body_1']['inertia_tensor']['I_yz']}"
                     izz="${module['dynamics']['body_1']['inertia_tensor']['I_zz']}"/>
             </inertial>
-        </link>
+        </link> -->
 
         <!-- add fingers -->
         <link name="${name}_leftfinger">
