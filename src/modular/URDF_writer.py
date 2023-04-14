@@ -2944,17 +2944,27 @@ class UrdfWriter:
         elif new_Link.type == 'gripper':
             setattr(new_Link, 'name', 'gripper' + new_Link.tag)
             ET.SubElement(self.root,
-                          "xacro:add_gripper",
-                          type="gripper",
-                          name=new_Link.name,
-                          filename=new_Link.filename)
+                        "xacro:add_gripper_body",
+                        type="gripper_body",
+                        name=new_Link.name,
+                        filename=new_Link.filename)
             # the end-effector gets added to the chain although it's not a joint. it's needed in the joint map and in the config!
             self.add_to_chain(new_Link)
-            # HACK: add tcp after gripper
+            # add fingers and tcp after gripper
             setattr(new_Link, 'TCP_name', 'TCP_' + new_Link.name)
+            setattr(new_Link, 'joint_name_finger1', new_Link.name + '_finger_joint1')
+            setattr(new_Link, 'joint_name_finger2', new_Link.name + '_finger_joint2')
+            ET.SubElement(self.root,
+                            "xacro:add_gripper_fingers",
+                            type="gripper_fingers",
+                            name=new_Link.name,
+                            joint_name_finger1=new_Link.joint_name_finger1,
+                            joint_name_finger2=new_Link.joint_name_finger2,
+                            TCP_name=new_Link.TCP_name,
+                            filename=new_Link.filename)
             # TO BE FIXED: ok for ros_control. How will it be for xbot2?
-            self.control_plugin.add_joint(new_Link.name + '_finger_joint1')
-            self.control_plugin.add_joint(new_Link.name + '_finger_joint2')
+            self.control_plugin.add_joint(new_Link.joint_name_finger1)
+            self.control_plugin.add_joint(new_Link.joint_name_finger2)
         elif new_Link.type == 'size_adapter':
             setattr(new_Link, 'name', 'L_' + str(new_Link.i) + '_size_adapter_' + str(new_Link.p) + new_Link.tag)
             ET.SubElement(self.root,
