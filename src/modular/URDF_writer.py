@@ -1599,6 +1599,7 @@ class UrdfWriter:
                 # call the method that reads the yaml file describing the cube and instantiate a new module object
                 try:
                     slavecube = ModuleNode.module_from_yaml(filename, self.parent_module, template_name)
+                    break
                 except FileNotFoundError:
                     continue
             if slavecube is None:
@@ -1759,6 +1760,7 @@ class UrdfWriter:
                 # call the method that reads the yaml file describing the cube and instantiate a new module object
                 try:
                     mastercube = ModuleNode.module_from_yaml(filename, self.parent_module, template_name)
+                    break
                 except FileNotFoundError:
                     continue
             if mastercube is None:
@@ -1925,6 +1927,7 @@ class UrdfWriter:
             # call the method that reads the yaml file describing the cube and instantiate a new module object
             try:
                 mobilebase = ModuleNode.module_from_json(filename, self.parent_module, template_name)
+                break
             except FileNotFoundError:
                 continue
         if mobilebase is None:
@@ -2096,6 +2099,7 @@ class UrdfWriter:
             # create a ModuleNode instance for the socket
             try:
                 new_socket = ModuleNode.module_from_yaml(module_name, self.parent_module, template_name, reverse=0)
+                break
             except FileNotFoundError:
                 continue
         if new_socket is None:
@@ -2343,6 +2347,7 @@ class UrdfWriter:
                     # Load the module from YAML and create a ModuleNode instance
                     new_module = ModuleNode.module_from_json(module_name, self.parent_module, template_name, reverse)
                     self.print("Module loaded from JSON: " + new_module.name)
+                break
             except FileNotFoundError:
                 continue
         if new_module is None:
