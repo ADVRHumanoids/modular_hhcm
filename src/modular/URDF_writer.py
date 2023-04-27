@@ -2218,13 +2218,10 @@ class UrdfWriter:
 
         return data
 
-    def add_simple_ee(self, x_offset=0.0, y_offset=0.0, z_offset=0.0, angle_offset=0.0):
+    # Add a cylinder as a fake end-effector
+    def add_simple_ee(self, x_offset=0.0, y_offset=0.0, z_offset=0.0, angle_offset=0.0, mass=1.0, radius=0.02):
         # TODO: treat this as a link in the link_after_* methods!
         data = {'type': "simple_ee", 'name': "simple_ee", 'kinematics_convention': "urdf"}
-
-        #self.print("Parent module:")
-        #self.print(self.parent_module.name)
-        #self.print(self.parent_module.type)
 
         simple_ee = ModuleNode.ModuleNode(data, "simple_ee", parent=self.parent_module)
         setattr(simple_ee, 'tag', self.parent_module.tag)
@@ -2235,10 +2232,12 @@ class UrdfWriter:
         setattr(simple_ee, 'name', 'ee' + self.parent_module.tag)
 
         ET.SubElement(self.root,
-                      "xacro:add_simple_ee",
+                      "xacro:add_cylinder",
                       type="simple_ee",
                       name=simple_ee.name,
-                      size_z=str(z_offset))
+                      size_z=str(z_offset),
+                      mass=str(mass),
+                      radius=str(radius))
 
         try:
             self.add_gazebo_element(simple_ee.gazebo.body_1, simple_ee.name)
