@@ -3121,7 +3121,7 @@ class UrdfWriter:
         x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(prox_mesh_transform)
 
         ET.SubElement(self.root,
-                      "xacro:add_joint_stator",
+                      "xacro:add_proximal",
                       type="joint_stator",
                       name=new_Joint.stator_name,
                       filename=new_Joint.filename)
