@@ -394,7 +394,7 @@ class RosControlPlugin(Plugin):
         hardware_interface_joints = []
 
         #kinematics.yaml
-        template_kinematics_filename = self.urdf_writer.resource_finder.get_filename('moveit_config/kinematics.yaml', 'data_path')
+        template_kinematics_filename = self.urdf_writer.resource_finder.get_filename('moveit_config/kinematics.yaml', ['data_path'])
         kinematics_filename = path_name + "/moveit_config/kinematics.yaml"
         # kinematics_filename = "/tmp/modular/moveit_config/kinematics.yaml"
         tmp_kinematics = OrderedDict([])
@@ -406,7 +406,7 @@ class RosControlPlugin(Plugin):
                 self.urdf_writer.print(exc)
 
         #ompl_planning.yaml
-        template_ompl_filename = self.urdf_writer.get_filename('moveit_config/ompl_planning.yaml', 'data_path')
+        template_ompl_filename = self.urdf_writer.get_filename('moveit_config/ompl_planning.yaml', ['data_path'])
         ompl_filename = path_name + "/moveit_config/ompl_planning.yaml"
         # ompl_filename = "/tmp/modular/moveit_config/ompl_planning.yaml"
         tmp_ompl = OrderedDict([])
@@ -612,7 +612,7 @@ class XBotCorePlugin(Plugin):
         """Creates the low level config file needed by XBotCore """
 
         # basic_config_filename = path_name + '/configs/ModularBot.yaml'
-        basic_config_filename = self.urdf_writer.resource_finder.get_filename('configs/ModularBot.yaml', 'data_path')
+        basic_config_filename = self.urdf_writer.resource_finder.get_filename('configs/ModularBot.yaml', ['data_path'])
         lowlevel_config_filename = path_name + '/ModularBot/configs/ModularBot.yaml'
         ## lowlevel_config_filename = self.urdf_writer.resource_finder.get_filename('configs/ModularBot.yaml', 'modularbot_path')
         # lowlevel_config_filename = "/tmp/modular/configs/ModularBot.yaml"
@@ -798,7 +798,7 @@ class XBot2Plugin(Plugin):
     def write_lowlevel_config(self, use_robot_id=False):
         """Creates the low level config file needed by XBotCore """
         # HAL config ModularBot_ec_all
-        hal_config_template = self.urdf_writer.resource_finder.get_filename('configs/low_level/hal/ModularBot_ec_all.yaml', 'data_path')
+        hal_config_template = self.urdf_writer.resource_finder.get_filename('configs/low_level/hal/ModularBot_ec_all.yaml', ['data_path'])
         hal_config_filename = path_name + '/ModularBot/config/hal/ModularBot_ec_all.yaml'
         # hal_config_filename = self.urdf_writer.resource_finder.get_filename('config/hal/ModularBot_ec_all.yaml', 'modularbot_path')
         # hal_config_filename = "/tmp/modular/config/hal/ModularBot_ec_all.yaml"
@@ -841,19 +841,24 @@ class XBot2Plugin(Plugin):
 
         # HAL config ModularBot_idle
         idle_joint_config_template = self.urdf_writer.resource_finder.get_filename(
-            'configs/low_level/joint_config/ModularBot_idle.yaml', 'data_path')
+            'configs/low_level/joint_config/ModularBot_idle.yaml', ['data_path'])
         idle_joint_config_filename = path_name + '/ModularBot/config/joint_config/ModularBot_idle.yaml'
         # HAL config ModularBot_impd4
         impd4_joint_config_template = self.urdf_writer.resource_finder.get_filename(
-            'configs/low_level/joint_config/ModularBot_impd4.yaml', 'data_path')
+            'configs/low_level/joint_config/ModularBot_impd4.yaml', ['data_path'])
         impd4_joint_config_filename = path_name + '/ModularBot/config/joint_config/ModularBot_impd4.yaml'
+        # HAL config ModularBot_pos3b
+        pos3b_joint_config_template = self.urdf_writer.resource_finder.get_filename(
+            'configs/low_level/joint_config/ModularBot_pos3b.yaml', ['data_path'])
+        pos3b_joint_config_filename = path_name + '/ModularBot/config/joint_config/ModularBot_pos3b.yaml'
         # XBot2 config
         xbot2_config_template = self.urdf_writer.resource_finder.get_filename(
-            'configs/ModularBot_xbot2.yaml', 'data_path')
+            'configs/ModularBot_xbot2.yaml', ['data_path'])
         xbot2_config_filename = path_name + '/ModularBot/config/ModularBot.yaml'
 
         idle_joint_config = OrderedDict([])
         impd4_joint_config = OrderedDict([])
+        pos3b_joint_config = OrderedDict([])
         xbot2_config = OrderedDict([])
 
         with open(idle_joint_config_template, 'r') as stream:
@@ -866,6 +871,12 @@ class XBot2Plugin(Plugin):
             try:
                 impd4_joint_config = ordered_load(stream, yaml.SafeLoader)
                 self.urdf_writer.print(list(impd4_joint_config.items())[0])
+            except yaml.YAMLError as exc:
+                self.urdf_writer.print(exc)
+        with open(pos3b_joint_config_template, 'r') as stream:
+            try:
+                pos3b_joint_config = ordered_load(stream, yaml.SafeLoader)
+                self.urdf_writer.print(list(pos3b_joint_config.items())[0])
             except yaml.YAMLError as exc:
                 self.urdf_writer.print(exc)
 
@@ -889,16 +900,34 @@ class XBot2Plugin(Plugin):
 
                     impd4_joint_config[key] = copy.deepcopy(value)
                     impd4_joint_config[key].control_mode = 'D4_impedance_ctrl'
+                    if hasattr(impd4_joint_config[key], 'pid'):
+                        if hasattr(impd4_joint_config[key].pid, 'position'):
+                            del impd4_joint_config[key].pid.position
+
+                    pos3b_joint_config[key] = copy.deepcopy(value)
+                    pos3b_joint_config[key].control_mode = '3B_motor_pos_ctrl'
+                    if hasattr(pos3b_joint_config[key], 'pid'):
+                        if hasattr(pos3b_joint_config[key].pid, 'impedance'):
+                            del pos3b_joint_config[key].pid.impedance
 
                     idle_joint_config[key] = copy.deepcopy(value)
                     idle_joint_config[key].control_mode = 'idle'
+                    if hasattr(idle_joint_config[key], 'pid'):
+                        if hasattr(idle_joint_config[key].pid, 'position'):
+                            del idle_joint_config[key].pid.position
+                    if hasattr(idle_joint_config[key], 'pid'):
+                        if hasattr(idle_joint_config[key].pid, 'impedance'):
+                            del idle_joint_config[key].pid.impedance
+                    if hasattr(idle_joint_config[key], 'pid'):
+                        if hasattr(idle_joint_config[key].pid, 'velocity'):
+                            del idle_joint_config[key].pid.velocity
 
-                    # HACK: Every joint on 2nd, 3rd, etc. chains have the torque loop damping set very low.
-                    # This is to handle chains with only one joint and low inertia after it.
-                    # If we build two big robots this could have catastrophic effects
-                    # TODO: fix this
-                    if p > 1:
-                        value.pid.impedance = [500.0, 20.0, 1.0, 0.003, 0.99]
+                    # # HACK: Every joint on 2nd, 3rd, etc. chains have the torque loop damping set very low.
+                    # # This is to handle chains with only one joint and low inertia after it.
+                    # # If we build two big robots this could have catastrophic effects
+                    # # TODO: fix this
+                    # if p > 1:
+                    #     value.pid.impedance = [500.0, 20.0, 1.0, 0.003, 0.99]
 
                 if joint_module.type == 'wheel':
                     i += 1
@@ -915,8 +944,14 @@ class XBot2Plugin(Plugin):
                     impd4_joint_config[key] = copy.deepcopy(value)
                     impd4_joint_config[key].control_mode = '71_motor_vel_ctrl'
 
+                    pos3b_joint_config[key] = copy.deepcopy(value)
+                    pos3b_joint_config[key].control_mode = '71_motor_vel_ctrl'
+
                     idle_joint_config[key] = copy.deepcopy(value)
                     idle_joint_config[key].control_mode = 'idle'
+                    if hasattr(idle_joint_config[key], 'pid'):
+                        if hasattr(idle_joint_config[key].pid, 'velocity'):
+                            del idle_joint_config[key].pid.velocity
 
                 elif joint_module.type == 'tool_exchanger':
                     key = joint_module.name
@@ -972,6 +1007,12 @@ class XBot2Plugin(Plugin):
             except OSError as exc:  # Guard against race condition
                 if exc.errno != errno.EEXIST:
                     raise
+        if not os.path.exists(os.path.dirname(pos3b_joint_config_filename)):
+            try:
+                os.makedirs(os.path.dirname(pos3b_joint_config_filename))
+            except OSError as exc:  # Guard against race condition
+                if exc.errno != errno.EEXIST:
+                    raise
         if not os.path.exists(os.path.dirname(xbot2_config_filename)):
             try:
                 os.makedirs(os.path.dirname(xbot2_config_filename))
@@ -987,6 +1028,11 @@ class XBot2Plugin(Plugin):
         with open(impd4_joint_config_filename, 'w') as outfile:
             # ordered_dump(impd4_joint_config, stream=outfile, Dumper=yaml.SafeDumper,  default_flow_style=False, line_break='\n\n', indent=4)
             ordered_dump(impd4_joint_config, stream=outfile, default_flow_style=False, line_break='\n\n', indent=4,
+                         canonical=False)
+
+        with open(pos3b_joint_config_filename, 'w') as outfile:
+            # ordered_dump(impd4_joint_config, stream=outfile, Dumper=yaml.SafeDumper,  default_flow_style=False, line_break='\n\n', indent=4)
+            ordered_dump(pos3b_joint_config, stream=outfile, default_flow_style=False, line_break='\n\n', indent=4,
                          canonical=False)
 
         with open(xbot2_config_filename, 'w') as outfile:
@@ -1021,6 +1067,7 @@ class UrdfWriter:
                                 'gazebo_urdf': 'false',
                                 'velodyne': 'false',
                                 'realsense': 'false',
+                                'ultrasound': 'false',
                                 'use_gpu_ray': 'false'}
 
         self.set_floating_base(floating_base)
@@ -1039,6 +1086,7 @@ class UrdfWriter:
         self.config_file = config_file
 
         self.resource_finder = ResourceFinder(self.config_file)
+        self.resources_paths = [['resources_path'], ['external_resources', 'concert_resources_path']]
 
         self.collision_elements = []
 
@@ -1053,7 +1101,7 @@ class UrdfWriter:
 
         if elementree is None:
             ## Open the template xacro file
-            template = self.resource_finder.get_string('urdf/template.urdf.xacro', 'data_path')
+            template = self.resource_finder.get_string('urdf/template.urdf.xacro', ['data_path'])
             # we load the template as a ET Element. Store the 'robot' element as root
             self.root = ET.fromstring(template)
             # Open the base xacro file
@@ -1067,8 +1115,8 @@ class UrdfWriter:
             self.urdf_tree = ET.ElementTree(self.root)
             
             # change path to xacro library
-            library_filename = self.resource_finder.get_filename('urdf/ModularBot.library.urdf.xacro', 'data_path')
-            control_filename = self.resource_finder.get_filename('urdf/ModularBot.control.urdf.xacro', 'data_path')
+            library_filename = self.resource_finder.get_filename('urdf/ModularBot.library.urdf.xacro', ['data_path'])
+            control_filename = self.resource_finder.get_filename('urdf/ModularBot.control.urdf.xacro', ['data_path'])
             for include in self.root.findall('xacro:include', ns):
                 if include.attrib['filename'] == 'ModularBot.library.urdf.xacro':
                     include.attrib['filename'] = library_filename
@@ -1240,10 +1288,10 @@ class UrdfWriter:
         # Load the robot_id dictionary from yaml file
         # opts = repl_option()
         # robot_id_dict = yaml.safe_load(open(opts["robot_id_yaml"], 'r'))
-        robot_id_yaml = self.resource_finder.get_filename('robot_id.yaml', '')
+        robot_id_yaml = self.resource_finder.get_filename('robot_id.yaml')
         robot_id_dict = yaml.safe_load(open(robot_id_yaml, 'r'))
 
-        module_params_yaml = self.resource_finder.get_filename('module_params.yaml', '')
+        module_params_yaml = self.resource_finder.get_filename('module_params.yaml')
         module_params_dict = yaml.safe_load(open(module_params_yaml, 'r'))
 
         # Process the modules described in the json to create the tree
@@ -1303,6 +1351,9 @@ class UrdfWriter:
             if parent_position :
                 parent = modules_list[parent_position -1]
                 self.print('parent:', parent)
+                # HACK: skip hub for discovery!
+                if parent['robot_id'] == -1:
+                    parent = modules_list[parent['position'] -2]
                 
                 parent_id = int(parent['robot_id'])
                 self.print('parent_id:', parent_id)
@@ -1340,6 +1391,10 @@ class UrdfWriter:
                     if parent_module.is_structural == False:
                         self.add_socket()
 
+                # HACK: for CONCERT mobile base select directly the connector for the manipulator. Discovery of the legs is skipped for now!
+                if parent_module.type == 'mobile_base':
+                    parent_module.selected_port = 5
+
             # get which ports in the ESC slave are active
             active_ports = int(module['active_ports'])
             self.print('active_ports:', active_ports)
@@ -1347,9 +1402,31 @@ class UrdfWriter:
             #add the module
             if mod_type == 2 or module_filename=='master_cube.yaml':
                 data = self.add_slave_cube(0, is_structural=False, robot_id=module_id, active_ports=active_ports)
+            elif module_filename=='concert/mobile_platform_concert.json':
+                data = self.add_mobile_platform(robot_id=module_id, active_ports=active_ports)
+                # leg + wheel 1
+                data = self.select_module_from_name('mobile_base_con1')
+                wheel_data, steering_data = self.add_wheel_module(wheel_filename='concert/module_wheel_concert.json', 
+                                                    steering_filename='concert/module_steering_concert_fl_rr.json', 
+                                                    angle_offset=0.0, robot_id=(21,22))
+                # leg + wheel 2
+                data = self.select_module_from_name('mobile_base_con2')
+                wheel_data, steering_data = self.add_wheel_module(wheel_filename='concert/module_wheel_concert.json', 
+                                                    steering_filename='concert/module_steering_concert_fr_rl.json', 
+                                                    angle_offset=0.0, robot_id=(11,12))
+                # leg + wheel 3
+                data = self.select_module_from_name('mobile_base_con3')
+                wheel_data, steering_data = self.add_wheel_module(wheel_filename='concert/module_wheel_concert.json', 
+                                                    steering_filename='concert/module_steering_concert_fr_rl.json', 
+                                                    angle_offset=0.0, robot_id=(31,32))
+                # leg + wheel 4
+                data = self.select_module_from_name('mobile_base_con4')
+                wheel_data, steering_data = self.add_wheel_module(wheel_filename='concert/module_wheel_concert.json', 
+                                                    steering_filename='concert/module_steering_concert_fl_rr.json', 
+                                                    angle_offset=0.0, robot_id=(41,42))
             else:
                 data = self.add_module(module_filename, 0, robot_id=module_id, active_ports=active_ports)
-            
+                
             if self.verbose:
                 for pre, _, node in RenderTree(self.base_link):
                     self.print(pre, node, node.name, node.robot_id)
@@ -1515,11 +1592,19 @@ class UrdfWriter:
             name = 'L_0' + self.cube_switcher.get(self.n_cubes)
             self.n_cubes += 1
 
-            filename = self.resource_finder.get_filename('yaml/master_cube.yaml', 'resources_path')
-            template_name = self.resource_finder.get_filename('yaml/template.yaml', 'resources_path')
+            slavecube = None
+            for resource_path in self.resources_paths:
+                filename = self.resource_finder.get_filename('yaml/master_cube.yaml', resource_path)
+                template_name = self.resource_finder.get_filename('yaml/template.yaml', ['resources_path'])
 
-            # call the method that reads the yaml file describing the cube and instantiate a new module object
-            slavecube = ModuleNode.module_from_yaml(filename, self.parent_module, template_name)
+                # call the method that reads the yaml file describing the cube and instantiate a new module object
+                try:
+                    slavecube = ModuleNode.module_from_yaml(filename, self.parent_module, template_name)
+                    break
+                except FileNotFoundError:
+                    continue
+            if slavecube is None:
+                raise FileNotFoundError(filename+' was not found in the available resources')
 
             setattr(slavecube, 'name', name)
 
@@ -1668,11 +1753,19 @@ class UrdfWriter:
             # self.T_con = tf.transformations.translation_matrix((0, 0, 0.1))
             # self.T_con = self.mastercube.geometry.connector_length))
 
-            filename = self.resource_finder.get_filename('yaml/master_cube.yaml', 'resources_path')
-            template_name = self.resource_finder.get_filename('yaml/template.yaml', 'resources_path')
+            mastercube = None
+            for resource_path in self.resources_paths:
+                filename = self.resource_finder.get_filename('yaml/master_cube.yaml', resource_path)
+                template_name = self.resource_finder.get_filename('yaml/template.yaml', ['resources_path'])
 
-            # call the method that reads the yaml file describing the cube and instantiate a new module object
-            mastercube = ModuleNode.module_from_yaml(filename, self.parent_module, template_name)
+                # call the method that reads the yaml file describing the cube and instantiate a new module object
+                try:
+                    mastercube = ModuleNode.module_from_yaml(filename, self.parent_module, template_name)
+                    break
+                except FileNotFoundError:
+                    continue
+            if mastercube is None:
+                raise FileNotFoundError(filename+' was not found in the available resources')
 
             # set attributes of the newly added module object
             setattr(mastercube, 'name', name)
@@ -1827,11 +1920,19 @@ class UrdfWriter:
         # Generate name according to the # of cubes already in the tree
         name = 'mobile_base'
 
-        filename = self.resource_finder.get_filename('json/concert/mobile_platform_concert.json', 'resources_path')
-        template_name = self.resource_finder.get_filename('yaml/template.yaml', 'resources_path')
+        mobilebase = None
+        for resource_path in self.resources_paths:
+            filename = self.resource_finder.get_filename('json/concert/mobile_platform_concert.json', resource_path)
+            template_name = self.resource_finder.get_filename('yaml/template.yaml', ['resources_path'])
 
-        # call the method that reads the yaml file describing the cube and instantiate a new module object
-        mobilebase = ModuleNode.module_from_json(filename, self.parent_module, template_name)
+            # call the method that reads the yaml file describing the cube and instantiate a new module object
+            try:
+                mobilebase = ModuleNode.module_from_json(filename, self.parent_module, template_name)
+                break
+            except FileNotFoundError:
+                continue
+        if mobilebase is None:
+            raise FileNotFoundError(filename+' was not found in the available resources')
 
         # set attributes of the newly added module object
         setattr(mobilebase, 'name', name)
@@ -1865,7 +1966,7 @@ class UrdfWriter:
         #    o           o           o           o
         #    |           |           |           |
         # com-exp   upper port  front port    nothing
-        setattr(mobilebase, 'selected_port', 2)
+        setattr(mobilebase, 'selected_port', 5)
         self.print('mobilebase.selected_port :', mobilebase.selected_port)
 
         # save the active ports as a binary string
@@ -1878,7 +1979,7 @@ class UrdfWriter:
 
         self.parent_module = mobilebase
 
-        # self.listofhubs.append(mobile_base)
+        self.listofhubs.append(mobilebase)
 
         # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
         data = {'result': string,
@@ -1987,15 +2088,23 @@ class UrdfWriter:
 
     def add_socket(self, x_offset=0.0, y_offset=0.0, z_offset=0.0, angle_offset=0.0):
         filename = 'socket.yaml'
-        # Generate the path to the required YAML file
-        module_name = self.resource_finder.get_filename('yaml/'+filename, 'resources_path')
-        template_name = self.resource_finder.get_filename('yaml/template.yaml', 'resources_path')
-
         # Set base_link as parent
         self.parent_module = self.base_link
 
-        # create a ModuleNode instance for the socket
-        new_socket = ModuleNode.module_from_yaml(module_name, self.parent_module, template_name, reverse=0)
+        new_socket = None
+        # Generate the path to the required YAML file
+        for resource_path in self.resources_paths:
+            module_name = self.resource_finder.get_filename('yaml/'+filename, resource_path)
+            template_name = self.resource_finder.get_filename('yaml/template.yaml', ['resources_path'])
+
+            # create a ModuleNode instance for the socket
+            try:
+                new_socket = ModuleNode.module_from_yaml(module_name, self.parent_module, template_name, reverse=0)
+                break
+            except FileNotFoundError:
+                continue
+        if new_socket is None:
+            raise FileNotFoundError(filename+' was not found in the available resources')
 
         # assign a new tag to the chain
         tag_letter = self.branch_switcher.get(self.tag_num)
@@ -2110,13 +2219,10 @@ class UrdfWriter:
 
         return data
 
-    def add_simple_ee(self, x_offset=0.0, y_offset=0.0, z_offset=0.0, angle_offset=0.0):
+    # Add a cylinder as a fake end-effector
+    def add_simple_ee(self, x_offset=0.0, y_offset=0.0, z_offset=0.0, angle_offset=0.0, mass=1.0, radius=0.02):
         # TODO: treat this as a link in the link_after_* methods!
         data = {'type': "simple_ee", 'name': "simple_ee", 'kinematics_convention': "urdf"}
-
-        #self.print("Parent module:")
-        #self.print(self.parent_module.name)
-        #self.print(self.parent_module.type)
 
         simple_ee = ModuleNode.ModuleNode(data, "simple_ee", parent=self.parent_module)
         setattr(simple_ee, 'tag', self.parent_module.tag)
@@ -2127,10 +2233,12 @@ class UrdfWriter:
         setattr(simple_ee, 'name', 'ee' + self.parent_module.tag)
 
         ET.SubElement(self.root,
-                      "xacro:add_simple_ee",
+                      "xacro:add_cylinder",
                       type="simple_ee",
                       name=simple_ee.name,
-                      size_z=str(z_offset))
+                      size_z=str(z_offset),
+                      mass=str(mass),
+                      radius=str(radius))
 
         try:
             self.add_gazebo_element(simple_ee.gazebo.body_1, simple_ee.name)
@@ -2191,9 +2299,9 @@ class UrdfWriter:
         return data
 
 
-    def add_wheel_module(self, wheel_filename, steering_filename, angle_offset, reverse=False, robot_id=0):
-        steering_data = self.add_module(steering_filename, angle_offset, reverse, robot_id)
-        wheel_data = self.add_module(wheel_filename, angle_offset, reverse, robot_id)
+    def add_wheel_module(self, wheel_filename, steering_filename, angle_offset, reverse=False, robot_id=(0,0)):
+        steering_data = self.add_module(steering_filename, angle_offset, reverse, robot_id[0])
+        wheel_data = self.add_module(wheel_filename, angle_offset, reverse, robot_id[1])
 
         return wheel_data, steering_data
     
@@ -2222,22 +2330,28 @@ class UrdfWriter:
         self.print(path_name)
         self.print(filename)
 
-        template_name = self.resource_finder.get_filename('yaml/template.yaml', 'resources_path')
-
-        if filename.lower().endswith(('.yaml', '.yml')):
-            # Generate the path to the required YAML file
-            module_name = self.resource_finder.get_filename('yaml/'+filename, 'resources_path')
-            # Load the module from YAML and create a ModuleNode instance
-            new_module = ModuleNode.module_from_yaml(module_name, self.parent_module, template_name, reverse)
-            self.print("Module loaded from YAML: " + new_module.name)
-        elif filename.lower().endswith(('.json')):
-            # Generate the path to the required YAML file
-            module_name = self.resource_finder.get_filename('json/'+filename, 'resources_path')
-            # Load the module from YAML and create a ModuleNode instance
-            new_module = ModuleNode.module_from_json(module_name, self.parent_module, template_name, reverse)
-            self.print("Module loaded from JSON: " + new_module.name)
-
-        # self.print(angle_offset)
+        new_module = None
+        # Generate the path and access the required YAML file
+        for resource_path in self.resources_paths:
+            template_name = self.resource_finder.get_filename('yaml/template.yaml', ['resources_path'])
+            try:
+                if filename.lower().endswith(('.yaml', '.yml')):
+                    # Generate the path to the required YAML file
+                    module_name = self.resource_finder.get_filename('yaml/'+filename, resource_path)
+                    # Load the module from YAML and create a ModuleNode instance
+                    new_module = ModuleNode.module_from_yaml(module_name, self.parent_module, template_name, reverse)
+                    self.print("Module loaded from YAML: " + new_module.name)
+                elif filename.lower().endswith(('.json')):
+                    # Generate the path to the required YAML file
+                    module_name = self.resource_finder.get_filename('json/'+filename, resource_path)
+                    # Load the module from YAML and create a ModuleNode instance
+                    new_module = ModuleNode.module_from_json(module_name, self.parent_module, template_name, reverse)
+                    self.print("Module loaded from JSON: " + new_module.name)
+                break
+            except FileNotFoundError:
+                continue
+        if new_module is None:
+            raise FileNotFoundError(filename+' was not found in the available resources')
 
         # If the parent is a connector module, it means we are starting a new branch from a cube.
         # Then assign the correct tag (A, B, C, ...) to the new module (and therefore start a new branch)
@@ -2835,17 +2949,27 @@ class UrdfWriter:
         elif new_Link.type == 'gripper':
             setattr(new_Link, 'name', 'gripper' + new_Link.tag)
             ET.SubElement(self.root,
-                          "xacro:add_gripper",
-                          type="gripper",
-                          name=new_Link.name,
-                          filename=new_Link.filename)
+                        "xacro:add_gripper_body",
+                        type="gripper_body",
+                        name=new_Link.name,
+                        filename=new_Link.filename)
             # the end-effector gets added to the chain although it's not a joint. it's needed in the joint map and in the config!
             self.add_to_chain(new_Link)
-            # HACK: add tcp after gripper
+            # add fingers and tcp after gripper
             setattr(new_Link, 'TCP_name', 'TCP_' + new_Link.name)
+            setattr(new_Link, 'joint_name_finger1', new_Link.name + '_finger_joint1')
+            setattr(new_Link, 'joint_name_finger2', new_Link.name + '_finger_joint2')
+            ET.SubElement(self.root,
+                            "xacro:add_gripper_fingers",
+                            type="gripper_fingers",
+                            name=new_Link.name,
+                            joint_name_finger1=new_Link.joint_name_finger1,
+                            joint_name_finger2=new_Link.joint_name_finger2,
+                            TCP_name=new_Link.TCP_name,
+                            filename=new_Link.filename)
             # TO BE FIXED: ok for ros_control. How will it be for xbot2?
-            self.control_plugin.add_joint(new_Link.name + '_finger_joint1')
-            self.control_plugin.add_joint(new_Link.name + '_finger_joint2')
+            self.control_plugin.add_joint(new_Link.joint_name_finger1)
+            self.control_plugin.add_joint(new_Link.joint_name_finger2)
         elif new_Link.type == 'size_adapter':
             setattr(new_Link, 'name', 'L_' + str(new_Link.i) + '_size_adapter_' + str(new_Link.p) + new_Link.tag)
             ET.SubElement(self.root,
@@ -2998,7 +3122,7 @@ class UrdfWriter:
         x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(prox_mesh_transform)
 
         ET.SubElement(self.root,
-                      "xacro:add_joint_stator",
+                      "xacro:add_proximal",
                       type="joint_stator",
                       name=new_Joint.stator_name,
                       filename=new_Joint.filename)
@@ -3227,7 +3351,7 @@ class UrdfWriter:
     # TODO: remove hard-coded values
     def write_problem_description_multi(self):
         basic_probdesc_filename = self.resource_finder.get_filename('cartesio/ModularBot_cartesio_IK_config.yaml',
-                                                          'data_path')
+                                                          ['data_path'])
         # basic_probdesc_filename = path_name + '/cartesio/ModularBot_cartesio_config.yaml'
         probdesc_filename = path_name + '/ModularBot/cartesio/ModularBot_cartesio_IK_config.yaml'
         # probdesc_filename = "/tmp/modular/cartesio/ModularBot_cartesio_multichain_config.yaml"
@@ -3303,7 +3427,7 @@ class UrdfWriter:
     # useful to run CartesianImpedanceController automatically
     def write_problem_description(self):
         basic_probdesc_filename = self.resource_finder.get_filename('cartesio/ModularBot_cartesio_config.yaml',
-                                                                   'data_path')
+                                                                   ['data_path'])
         # basic_probdesc_filename = path_name + '/cartesio/ModularBot_cartesio_config.yaml'
         probdesc_filename = path_name + '/ModularBot/cartesio/ModularBot_cartesio_config.yaml'
         ##probdesc_filename = self.resource_finder.get_filename('cartesio/ModularBot_cartesio_config.yaml',
@@ -3396,12 +3520,12 @@ class UrdfWriter:
         preprocessed_out.close()
 
         # write the URDF for Gazebo
-        string_urdf_gz = self.process_urdf(xacro_mappings={'gazebo_urdf': 'true', 'velodyne': 'true', 'realsense': 'true'})
+        string_urdf_gz = self.process_urdf(xacro_mappings={'gazebo_urdf': 'true', 'velodyne': 'true', 'realsense': 'true', 'ultrasound': 'true'})
         gazebo_out.write(string_urdf_gz)
         gazebo_out.close()
 
         # write the URDF
-        string_urdf_xbot = self.process_urdf(xacro_mappings={'gazebo_urdf': 'false', 'velodyne': 'false', 'realsense': 'false'})
+        string_urdf_xbot = self.process_urdf(xacro_mappings={'gazebo_urdf': 'false', 'velodyne': 'false', 'realsense': 'false', 'ultrasound': 'false'})
         out.write(string_urdf_xbot)
         out.close()
 
@@ -3409,7 +3533,7 @@ class UrdfWriter:
 
     # Save URDF/SRDF etc. in a directory with the specified robot_name
     def deploy_robot(self, robot_name, deploy_dir=None):
-        script = self.resource_finder.get_filename('deploy.sh', 'data_path')
+        script = self.resource_finder.get_filename('deploy.sh', ['data_path'])
 
         if deploy_dir is None:
             deploy_dir = os.path.expanduser(self.resource_finder.cfg['deploy_dir'])
