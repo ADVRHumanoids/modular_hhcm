@@ -1067,6 +1067,7 @@ class UrdfWriter:
                                 'gazebo_urdf': 'false',
                                 'velodyne': 'false',
                                 'realsense': 'false',
+                                'ultrasound': 'false',
                                 'use_gpu_ray': 'false'}
 
         self.set_floating_base(floating_base)
@@ -3519,12 +3520,12 @@ class UrdfWriter:
         preprocessed_out.close()
 
         # write the URDF for Gazebo
-        string_urdf_gz = self.process_urdf(xacro_mappings={'gazebo_urdf': 'true', 'velodyne': 'true', 'realsense': 'true'})
+        string_urdf_gz = self.process_urdf(xacro_mappings={'gazebo_urdf': 'true', 'velodyne': 'true', 'realsense': 'true', 'ultrasound': 'true'})
         gazebo_out.write(string_urdf_gz)
         gazebo_out.close()
 
         # write the URDF
-        string_urdf_xbot = self.process_urdf(xacro_mappings={'gazebo_urdf': 'false', 'velodyne': 'false', 'realsense': 'false'})
+        string_urdf_xbot = self.process_urdf(xacro_mappings={'gazebo_urdf': 'false', 'velodyne': 'false', 'realsense': 'false', 'ultrasound': 'false'})
         out.write(string_urdf_xbot)
         out.close()
 

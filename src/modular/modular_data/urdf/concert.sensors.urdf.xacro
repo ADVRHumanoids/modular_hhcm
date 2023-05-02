@@ -233,7 +233,6 @@
         </xacro:VLP-16>
     </xacro:if>
     <xacro:unless value="${ADD_VELODYNE_BACK}">
-        <!-- camera body, with origin at bottom screw mount -->
         <joint name="${velodyne_back_name}_base_mount_joint" type="fixed">
             <xacro:insert_block name="velodyne_back_origin"/>
             <parent link="${velodyne_back_parent_name}"/>
@@ -242,69 +241,168 @@
         <link name="${velodyne_back_name}_base_link"/>
     </xacro:unless>
 
-    <!-- Add front-left Bosch USS5 -->
-    <joint name="bosch_uss5_front_left_joint" type="fixed">
+    <!-- Ultrasound sensors -->
+    <xacro:property name="ultrasound_parent_name" value="${parent_name}" />
+    <xacro:property name="ultrasound_ns" value="bosch_uss5" />
+
+    <!-- Macro for adding ultrasound sensor -->
+    <xacro:macro name="add_ultrasound_sensor" params="parent_name name topic *origin">
+ 
+        <joint name="${name}_base_mount_joint" type="fixed">
+            <xacro:insert_block name="origin" /> 
+            <parent link="${parent_name}"/>
+            <child link="${name}_base_link"/>
+        </joint>
+        <link name="${name}_base_link"/>
+
+        <!-- Rotate sensor frame (readings are on x axis instead of z) -->
+        <joint name="${name}_joint" type="fixed">
+            <origin xyz="0 0 0" rpy="0.0 -1.57 0.0"/>
+            <parent link="${name}_base_link"/>
+            <child link="${name}"/>
+        </joint>
+        <link name="${name}"/>
+        
+        <xacro:if value="${ADD_ULTRASOUND}">
+            <xacro:add_ultrasound_gazebo name="${name}" topic="${topic}" />
+        </xacro:if>
+
+    </xacro:macro>
+
+    <!-- Macro for adding gazebo plugin for ultrasound sensors -->
+    <xacro:macro name="add_ultrasound_gazebo" params="name topic">
+        <gazebo reference="${name}">
+            <sensor type="ray" name="sonar">
+                <update_rate>5</update_rate>
+                <ray>
+                    <scan>
+                        <horizontal>
+                            <samples>5</samples>
+                            <resolution>1.0</resolution>
+                            <min_angle>-1.0</min_angle>
+                            <max_angle>1.0</max_angle>
+                        </horizontal>
+                        <vertical>
+                            <samples>5</samples>
+                            <resolution>1</resolution>
+                            <min_angle>-0.5</min_angle>
+                            <max_angle>0.5</max_angle>
+                        </vertical>
+                    </scan>
+                    <range>
+                        <min>0.2</min>
+                        <max>3.0</max>
+                        <resolution>0.01</resolution>
+                    </range>
+                </ray>
+                <plugin filename="libgazebo_ros_range.so" name="gazebo_ros_range">
+                    <gaussianNoise>0.005</gaussianNoise>
+                    <alwaysOn>true</alwaysOn>
+                    <updateRate>5</updateRate>
+                    <topicName>${topic}</topicName>
+                    <frameName>${name}</frameName>
+                    <fov>2.3</fov>
+                    <radiation>ultrasound</radiation>
+                </plugin>
+            </sensor>
+        </gazebo>
+    </xacro:macro>
+
+    <!-- Add front-left Bosch USS5 ultrasound sensor -->
+    <xacro:property name="ultrasound_front_left_sagittal_name" value="ultrasound_fl_sag" />
+    <xacro:property name="ultrasound_front_left_sagittal_origin">
         <origin xyz="0.5105 0.315 -0.129" rpy="0.0 1.963496 0.0"/>
-        <parent link="${parent_name}"/>
-        <child link="bosch_uss5_front_left"/>
-    </joint>
-    <link name="bosch_uss5_front_left"/>
+    </xacro:property>
 
-    <!-- Add front-right Bosch USS5 -->
-    <joint name="bosch_uss5_front_right_joint" type="fixed">
+    <xacro:add_ultrasound_sensor parent_name="${ultrasound_parent_name}" 
+                            name="${ultrasound_front_left_sagittal_name}" 
+                            topic="/${ultrasound_ns}/${ultrasound_front_left_sagittal_name}">
+        <xacro:insert_block name="ultrasound_front_left_sagittal_origin" />
+    </xacro:add_ultrasound_sensor>
+
+    <!-- Add front-right Bosch USS5 ultrasound sensor -->
+    <xacro:property name="ultrasound_front_right_sagittal_name" value="ultrasound_fr_sag" />
+    <xacro:property name="ultrasound_front_right_sagittal_origin">
         <origin xyz="0.5105 -0.315 -0.129" rpy="0.0 1.963496 0.0"/>
-        <parent link="${parent_name}"/>
-        <child link="bosch_uss5_front_right"/>
-    </joint>
-    <link name="bosch_uss5_front_right"/>
+    </xacro:property>
 
-    <!-- Add back-left Bosch USS5 -->
-    <joint name="bosch_uss5_back_left_joint" type="fixed">
+    <xacro:add_ultrasound_sensor parent_name="${ultrasound_parent_name}" 
+                            name="${ultrasound_front_right_sagittal_name}" 
+                            topic="/${ultrasound_ns}/${ultrasound_front_right_sagittal_name}">
+        <xacro:insert_block name="ultrasound_front_right_sagittal_origin" />
+    </xacro:add_ultrasound_sensor>
+
+    <!-- Add back-left Bosch USS5 ultrasound sensor -->
+    <xacro:property name="ultrasound_rear_left_sagittal_name" value="ultrasound_rl_sag" />
+    <xacro:property name="ultrasound_rear_left_sagittal_origin">
         <origin xyz="-0.5105 0.315 -0.129" rpy="0.0 1.963496 3.141593"/>
-        <parent link="${parent_name}"/>
-        <child link="bosch_uss5_back_left"/>
-    </joint>
-    <link name="bosch_uss5_back_left"/>
+    </xacro:property>
 
-    <!-- Add back-right Bosch USS5 -->
-    <joint name="bosch_uss5_back_right_joint" type="fixed">
+    <xacro:add_ultrasound_sensor parent_name="${ultrasound_parent_name}" 
+                            name="${ultrasound_rear_left_sagittal_name}" 
+                            topic="/${ultrasound_ns}/${ultrasound_rear_left_sagittal_name}">
+        <xacro:insert_block name="ultrasound_rear_left_sagittal_origin" />
+    </xacro:add_ultrasound_sensor>
+
+    <!-- Add back-right Bosch USS5 ultrasound sensor -->
+    <xacro:property name="ultrasound_rear_right_sagittal_name" value="ultrasound_rr_sag" />
+    <xacro:property name="ultrasound_rear_right_sagittal_origin">
         <origin xyz="-0.5105 -0.315 -0.129" rpy="0.0 1.963496 3.141593"/>
-        <parent link="${parent_name}"/>
-        <child link="bosch_uss5_back_right"/>
-    </joint>
-    <link name="bosch_uss5_back_right"/>
+    </xacro:property>
 
-    <!-- Add left-front Bosch USS5 -->
-    <joint name="bosch_uss5_left_front_joint" type="fixed">
+    <xacro:add_ultrasound_sensor parent_name="${ultrasound_parent_name}" 
+                            name="${ultrasound_rear_right_sagittal_name}" 
+                            topic="/${ultrasound_ns}/${ultrasound_rear_right_sagittal_name}">
+        <xacro:insert_block name="ultrasound_rear_right_sagittal_origin" />
+    </xacro:add_ultrasound_sensor>
+
+    <!-- Add left-front Bosch USS5 ultrasound sensor -->
+    <xacro:property name="ultrasound_front_left_lateral_name" value="ultrasound_fl_lat" />
+    <xacro:property name="ultrasound_front_left_lateral_origin">
         <origin xyz="0.4515 0.365 -0.117" rpy="0.0 1.963496 1.570796"/>
-        <parent link="${parent_name}"/>
-        <child link="bosch_uss5_left_front"/>
-    </joint>
-    <link name="bosch_uss5_left_front"/>
+    </xacro:property>
 
-    <!-- Add left-back Bosch USS5 -->
-    <joint name="bosch_uss5_left_back_joint" type="fixed">
+    <xacro:add_ultrasound_sensor parent_name="${ultrasound_parent_name}" 
+                            name="${ultrasound_front_left_lateral_name}" 
+                            topic="/${ultrasound_ns}/${ultrasound_front_left_lateral_name}">
+        <xacro:insert_block name="ultrasound_front_left_lateral_origin" />
+    </xacro:add_ultrasound_sensor>
+
+    <!-- Add left-back Bosch USS5 ultrasound sensor -->
+    <xacro:property name="ultrasound_rear_left_lateral_name" value="ultrasound_rl_lat" />
+    <xacro:property name="ultrasound_rear_left_lateral_origin">
         <origin xyz="-0.4515 0.365 -0.117" rpy="0.0 1.963496 1.570796"/>
-        <parent link="${parent_name}"/>
-        <child link="bosch_uss5_left_back"/>
-    </joint>
-    <link name="bosch_uss5_left_back"/>
+    </xacro:property>
 
-    <!-- Add right-front Bosch USS5 -->
-    <joint name="bosch_uss5_right_front_joint" type="fixed">
+    <xacro:add_ultrasound_sensor parent_name="${ultrasound_parent_name}" 
+                            name="${ultrasound_rear_left_lateral_name}" 
+                            topic="/${ultrasound_ns}/${ultrasound_rear_left_lateral_name}">
+        <xacro:insert_block name="ultrasound_rear_left_lateral_origin" />
+    </xacro:add_ultrasound_sensor>
+
+    <!-- Add right-front Bosch USS5 ultrasound sensor -->
+    <xacro:property name="ultrasound_front_right_lateral_name" value="ultrasound_fr_lat" />
+    <xacro:property name="ultrasound_front_right_lateral_origin">
         <origin xyz="0.4515 -0.365 -0.117" rpy="0.0 1.963496 -1.570796"/>
-        <parent link="${parent_name}"/>
-        <child link="bosch_uss5_right_front"/>
-    </joint>
-    <link name="bosch_uss5_right_front"/>
+    </xacro:property>
 
-    <!-- Add right-back Bosch USS5 -->
-    <joint name="bosch_uss5_right_back_joint" type="fixed">
+    <xacro:add_ultrasound_sensor parent_name="${ultrasound_parent_name}" 
+                            name="${ultrasound_front_right_lateral_name}" 
+                            topic="/${ultrasound_ns}/${ultrasound_front_right_lateral_name}">
+        <xacro:insert_block name="ultrasound_front_right_lateral_origin" />
+    </xacro:add_ultrasound_sensor>
+
+    <!-- Add right-back Bosch USS5 ultrasound sensor -->
+    <xacro:property name="ultrasound_rear_right_lateral_name" value="ultrasound_rr_lat" />
+    <xacro:property name="ultrasound_rear_right_lateral_origin">
         <origin xyz="-0.4515 -0.365 -0.117" rpy="0.0 1.963496 -1.570796"/>
-        <parent link="${parent_name}"/>
-        <child link="bosch_uss5_right_back"/>
-    </joint>
-    <link name="bosch_uss5_right_back"/>
+    </xacro:property>
+
+    <xacro:add_ultrasound_sensor parent_name="${ultrasound_parent_name}" 
+                            name="${ultrasound_rear_right_lateral_name}" 
+                            topic="/${ultrasound_ns}/${ultrasound_rear_right_lateral_name}">
+        <xacro:insert_block name="ultrasound_rear_right_lateral_origin" />
+    </xacro:add_ultrasound_sensor>
 
 </xacro:macro>
 
