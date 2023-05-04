@@ -80,13 +80,13 @@
         <xacro:property name="visual_bool" value="false"/>
         <xacro:unless value="${not module['visual'][body_name]}">
             <xacro:property name="visual_bool" value="true"/>
-            <xacro:property name="visual_body" value="${module['visual'][body_name]}"/>
+            <xacro:property name="visual_bodies" value="${module['visual'][body_name]}"/>
         </xacro:unless>
 
         <xacro:property name="collision_bool" value="false"/>
         <xacro:unless value="${not module['collision'][body_name]}">
             <xacro:property name="collision_bool" value="true"/>
-            <xacro:property name="collision_body" value="${module['collision'][body_name]}"/>
+            <xacro:property name="collision_bodies" value="${module['collision'][body_name]}"/>
         </xacro:unless>
 
         <xacro:property name="dynamics_bool" value="false"/>
@@ -97,19 +97,39 @@
         
         <link name="${name}">
             <xacro:unless value="${visual_bool == 0}">
-                <visual>
-                    <xacro:add_origin body_pose="${visual_body['pose']}"/>
-                    <xacro:add_geometry body="${visual_body}"/>
-                    <xacro:if value="${'color' in visual_body}">
-                        <material name="${visual_body['color']}"/>
-                    </xacro:if> 
-                </visual>
+                <!-- xacro loop -->
+                <xacro:macro name="visual_loop" params="visual_bodies n_bodies">
+                    <xacro:property name="i_bodies" value="${n_bodies-1}"/>
+                    <xacro:unless value="${i_bodies == -1}"> 
+                        <visual>    
+                            <xacro:property name="body" value="${visual_bodies[i_bodies]}"/>
+                            <xacro:add_origin body_pose="${body['pose']}"/>
+                            <xacro:add_geometry body="${body}"/>
+                            <xacro:if value="${'color' in body}">
+                                <material name="${body['color']}"/>
+                            </xacro:if>
+                        </visual>
+                        <xacro:visual_loop visual_bodies="${visual_bodies}" n_bodies="${i_bodies}"/>
+                    </xacro:unless> 
+                </xacro:macro>
+                <!-- call the macro -->
+                <xacro:visual_loop visual_bodies="${visual_bodies}" n_bodies="${len(visual_bodies)}"/>
             </xacro:unless>
             <xacro:unless value="${collision_bool == 0}">
-                <collision>
-                    <xacro:add_origin body_pose="${collision_body['pose']}"/>
-                    <xacro:add_geometry body="${collision_body}"/>
-                </collision>
+                <!-- xacro loop -->
+                <xacro:macro name="collision_loop" params="collision_bodies n_bodies">
+                    <xacro:property name="i_bodies" value="${n_bodies-1}"/>
+                    <xacro:unless value="${i_bodies == -1}"> 
+                        <collision>
+                            <xacro:property name="body" value="${collision_bodies[i_bodies]}"/>
+                            <xacro:add_origin body_pose="${body['pose']}"/>
+                            <xacro:add_geometry body="${body}"/>
+                        </collision>
+                        <xacro:collision_loop collision_bodies="${collision_bodies}" n_bodies="${i_bodies}"/>
+                    </xacro:unless>
+                </xacro:macro> 
+                <!-- call the macro -->
+                <xacro:collision_loop collision_bodies="${collision_bodies}" n_bodies="${len(collision_bodies)}"/>
             </xacro:unless>
             <xacro:if value="${dynamics_bool == 0}">
                 <xacro:default_inertial mass="${mass}"/>
@@ -419,14 +439,14 @@
         <link name="${name}_finger2">
             <visual>
                 <xacro:add_origin body_pose="${dict(x=0.0, y=0.0, z=0.0, roll=0.0, pitch=0.0, yaw=pi)}"/>
-                <xacro:add_geometry body="${module['visual'][body_name]}"/>
-                <xacro:if value="${'color' in module['visual'][body_name]}">
-                    <material name="${module['visual'][body_name]['color']}"/>
+                <xacro:add_geometry body="${module['visual'][body_name][0]}"/>
+                <xacro:if value="${'color' in module['visual'][body_name][0]}">
+                    <material name="${module['visual'][body_name]['color'][0]}"/>
                 </xacro:if> 
             </visual>
             <collision>
                 <xacro:add_origin body_pose="${dict(x=0.0, y=0.0, z=0.0, roll=0.0, pitch=0.0, yaw=pi)}"/>
-                <xacro:add_geometry body="${module['collision'][body_name]}"/>
+                <xacro:add_geometry body="${module['collision'][body_name][0]}"/>
             </collision>
             <inertial>
                 <origin

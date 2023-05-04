@@ -46,6 +46,34 @@ def update_nested_dict(d, u):
             d[k] = v
     return d
 
+def as_dumpable_dict(obj):
+    """ Convert object to nested Python dictionary dumpable to YAML """
+    props = {}
+    if isinstance(obj, (Module, Module.Attribute)):
+       for k,v in vars(obj).items():
+        if isinstance(v, Module.Attribute):
+            props[k] = as_dumpable_dict(v)
+        elif isinstance(v, (list, tuple)):
+            props[k] = as_dumpable_dict(v)
+        elif isinstance(v, (KinematicsConvention, ModuleType)):
+            props[k] = v.value
+        else:
+            props[k] = v
+    elif isinstance(obj, (list, tuple)):
+        props = []
+        for x in obj:
+            if isinstance(x, (list, tuple)):
+                props.append(as_dumpable_dict(x))
+            elif isinstance(x, Module.Attribute):
+                props.append(as_dumpable_dict(x))
+            elif isinstance(x, (KinematicsConvention, ModuleType)):
+                props.append(x.value)
+            else:
+                props.append(x)
+    else:
+        props = obj
+    return props
+
 class JSONInterpreter(object):
     """Class used to interpret the JSON file describing a module"""
     def __init__(self, owner, d, json_file=None):
@@ -59,7 +87,7 @@ class JSONInterpreter(object):
             filename_without_extension = path_without_extension.split('/')[-1]
             new_filename = '/tmp/ModulesDescriptions/' + filename_without_extension + '.yaml'
             os.makedirs(os.path.dirname(new_filename), exist_ok=True)
-            out = self.owner.attributes_as_dict()
+            out = as_dumpable_dict(self.owner)
             with open(new_filename, 'w') as outfile:
                 yaml.safe_dump(out, outfile, default_flow_style=False)
             self.owner.filename = new_filename
@@ -92,9 +120,9 @@ class JSONInterpreter(object):
             # dynamics
             self.set_dynamic_properties(self.owner.dynamics.body_1, dict_body_1)
             # visual
-            self.set_visual_properties(self.owner.visual.body_1, dict_body_1)
+            self.set_visual_properties(self.owner.visual, 'body_1', dict_body_1)
             # collision
-            self.set_collision_properties(self.owner.collision.body_1, dict_body_1)
+            self.set_collision_properties(self.owner.collision, 'body_1', dict_body_1)
             # gazebo
             self.set_gazebo_properties(self.owner.gazebo.body_1, dict_body_1)
             # size
@@ -139,11 +167,11 @@ class JSONInterpreter(object):
             self.set_dynamic_properties(self.owner.dynamics.body_1, dict_body_1)
             self.set_dynamic_properties(self.owner.dynamics.body_2, dict_body_2)
             # visual
-            self.set_visual_properties(self.owner.visual.body_1, dict_body_1)
-            self.set_visual_properties(self.owner.visual.body_2, dict_body_2)
+            self.set_visual_properties(self.owner.visual, 'body_1', dict_body_1)
+            self.set_visual_properties(self.owner.visual, 'body_2', dict_body_2)
             # collision
-            self.set_collision_properties(self.owner.collision.body_1, dict_body_1)
-            self.set_collision_properties(self.owner.collision.body_2, dict_body_2)
+            self.set_collision_properties(self.owner.collision, 'body_1', dict_body_1)
+            self.set_collision_properties(self.owner.collision, 'body_2', dict_body_2)
             # gazebo
             self.set_gazebo_properties(self.owner.gazebo.body_1, dict_body_1)
             self.set_gazebo_properties(self.owner.gazebo.body_2, dict_body_2)
@@ -173,9 +201,9 @@ class JSONInterpreter(object):
             # dynamics
             self.set_dynamic_properties(self.owner.dynamics.body_1, body_1)
             # visual
-            self.set_visual_properties(self.owner.visual.body_1, body_1)
+            self.set_visual_properties(self.owner.visual, 'body_1', body_1)
             # collision
-            self.set_collision_properties(self.owner.collision.body_1, body_1)
+            self.set_collision_properties(self.owner.collision, 'body_1', body_1)
             # gazebo
             self.set_gazebo_properties(self.owner.gazebo.body_1, body_1)
             # size
@@ -197,34 +225,36 @@ class JSONInterpreter(object):
         body.CoM.z = dict_body['r_com'][2]
 
     @staticmethod
-    def set_visual_properties(body, dict_body):
+    def set_visual_properties(visual_obj, body_name, dict_body):
         """Set the visual properties of a body from a dictionary"""
         try:
-            if len(dict_body['visual']) != 1:
-                raise ValueError('A body must have exactly one visual property')
-            visual = dict_body['visual'][0]
-            attr = Module.Attribute(visual)
-            if visual:
-                # NOTE: pose of visual properties should be expressed in urdf format at the moment
-                x, y, z, roll, pitch, yaw = get_xyzrpy(tf.transformations.numpy.array(visual['pose']))
-                attr.pose = Module.Attribute({'x': x, 'y': y, 'z': z, 'roll': roll, 'pitch': pitch, 'yaw': yaw})
-            update_nested_dict(body.__dict__, attr.__dict__)
+            visual_properties = []
+            for visual in dict_body['visual']:
+                attr = Module.Attribute(visual)
+                if visual:
+                    # NOTE: pose of visual properties should be expressed in urdf format at the moment
+                    x, y, z, roll, pitch, yaw = get_xyzrpy(tf.transformations.numpy.array(visual['pose']))
+                    attr.pose = Module.Attribute({'x': x, 'y': y, 'z': z, 'roll': roll, 'pitch': pitch, 'yaw': yaw})
+                visual_properties.append(attr)
+            visual_attr = Module.Attribute({body_name: visual_properties})
+            update_nested_dict(visual_obj.__dict__, visual_attr.__dict__)
         except KeyError:
             pass
 
     @staticmethod
-    def set_collision_properties(body, dict_body):
+    def set_collision_properties(collision_obj, body_name, dict_body):
         """Set the collision properties of a body from a dictionary"""
         try:
-            if len(dict_body['collision']) != 1:
-                raise ValueError('A body must have exactly one collision property')
-            collision = dict_body['collision'][0]
-            attr = Module.Attribute(collision) 
-            if collision:
-                # NOTE: pose of collision properties should be expressed in urdf format at the moment
-                x, y, z, roll, pitch, yaw = get_xyzrpy(tf.transformations.numpy.array(collision['pose']))
-                attr.pose = Module.Attribute({'x': x, 'y': y, 'z': z, 'roll': roll, 'pitch': pitch, 'yaw': yaw})
-            update_nested_dict(body.__dict__, attr.__dict__)
+            collision_properties = []
+            for collision in dict_body['collision']:
+                attr = Module.Attribute(collision) 
+                if collision:
+                    # NOTE: pose of collision properties should be expressed in urdf format at the moment
+                    x, y, z, roll, pitch, yaw = get_xyzrpy(tf.transformations.numpy.array(collision['pose']))
+                    attr.pose = Module.Attribute({'x': x, 'y': y, 'z': z, 'roll': roll, 'pitch': pitch, 'yaw': yaw})
+                collision_properties.append(attr)
+            collision_attr = Module.Attribute({body_name: collision_properties})
+            update_nested_dict(collision_obj.__dict__, collision_attr.__dict__)
         except KeyError:
             pass
 
@@ -256,7 +286,7 @@ class YAMLInterpreter(object):
         update_nested_dict(self.owner.__dict__, attr.__dict__)
         self.owner.type = ModuleType(self.owner.type)
         self.owner.kinematics_convention = KinematicsConvention(self.owner.kinematics_convention)
-    
+
 #
 class Module(object):
     """
@@ -288,19 +318,6 @@ class Module(object):
                     setattr(self, a, [Module.Attribute(x) if isinstance(x, dict) else x for x in b])
                 else:
                     setattr(self, a, Module.Attribute(b) if isinstance(b, dict) else b)
-
-        def as_dict(self):
-            """ Convert object to nested Python dictionary """
-            return {k:v.as_dict() if isinstance(v, Module.Attribute) else v for k,v in vars(self).items()}
-
-    #
-    def attributes_as_dict(self):
-        """ Convert object to nested Python dictionary """
-        props = {}
-        for k,v in vars(self).items():
-            if isinstance(v, Module.Attribute):
-                props[k] = v.as_dict()
-        return props
 
     # 
     def set_size(self):
@@ -547,7 +564,6 @@ def inverse(transform_matrix):
     inv = tf.transformations.inverse_matrix(transform_matrix)
 
     return inv
-
 
 # 
 def module_from_yaml(filename, father=None, yaml_template=None, reverse=False):
