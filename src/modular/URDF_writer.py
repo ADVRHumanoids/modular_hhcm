@@ -3350,10 +3350,10 @@ class UrdfWriter:
 
     # TODO: remove hard-coded values
     def write_problem_description_multi(self):
-        basic_probdesc_filename = self.resource_finder.get_filename('cartesio/ModularBot_cartesio_IK_config.yaml',
+        basic_probdesc_filename = self.resource_finder.get_filename('cartesio/ModularBot_cartesio_Interaction_config.yaml',
                                                           ['data_path'])
         # basic_probdesc_filename = path_name + '/cartesio/ModularBot_cartesio_config.yaml'
-        probdesc_filename = path_name + '/ModularBot/cartesio/ModularBot_cartesio_IK_config.yaml'
+        probdesc_filename = path_name + '/ModularBot/cartesio/ModularBot_cartesio_Interaction_config.yaml'
         # probdesc_filename = "/tmp/modular/cartesio/ModularBot_cartesio_multichain_config.yaml"
         # probdesc_filename = self.resource_finder.get_filename('cartesio/ModularBot_cartesio_multichain_config.yaml',
         #                                                       'modularbot_path')
