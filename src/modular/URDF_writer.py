@@ -2045,7 +2045,7 @@ class UrdfWriter:
         return data
 
     def move_socket(self, socket_name, x_offset=0.0, y_offset=0.0, z_offset=0.0, angle_offset=0.0):
-        socket = self.access_module(socket_name)
+        socket = self.access_module_by_name(socket_name)
         fixed_joint_name = 'L_' + str(socket.i) + socket.tag + '_fixed_joint_' + str(socket.p)
 
         # Update generator expression
@@ -2379,10 +2379,10 @@ class UrdfWriter:
         self.print("parent module:", self.parent_module.name, ", type :", self.parent_module.type)
 
         # Update the EtherCAT port connected to the electro-mechanical interface where the new module/slave will be added 
-        #    1           2           3           4
-        #    o           o           o           o
-        #    |           |           |           |
-        # com-exp   upper port  front port    nothing
+        #      1            2           3           4
+        #      o            o           o           o
+        #      |            |           |           |
+        # input port   output port   nothing    nothing
         setattr(new_module, 'selected_port', 2)
         self.print('mastercube.selected_port :', new_module.selected_port)
 
@@ -2600,7 +2600,7 @@ class UrdfWriter:
             # selected_module.parent = None
 
             # select the father module of the cube
-            father_module = self.access_module(selected_module.parent.name)
+            father_module = self.access_module_by_name(selected_module.parent.name)
 
             # Generate the name of the fixed joint between parent and cube
             joint_name = 'FJ_' + father_module.parent.parent.name + '_' + father_module.name
@@ -2749,19 +2749,45 @@ class UrdfWriter:
 
         return data
 
-    def access_module(self, queried_module_name):
+    def access_module_by_id(self, queried_module_id):
+        """Find the selected module object by searching its ID in the tree and returns it. Moreover, sets it as the current parent_module.
+
+        Parameters
+        ----------
+        queried_module_id: int
+            The id of the module to access. It will be used to search the tree and find the relative ModuleNode object
+
+        Returns
+        -------
+        last_module: ModuleNode.ModuleNode
+            The object of the module with the id as passed by the arg.
+
+        """
+        # global parent_module
+        self.print('queried_module_id: ', queried_module_id)
+
+        # Serch the tree by id for the selected module
+        queried_module = anytree.search.findall_by_attr(self.base_link, queried_module_id, name='robot_id')[0]
+
+        self.print('queried_module.type: ', queried_module.type)
+
+        # Update parent_module attribute
+        self.parent_module = queried_module
+
+        return queried_module
+
+    def access_module_by_name(self, queried_module_name):
         """Find the selected module object in the tree and returns it. Moreover, sets it as the current parent_module.
 
         Parameters
         ----------
         queried_module_name: str
-            String with the name of the module to access. It will be used to search the tree and find
-            the relative ModuleNode object
+            String with the name of the module to access. It will be used to search the tree and find the relative ModuleNode object
 
         Returns
         -------
         last_module: ModuleNode.ModuleNode
-            The object of the module with the name as passed by the string.
+            The object of the module with the name as passed by the arg.
 
         """
         # global parent_module
@@ -2776,15 +2802,75 @@ class UrdfWriter:
         self.parent_module = queried_module
 
         return queried_module
+    
+    def select_module_from_id(self, id, selected_port=None):
+        """Allows to select a module from the tree. An inner call to access_module_by_id sets the selected module as the
+        current parent module. Returns info on the selected module, so that the GUI can display it.
+
+        Parameters
+        ----------
+        id: int
+            The id of the module to select. It will be used to call the access_module_by_id method.
+            The corresponding object module data is then put in a dictionary and returned.
+
+        selected_port: int
+            Represent the port selected if the module is a hub/box
+
+        Returns
+        -------
+        data: dict
+            The dictionary containing all necessary data about the selected module.
+
+        """
+        # global parent_module
+        self.print('id: ', id)
+
+        # Call the access_module_by_id method to find the selected module
+        selected_module = self.access_module_by_id(id)
+
+        # TODO: Replace this with select_ports
+        # binary XOR
+        free_ports = int(selected_module.active_ports, 2) ^ int(selected_module.occupied_ports, 2)
+        self.print("{0:04b}".format(free_ports))
+
+        selected_module.selected_port = self.ffs(free_ports)
+        self.print('selected_module.selected_port :', selected_module.selected_port)
+        
+        # # If parent topology is greater than 2 the parent is a switch/hub so we need to find the right port where the module is connected
+        # if active_ports >= 3:
+        #     for port_idx in range(2, len(mastercube.active_ports) - 1)
+        #         if mastercube.active_ports[-port_idx] == 1:
+        #             mastercube.selected_port = port_idx
+        #             break
+        
+        # if parent_active_ports == 3:
+        #     self.parent_module.selected_port = 3
+        # elif parent_active_ports == 5:
+        #     self.parent_module.selected_port = 4
+        # self.print('self.parent_module.selected_port: ', self.parent_module.selected_port)
+
+        # Create the dictionary with the relevant info on the selected module, so that the GUI can dispaly it.
+        if selected_module.type == 'cube':
+            data = {'lastModule_type': selected_module.type,
+                    'lastModule_name': selected_module.name,
+                    'size': selected_module.size,
+                    'count': self.n_cubes}
+        else:
+            data = {'lastModule_type': selected_module.type,
+                    'lastModule_name': selected_module.name,
+                    'size': selected_module.size,
+                    'count': selected_module.i}
+
+        return data
 
     def select_module_from_name(self, name, selected_port=None):
-        """Allows to select a module from the tree. An inner call to access_module sets the selected module as the
+        """Allows to select a module from the tree. An inner call to access_module_by_name sets the selected module as the
         current parent module. Returns info on the selected module, so that the GUI can display it.
 
         Parameters
         ----------
         name: str
-            String with the name of the module to select or the name of the mesh clicked on the GUI. It will be used to call the access_module method.
+            String with the name of the module to select or the name of the mesh clicked on the GUI. It will be used to call the access_module_by_name method.
             The corresponding object module data is then put in a dictionary and returned.
 
         selected_port: int
@@ -2816,9 +2902,9 @@ class UrdfWriter:
 
         self.print(selected_module_name)
 
-        # Call access_module to get the object with the requested name and sets it as parent.
-        # The method doing the real work is actually access_module
-        selected_module = self.access_module(selected_module_name)
+        # Call access_module_by_name to get the object with the requested name and sets it as parent.
+        # The method doing the real work is actually access_module_by_name
+        selected_module = self.access_module_by_name(selected_module_name)
         self.print(selected_module.type)
         self.print(selected_module.name)
         self.print(selected_module.robot_id)
