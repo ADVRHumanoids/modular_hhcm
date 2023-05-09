@@ -11,23 +11,23 @@
         2: #size PINO flange
             0: module_joint_double_elbow_ORANGE.yaml # rev 0
     3: # straight CONCERT size B
-        4: #size concert arm flage
-            0: module_joint_straight_concert.yaml # rev 0
+        4: #size concert arm flange
+            0: concert/module_joint_straight_concert.json # rev 0
     4: # straight CONCERT size A
-        4: #size concert arm flage
-            0: module_joint_straight_concert_XL.yaml # rev 0
+        4: #size concert arm flange
+            0: concert/module_joint_straight_concert_XL.json # rev 0
     5: # elbow CONCERT size B
-        4: #size concert arm flage
-            0: module_joint_elbow_concert.yaml # rev 0
+        4: #size concert arm flange
+            0: concert/module_joint_elbow_concert.json # rev 0
     6: # elbow CONCERT size A
-        4: #size concert arm flage
-            0: module_joint_elbow_concert_XL.yaml # rev 0
+        4: #size concert arm flange
+            0: concert/module_joint_elbow_concert_XL.json # rev 0
     7: # CONCERT steering module front-right / rear-left
         5: #CONCERT leg flange size
-            0: module_steering_concert_fr_rl.yaml #rev 0
+            0: concert/module_steering_concert_fr_rl.json #rev 0
     8: # CONCERT steering module front-left / rear-right
         5: #CONCERT leg flange size
-            0: module_steering_concert_fl_rr.yaml #rev 0
+            0: concert/module_steering_concert_fl_rr.json #rev 0
     # ...
 
 2: # hub module
@@ -36,10 +36,10 @@
             0: master_cube.yaml # rev 0
     3: # mobile base pwrboard
         0: # no size associated
-            0: mobile_platform_concert.yaml
+            0: concert/mobile_platform_concert.json
     4: # mobile base ecat hub
         0: #no size associated
-            0: mobile_platform_concert.yaml
+            0: concert/mobile_platform_concert.json
     # ...
 
 3: #end effector module
@@ -49,6 +49,9 @@
     2: # gripper
         2: #size PINO flange
             0: module_gripper.yaml # rev 0
+    3: # drill CONCERT
+        4: #size concert arm flange
+            0: concert/module_drill_concert.json
     # ...
 
 4: #passive link module
@@ -62,20 +65,20 @@
         2: #size PINO flange
             0: module_link_straight_10_fraunhofer.yaml
         4: #size CONCERT arm flange
-            0: module_link_straight_10_concert.yaml
+            0: concert/module_link_straight_10_concert.json
     4: #passive link 20 cm
         2: #size PINO flange
-            0: module_link_straight_20_fraunhofer.yaml
+            0: concert/module_link_straight_20_fraunhofer.json
         4: #size CONCERT arm flange
-            0: module_link_straight_20_concert.yaml
+            0: concert/module_link_straight_20_concert.json
     5: #passive link 50 cm
         2: #size PINO flange
-            0: module_link_straight_50_fraunhofer.yaml
+            0: concert/module_link_straight_50_fraunhofer.json
         4: #size CONCERT arm flange
-            0: module_link_straight_50_concert.yaml
+            0: concert/module_link_straight_50_concert.json
     # ...
 
 5: #wheel module
     1: # CONCERT wheel
         5: # CONCERT leg flange size
-            0: module_wheel_concert.yaml #rev 0
+            0: concert/module_wheel_concert.json #rev 0
