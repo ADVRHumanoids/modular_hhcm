@@ -1300,7 +1300,7 @@ class UrdfWriter:
 
         for module in modules_list:
 
-            module_id = int(module['robot_id'])
+            robot_id = int(module['robot_id'])
 
             mod_type = int(module['mod_type'])
             mod_id = int(module['mod_id'])
@@ -1309,15 +1309,14 @@ class UrdfWriter:
 
             module_filename = module_params_dict.get(mod_type, {}).get(mod_id,{}).get(mod_size,{}).get(mod_rev)
             if module_filename is None:
-                module_filename = robot_id_dict.get(module_id)
+                module_filename = robot_id_dict.get(robot_id)
                 if module_filename is None:
-                    self.info_print("Id not recognized! Skipping add_module() for id", robot_id_dict.get(module_id))          
+                    self.info_print("Id not recognized! Skipping add_module() for id", robot_id_dict.get(robot_id))          
                     continue
 
             module_position = int(module['position'])
-            module_topology = int(module['topology'])
 
-            self.info_print('Discovered module with ID:', module_id)
+            self.info_print('Discovered module with ID:', robot_id)
 
             parent_position = None
 
@@ -1328,7 +1327,6 @@ class UrdfWriter:
 
                 while candidate_position > 0:
                     candidate_parent = modules_list[candidate_position - 1]
-                    candidate_parent_id = int(candidate_parent['robot_id'])
                     topology = int(candidate_parent['topology'])
 
                     if topology == 1:
@@ -1345,15 +1343,15 @@ class UrdfWriter:
 
                     candidate_position -= 1
 
-            self.print("module and parent:", module_id, parent_position)
+            self.print("module and parent:", robot_id, parent_position)
 
             # select the correct parent module
             if parent_position :
                 parent = modules_list[parent_position -1]
                 self.print('parent:', parent)
-                # HACK: skip hub for discovery!
-                if parent['robot_id'] == -1:
-                    parent = modules_list[parent['position'] -2]
+                # # HACK: skip hub for discovery!
+                # if parent['robot_id'] == -1:
+                #     parent = modules_list[parent['position'] -2]
                 
                 parent_id = int(parent['robot_id'])
                 self.print('parent_id:', parent_id)
@@ -1372,60 +1370,64 @@ class UrdfWriter:
                         # treestr = u"%s%s" % (pre, node.name)
                         # self.print(treestr.ljust(8), node.name, node.robot_id)
 
-                parent_module = anytree.search.findall_by_attr(self.base_link, parent_id, name='robot_id')[0]
-                self.print('parent_module:', parent_module, '\nparent name:', parent_module.name)
-                self.select_module_from_name(parent_module.name)
-                self.print(self.parent_module.name)
+                # parent_module = anytree.search.findall_by_attr(self.base_link, parent_id, name='robot_id')[0]
+                # self.print('parent_module:', parent_module, '\nparent name:', parent_module.name)
+                # self.select_module_from_name(parent_module.name)
+                # self.print(self.parent_module.name)
                 #TODO:replace with select_module_from_id
+                self.select_module_from_id(parent_id)
 
                 # set the selected_port as occupied
-                mask = 1 << parent_module.selected_port - 1
+                mask = 1 << self.parent_module.selected_port - 1
                 self.print(mask)
-                self.print(parent_module.occupied_ports)
-                parent_module.occupied_ports = "{0:04b}".format(int(parent_module.occupied_ports, 2) | mask)
-                self.print(parent_module.occupied_ports)
+                self.print(self.parent_module.occupied_ports)
+                self.parent_module.occupied_ports = "{0:04b}".format(int(self.parent_module.occupied_ports, 2) | mask)
+                self.print(self.parent_module.occupied_ports)
                 #parent_module.occupied_ports[-selected_port] = 1
 
                 #If the parent is a cube to support non-structural box we add a socket
-                if parent_module.type == 'cube':
-                    if parent_module.is_structural == False:
+                if self.parent_module.type == 'cube':
+                    if self.parent_module.is_structural == False:
                         self.add_socket()
 
-                # HACK: for CONCERT mobile base select directly the connector for the manipulator. Discovery of the legs is skipped for now!
-                if parent_module.type == 'mobile_base':
-                    parent_module.selected_port = 5
+                # # HACK: for CONCERT mobile base select directly the connector for the manipulator. Discovery of the legs is skipped for now!
+                # if parent_module.type == 'mobile_base':
+                #     parent_module.selected_port = 5
 
             # get which ports in the ESC slave are active
             active_ports = int(module['active_ports'])
             self.print('active_ports:', active_ports)
 
             #add the module
-            if mod_type == 2 or module_filename=='master_cube.yaml':
-                data = self.add_slave_cube(0, is_structural=False, robot_id=module_id, active_ports=active_ports)
+            if module_filename=='master_cube.yaml':
+                data = self.add_slave_cube(0, is_structural=False, robot_id=robot_id, active_ports=active_ports)
             elif module_filename=='concert/mobile_platform_concert.json':
-                data = self.add_mobile_platform(robot_id=module_id, active_ports=active_ports)
-                # leg + wheel 1
-                data = self.select_module_from_name('mobile_base_con1')
-                wheel_data, steering_data = self.add_wheel_module(wheel_filename='concert/module_wheel_concert.json', 
-                                                    steering_filename='concert/module_steering_concert_fl_rr.json', 
-                                                    angle_offset=0.0, robot_id=(21,22))
-                # leg + wheel 2
-                data = self.select_module_from_name('mobile_base_con2')
-                wheel_data, steering_data = self.add_wheel_module(wheel_filename='concert/module_wheel_concert.json', 
-                                                    steering_filename='concert/module_steering_concert_fr_rl.json', 
-                                                    angle_offset=0.0, robot_id=(11,12))
-                # leg + wheel 3
-                data = self.select_module_from_name('mobile_base_con3')
-                wheel_data, steering_data = self.add_wheel_module(wheel_filename='concert/module_wheel_concert.json', 
-                                                    steering_filename='concert/module_steering_concert_fr_rl.json', 
-                                                    angle_offset=0.0, robot_id=(31,32))
-                # leg + wheel 4
-                data = self.select_module_from_name('mobile_base_con4')
-                wheel_data, steering_data = self.add_wheel_module(wheel_filename='concert/module_wheel_concert.json', 
-                                                    steering_filename='concert/module_steering_concert_fl_rr.json', 
-                                                    angle_offset=0.0, robot_id=(41,42))
+                is_structural = True
+                if self.parent_module.type == 'mobile_base':
+                    is_structural = False
+                data = self.add_mobile_platform(is_structural=is_structural, robot_id=robot_id, active_ports=active_ports)
+                # # leg + wheel 1
+                # data = self.select_module_from_name('mobile_base_con1')
+                # wheel_data, steering_data = self.add_wheel_module(wheel_filename='concert/module_wheel_concert.json', 
+                #                                     steering_filename='concert/module_steering_concert_fl_rr.json', 
+                #                                     angle_offset=0.0, robot_id=(21,22))
+                # # leg + wheel 2
+                # data = self.select_module_from_name('mobile_base_con2')
+                # wheel_data, steering_data = self.add_wheel_module(wheel_filename='concert/module_wheel_concert.json', 
+                #                                     steering_filename='concert/module_steering_concert_fr_rl.json', 
+                #                                     angle_offset=0.0, robot_id=(11,12))
+                # # leg + wheel 3
+                # data = self.select_module_from_name('mobile_base_con3')
+                # wheel_data, steering_data = self.add_wheel_module(wheel_filename='concert/module_wheel_concert.json', 
+                #                                     steering_filename='concert/module_steering_concert_fr_rl.json', 
+                #                                     angle_offset=0.0, robot_id=(31,32))
+                # # leg + wheel 4
+                # data = self.select_module_from_name('mobile_base_con4')
+                # wheel_data, steering_data = self.add_wheel_module(wheel_filename='concert/module_wheel_concert.json', 
+                #                                     steering_filename='concert/module_steering_concert_fl_rr.json', 
+                #                                     angle_offset=0.0, robot_id=(41,42))
             else:
-                data = self.add_module(module_filename, 0, robot_id=module_id, active_ports=active_ports)
+                data = self.add_module(module_filename, 0, robot_id=robot_id, active_ports=active_ports)
                 
             if self.verbose:
                 for pre, _, node in RenderTree(self.base_link):
@@ -1912,9 +1914,9 @@ class UrdfWriter:
         """
         self.set_floating_base(True)  # TODO: better way to do this?
 
-        if self.parent_module != self.base_link :
-            self.print('mobile base can be have only base_link as parent!')
-            self.parent_module = self.base_link
+        # if self.parent_module != self.base_link :
+        #     self.print('mobile base can be have only base_link as parent!')
+        #     self.parent_module = self.base_link
 
         self.print('add_mobile_platform')
         # Generate name according to the # of cubes already in the tree
@@ -1941,17 +1943,17 @@ class UrdfWriter:
 
         setattr(mobilebase, 'robot_id', robot_id)
 
-
+        setattr(mobilebase, 'n_child_hubs', 0)
         setattr(mobilebase, 'is_structural', is_structural)
         if is_structural:
             # add the master cube to the xml tree
             ET.SubElement(self.root, "xacro:add_mobile_base", type='mobile_base', name=mobilebase.name, filename=mobilebase.filename)
             self.add_connectors(mobilebase)
         else:
-            # add the master cube to the xml tree
-            #ET.SubElement(self.root, "xacro:add_master_cube", type='cube', name=name, filename=filename)
-            #ET.SubElement(self.root, "xacro:add_connectors", type='connectors', name=name, filename=filename)
-            pass
+            # the added module is a hub (not structural) extension to the mobile base
+            if self.parent_module.type == 'mobile_base':
+                # if the parent is a mobile base, the n_child_hubs attribute is incremented, in order to keep track of the number of hubs connected to the mobile base and therefore the number of ports occupied. This is needed to select the right connector where to connect the new module 
+                self.parent_module.n_child_hubs += 1
 
         self.add_gazebo_element(mobilebase.gazebo.body_1, mobilebase.name)
         
@@ -1966,7 +1968,7 @@ class UrdfWriter:
         #    o           o           o           o
         #    |           |           |           |
         # com-exp   upper port  front port    nothing
-        setattr(mobilebase, 'selected_port', 5)
+        setattr(mobilebase, 'selected_port', 2)
         self.print('mobilebase.selected_port :', mobilebase.selected_port)
 
         # save the active ports as a binary string
@@ -3125,20 +3127,17 @@ class UrdfWriter:
         
 
     def get_cube_output_transform(self, past_Cube):
-        if past_Cube.is_structural:
-            if past_Cube.selected_port == 1:
-                interface_transform = past_Cube.Con_1_tf
-            elif past_Cube.selected_port == 2:
-                interface_transform = past_Cube.Con_2_tf
-            elif past_Cube.selected_port == 3:
-                interface_transform = past_Cube.Con_3_tf
-            elif past_Cube.selected_port == 4:
-                interface_transform = past_Cube.Con_4_tf
-            # just in case of mobile base! TODO: fix, this is a hack. We do not have 5 ports but 4 and two slaves in series.
-            elif past_Cube.selected_port == 5:
-                interface_transform = past_Cube.Con_5_tf
-        else:
-            interface_transform = tf.transformations.identity_matrix()
+        # index for connector and selecte port are shifted by 1
+        connector_idx = (past_Cube.selected_port -1)
+        # We take into account the other hubs connected to get the right index. We have 4 connectors per hub, but since ports and index are shifted by 1, each child hub increase the index by 3
+        connector_idx += (past_Cube.n_child_hubs) * (4-1)
+        # We take into account that one port is used to establish a  connection with a second hub, and that should not be taken into account when counting the index
+        connector_idx -= past_Cube.n_child_hubs
+
+        connector_name = 'Con_' + str(connector_idx) + '_tf'
+        interface_transform = getattr(past_Cube, connector_name)
+        # if not past_Cube.is_structural:
+        #     interface_transform = tf.transformations.identity_matrix()
 
         self.print('past_Cube.selected_port:', past_Cube.selected_port)
         self.print('interface_transform: ', interface_transform)
