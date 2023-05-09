@@ -6,4 +6,4 @@ external_resources:
   dagana_path: '$(rospack find dagana_urdf)'
   # whatever_resources_path: None
 modularbot_path: 'modular_data/ModularBot'
-deploy_dir: '~/robots'
+deploy_dir: '~/albero_ws/ros_src'
