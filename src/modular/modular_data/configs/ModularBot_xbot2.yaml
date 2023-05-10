@@ -65,7 +65,7 @@ xbotcore_plugins:
         value: 4.
         type: double
       enabled_chains: 
-        value: [chain_E]
+        value: [chain_A]
         type: vector<string>
       problem_description:
         value: $(rospack find ModularBot)/cartesio/ModularBot_cartesio_Interaction_config.yaml
