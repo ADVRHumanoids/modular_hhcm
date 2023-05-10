@@ -1300,7 +1300,9 @@ class UrdfWriter:
 
         for module in modules_list:
 
-            robot_id = int(module['robot_id'])
+            module_position = int(module['position'])
+            module['robot_id'] = int(module['robot_id']) if module['robot_id'] != -1 else module_position*(-1)
+            robot_id = module['robot_id']
 
             mod_type = int(module['mod_type'])
             mod_id = int(module['mod_id'])
@@ -1314,7 +1316,6 @@ class UrdfWriter:
                     self.info_print("Id not recognized! Skipping add_module() for id", robot_id_dict.get(robot_id))          
                     continue
 
-            module_position = int(module['position'])
 
             self.info_print('Discovered module with ID:', robot_id)
 
@@ -1920,7 +1921,7 @@ class UrdfWriter:
 
         self.print('add_mobile_platform')
         # Generate name according to the # of cubes already in the tree
-        name = 'mobile_base'
+        name = 'mobile_base' #  _' + str(len(self.listofhubs))
 
         mobilebase = None
         for resource_path in self.resources_paths:
