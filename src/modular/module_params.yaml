@@ -12,16 +12,16 @@
             0: module_joint_double_elbow_ORANGE.yaml # rev 0
     3: # straight CONCERT size B
         4: #size concert arm flange
-            0: concert/module_joint_straight_concert.json # rev 0
+            0: concert/module_joint_yaw_B_concert.json # rev 0
     4: # straight CONCERT size A
         4: #size concert arm flange
-            0: concert/module_joint_straight_concert_XL.json # rev 0
+            0: concert/module_joint_yaw_A_concert.json # rev 0
     5: # elbow CONCERT size B
         4: #size concert arm flange
-            0: concert/module_joint_elbow_concert.json # rev 0
+            0: concert/module_joint_elbow_B_concert.json # rev 0
     6: # elbow CONCERT size A
         4: #size concert arm flange
-            0: concert/module_joint_elbow_concert_XL.json # rev 0
+            0: concert/module_joint_elbow_A_concert.json # rev 0
     7: # CONCERT steering module front-right / rear-left
         5: #CONCERT leg flange size
             0: concert/module_steering_concert_fr_rl.json #rev 0
