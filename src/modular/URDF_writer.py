@@ -2896,8 +2896,8 @@ class UrdfWriter:
         elif '_con' in name:
             # Take the box as parent when a connector is selected
             selected_module_name = name[:-5]
-            # Save the selected port
-            selected_port = int(name[-1])
+            # Save the selected port. We take the connector index from the name and increment it b 1 to get the port
+            selected_port = int(name[-1]) + 1
             self.print(selected_port)
         else:
             selected_module_name = name
