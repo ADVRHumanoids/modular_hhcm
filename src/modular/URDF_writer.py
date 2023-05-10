@@ -3847,8 +3847,8 @@ class UrdfWriter:
 
             base_link = self.find_chain_base_link(joints_chain)
             probdesc[ee_name]['base_link'] = base_link
-            # probdesc[ee_name]['type'] = "Interaction"
-            probdesc[ee_name]['type'] = "Cartesian"
+            probdesc[ee_name]['type'] = "Interaction"
+            # probdesc[ee_name]['type'] = "Cartesian"
             probdesc[ee_name]['lambda'] = 0.1
 
             i += 1
