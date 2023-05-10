@@ -1264,6 +1264,24 @@ class UrdfWriter:
         return ordered_chain
 
 
+    def sort_modules_by_pos(self, modules_dict):
+
+        ordered_chain = [None] * len(modules_dict)
+
+        for key, item in modules_dict.items():
+
+            module_position = key
+
+            try:
+                ordered_chain[module_position - 1] = item
+            
+            except IndexError:
+                self.print('unexpected module position {}, modules number: {}'.format(module_position, len(modules_dict)))
+                return list()
+        
+        return ordered_chain
+
+
     # This method will be used when branches in the robot will be supported.
     def read_from_json(self, json_data):
 
@@ -1296,7 +1314,7 @@ class UrdfWriter:
 
         # Process the modules described in the json to create the tree
         modules_dict = yaml.safe_load(json_data)
-        modules_list = self.sort_modules(modules_dict)
+        modules_list = self.sort_modules_by_pos(modules_dict)
 
         for module in modules_list:
 
