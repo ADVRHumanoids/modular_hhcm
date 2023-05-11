@@ -73,6 +73,10 @@ xbotcore_plugins:
       solver: {value: AlberoImpedance, type: string}
       enable_feedback: {value: true, type: bool}
       fc_map: {value: {grav: 0.2, dfl: 0.9}, type: map<double>}
+  
+  gripper:
+    thread: rt_main
+    type: albero_gripper_rt
 
 # additional parameters that don't relate to any plugin
 xbotcore_param:
