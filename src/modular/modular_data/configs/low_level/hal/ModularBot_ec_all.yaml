@@ -39,6 +39,12 @@ xbotcore_devices:
     #     params:
     #         robot_name: *rn
     #         joint_id_map: *jim
+
+    albero_gripper:
+        names: []
+        thread: rt_main
+        params:
+            joint_id_map: *jjm
                 
     joint_master:
         master: true
