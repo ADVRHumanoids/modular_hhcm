@@ -187,12 +187,12 @@ class Plugin:
             group_name = "chain" + self.urdf_writer.branch_switcher.get(i + 1)
             # group_name = "arm" + self.urdf_writer.branch_switcher.get(i + 1)
             groups.append(ET.SubElement(root, 'group', name=group_name))
-            if "con" in joints_chain[0].parent.name:
+            if "con_" in joints_chain[0].parent.name:
                 base_link = joints_chain[0].parent.parent.name
             else:
                 base_link = joints_chain[0].parent.name
             if joints_chain[-1].children:
-                if "con" in joints_chain[-1].children[0].name:
+                if "con_" in joints_chain[-1].children[0].name:
                     tip_link = joints_chain[-1].children[0].children[0].name
                 else:
                     tip_link = joints_chain[-1].children[0].name
@@ -423,12 +423,12 @@ class RosControlPlugin(Plugin):
             group_name = "arm" + self.urdf_writer.branch_switcher.get(i + 1)
             #group_name = "chain_"+str(i+1)
             groups.append(ET.SubElement(root, 'group', name=group_name))
-            if "con" in joints_chain[0].parent.name:
+            if "con_" in joints_chain[0].parent.name:
                 base_link = joints_chain[0].parent.parent.name
             else:
                 base_link = joints_chain[0].parent.name
             if joints_chain[-1].children:
-                if "con" in joints_chain[-1].children[0].name:
+                if "con_" in joints_chain[-1].children[0].name:
                     tip_link = joints_chain[-1].children[0].children[0].name
                 else:
                     tip_link = joints_chain[-1].children[0].name
@@ -3464,7 +3464,7 @@ class UrdfWriter:
             probdesc[ee_name] = copy.deepcopy(probdesc['EE'])
 
             if joints_chain[-1].children:
-                if "con" in joints_chain[-1].children[0].name:
+                if "con_" in joints_chain[-1].children[0].name:
                     tip_link = joints_chain[-1].children[0].children[0].name
                 else:
                     tip_link = joints_chain[-1].children[0].name
@@ -3482,7 +3482,7 @@ class UrdfWriter:
                     tip_link = joints_chain[-1].name
             probdesc[ee_name]['distal_link'] = tip_link
 
-            if "con" in joints_chain[0].parent.name:
+            if "con_" in joints_chain[0].parent.name:
                 base_link = joints_chain[0].parent.parent.name
             else:
                 base_link = joints_chain[0].parent.name
@@ -3532,7 +3532,7 @@ class UrdfWriter:
         self.print(probdesc.items())
         joints_chain = self.listofchains[0]
         if joints_chain[-1].children:
-            if "con" in joints_chain[-1].children[0].name:
+            if "con_" in joints_chain[-1].children[0].name:
                 tip_link = joints_chain[-1].children[0].children[0].name
             else:
                 tip_link = joints_chain[-1].children[0].name
