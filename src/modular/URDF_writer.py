@@ -3019,6 +3019,19 @@ class UrdfWriter:
                           type="link",
                           name=new_Link.name,
                           filename=new_Link.filename)
+        elif new_Link.type == 'end_effector':
+            setattr(new_Link, 'name', 'end_effector' + new_Link.tag)
+            ET.SubElement(self.root,
+                          "xacro:add_link",
+                          type="link",
+                          name=new_Link.name,
+                          filename=new_Link.filename)
+            setattr(new_Link, 'tcp_name', 'ee' + new_Link.tag)
+            ET.SubElement(self.root,
+                          "xacro:add_pen",
+                          type="pen",
+                          name=new_Link.tcp_name,
+                          father=new_Link.name)
         elif new_Link.type == 'tool_exchanger':
             setattr(new_Link, 'name', 'tool_exchanger' + new_Link.tag)
             ET.SubElement(self.root,
@@ -3074,7 +3087,7 @@ class UrdfWriter:
 
         self.add_gazebo_element(new_Link.gazebo.body_1, new_Link.name)
             
-        if new_Link.type == 'tool_exchanger' or new_Link.type == 'gripper':
+        if new_Link.type == 'tool_exchanger' or new_Link.type == 'gripper' or new_Link.type == 'end_effector':
             fixed_joint_name = new_Link.name + '_fixed_joint'
         else:
             fixed_joint_name = 'L_' + str(new_Link.i) + '_fixed_joint_' + str(new_Link.p) + new_Link.tag

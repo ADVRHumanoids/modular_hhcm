@@ -36,6 +36,7 @@ class ModuleType(str, Enum):
     BASE_LINK = 'base_link'
     SIZE_ADAPTER = 'size_adapter'
     SIMPLE_EE = 'simple_ee'
+    END_EFFECTOR = 'end_effector'
 
 # import collections.abc
 def update_nested_dict(d, u):
@@ -102,7 +103,7 @@ class JSONInterpreter(object):
 
     def type_dispatcher(self, d):
         """Dispatch the parsing of the dictionary d according to the module type"""
-        if self.owner.type in {ModuleType.LINK, ModuleType.GRIPPER, ModuleType.TOOL_EXCHANGER, ModuleType.SIZE_ADAPTER}:
+        if self.owner.type in {ModuleType.LINK, ModuleType.GRIPPER, ModuleType.TOOL_EXCHANGER, ModuleType.SIZE_ADAPTER, ModuleType.END_EFFECTOR}:
             if len(d['joints']) != 0:
                 raise ValueError('A link must have no joints')
             if len(d['bodies']) != 1:
@@ -510,6 +511,7 @@ class Module(object):
             'link': self.get_homogeneous_matrix,
             'size_adapter': self.get_homogeneous_matrix,
             'tool_exchanger': self.get_homogeneous_matrix,
+            'end_effector': self.get_homogeneous_matrix,
             'gripper': self.get_homogeneous_matrix,
             'cube': self.get_hub_connections_tf, #  self.get_cube_connections_tf,
             'mobile_base': self.get_hub_connections_tf, #  self.get_mobile_base_connections_tf,
