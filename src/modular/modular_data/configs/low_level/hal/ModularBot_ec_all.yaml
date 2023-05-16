@@ -33,12 +33,12 @@ xbotcore_devices:
     #         robot_name: *rn
     #         joint_id_map: *jim
             
-    # pow_ec:
-    #     names: []
-    #     thread: rt_main
-    #     params:
-    #         robot_name: *rn
-    #         joint_id_map: *jim
+    pow_ec:
+        names: []
+        thread: rt_main
+        params:
+            robot_name: *rn
+            joint_id_map: *jim
 
     albero_gripper:
         names: []
