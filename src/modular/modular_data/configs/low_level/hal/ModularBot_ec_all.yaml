@@ -48,7 +48,7 @@ xbotcore_devices:
         names: []
         thread: rt_main
         params:
-            joint_id_map: *jjm
+            joint_id_map: *jim
                 
     joint_master:
         master: true
