@@ -77,6 +77,10 @@ xbotcore_plugins:
   gripper:
     thread: rt_main
     type: albero_gripper_rt
+  
+  ec_ros:
+    thread: nrt_main
+    type: ec_ros
 
 # additional parameters that don't relate to any plugin
 xbotcore_param:
