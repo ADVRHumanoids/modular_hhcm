@@ -173,11 +173,10 @@ def addWheel():
     app.logger.debug(reverse)
     wheel_data, steering_data = urdf_writer.add_wheel_module(wheel_filename, steering_filename, offset, reverse)
     data = jsonify(wheel_data)
-    return data 
+    return data
 
 
-@app.route('/writeURDF/', methods=['POST'])
-def writeURDF():
+def writeRobotURDF(builder_jm):
     global building_mode_ON
     #string = request.form.get('string', 0)
     # app.logger.debug(string)
@@ -212,8 +211,20 @@ def writeURDF():
     # app.logger.debug("\nCartesIO stack\n")
     # app.logger.debug(cartesio_stack)
     # data = jsonify(data)
-    return data 
+    return data
 
+@app.route('/writeURDF/', methods=['POST'])
+def writeURDF():
+    global building_mode_ON
+    #string = request.form.get('string', 0)
+    # app.logger.debug(string)
+    # app.logger.debug (building_mode_ON)
+    app.logger.debug('jointMap')
+    json_jm = request.form.get('jointMap', 0)
+    app.logger.debug(json_jm)
+    builder_jm = json.loads(json_jm)
+    building_mode_ON = True if request.form.get('buildingModeON', 0) == 'true' else False
+    writeRobotURDF(builder_jm)
 
 # call URDF_writer.py to add another master cube
 @app.route('/addMasterCube/', methods=['POST'])
@@ -433,13 +444,42 @@ def removeConnectors():
     global building_mode_ON
 
     building_mode_ON = True if request.form.get('buildingModeON', 0) == 'true' else False
-    
+
     if building_mode_ON :
         data = urdf_writer.remove_connectors()
     else:
-        data = urdf_writer_fromHW.remove_connectors()    
+        data = urdf_writer_fromHW.remove_connectors()
     return data
-    
+
+# deploy the package of the built robot
+@app.route('/urdf', methods=['POST'])
+def deployROSModel():
+    global building_mode_ON
+
+    try:
+        req = request.get_json()
+        name = req['name']
+        builder_jm =  req['jointMap']
+
+        removeConnectors() # to be removed and itergrated inside .deploy_robot
+        writeRobotURDF(builder_jm)
+
+        if building_mode_ON :
+            app.logger.debug(name)
+            urdf_writer.deploy_robot(name)
+        else:
+            urdf_writer_fromHW.deploy_robot(name)
+
+        return Response(status=204)
+
+    except Exception as e:
+        # validation failed
+        print(f'{type(e).__name__}: {e}')
+        return Response(
+            response=json.dumps({"message": f'{type(e).__name__}: {e}'}),
+            status=500,
+            mimetype="application/json"
+        )
 
 def byteify(input):
     if isinstance(input, dict):

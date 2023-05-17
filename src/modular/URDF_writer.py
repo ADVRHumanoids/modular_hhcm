@@ -3532,7 +3532,7 @@ class UrdfWriter:
         return string_urdf_xbot
 
     # Save URDF/SRDF etc. in a directory with the specified robot_name
-    def deploy_robot(self, robot_name, deploy_dir=None):
+    def deploy_robot(self, robot_name='modularbot', deploy_dir=None):
         script = self.resource_finder.get_filename('deploy.sh', ['data_path'])
 
         if deploy_dir is None:
