@@ -462,6 +462,38 @@ def changeMode():
     data = jsonify(data)
     return data
 
+# get list of modules of robot
+@app.route('/urdf/modules', methods=['GET'])
+def getModelModules():
+    global building_mode_ON
+    try:
+        chains=[]
+        if building_mode_ON :
+            chains = urdf_writer.listofchains
+        else:
+            chains = urdf_writer_fromHW.listofchains
+
+        modules=[]
+        for chain in chains:
+            for el in chain:
+                module={}
+                module['id']=el.name
+                module['family']= "" #"alberoboticsGenA"
+                module['type']= el.type
+                module['product']= el.filename
+                module['label']= el.name
+                modules.append(module)
+
+        return jsonify({'modules': modules}), 200
+
+    except Exception as e:
+        # validation failed
+        print(f'{type(e).__name__}: {e}')
+        return Response(
+            response=json.dumps({"message": f'{type(e).__name__}: {e}'}),
+            status=500,
+            mimetype="application/json"
+        )
 
 # deploy the package of the built robot
 @app.route('/deployRobot/', methods=['POST'])
