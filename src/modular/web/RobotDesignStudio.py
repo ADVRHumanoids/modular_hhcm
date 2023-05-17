@@ -98,6 +98,12 @@ def index():
 def test():
     return render_template('test.html')
 
+# Get workspace mode
+@app.route('/mode', methods=['GET'])
+def getMode():
+    global building_mode_ON
+    mode = 'Build' if building_mode_ON else 'Discover'
+    return jsonify({'mode': mode}), 200
 
 # call URDF_writer.py to modify the urdf
 @app.route('/changeURDF/', methods=['POST'])
