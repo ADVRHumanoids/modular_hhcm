@@ -338,8 +338,9 @@ def requestURDF():
 #     return send_from_directory(app.static_folder, path)
 
 
-# upload on the server the /modular_resources folder. 
+# upload on the server the /modular_resources folder.
 # This is needed to load the meshes of the modules (withot the need to put them in the /static folder)
+@app.route('/resources/meshes/<path:path>', methods=['GET'])
 @app.route('/modular_resources/<path:path>')
 def send_file(path):
     resources_paths = []
@@ -353,7 +354,7 @@ def send_file(path):
     # if isinstance(resources_path, str):
     #     return send_from_directory(resources_path, path)
     # else:
-    for res_path in resources_paths:    
+    for res_path in resources_paths:
         try:
             return send_from_directory(res_path, path)
         except werkzeug.exceptions.NotFound:
