@@ -105,6 +105,44 @@ def getMode():
     mode = 'Build' if building_mode_ON else 'Discover'
     return jsonify({'mode': mode}), 200
 
+# Change mode and reset
+# Request payload:
+#   - mode:             [string]: "Build" or "Discover"
+@app.route('/mode', methods=['POST'])
+def setMode():
+    global building_mode_ON
+    try:
+        # Get the state of the toggle switch. Convert the boolean from Javascript to Python
+        mode = request.get_json()['mode']
+        if mode!='Build' and mode!= 'Discover':
+            raise ValueError(f"Illegal value for mode: exprected 'Build' or 'Discover' but found {mode}.")
+
+        building_mode_ON = mode == 'Build'
+        app.logger.debug(building_mode_ON)
+
+        # Re-initialize the two object instances
+        urdf_writer.__init__(**urdfwriter_kwargs_dict)
+        urdf_writer_fromHW.__init__(**urdfwriter_kwargs_dict)
+
+        return Response(status=204)
+
+    except ValueError as e:
+        # validation failed
+        print(f'{type(e).__name__}: {e}')
+        return Response(
+            response=json.dumps({"message": f'{type(e).__name__}: {e}'}),
+            status=400,
+            mimetype="application/json"
+        )
+    except Exception as e:
+        # validation failed
+        print(f'{type(e).__name__}: {e}')
+        return Response(
+            response=json.dumps({"message": f'{type(e).__name__}: {e}'}),
+            status=500,
+            mimetype="application/json"
+        )
+
 # call URDF_writer.py to modify the urdf
 @app.route('/changeURDF/', methods=['POST'])
 def changeURDF():
