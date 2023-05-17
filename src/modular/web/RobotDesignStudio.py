@@ -356,6 +356,7 @@ def send_file(path):
 
 #TODO: to be included in the next versions (requires ROS etc.)
 # send a request to the poller thread to get ECat topology and synchronize with hardware
+@app.route('/urdf', methods=['PUT'])
 @app.route('/syncHW/', methods=['POST'])
 def syncHW():
     srv_name = '/ec_client/get_slaves_description'
