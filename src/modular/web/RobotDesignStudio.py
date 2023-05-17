@@ -143,6 +143,47 @@ def setMode():
             mimetype="application/json"
         )
 
+@app.route('/urdf/modules', methods=['POST'])
+def addNewModule():
+    global building_mode_ON
+    if(not building_mode_ON):
+        return Response(
+            response=json.dumps({"message": "Cannot add modules in Discovery mode."}),
+            status=409,
+            mimetype="application/json"
+        )
+
+    req = request.get_json()
+    try:
+        filename = req['product']
+        app.logger.debug(filename)
+        parent = req['parent']
+        app.logger.debug(parent)
+        offset = float(req['offset']['yaw']) # we user RPY notation
+        app.logger.debug(offset)
+        reverse = True if req['reverse'] == 'true' else False
+        app.logger.debug(reverse)
+        data = urdf_writer.add_module(filename, offset, reverse)
+        data = jsonify(data)
+        return Response(status=204)
+
+    except ValueError as e:
+        # validation failed
+        print(f'{type(e).__name__}: {e}')
+        return Response(
+            response=json.dumps({"message": f'{type(e).__name__}: {e}'}),
+            status=400,
+            mimetype="application/json"
+        )
+    except Exception as e:
+        # validation failed
+        print(f'{type(e).__name__}: {e}')
+        return Response(
+            response=json.dumps({"message": f'{type(e).__name__}: {e}'}),
+            status=500,
+            mimetype="application/json"
+        )
+
 # call URDF_writer.py to modify the urdf
 @app.route('/changeURDF/', methods=['POST'])
 def changeURDF():
