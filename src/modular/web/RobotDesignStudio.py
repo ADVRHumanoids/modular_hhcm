@@ -283,6 +283,7 @@ def moveSocket():
 
 
 # call URDF_writer.py to remove the last module
+@app.route('/urdf/module/', methods=['DELETE'])
 @app.route('/removeModule/', methods=['POST'])
 def remove():
     parent = request.form.get('parent', 0)
