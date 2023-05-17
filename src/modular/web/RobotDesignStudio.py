@@ -314,6 +314,13 @@ def openFile():
 
 
 # request the urdf generated from the currently stored tree
+@app.route('/urdf', methods=['GET'])
+def getURDF():
+    urdf_string = urdf_writer.process_urdf()
+    data = {'urdf': urdf_string}
+    app.logger.debug('data: %s', data)
+    data = jsonify(data)
+    return data
 @app.route('/requestURDF/', methods=['POST'])
 def requestURDF():
     # building_mode_on_str = request.form.get('mode', 0)
