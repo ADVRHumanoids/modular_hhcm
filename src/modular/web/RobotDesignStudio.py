@@ -328,6 +328,9 @@ def syncHW():
     app.logger.debug("Exit")
 
     data = urdf_writer_fromHW.read_from_json(reply)
+
+    urdf_writer_fromHW.add_simple_ee(0.0, 0.0, 0.135, mass=0.23)
+
     # data = urdf_writer_fromHW.read_from_json_alt(reply)
     if urdf_writer_fromHW.verbose:
         urdf_writer_fromHW.render_tree()
