@@ -3026,12 +3026,20 @@ class UrdfWriter:
                           type="link",
                           name=new_Link.name,
                           filename=new_Link.filename)
+            x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(tf.transformations.numpy.array(new_Link.kinematics.link.pose))
             setattr(new_Link, 'tcp_name', 'ee' + new_Link.tag)
             ET.SubElement(self.root,
-                          "xacro:add_pen",
+                          "xacro:add_tcp",
                           type="pen",
                           name=new_Link.tcp_name,
-                          father=new_Link.name)
+                          father=new_Link.name,
+                          filename=new_Link.filename,
+                          x=x,
+                          y=y,
+                          z=z,
+                          roll=roll,
+                          pitch=pitch,
+                          yaw=yaw)
         elif new_Link.type == 'tool_exchanger':
             setattr(new_Link, 'name', 'tool_exchanger' + new_Link.tag)
             ET.SubElement(self.root,
