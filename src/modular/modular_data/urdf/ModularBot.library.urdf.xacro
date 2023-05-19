@@ -424,6 +424,21 @@
         </joint>
     </xacro:macro>
 
+    <!-- Add a tcp. Length may vary -->
+    <xacro:macro name="add_tcp" params="type name father filename x y z roll pitch yaw">
+        <xacro:property name="module" value="${xacro.load_yaml(filename)}"/>
+
+        <link name="${name}"/>
+        <joint name="fixed_${name}" type="fixed">
+            <axis xyz="0 0 1" rpy="0 0 0" />
+            <parent link="${father}"/>
+            <child link="${name}"/>
+            <origin
+            rpy="${roll} ${pitch} ${yaw}"
+            xyz="${x} ${y} ${z}"/>
+        </joint>
+    </xacro:macro>
+
     <xacro:macro name="add_gripper_body" params="type name filename">
         <xacro:property name="module" value="${xacro.load_yaml(filename)}"/>
         <xacro:property name="body_name" value="body_1"/>
