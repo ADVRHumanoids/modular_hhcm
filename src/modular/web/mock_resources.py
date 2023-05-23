@@ -224,3 +224,7 @@ def get_avalilable_families():
 def get_avalilable_family_ids():
     family_ids = [el['id'] for el in families]
     return list(dict.fromkeys(family_ids))
+
+def get_avalilable_family_groups():
+    family_groups = [el['group'] for el in families]
+    return list(dict.fromkeys(family_groups))
