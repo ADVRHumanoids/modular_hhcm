@@ -23,6 +23,12 @@ ec_srvs_spec = util.find_spec('ec_srvs')
 if ec_srvs_spec is not None:
     from ec_srvs.srv import GetSlaveInfo, GetSlaveInfoRequest, GetSlaveInfoResponse
 
+# Add Mock Resources lists
+import modular.web.mock_resources as mock_resources
+
+def filter_query_param(query_params:dict, key:str) -> list:
+    return list(filter(None, query_params.get(key,'').split(",")))
+
 # initialize ros node
 rospy.init_node('robot_builder', disable_signals=True) # , log_level=rospy.DEBUG)
 
