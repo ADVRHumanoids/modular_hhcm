@@ -207,19 +207,19 @@ resources = {
   ]
 }
 
-families = resources['families']
+# Modules
 modules = resources['modules']
-
 def get_avalilable_modules():
     return modules
-
-def get_avalilable_families():
-    return families
-
 
 def get_avalilable_module_types():
     module_types = [el['type'] for el in modules]
     return list(dict.fromkeys(module_types))
+
+# Families
+families = resources['families']
+def get_avalilable_families():
+    return families
 
 def get_avalilable_family_ids():
     family_ids = [el['id'] for el in families]

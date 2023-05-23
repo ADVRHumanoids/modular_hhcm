@@ -149,6 +149,65 @@ def setMode():
             mimetype="application/json"
         )
 
+# Get a list of the available modules
+@app.route('/resources/modules', methods=['GET'])
+def resources_modules_get():
+    """Get available modules
+
+    :param families: Optionally the returned list can be filtered by their family of module.
+    :type families: List[str]
+    :param types: Optionally the returned list can filter results by their type of module.
+    :type types: List[str]
+
+    :rtype: List[ModuleBase]
+    """
+    query_params = request.args
+    try:
+        #get complete list
+        modules = mock_resources.get_avalilable_modules()
+
+        # filter by family (from query params)
+        valid_families = mock_resources.get_avalilable_family_ids()
+        filter_families = filter_query_param(query_params,'families')
+        for t in filter_families:
+            if t not in valid_families:
+                raise ValueError(f"Illegal value for filter families: expected one of {valid_families} but found '{t}'.")
+        if len(filter_families) > 0:
+            modules = [el for el in modules if el['family'] in filter_families]
+
+        # filter by type (from query params)
+        valid_types = mock_resources.get_avalilable_module_types()
+        filter_types = filter_query_param(query_params,'types')
+        for t in filter_types:
+            if t not in valid_types:
+                raise ValueError(f"Illegal value for filter types: expected one of {valid_types} but found '{t}'.")
+        if len(filter_types) > 0:
+            modules = [el for el in modules if el['type'] in filter_types]
+
+        # return filtered list
+        return Response(
+                response=json.dumps({"modules": modules}),
+                status=200,
+                mimetype="application/json"
+            )
+
+    except ValueError as e:
+        # validation failed
+        print(f'{type(e).__name__}: {e}')
+        return Response(
+            response=json.dumps({"message": f'{type(e).__name__}: {e}'}),
+            status=400,
+            mimetype="application/json"
+        )
+    except Exception as e:
+        # validation failed
+        print(f'{type(e).__name__}: {e}')
+        return Response(
+            response=json.dumps({"message": f'{type(e).__name__}: {e}'}),
+            status=500,
+            mimetype="application/json"
+        )
+
 @app.route('/urdf/modules', methods=['POST'])
 def addNewModule():
     global building_mode_ON
