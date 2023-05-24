@@ -58,7 +58,7 @@ if verbose:
 else:
     logger.setLevel(logging.INFO)
     werkzeug_logger.setLevel(logging.ERROR)
-    
+
 # determine if it's running on a Pyinstaller bundle
 if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
     template_folder = os.path.join(sys._MEIPASS, 'modular/web/templates')
@@ -80,7 +80,7 @@ if is_pyinstaller_bundle:
     app.logger.debug(static_folder)
 else:
     app.logger.debug('running in a normal Python process')
-    
+
 urdfwriter_kwargs_dict={
     'verbose': verbose,
     'logger': logger
@@ -319,7 +319,7 @@ def changeURDF():
     app.logger.debug(reverse)
     data = urdf_writer.add_module(filename, offset, reverse)
     data = jsonify(data)
-    return data 
+    return data
 
 # call URDF_writer.py to modify the urdf
 @app.route('/addWheel/', methods=['POST'])
@@ -400,7 +400,7 @@ def addCube():
     app.logger.debug(offset)
     data = urdf_writer.add_slave_cube(offset)
     data = jsonify(data)
-    return data 
+    return data
 
 # call URDF_writer.py to add another master cube
 @app.route('/addMobilePlatform/', methods=['POST'])
@@ -413,7 +413,7 @@ def addMobilePlatform():
     app.logger.debug(offset)
     data = urdf_writer.add_mobile_platform(offset)
     data = jsonify(data)
-    return data 
+    return data
 
 
 # call URDF_writer.py to add another socket
@@ -428,7 +428,7 @@ def addSocket():
     global building_mode_ON
 
     building_mode_ON = True if request.form.get('buildingModeON', 0) == 'true' else False
-    
+
     if building_mode_ON :
         data = urdf_writer.add_socket(float(offset.get('x_offset')), float(offset.get('y_offset')),
                                   float(offset.get('z_offset')), float(angle_offset))
@@ -568,7 +568,7 @@ def syncHW():
 @app.route('/changeMode/', methods=['POST'])
 def changeMode():
     global building_mode_ON
-    
+
     # Get the state of the toggle switch. Convert the boolean from Javascript to Python
     building_mode_ON = True if request.form.get('buildingModeON', 0) == 'true' else False
 
@@ -622,7 +622,7 @@ def deployRobot():
     global building_mode_ON
 
     building_mode_ON = True if request.form.get('buildingModeON', 0) == 'true' else False
-    
+
     if building_mode_ON :
         name = request.form.get('name', 'ModularBot')
         app.logger.debug(name)
