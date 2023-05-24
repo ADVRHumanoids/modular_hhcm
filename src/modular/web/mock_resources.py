@@ -26,6 +26,14 @@ resources = {
     }
   ],
   "modules": [
+  { # [TREE Modules] Elbow Joint - module_joint_elbow_ORANGE
+    "family": "alberoboticsGen0",
+    "type": "joint",
+    "product":"yaml/module_joint_elbow_ORANGE.yaml",
+    "label":"Elbow Joint",
+    "disabled": True
+  },
+
   { # [PINO v1] Socket - socket
     "family": "alberoboticsGenA",
     "type": "Socket",
@@ -44,13 +52,6 @@ resources = {
     "type": "joint",
     "product":"yaml/module_joint_double_elbow_ORANGE.yaml",
     "label":"Elbow Joint"
-  },
-  { # [PINO v1] Elbow Joint - module_joint_elbow_ORANGE
-    "family": "alberoboticsGenA",
-    "type": "joint",
-    "product":"yaml/module_joint_elbow_ORANGE.yaml",
-    "label":"Elbow Joint",
-    "disabled": True
   },
   { # [PINO v1] Straight Joint - module_joint_yaw_ORANGE
     "family": "alberoboticsGenA",
