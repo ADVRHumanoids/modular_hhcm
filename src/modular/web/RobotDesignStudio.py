@@ -672,16 +672,16 @@ def deployROSModel():
             mimetype="application/json"
         )
 
-def byteify(input):
-    if isinstance(input, dict):
+def byteify(input_raw):
+    if isinstance(input_raw, dict):
         return {byteify(key): byteify(value)
-                for key, value in input.items()}
-    elif isinstance(input, list):
-        return [byteify(element) for element in input]
-    elif isinstance(input, str):
-        return input.encode('utf-8')
+                for key, value in input_raw.items()}
+    elif isinstance(input_raw, list):
+        return [byteify(element) for element in input_raw]
+    elif isinstance(input_raw, str):
+        return input_raw.encode('utf-8')
     else:
-        return input
+        return input_raw
 
 
 def main():
