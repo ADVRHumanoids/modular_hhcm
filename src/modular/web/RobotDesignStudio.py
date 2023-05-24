@@ -432,7 +432,7 @@ def addSocket():
         data = urdf_writer.add_socket(float(offset.get('x_offset')), float(offset.get('y_offset')),
                                   float(offset.get('z_offset')), float(angle_offset))
     else:
-         data = urdf_writer_fromHW.move_socket("L_0_B", float(offset.get('x_offset')), float(offset.get('y_offset')),
+        data = urdf_writer_fromHW.move_socket("L_0_B", float(offset.get('x_offset')), float(offset.get('y_offset')),
                                   float(offset.get('z_offset')), float(angle_offset))
 
     data = jsonify(data)
