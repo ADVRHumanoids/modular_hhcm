@@ -1045,12 +1045,30 @@ class XBot2Plugin(Plugin):
 
 # noinspection PyUnresolvedReferences
 class UrdfWriter:
-    def __init__(self, 
-                config_file='config_file.yaml', 
-                control_plugin='xbot2', 
-                elementree=None, 
-                speedup=False, 
-                parent=None, 
+    def __init__(self,
+                config_file='config_file.yaml',
+                control_plugin='xbot2',
+                elementree=None,
+                speedup=False,
+                parent=None,
+                floating_base=False,
+                verbose=False,
+                logger=None):
+        self.reset(config_file,
+                control_plugin,
+                elementree,
+                speedup,
+                parent,
+                floating_base,
+                verbose,
+                logger)
+
+    def reset(self,
+                config_file='config_file.yaml',
+                control_plugin='xbot2',
+                elementree=None,
+                speedup=False,
+                parent=None,
                 floating_base=False,
                 verbose=False,
                 logger=None):

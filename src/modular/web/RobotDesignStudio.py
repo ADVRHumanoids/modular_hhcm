@@ -127,8 +127,8 @@ def setMode():
         app.logger.debug(building_mode_ON)
 
         # Re-initialize the two object instances
-        urdf_writer.__init__(**urdfwriter_kwargs_dict)
-        urdf_writer_fromHW.__init__(**urdfwriter_kwargs_dict)
+        urdf_writer.reset(**urdfwriter_kwargs_dict)
+        urdf_writer_fromHW.reset(**urdfwriter_kwargs_dict)
 
         return Response(status=204)
 
@@ -577,8 +577,8 @@ def changeMode():
     app.logger.debug(building_mode_ON)
 
     # Re-initialize the two object instances
-    urdf_writer.__init__(**urdfwriter_kwargs_dict)
-    urdf_writer_fromHW.__init__(**urdfwriter_kwargs_dict)
+    urdf_writer.reset(**urdfwriter_kwargs_dict)
+    urdf_writer_fromHW.reset(**urdfwriter_kwargs_dict)
 
     #data = urdf_writer_fromHW.read_file(file_str)
     data = {'building mode': building_mode_ON}
