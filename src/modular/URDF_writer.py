@@ -1,3 +1,8 @@
+#!/usr/bin/env python3
+# Disable some of the pylint violations in this file
+# see https://pylint.pycqa.org/en/latest/user_guide/messages/message_control.html#block-disables
+# pylint: disable=line-too-long, missing-function-docstring, missing-module-docstring
+
 from __future__ import print_function
 from future.utils import iteritems
 from abc import ABCMeta, abstractmethod

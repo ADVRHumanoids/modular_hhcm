@@ -3,7 +3,7 @@
 # see https://pylint.pycqa.org/en/latest/user_guide/messages/message_control.html#block-disables
 # pylint: disable=logging-too-many-args
 # pylint: disable=protected-access, global-statement, broad-except, unused-variable
-# pylint: disable=line-too-long, missing-function-docstring
+# pylint: disable=line-too-long, missing-function-docstring, missing-module-docstring
 
 # import yaml
 import json

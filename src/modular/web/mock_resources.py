@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Disable some of the pylint violations in this file
 # see https://pylint.pycqa.org/en/latest/user_guide/messages/message_control.html#block-disables
-# pylint: disable=line-too-long, missing-function-docstring
+# pylint: disable=line-too-long, missing-function-docstring, missing-module-docstring
 
 # used in [GET /resurces/modules] and [GET /resurces/families]
 #   modular: yaml/{fn}.yaml
