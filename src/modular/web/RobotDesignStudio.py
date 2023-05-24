@@ -107,7 +107,6 @@ def test():
 # Get workspace mode
 @app.route('/mode', methods=['GET'])
 def getMode():
-    global building_mode_ON
     mode = 'Build' if building_mode_ON else 'Discover'
     return jsonify({'mode': mode}), 200
 
@@ -269,8 +268,7 @@ def resources_families_get():
 
 @app.route('/urdf/modules', methods=['POST'])
 def addNewModule():
-    global building_mode_ON
-    if(not building_mode_ON):
+    if not building_mode_ON:
         return Response(
             response=json.dumps({"message": "Cannot add modules in Discovery mode."}),
             status=409,
@@ -589,7 +587,6 @@ def changeMode():
 # get list of modules of robot
 @app.route('/urdf/modules', methods=['GET'])
 def getModelModules():
-    global building_mode_ON
     try:
         chains=[]
         if building_mode_ON :
@@ -651,8 +648,6 @@ def removeConnectors():
 # deploy the package of the built robot
 @app.route('/urdf', methods=['POST'])
 def deployROSModel():
-    global building_mode_ON
-
     try:
         req = request.get_json()
         name = req['name']
