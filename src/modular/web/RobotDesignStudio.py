@@ -4,6 +4,7 @@
 # pylint: disable=logging-too-many-args
 # pylint: disable=protected-access, global-statement, broad-except, unused-variable
 # pylint: disable=line-too-long, missing-function-docstring, missing-module-docstring
+# pylint: disable=wrong-import-position
 
 # import yaml
 import json
@@ -14,14 +15,12 @@ from importlib import reload, util
 
 import rospy
 from flask import Flask, Response, render_template, request, jsonify, send_from_directory, abort
-from flask.logging import create_logger
-import zmq
 import werkzeug
 
 from modular.URDF_writer import UrdfWriter
 ec_srvs_spec = util.find_spec('ec_srvs')
 if ec_srvs_spec is not None:
-    from ec_srvs.srv import GetSlaveInfo, GetSlaveInfoRequest, GetSlaveInfoResponse
+    from ec_srvs.srv import GetSlaveInfo
 
 # Add Mock Resources lists
 import modular.web.mock_resources as mock_resources
