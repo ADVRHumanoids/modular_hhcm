@@ -1,65 +1,567 @@
 openapi: 3.0.0
 info:
   title: Modular
-  version: 0.0.3
+  version: 1.0.0-alpha.0
   # description: Alberobitcs API for RobotBuilder
   contact:
-    email: edoardo.romiti@iit.it
-    name: Edoardo Romiti
+    email: alberobotics@iit.it
+    name: Alberobotics Team
 servers:
-  - url: http://0.0.0.0:5000
+  - url: http://localhost:5003
 externalDocs:
   description: Github repository
   url: https://github.com/ADVRHumanoids/modular
 
-components:
-  schemas:
-    FeedbackResponse:
-      type: object
-      properties:
-        result: # the updated URDF to render!
-          type: string
-        lastModule_type:
-          type: string
-        lastModule_name:
-          type: string
-        size:
-          type: number
-          format: integer
-        count:
-          type: number
-          format: integer
-      example:
-        result: "the updated URDF to render!"
-        lastModule_type: "joint"
-        lastModule_name: "L3_A"
-        size: 3
-        count: 1
-
-    AddModuleRequest:
-      type: object
-      properties:
-        module_name: #  The name of the type of module to add
-          type: string
-        parent: #  The parent name
-          type: string
-        angle_offset: #  The angle offset w.r.t the parent
-          type: number
-          format: float
-        reverse:
-          type: boolean
-      example:
-        module_name: "module_joint_yaw_ORANGE"
-        parent: "L3_A"
-        angle_offset: 0.5
-        reverse: false
-
 paths:
-  /changeURDF:
+  /mode:
+    get:
+      tags:
+        - Workspace
+      summary: get workspace mode
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkspaceModeGetResponse"
+        500:
+          description: "INTERNAL SERVER ERROR"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+
     post:
       tags:
-        - modular
-      summary: makes an ajax request to the server to modify the URDF by adding the requested module
+        - Workspace
+      summary: set workspace mode and reset the robot instance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - mode
+              properties:
+                mode:
+                  type: string
+                  example: Discovery
+      responses:
+        204:
+          description: "NO CONTENT: The server successfully processed the request, and is not returning any content."
+        400:
+          description: "BAD REQUEST"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+              example:
+                message: "Missing required parameter 'mode'."
+        500:
+          description: "INTERNAL SERVER ERROR"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+
+  /urdf:
+    get:
+      tags:
+        - Robot Model
+      summary: get the urdf generated from the currently stored tree
+      parameters:
+        - $ref: "#/components/parameters/modelIdFromQuery"
+      responses:
+        200:
+          description: "OK: the updated URDF to render!"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UrdfGetResponse"
+            application/xml:
+              schema:
+                type: string
+        500:
+          description: "INTERNAL SERVER ERROR"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+
+    post:
+      tags:
+        - Robot Model
+      summary: deploy the URDF of the robot in a ROS pakage
+      requestBody:
+        description: JSON containing a mapping of the joint names and their homing value and the name of the ROS package to save
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - jointMap
+              properties:
+                name:
+                  type: string
+                  description: The name of the ROS package (default:'ModularBot')
+                  example: "ModularBot5"
+                jointMap:
+                  type: object
+                  description: Mapping of the joint names and their homing value
+                  additionalProperties:
+                    type: object
+                    properties:
+                      joint_name:
+                        type: string
+                      homing_value:
+                        type: number
+                        format: float
+                  example:
+                    J1_A: 0.1
+                    J2_A: 0.2
+                path:
+                  description: deployment path
+                  type: string
+                overwrite:
+                  description: Overwrite ROS package if already existing
+                  type: boolean
+      responses:
+        204:
+          description: "NO CONTENT: The server successfully processed the request, and is not returning any content."
+        400:
+          description: "BAD REQUEST"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+              example:
+                message: "Missing required parameter jointMap."
+        500:
+          description: "INTERNAL SERVER ERROR"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+              example:
+                message: string
+
+    put:
+      tags:
+        - Robot Model
+      summary: Generate the URDF of the robot from the connected hardware modules
+      responses:
+        200:
+          description: "OK: the gost URDF to render! (if in Build mode)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UrdfGetResponse"
+            application/xml:
+              schema:
+                type: string
+        204:
+          description: "NO CONTENT: The server successfully processed the request, and is not returning any content (if in Discovery mode)."
+        # 409:
+        #   description: "CONFLICT: The request could not be processed because of conflict in the current state of the resource"
+        #   content:
+        #     application/json:
+        #       schema:
+        #         $ref: '#/components/schemas/ErrorMessage'
+        #       example:
+        #         message: "Cannot generate robot model in Build mode."
+        500:
+          description: "INTERNAL SERVER ERROR"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+
+  /urdf/modules:
+    get:
+      tags:
+        - Robot Model
+      summary: Get a list of the modules in the robot model
+      parameters:
+        - $ref: "#/components/parameters/familiesFromQuery"
+        - $ref: "#/components/parameters/moduleTypesFromQuery"
+      responses:
+        200:
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Module"
+                example:
+                  modules:
+                    - id: "J1_A"
+                      family: "alberoboticsGenA"
+                      type: "ActiveJoint"
+                      product: "module_joint_yaw_ORANGE"
+                      label: "Straight Joint"
+                      offset: {}
+                    - id: "J2_A"
+                      family: "alberoboticsGenA"
+                      type: "ActiveJoint"
+                      product: "module_joint_double_elbow_ORANGE"
+                      label: "Elbow Joint"
+                      offset: {}
+                    - id: "J3_A"
+                      family: "alberoboticsGenA"
+                      type: "EndEffector"
+                      product: "module_tool_exchanger_heavy"
+                      label: "Tool Exchanger"
+                      offset: {}
+                    - id: "J4_A"
+                      family: "alberoboticsGenB"
+                      type: "EndEffector"
+                      product: "module_gripper"
+                      label: "Gripper"
+                      offset:
+                        x: 1
+                        y: 2
+        400:
+          description: "BAD REQUEST"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+              example:
+                message: "Requested invalid 'types'"
+        404:
+          description: "NOT FOUND"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+              example:
+                message: "Family 'foo' not found."
+        500:
+          description: "INTERNAL SERVER ERROR"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        501:
+          description: "NOT IMPLEMENTED: This implies future availability (e.g., a new feature of the API)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+              example:
+                message: "Filtering by family is currently not supported"
+
+    post:
+      tags:
+        - Robot Model
+      summary: Add a new module to the robot model
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ModuleCreateDTO"
+            example:
+              family: "alberoboticsGenA"
+              type: "ActiveJoint"
+              product: "module_joint_yaw_ORANGE"
+              offset:
+                z: 0.05
+                yaw: -1.571
+              reverse: false
+              parent: "J1_A"
+
+      responses:
+        204:
+          description: "NO CONTENT: The server successfully processed the request, and is not returning any content."
+        400:
+          description: "BAD REQUEST"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+              example:
+                message: "Missing required parameter 'product'."
+        403:
+          description: FORBIDDEN
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+              example:
+                message: "Cannot place module with type 'PassiveLink' after a module of type 'EndEffector'"
+        404:
+          description: "NOT FOUND"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+              example:
+                message: "No module found with varint 'foo'."
+        409:
+          description: "CONFLICT: The request could not be processed because of conflict in the current state of the resource"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+              example:
+                message: "Cannot add modules in Discovery mode."
+        500:
+          description: "INTERNAL SERVER ERROR"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        501:
+          description: "NOT IMPLEMENTED: This implies future availability (e.g., a new feature of the API)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+              example:
+                message: "Offset along x,y,z axis is currently not supported"
+
+    patch: # or put?
+      tags:
+        - Robot Model
+      summary: Edit a module's parameters
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Module"
+
+      responses:
+        204:
+          description: "NO CONTENT: The server successfully processed the request, and is not returning any content."
+        400:
+          description: "BAD REQUEST"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+              example:
+                message: "Missing required parameter 'product'."
+        403:
+          description: "FORBIDDEN"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+              example:
+                message: "Cannot place module with type 'PassiveLink' after a module of type 'EndEffector'"
+        404:
+          description: "NOT FOUND"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+              example:
+                message: "No module found with id 'foo'."
+        409:
+          description: "CONFLICT: The request could not be processed because of conflict in the current state of the resource"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+              example:
+                message: "Cannot change module type in Discovery mode."
+        500:
+          description: "INTERNAL SERVER ERROR"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        501:
+          description: "NOT IMPLEMENTED: This implies future availability (e.g., a new feature of the API)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+              example:
+                message: "Offset along x,y,z axis is currently not supported"
+
+    delete:
+      tags:
+        - Robot Model
+      summary: Delete a module from  the robot model
+      parameters:
+        - in: query
+          name: ids
+          description: Optionally, you can provide one or more IDs of modules to remove. By default it removes the last element.
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: false
+          examples:
+            oneId:
+              summary: Example of a single ID
+              description: "equals to =`?ids=J1_A`"
+              value: ["J5_A"] # ?ids=5
+            multipleIds:
+              summary: Example of multiple IDs
+              description: "equals to =`?ids=J1_A,J5_B,J0_D`"
+              value: ["J1_A", "J5_B", "J0_D"] # ?ids=J1_A,J5_B,J0_D
+      responses:
+        204:
+          description: "NO CONTENT: The server successfully processed the request, and is not returning any content."
+        304:
+          description: "NOT MODIFIED"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+              example:
+                message: "The current model has no modules"
+        404:
+          description: "NOT FOUND"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+              example:
+                message: "No module found with id 'J1_A'."
+        409:
+          description: "CONFLICT: The request could not be processed because of conflict in the current state of the resource"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+              example:
+                message: "Cannot delete modules in Discovery mode."
+        500:
+          description: "INTERNAL SERVER ERROR"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        501:
+          description: "NOT IMPLEMENTED: This implies future availability (e.g., a new feature of the API)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+              example:
+                message: "Deletion of multiple modules at once is currently not supported"
+
+  /resources/modules:
+    get:
+      tags:
+        - Store
+      summary: Get available modules
+      parameters:
+        - $ref: "#/components/parameters/familiesFromQuery"
+        - $ref: "#/components/parameters/moduleTypesFromQuery"
+      responses:
+        200:
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModuleBaseGetResponse"
+        400:
+          description: "BAD REQUEST"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+              example:
+                message: "Requested invalid 'types'"
+        404:
+          description: "NOT FOUND"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+              example:
+                message: "Family 'foo' not found."
+        500:
+          description: "INTERNAL SERVER ERROR"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        501:
+          description: "NOT IMPLEMENTED: This implies future availability (e.g., a new feature of the API)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+              example:
+                message: "Filtering by type is currently not supported"
+
+  /resources/families:
+    get:
+      tags:
+        - Store
+      summary: Get a list of families of the available modules
+      parameters:
+        - $ref: "#/components/parameters/familiesFromQuery"
+      responses:
+        200:
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModuleFamiliesGetResponse"
+        500:
+          description: "INTERNAL SERVER ERROR"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        501:
+          description: "NOT IMPLEMENTED: This implies future availability (e.g., a new feature of the API)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+              example:
+                message: "Filtering by families is currently not supported"
+
+  /resources/meshes/{path}:
+    parameters:
+      - $ref: "#/components/parameters/stlPathFromPath"
+
+    get:
+      tags:
+        - Store
+      summary: file access for STL meshes
+      responses:
+        200:
+          description: "OK: the STL to render!"
+          content:
+            model/stl:
+              schema:
+                type: object
+        404:
+          description: "NOT FOUND"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+              example:
+                message: "No mesh found for path 'foo/bar/baz.stl'"
+        500:
+          description: "INTERNAL SERVER ERROR"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+
+  /changeURDF:
+    post:
+      deprecated: true
+      tags:
+        - Deprecated
+      description: makes an ajax request to the server to modify the URDF by adding the requested module
       requestBody:
         description: JSON containing the name of the module to add, the parent module and their respective orientation.
         required: true
@@ -83,9 +585,10 @@ paths:
 
   /addMasterCube: # TODO: This should be merged under changeURDF
     post:
+      deprecated: true
       tags:
-        - modular
-      summary: makes an ajax request to the server to modify the URDF by adding the requested cube
+        - Deprecated
+      description: makes an ajax request to the server to modify the URDF by adding the requested cube
       requestBody:
         description: JSON containing the name of the module to add, the parent module and their respective orientation.
         required: true
@@ -109,9 +612,10 @@ paths:
 
   /addSocket:
     post:
+      deprecated: true
       tags:
-        - modular
-      summary: add a Socket to the robot model (meaning adding a kinematic chain to the robot in practice)
+        - Deprecated
+      description: add a Socket to the robot model (meaning adding a kinematic chain to the robot in practice)
       requestBody:
         description: JSON containing position and orientation of the socket.
         required: true
@@ -155,9 +659,10 @@ paths:
 
   /writeURDF:
     post: # PUT?
+      deprecated: true
       tags:
-        - modular
-      summary: makes an ajax request to the server to write the URDF in the filesystem (and SRDF, configs, etc.)
+        - Deprecated
+      description: makes an ajax request to the server to write the URDF in the filesystem (and SRDF, configs, etc.)
       requestBody:
         description: JSON containing a boolean to determine whether or not building mode is activated and a joint map containing the value for the homing of the joints
         required: true
@@ -198,9 +703,10 @@ paths:
 
   /removeModule:
     post: # DELETE?
+      deprecated: true
       tags:
-        - modular
-      summary: makes an ajax request to the server to remove the **last selected module** and its **children**
+        - Deprecated
+      description: makes an ajax request to the server to remove the **last selected module** and its **children**
       # requestBody:
       #   description: ....
       #   required: false
@@ -223,9 +729,10 @@ paths:
 
   /updateLastModule:
     post: # PUT?
+      deprecated: true
       tags:
-        - modular
-      summary: makes an ajax request to the server to update the "last selected module" (and so shown buttons) when clicking on it from the front-end
+        - Deprecated
+      description: makes an ajax request to the server to update the "last selected module" (and so shown buttons) when clicking on it from the front-end
       requestBody:
         description: JSON containing the name of the current parent module (last selected one)
         required: true
@@ -253,9 +760,10 @@ paths:
 
   /openFile:
     post:
+      deprecated: true
       tags:
-        - modular
-      summary: makes an ajax request to the server to upload a URDF file and display it
+        - Deprecated
+      description: makes an ajax request to the server to upload a URDF file and display it
       requestBody:
         description: JSON containing the string of the read URDF
         required: true
@@ -286,9 +794,10 @@ paths:
 
   /requestURDF:
     post: # GET?
+      deprecated: true
       tags:
-        - modular
-      summary: makes an ajax request to get the urdf generated from the currently stored tree
+        - Deprecated
+      description: makes an ajax request to get the urdf generated from the currently stored tree
       requestBody:
         description: JSON specifying if we are in building mode (true) or not (false)
         required: true
@@ -318,9 +827,10 @@ paths:
 
   /changeMode:
     post: # GET?
+      deprecated: true
       tags:
-        - modular
-      summary: makes an ajax request to change mode (Building vs Discovery) and reset the robot instance
+        - Deprecated
+      description: makes an ajax request to change mode (Building vs Discovery) and reset the robot instance
       requestBody:
         description: JSON specifying if switching in building (true) or dicovery mode (false)
         required: true
@@ -350,9 +860,10 @@ paths:
 
   /deployRobot:
     post: # PUT?
+      deprecated: true
       tags:
-        - modular
-      summary: makes an ajax request to the server to deploy the URDF of the robot in a ROS pakage to be saved in the filesystem
+        - Deprecated
+      description: makes an ajax request to the server to deploy the URDF of the robot in a ROS pakage to be saved in the filesystem
       requestBody:
         description: JSON containing a boolean to determine whether or not building mode is activated and the name of the ROS package to save
         required: true
@@ -383,9 +894,10 @@ paths:
 
   /removeConnectors:
     post: # PUT?
+      deprecated: true
       tags:
-        - modular
-      summary: makes an ajax request to the server to remove the connectors from the model. To be called before making a write request and deploying a robot.
+        - Deprecated
+      description: makes an ajax request to the server to remove the connectors from the model. To be called before making a write request and deploying a robot.
       requestBody:
         description: JSON containing a boolean to determine whether or not building mode is activated
         required: true
@@ -410,3 +922,298 @@ paths:
         #TBD
         "500":
           description: Server Error
+
+# Components
+components:
+  #/components/parameters
+  parameters:
+    stlPathFromPath:
+      in: path
+      name: path
+      required: true
+      schema:
+        type: string
+      example: "foo/bar/baz.stl"
+    modelIdFromQuery:
+      in: query
+      name: id
+      description: "This query variable is unused and has been added to avoid [`react-three-fiber`](https://github.com/pmndrs/react-three-fiber) taking the cached model robot instead of fully reloading it. For details see <https://github.com/pmndrs/react-three-fiber/discussions/2092>"
+      schema:
+        type: string
+      examples:
+        id:
+          description: "equals to =`?id=u2lyCEBi`"
+          value: "u2lyCEBi" # ?ids=u2lyCEBi
+    familiesFromQuery:
+      in: query
+      name: families
+      description: "Optionally the returned list can be filtered by their family of module."
+      schema:
+        type: array
+        items:
+          type: string
+      style: form
+      explode: false
+      examples:
+        multipleTypes:
+          summary: Example of multiple families
+          description: "equals to =`?families=alberoboticsGenA,alberoboticsGenB`"
+          value: ["alberoboticsGenA", "alberoboticsGenB"] # ?ids=alberoboticsGenA,alberoboticsGenB
+        oneType:
+          summary: Example of a single type
+          description: "equals to =`?ids=alberoboticsGenA`"
+          value: ["alberoboticsGenA"] # ?ids=alberoboticsGenA
+    moduleTypesFromQuery:
+      in: query
+      name: "types[]"
+      description: "Optionally the returned list can filter results by their type of module."
+      schema:
+        type: array
+        items:
+          type: string
+      style: form
+      explode: false
+      examples:
+        multipleTypes:
+          summary: Example of multiple types
+          description: "equals to =`?types=Socket,EndEffector`"
+          value: ["Socket", "EndEffector"] # ?types=Socket,EndEffector
+        oneType:
+          summary: Example of a single type
+          description: "equals to =`?types=Socket`"
+          value: ["Socket"] # ?types=Socket
+  #/components/schemas
+  schemas:
+    #ErrorMessage
+    ErrorMessage:
+      type: object
+      properties:
+        message:
+          type: string
+          description: "The error that triggered an exception"
+    WorkspaceModeGetResponse:
+      type: object
+      properties:
+        mode:
+          type: string
+          description: "The current workspace mode: 'Build' or 'Discover'"
+          example: "Build" # | 'Discover'
+    #URDF_model
+    UrdfGetResponse:
+      type: object
+      properties:
+        urdf:
+          description: the updated URDF to render!
+          type: string
+    # Families
+    ModuleFamily:
+      type: object
+      required:
+        - id
+        - group
+        - label
+      properties:
+        id:
+          type: string
+          description: family Id
+          example: alberoboticsGenB
+        group:
+          type: string
+          description: used to group similar families # potentially Ethercat's 0x1018:01, see https://infosys.beckhoff.com/content/1033/el252x/1856726667.html
+          example: Alberobotics
+        label:
+          type: string
+          description: label shown in the frontend
+          example: "CONCERT"
+        disabled:
+          type: boolean
+          description: represent the family as not selectable
+          example: true
+    ModuleFamiliesGetResponse:
+      type: object
+      required:
+        - families
+      properties:
+        families:
+          type: array
+          items:
+            $ref: "#/components/schemas/ModuleFamily"
+      example:
+        families:
+          - id: "alberoboticsGenA"
+            group: "Alberobotics"
+            label: "PINO v1"
+          - id: "alberoboticsGenB"
+            group: "Alberobotics"
+            label: "CONCERT"
+            disabled: true
+    # Modules
+    ModuleBase:
+      type: object
+      required:
+        - family
+        - type
+        - product
+        - label
+      properties:
+        family:
+          type: string
+          description: "Family Id"
+          example: "alberoboticsGenA"
+        type:
+          type: string
+          description: "Type of module ('ActiveJoint', 'PassiveJoint', 'EndEffector', 'Socket')"
+          example: "EndEffector"
+        product:
+          type: string
+          description: "product code / name of the module" # potentially Ethercat's 0x1018:02, see https://infosys.beckhoff.com/content/1033/el252x/1856726667.html
+          example: "module_joint_yaw_ORANGE"
+        label:
+          type: string
+          description: label shown in the frontend
+          example: "Straight Joint"
+        disabled:
+          type: boolean
+          description: represent the module as not selectable
+          example: true
+    ModuleBaseGetResponse:
+      type: object
+      required:
+        - modules
+      properties:
+        modules:
+          type: array
+          items:
+            $ref: "#/components/schemas/ModuleBase"
+          example:
+            modules:
+              - family: "alberoboticsGenA"
+                type: "ActiveJoint"
+                product: "module_joint_yaw_ORANGE"
+                label: "Straight Joint"
+              - family: "alberoboticsGenA"
+                type: "ActiveJoint"
+                product: "module_joint_double_elbow_ORANGE"
+                label: "Elbow Joint"
+              - family: "alberoboticsGenA"
+                type: "EndEffector"
+                product: "module_tool_exchanger_heavy"
+                label: "Tool Exchanger"
+                disabled: true
+              - family: "alberoboticsGenB"
+                type: "EndEffector"
+                product: "module_gripper"
+                label: "Gripper"
+    ModuleCreateDTO:
+      allOf:
+        - type: object
+          properties:
+            parentId:
+              type: string
+            offset:
+              $ref: "#/components/schemas/offset"
+        - $ref: "#/components/schemas/ModuleBase"
+    Module:
+      allOf:
+        - type: object
+          required:
+            - id
+          properties:
+            id:
+              type: string
+        - $ref: "#/components/schemas/ModuleCreateDTO"
+      example:
+        id: "J2_A"
+        family: "alberoboticsGenA"
+        type: "ActiveJoint"
+        product: "module_joint_yaw_ORANGE"
+        offset:
+          z: 0.05
+          yaw: -1.571
+        reverse: false
+        parent: "J1_A"
+    #Offset
+    poseQuat:
+      type: object
+      description: Pose with quaternion notation
+      properties:
+        x:
+          type: number
+        y:
+          type: number
+        z:
+          type: number
+        rx:
+          type: number
+        ry:
+          type: number
+        rz:
+          type: number
+        rw:
+          type: number
+      example:
+        x: 0.03
+        ry: 0.083
+        rz: 0.05
+    poseRPY:
+      type: object
+      description: Pose with RPY notation
+      properties:
+        x:
+          type: number
+        y:
+          type: number
+        z:
+          type: number
+        roll:
+          type: number
+        pitch:
+          type: number
+        yaw:
+          type: number
+      example:
+        z: 0.05
+        yaw: -1.571
+    offset:
+      oneOf:
+        - $ref: "#/components/schemas/poseQuat"
+        - $ref: "#/components/schemas/poseRPY"
+    FeedbackResponse:
+      type: object
+      properties:
+        result: # the updated URDF to render!
+          type: string
+        lastModule_type:
+          type: string
+        lastModule_name:
+          type: string
+        size:
+          type: number
+          format: integer
+        count:
+          type: number
+          format: integer
+      example:
+        result: "the updated URDF to render!"
+        lastModule_type: "joint"
+        lastModule_name: "L3_A"
+        size: 3
+        count: 1
+
+    AddModuleRequest:
+      type: object
+      properties:
+        module_name: #  The name of the type of module to add
+          type: string
+        parent: #  The parent name
+          type: string
+        angle_offset: #  The angle offset w.r.t the parent
+          type: number
+          format: float
+        reverse:
+          type: boolean
+      example:
+        module_name: "module_joint_yaw_ORANGE"
+        parent: "L3_A"
+        angle_offset: 0.5
+        reverse: false
