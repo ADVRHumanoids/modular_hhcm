@@ -25,9 +25,6 @@ if ec_srvs_spec is not None:
 # Add Mock Resources lists
 import modular.web.mock_resources as mock_resources
 
-def filter_query_param(query_params:dict, key:str) -> list:
-    return list(filter(None, query_params.get(key,'').split(",")))
-
 # initialize ros node
 rospy.init_node('robot_builder', disable_signals=True) # , log_level=rospy.DEBUG)
 
@@ -166,7 +163,8 @@ def resources_modules_get():
 
         # filter by family (from query params)
         valid_families = mock_resources.get_avalilable_family_ids()
-        filter_families = filter_query_param(query_params,'families')
+
+        filter_families = query_params.getlist('families[]')
         for t in filter_families:
             if t not in valid_families:
                 raise ValueError(f"Illegal value for filter families: expected one of {valid_families} but found '{t}'.")
@@ -175,7 +173,7 @@ def resources_modules_get():
 
         # filter by type (from query params)
         valid_types = mock_resources.get_avalilable_module_types()
-        filter_types = filter_query_param(query_params,'types')
+        filter_types = query_params.getlist('types[]')
         for t in filter_types:
             if t not in valid_types:
                 raise ValueError(f"Illegal value for filter types: expected one of {valid_types} but found '{t}'.")
@@ -225,7 +223,7 @@ def resources_families_get():
 
         # filter by family (from query params)
         valid_families = mock_resources.get_avalilable_family_ids()
-        filter_families = filter_query_param(query_params,'families')
+        filter_families = query_params.getlist('families')
         for t in filter_families:
             if t not in valid_families:
                 raise ValueError(f"Illegal value for filter families: expected one of {valid_families} but found '{t}'.")
@@ -234,7 +232,7 @@ def resources_families_get():
 
         # filter by group (from query params)
         valid_groups = mock_resources.get_avalilable_family_groups()
-        filter_groups = filter_query_param(query_params,'groups')
+        filter_groups = query_params.getlist('groups')
         for t in filter_groups:
             if t not in valid_groups:
                 raise ValueError(f"Illegal value for filter groups: expected one of {valid_groups} but found '{t}'.")

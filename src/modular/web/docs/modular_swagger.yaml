@@ -946,7 +946,7 @@ components:
           value: "u2lyCEBi" # ?ids=u2lyCEBi
     familiesFromQuery:
       in: query
-      name: families
+      name: "families[]"
       description: "Optionally the returned list can be filtered by their family of module."
       schema:
         type: array
@@ -957,12 +957,12 @@ components:
       examples:
         multipleTypes:
           summary: Example of multiple families
-          description: "equals to =`?families=alberoboticsGenA,alberoboticsGenB`"
-          value: ["alberoboticsGenA", "alberoboticsGenB"] # ?ids=alberoboticsGenA,alberoboticsGenB
+          description: "equals to `?families[]=alberoboticsGenA&families[]=alberoboticsGenB`"
+          value: ["alberoboticsGenA", "alberoboticsGenB"] # ?families[]=alberoboticsGenA&families[]=alberoboticsGenB
         oneType:
           summary: Example of a single type
-          description: "equals to =`?ids=alberoboticsGenA`"
-          value: ["alberoboticsGenA"] # ?ids=alberoboticsGenA
+          description: "equals to `?families[]=alberoboticsGenA`"
+          value: ["alberoboticsGenA"] # ?families[]=alberoboticsGenA
     moduleTypesFromQuery:
       in: query
       name: "types[]"
@@ -976,12 +976,12 @@ components:
       examples:
         multipleTypes:
           summary: Example of multiple types
-          description: "equals to =`?types=Socket,EndEffector`"
-          value: ["Socket", "EndEffector"] # ?types=Socket,EndEffector
+          description: "equals to `?types[]=joint&types[]=link`"
+          value: ["joint", "link"] # ?types[]=joint,types[]=link
         oneType:
           summary: Example of a single type
-          description: "equals to =`?types=Socket`"
-          value: ["Socket"] # ?types=Socket
+          description: "equals to `?types[]=Socket`"
+          value: ["Socket"] # ?types[]=Socket
   #/components/schemas
   schemas:
     #ErrorMessage
