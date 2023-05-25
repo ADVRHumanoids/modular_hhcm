@@ -452,9 +452,6 @@ def moveSocket():
     data = jsonify(data)
     return data
 
-
-# call URDF_writer.py to remove the last module
-@app.route('/urdf/module/', methods=['DELETE'])
 @app.route('/removeModule/', methods=['POST'])
 def remove():
     parent = request.form.get('parent', 0)
@@ -581,28 +578,76 @@ def changeMode():
     data = jsonify(data)
     return data
 
+def getModulesMap():
+    chains=[]
+    if building_mode_ON :
+        chains = urdf_writer.listofchains
+    else:
+        chains = urdf_writer_fromHW.listofchains
+
+    modules=[]
+    for chain in chains:
+        for el in chain:
+            module={}
+            module['id']=el.name
+            module['family']= "" #"alberoboticsGenA"
+            module['type']= el.type
+            module['product']= el.filename
+            module['label']= el.name
+            modules.append(module)
+    return modules
+
 # get list of modules of robot
 @app.route('/urdf/modules', methods=['GET'])
 def getModelModules():
     try:
-        chains=[]
-        if building_mode_ON :
-            chains = urdf_writer.listofchains
-        else:
-            chains = urdf_writer_fromHW.listofchains
+        modules = getModulesMap()
+        return Response(
+            response=json.dumps({'modules': modules}),
+            status=200,
+            mimetype="application/json"
+        )
 
-        modules=[]
-        for chain in chains:
-            for el in chain:
-                module={}
-                module['id']=el.name
-                module['family']= "" #"alberoboticsGenA"
-                module['type']= el.type
-                module['product']= el.filename
-                module['label']= el.name
-                modules.append(module)
+    except Exception as e:
+        # validation failed
+        print(f'{type(e).__name__}: {e}')
+        return Response(
+            response=json.dumps({"message": f'{type(e).__name__}: {e}'}),
+            status=500,
+            mimetype="application/json"
+        )
 
-        return jsonify({'modules': modules}), 200
+# call URDF_writer.py to remove the last module
+@app.route('/urdf/module', methods=['DELETE'])
+def removeModules():
+    """Delete one or more modules from the robot model. By default it removes the last element.
+
+    :param ids: Optionally, you can provide one or more IDs of modules to remove. (Currently not supported)
+    :type ids: List[str]
+    """
+    if not building_mode_ON:
+        return Response(
+            response=json.dumps({"message": 'Cannot delete modules in Discovery mode.'}),
+            status=409,
+            mimetype="application/json"
+    )
+
+    try:
+        ids = request.args.getlist('families')
+        if len(ids)==0:
+            # remove last module
+            urdf_writer.remove_module()
+            return Response(status=204)
+
+        module_ids = [m['id'] for m in getModulesMap()]
+        for t in ids:
+            if t in module_ids:
+                return Response(
+                    response=json.dumps({"message": 'Deletion of multiple modules at once is currently not supported'}),
+                    status=501,
+                    mimetype="application/json"
+            )
+        return Response(status=304) # NOTHING CHANGED
 
     except Exception as e:
         # validation failed
