@@ -339,15 +339,6 @@ def addWheel():
 
 
 def writeRobotURDF(builder_jm):
-    global building_mode_ON
-    #string = request.form.get('string', 0)
-    # app.logger.debug(string)
-    # app.logger.debug (building_mode_ON)
-    app.logger.debug('jointMap')
-    json_jm = request.form.get('jointMap', 0)
-    app.logger.debug(json_jm)
-    builder_jm = json.loads(json_jm)
-    building_mode_ON = True if request.form.get('buildingModeON', 0) == 'true' else False
     if building_mode_ON :
         data = urdf_writer.write_urdf()
         srdf = urdf_writer.write_srdf(builder_jm)
@@ -366,13 +357,12 @@ def writeRobotURDF(builder_jm):
         # probdesc = urdf_writer_fromHW.write_problem_description()
         probdesc = urdf_writer_fromHW.write_problem_description_multi()
         # cartesio_stack = urdf_writer_fromHW.write_cartesio_stack()
-    # app.logger.debug("\nSRDF\n")
-    # app.logger.debug(srdf)
-    # app.logger.debug("\nJoint Map\n")
-    # app.logger.debug(joint_map)
+    app.logger.debug("\nSRDF\n")
+    app.logger.debug(srdf)
+    app.logger.debug("\nJoint Map\n")
+    app.logger.debug(joint_map)
     # app.logger.debug("\nCartesIO stack\n")
     # app.logger.debug(cartesio_stack)
-    # data = jsonify(data)
     return data
 
 @app.route('/writeURDF/', methods=['POST'])
@@ -386,7 +376,9 @@ def writeURDF():
     app.logger.debug(json_jm)
     builder_jm = json.loads(json_jm)
     building_mode_ON = True if request.form.get('buildingModeON', 0) == 'true' else False
-    writeRobotURDF(builder_jm)
+    data = writeRobotURDF(builder_jm)
+    data = jsonify(data)
+    return data
 
 # call URDF_writer.py to add another master cube
 @app.route('/addMasterCube/', methods=['POST'])
