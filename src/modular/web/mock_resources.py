@@ -173,7 +173,7 @@ resources = {
     "family": "alberoboticsGenB",
     "type": "link",
     "product": "concert/module_link_straight_50_concert.json",
-    "label": "Passive Link Straight 20cm",
+    "label": "Passive Link Straight 50cm",
   },
   { # [CONCERT] concert_steering_module_fl_rr
     "family": "alberoboticsGenB",
