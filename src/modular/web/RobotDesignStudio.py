@@ -276,14 +276,16 @@ def addNewModule():
     try:
         filename = req['product']
         app.logger.debug(filename)
-        parent = req['parent']
-        app.logger.debug(parent)
-        offset = float(req['offset']['yaw']) # we user RPY notation
+
+        app.logger.debug(req['parent'] if 'parent' in req else 'no parent')
+
+        offset = float(req['offset']['yaw'] if 'offset' in req and 'yaw' in req['offset'] else 0) # we user RPY notation
         app.logger.debug(offset)
-        reverse = True if req['reverse'] == 'true' else False
+
+        reverse = True if 'reverse' in req and req['reverse'] == 'true' else False
         app.logger.debug(reverse)
-        data = urdf_writer.add_module(filename, offset, reverse)
-        data = jsonify(data)
+
+        urdf_writer.add_module(filename, offset, reverse)
         return Response(status=204)
 
     except ValueError as e:
