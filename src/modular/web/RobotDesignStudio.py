@@ -494,7 +494,8 @@ def getURDF():
         return  Response(
             response=urdf,
             status=200,
-            mimetype='text/xml')
+            mimetype='application/xml'
+        )
     except Exception as e:
         # validation failed
         print( f'{type(e).__name__}: {e}')

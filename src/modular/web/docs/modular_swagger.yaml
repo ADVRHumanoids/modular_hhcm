@@ -75,14 +75,11 @@ paths:
         - $ref: "#/components/parameters/modelIdFromQuery"
       responses:
         200:
-          description: "OK: the updated URDF to render!"
+          description: "OK: the URDF to render!"
           content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/UrdfGetResponse"
             application/xml:
               schema:
-                type: string
+                type: object
         500:
           description: "INTERNAL SERVER ERROR"
           content:
