@@ -478,11 +478,30 @@ def openFile():
 # request the urdf generated from the currently stored tree
 @app.route('/urdf', methods=['GET'])
 def getURDF():
-    urdf_string = urdf_writer.process_urdf()
-    data = {'urdf': urdf_string}
-    app.logger.debug('data: %s', data)
-    data = jsonify(data)
-    return data
+    try:
+        if building_mode_ON:
+            urdf_string = urdf_writer.process_urdf()
+        else:
+            urdf_string = urdf_writer_fromHW.process_urdf()
+
+        # replace path for remote access of STL meshes that will be served with '/meshes/<path:path>' route
+        # urdf= urdf_string.replace('package://modular/src/modular/web/static/models/modular/,'package://')
+        urdf= urdf_string.replace('package://modular_resources','package://linfa/api/v1/modular/resources/meshes')
+
+
+        return  Response(
+            response=urdf,
+            status=200,
+            mimetype='text/xml')
+    except Exception as e:
+        # validation failed
+        print( f'{type(e).__name__}: {e}')
+        return Response(
+            response=json.dumps({"message": f'{type(e).__name__}: {e}'}),
+            status=500,
+            mimetype="application/json"
+        )
+
 @app.route('/requestURDF/', methods=['POST'])
 def requestURDF():
     # building_mode_on_str = request.form.get('mode', 0)
