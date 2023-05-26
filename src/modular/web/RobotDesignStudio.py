@@ -486,7 +486,9 @@ def getURDF():
 
         # replace path for remote access of STL meshes that will be served with '/meshes/<path:path>' route
         # urdf= urdf_string.replace('package://modular/src/modular/web/static/models/modular/,'package://')
-        urdf= urdf_string.replace('package://modular_resources','package://linfa/api/v1/modular/resources/meshes')
+        urdf= urdf_string\
+                .replace('package://modular_resources','package://linfa/api/v1/modular/resources/meshes')\
+                .replace('package://concert_resources','package://linfa/api/v1/modular/resources/meshes')
 
 
         return  Response(
