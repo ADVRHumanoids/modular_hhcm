@@ -631,7 +631,7 @@ def getModelModules():
         )
 
 # call URDF_writer.py to remove the last module
-@app.route('/urdf/module', methods=['DELETE'])
+@app.route('/urdf/modules', methods=['DELETE'])
 def removeModules():
     """Delete one or more modules from the robot model. By default it removes the last element.
 
