@@ -7,7 +7,8 @@ info:
     email: alberobotics@iit.it
     name: Alberobotics Team
 servers:
-  - url: http://localhost:5003
+  # - url: http://localhost:5003
+  - url: /linfa/api/v1/modular
 externalDocs:
   description: Github repository
   url: https://github.com/ADVRHumanoids/modular
@@ -501,6 +502,7 @@ paths:
       summary: Get a list of families of the available modules
       parameters:
         - $ref: "#/components/parameters/familiesFromQuery"
+        - $ref: "#/components/parameters/familyGroupFromQuery"
       responses:
         200:
           description: "OK"
@@ -957,9 +959,28 @@ components:
           description: "equals to `?families[]=alberoboticsGenA&families[]=alberoboticsGenB`"
           value: ["alberoboticsGenA", "alberoboticsGenB"] # ?families[]=alberoboticsGenA&families[]=alberoboticsGenB
         oneType:
-          summary: Example of a single type
+          summary: Example of a single family
           description: "equals to `?families[]=alberoboticsGenA`"
           value: ["alberoboticsGenA"] # ?families[]=alberoboticsGenA
+    familyGroupFromQuery:
+      in: query
+      name: "groups[]"
+      description: "Optionally the returned list can be filtered by their group."
+      schema:
+        type: array
+        items:
+          type: string
+      style: form
+      explode: false
+      examples:
+        multipleTypes:
+          summary: Example of multiple groups
+          description: "equals to `?groups[]=Alberobotics&families[]=CONCERT`"
+          value: ["Alberobotics", "CONCERT"] # ?groups[]=Alberobotics&groups[]=CONCERT
+        oneType:
+          summary: Example of a single group
+          description: "equals to `?groups[]=Alberobotics`"
+          value: ["Alberobotics"] # ?groups[]=Alberobotics
     moduleTypesFromQuery:
       in: query
       name: "types[]"
