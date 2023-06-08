@@ -56,7 +56,6 @@ jobs:
           --base ${{ env.TARGET_BRANCH }} \
           --label refactor  \
           --reviewer "m-tartari"
-          gh pr merge --merge --auto
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
