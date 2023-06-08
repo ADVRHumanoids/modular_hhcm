@@ -65,18 +65,19 @@ else:
     logger.setLevel(logging.INFO)
     werkzeug_logger.setLevel(logging.ERROR)
 
+
+template_folder='modular_frontend'
+static_folder = 'modular_frontend/static'
+static_url_path = '/static'
 # determine if it's running on a Pyinstaller bundle
 if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
-    template_folder = os.path.join(sys._MEIPASS, 'modular/web/templates')
-    static_folder = os.path.join(sys._MEIPASS, 'modular/web/static')
+    template_folder = os.path.join(sys._MEIPASS, 'modular/web',template_folder)
+    static_folder = os.path.join(sys._MEIPASS, 'modular/web',static_folder)
     is_pyinstaller_bundle=True
 else:
-    static_folder='static'
-    template_folder='templates'
-    static_url_path=''
     is_pyinstaller_bundle=False
 
-app = Flask(__name__, static_folder=static_folder, template_folder=template_folder, static_url_path='')
+app = Flask(__name__, static_folder=static_folder, template_folder=template_folder, static_url_path=static_url_path)
 app.logger = logger
 
 if is_pyinstaller_bundle:
@@ -104,7 +105,7 @@ building_mode_ON = True
 # load view_urdf.html
 @app.route(f'{gui_route}/', methods=['GET'])
 def index():
-    return render_template('view_urdf.html')
+    return render_template('index.html')
 
 @app.route('/test')
 def test():
