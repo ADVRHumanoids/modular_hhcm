@@ -52,7 +52,7 @@ jobs:
           RELEASE_VERSION=$(echo $GITHUB_REF_NAME | sed -e s/.*modular_frontend-//)
           gh pr create \
           --title "⬆️ chore(gui): Bump modular_frontend to $RELEASE_VERSION" \
-          --body-file ./public/frontend_release_notes/CHANGELOG.$RELEASE_VERSION.md \
+          --body-file ./src/modular/web/modular_frontend/frontend_release_notes/CHANGELOG.$RELEASE_VERSION.md \
           --base ${{ env.TARGET_BRANCH }} \
           --label refactor  \
           --reviewer "m-tartari"
