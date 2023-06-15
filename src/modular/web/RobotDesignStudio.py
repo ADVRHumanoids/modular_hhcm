@@ -276,15 +276,15 @@ def resources_families_get():
 
 @app.route(f'{api_base_route}/urdf/modules', methods=['POST'])
 def addNewModule():
-    if not building_mode_ON:
-        return Response(
-            response=json.dumps({"message": "Cannot add modules in Discovery mode."}),
-            status=409,
-            mimetype="application/json"
-        )
-
     req = request.get_json()
     try:
+        if (not building_mode_ON) and req['type'] != 'end_effector':
+            return Response(
+                response=json.dumps({"message": "in Discovery mode, only passive end-effectors can be added"}),
+                status=409,
+                mimetype="application/json"
+            )
+
         filename = req['product']
         app.logger.debug(filename)
 
