@@ -37,6 +37,7 @@ class ModuleType(str, Enum):
     SIZE_ADAPTER = 'size_adapter'
     SIMPLE_EE = 'simple_ee'
     END_EFFECTOR = 'end_effector'
+    DAGANA = 'dagana'
 
 # import collections.abc
 def update_nested_dict(d, u):
@@ -210,6 +211,21 @@ class JSONInterpreter(object):
             # size
             #HACK: We assume the size is the same for all the connectors and load it from the last connector (which we assume to be the connector for the arm)
             self.owner.size = body_1['connectors'][-1]['size']
+        elif self.owner.type in {ModuleType.DAGANA}:
+            dict_joint = d['joints'][0]
+            # joint data
+            self.owner.actuator_data.type = dict_joint['type']
+            self.owner.actuator_data.upper_limit = dict_joint['limits']['positionUpper']
+            self.owner.actuator_data.lower_limit = dict_joint['limits']['positionLower']
+            self.owner.actuator_data.velocity = dict_joint['limits']['velocity']
+            self.owner.actuator_data.effort = dict_joint['limits']['peak_torque']
+            self.owner.actuator_data.gear_ratio = dict_joint['gear_ratio']
+            self.owner.actuator_data.zero_offset = 0.0
+            # CentAcESC
+            self.owner.CentAcESC = Module.Attribute(dict_joint['control_parameters']['xbot'])
+            # xbot_gz
+            self.owner.xbot_gz = Module.Attribute(dict_joint['control_parameters']['xbot_gz'])
+            self.owner.joint_gripper_adapter = Module.Attribute(dict_joint['control_parameters']['joint_gripper_adapter'])
 
     @staticmethod
     def set_dynamic_properties(body, dict_body):
@@ -512,6 +528,7 @@ class Module(object):
             'size_adapter': self.get_homogeneous_matrix,
             'tool_exchanger': self.get_homogeneous_matrix,
             'end_effector': self.get_homogeneous_matrix,
+            'dagana': lambda reverse: None,
             'gripper': self.get_homogeneous_matrix,
             'cube': self.get_hub_connections_tf, #  self.get_cube_connections_tf,
             'mobile_base': self.get_hub_connections_tf, #  self.get_mobile_base_connections_tf,

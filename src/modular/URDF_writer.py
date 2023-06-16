@@ -205,6 +205,8 @@ class Plugin:
                     tip_link = joints_chain[-1].TCP_name
                 elif joints_chain[-1].type == 'simple_ee':
                     tip_link = joints_chain[-1].name
+                elif joints_chain[-1].type == 'dagana':
+                    tip_link = joints_chain[-1].dagana_link_name
             chains.append(ET.SubElement(groups[i], 'chain', base_link=base_link, tip_link=tip_link))
             i += 1
         i = 0
@@ -225,6 +227,14 @@ class Plugin:
                         homing_value = 0.1
                     # self.urdf_writer.print(homing_value)
                     joints.append(ET.SubElement(group_state, 'joint', name=joint_module.name, value=str(homing_value)))
+                elif joint_module.type == 'dagana':
+                    # Homing state
+                    if builder_joint_map is not None:
+                        homing_value = float(builder_joint_map[joint_module.dagana_joint_name]['angle'])
+                    else:
+                        homing_value = 0.1
+                    # self.urdf_writer.print(homing_value)
+                    joints.append(ET.SubElement(group_state, 'joint', name=joint_module.dagana_joint_name, value=str(homing_value)))
                 elif joint_module.type == 'wheel':
                     # Homing state
                     if builder_joint_map is not None:
@@ -763,6 +773,12 @@ class XBot2Plugin(Plugin):
                         joint_map['joint_map'][int(joint_module.robot_id)] = name
                     else:
                         joint_map['joint_map'][i] = name
+                if joint_module.type == 'dagana':
+                    name = joint_module.dagana_joint_name
+                    if use_robot_id:
+                        joint_map['joint_map'][int(joint_module.robot_id)] = name
+                    else:
+                        joint_map['joint_map'][i] = name
                 elif joint_module.type == 'simple_ee':
                     continue
                 elif joint_module.type == 'gripper':
@@ -826,6 +842,28 @@ class XBot2Plugin(Plugin):
         ignore_id = OrderedDict({'ignore_id': {'type': 'vector<int>', 'value': ids}})
         hal_config['xbotcore_devices']['joint_ec']['params'].update(ignore_id)
 
+        #joint_gripper_adapter
+        i = 0
+        for joints_chain in self.urdf_writer.listofchains:
+            for joint_module in joints_chain:
+                if joint_module.type =='dagana':
+                    
+                    attrs = [a for a in dir(joint_module.joint_gripper_adapter) if not a.startswith('__') and not callable(getattr(joint_module.joint_gripper_adapter, a))]
+                    attrs_with_prefix = [joint_module.name+"/" + x for x in attrs]
+                    params_dict = {i:getattr(joint_module.joint_gripper_adapter, j) for i, j in zip(attrs_with_prefix, attrs)}
+                    params_dict.update({joint_module.name+"/joint_name": {"value": joint_module.dagana_joint_name, "type": "string"}})
+                    # joint_gripper_adapter_params = OrderedDict({joint_module.name+"/joint_name": {"value": joint_module.dagana_joint_name, "type": "string"},
+                    #                                             joint_module.name+"/joint_type": {"value": "joint_ec", "type": "string"},
+                    #                                             joint_module.name+"/qopen": {"value": -0.4, "type": "double"},
+                    #                                             joint_module.name+"/qclosed": {"value": 0.6, "type": "double"},
+                    #                                             joint_module.name+"/vmax": {"value": 1.0, "type": "double"},
+                    #                                             joint_module.name+"/stiffness": {"value": 50.0, "type": "double"}
+                    #                                             })
+                    joint_gripper_adapter_params = OrderedDict(params_dict)
+                    hal_config['xbotcore_devices']['joint_gripper_adapter']['params'].update(joint_gripper_adapter_params)
+
+                    hal_config['xbotcore_devices']['joint_gripper_adapter']['names'].append(joint_module.name)
+
         # Create folder if doesen't exist
         if not os.path.exists(os.path.dirname(hal_config_filename)):
             try:
@@ -886,9 +924,12 @@ class XBot2Plugin(Plugin):
             # HACK
             p += 1
             for joint_module in joints_chain:
-                if joint_module.type == 'joint':
+                if joint_module.type in ['joint', 'dagana']:
                     i += 1
-                    key = joint_module.name
+                    if joint_module.type == 'dagana':
+                        key = joint_module.dagana_joint_name
+                    else:    
+                        key = joint_module.name
                     value = joint_module.CentAcESC
                     # Remove parameters that are now not used by XBot2 (they are handled by the EtherCat master on a different config file)
                     if hasattr(value, 'sign'):
@@ -929,7 +970,7 @@ class XBot2Plugin(Plugin):
                     # if p > 1:
                     #     value.pid.impedance = [500.0, 20.0, 1.0, 0.003, 0.99]
 
-                if joint_module.type == 'wheel':
+                elif joint_module.type == 'wheel':
                     i += 1
                     key = joint_module.name
                     value = joint_module.CentAcESC
@@ -952,6 +993,18 @@ class XBot2Plugin(Plugin):
                     if hasattr(idle_joint_config[key], 'pid'):
                         if hasattr(idle_joint_config[key].pid, 'velocity'):
                             del idle_joint_config[key].pid.velocity
+
+                elif joint_module.type == 'dagana':
+                    i += 1
+                    key = joint_module.name
+                    value = joint_module.CentAcESC
+                    # Remove parameters that are now not used by XBot2 (they are handled by the EtherCat master on a different config file)
+                    if hasattr(value, 'sign'):
+                        del value.sign 
+                    if hasattr(value, 'pos_offset'):
+                        del value.pos_offset 
+                    if hasattr(value, 'max_current_A'):
+                        del value.max_current_A 
 
                 elif joint_module.type == 'tool_exchanger':
                     key = joint_module.name
@@ -3019,6 +3072,27 @@ class UrdfWriter:
                           type="link",
                           name=new_Link.name,
                           filename=new_Link.filename)
+        elif new_Link.type == 'dagana':
+            setattr(new_Link, 'name', 'dagana' + new_Link.tag)
+            ET.SubElement(self.root,
+                          "xacro:add_dagana",
+                          type="link",
+                          name=new_Link.name,
+                          father=parent_name,
+                          x=x,
+                          y=y,
+                          z=z,
+                          roll=roll,
+                          pitch=pitch,
+                          yaw=yaw)
+            setattr(new_Link, 'dagana_joint_name', new_Link.name + '_claw_joint')
+            setattr(new_Link, 'dagana_link_name', new_Link.name + '_bottom_link')
+            # the dagana gets added to the chain. it's needed in the joint map and in the config!
+            self.add_to_chain(new_Link)
+            self.control_plugin.add_joint(new_Link.dagana_joint_name)
+
+            return
+
         elif new_Link.type == 'end_effector':
             setattr(new_Link, 'name', 'end_effector' + new_Link.tag)
             ET.SubElement(self.root,
@@ -3112,6 +3186,8 @@ class UrdfWriter:
                       roll=roll,
                       pitch=pitch,
                       yaw=yaw)
+        
+        return
 
 
     # noinspection PyPep8Naming

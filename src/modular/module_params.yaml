@@ -52,6 +52,9 @@
     3: # drill CONCERT
         4: #size concert arm flange
             0: concert/module_drill_concert.json
+    4: # dagana
+        2: #size PINO flange
+            0: module_dagana.json
     # ...
 
 4: #passive link module
