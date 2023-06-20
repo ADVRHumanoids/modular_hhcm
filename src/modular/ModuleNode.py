@@ -226,6 +226,8 @@ class JSONInterpreter(object):
             # xbot_gz
             self.owner.xbot_gz = Module.Attribute(dict_joint['control_parameters']['xbot_gz'])
             self.owner.joint_gripper_adapter = Module.Attribute(dict_joint['control_parameters']['joint_gripper_adapter'])
+            #HACK: We hard-code the value for the size of the dagana
+            self.owner.size = 'big'
 
     @staticmethod
     def set_dynamic_properties(body, dict_body):
