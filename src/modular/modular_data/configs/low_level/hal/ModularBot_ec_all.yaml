@@ -44,4 +44,9 @@ xbotcore_devices:
         master: true
         thread: rt_main
 
+    joint_gripper_adapter:
+        names: []
+        thread: rt_main
+        params: {}
+
 

@@ -195,7 +195,7 @@
     </xacro:unless>
 
     <!-- Add Velodyne front -->
-    <xacro:property name="velodyne_front_name" value="front_base" />
+    <xacro:property name="velodyne_front_name" value="VLP16_lidar_front" />
     <xacro:property name="velodyne_front_parent_name" value="${parent_name}" />
     <xacro:property name="velodyne_front_origin">
         <origin xyz="0.5305 0.315 -0.1" rpy="0.0 0.0 0.0"/>
@@ -219,7 +219,7 @@
     </xacro:unless>
 
     <!-- Add Velodyne back -->
-    <xacro:property name="velodyne_back_name" value="back_base" />
+    <xacro:property name="velodyne_back_name" value="VLP16_lidar_back" />
     <xacro:property name="velodyne_back_parent_name" value="${parent_name}" />
     <xacro:property name="velodyne_back_origin">
         <origin xyz="-0.5305 -0.315 -0.1" rpy="0.0 0.0 3.141593"/>
