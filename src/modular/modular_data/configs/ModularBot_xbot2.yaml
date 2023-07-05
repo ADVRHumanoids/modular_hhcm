@@ -67,9 +67,6 @@ xbotcore_plugins:
       switch_time:
         value: 4.
         type: double
-      enabled_chains: 
-        value: [chain_A]
-        type: vector<string>
       ros_ns:
         value: cartesian
         type: string
