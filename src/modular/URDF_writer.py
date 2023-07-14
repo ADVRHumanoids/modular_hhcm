@@ -1176,7 +1176,7 @@ class UrdfWriter:
         self.base_link = ModuleNode.ModuleNode(data, "base_link")
         setattr(self.base_link, 'name', "base_link")
         setattr(self.base_link, 'tag', "_A")
-        setattr(self.base_link, 'size', 3)
+        setattr(self.base_link, 'flange_size', 3)
         setattr(self.base_link, 'i', 0)
         setattr(self.base_link, 'p', 0)
         setattr(self.base_link, 'Homogeneous_tf', tf.transformations.identity_matrix())
@@ -1611,8 +1611,8 @@ class UrdfWriter:
             # Set attributes of the newly added module object
             setattr(slavecube, 'i', self.parent_module.i)
             setattr(slavecube, 'p', self.parent_module.p)
-            # Size is already set from the YAML file
-            # setattr(slavecube, 'size', self.parent_module.size)
+            # flange_size is already set from the YAML file
+            # setattr(slavecube, 'flange_size', self.parent_module.flange_size)
 
             setattr(slavecube, 'angle_offset', angle_offset)
             setattr(slavecube, 'robot_id', robot_id)
@@ -1628,12 +1628,12 @@ class UrdfWriter:
 
             # # Generate name and dict for the 1st connector module
             # name_con1 = name + '_con1'
-            # data1 = {'Homogeneous_tf': T_con_inv, 'type': "con", 'name': name_con1, 'i': 0, 'p': 0, 'size': 3}
+            # data1 = {'Homogeneous_tf': T_con_inv, 'type': "con", 'name': name_con1, 'i': 0, 'p': 0, 'flange_size': 3}
             # self.print('T_con_inv:', T_con_inv)
 
             # Generate name and dict for the 1st connector module
             name_con1 = name + '_con1'
-            data1 = {'Homogeneous_tf': T_con_inv, 'type': "con", 'name': name_con1, 'i': 0, 'p': 0, 'size': 3}
+            data1 = {'Homogeneous_tf': T_con_inv, 'type': "con", 'name': name_con1, 'i': 0, 'p': 0, 'flange_size': 3}
             self.print('T_con_inv:', T_con_inv)
 
             if self.parent_module.type in { 'joint', 'wheel' }:
@@ -1738,7 +1738,7 @@ class UrdfWriter:
             data = {'result': string,
                     'lastModule_type': 'mastercube',
                     'lastModule_name': name,
-                    'size': 3,
+                    'flange_size': 3,
                     'count': self.n_cubes}
 
             return data
@@ -1789,22 +1789,22 @@ class UrdfWriter:
 
             # # instantate a ModuleNode for branch 1 connector
             # name_con1 = name + '_con1'
-            # data1 = {'Homogeneous_tf': mastercube.Con_1_tf, 'type': "con", 'name': name_con1, 'i': 0, 'p': 0, 'size': 3}
+            # data1 = {'Homogeneous_tf': mastercube.Con_1_tf, 'type': "con", 'name': name_con1, 'i': 0, 'p': 0, 'flange_size': 3}
             # slavecube_con1 = ModuleNode.ModuleNode(data1, name_con1, parent=mastercube)
 
             # # instantate a ModuleNode for branch 2 connector
             # name_con2 = name + '_con2'
-            # data2 = {'Homogeneous_tf': mastercube.Con_2_tf, 'type': "con", 'name': name_con2, 'i': 0, 'p': 0, 'size': 3}
+            # data2 = {'Homogeneous_tf': mastercube.Con_2_tf, 'type': "con", 'name': name_con2, 'i': 0, 'p': 0, 'flange_size': 3}
             # slavecube_con2 = ModuleNode.ModuleNode(data2, name_con2, parent=mastercube)
 
             # # instantate a ModuleNode for branch 3 connector
             # name_con3 = name + '_con3'
-            # data3 = {'Homogeneous_tf': mastercube.Con_3_tf, 'type': "con", 'name': name_con3, 'i': 0, 'p': 0, 'size': 3}
+            # data3 = {'Homogeneous_tf': mastercube.Con_3_tf, 'type': "con", 'name': name_con3, 'i': 0, 'p': 0, 'flange_size': 3}
             # slavecube_con3 = ModuleNode.ModuleNode(data3, name_con3, parent=mastercube)
 
             # # instantate a ModuleNode for branch 4 connector
             # name_con4 = name + '_con4'
-            # data4 = {'Homogeneous_tf': mastercube.Con_4_tf, 'type': "con", 'name': name_con4, 'i': 0, 'p': 0, 'size': 3}
+            # data4 = {'Homogeneous_tf': mastercube.Con_4_tf, 'type': "con", 'name': name_con4, 'i': 0, 'p': 0, 'flange_size': 3}
             # slavecube_con4 = ModuleNode.ModuleNode(data4, name_con4, parent=mastercube)
 
             # Render tree
@@ -1880,7 +1880,7 @@ class UrdfWriter:
             data = {'result': string,
                     'lastModule_type': 'mastercube',
                     'lastModule_name': name,
-                    'size': 3,
+                    'flange_size': 3,
                     'count': self.n_cubes}
 
             return data
@@ -1985,7 +1985,7 @@ class UrdfWriter:
         data = {'result': string,
                 'lastModule_type': 'mobile_base',
                 'lastModule_name': name,
-                'size': 3,
+                'flange_size': 3,
                 'count': 1}
 
         return data
@@ -2013,7 +2013,7 @@ class UrdfWriter:
         table = ModuleNode.ModuleNode(data, "table", parent=self.base_link)
         setattr(table, 'name', "table")
         setattr(table, 'tag', "_A")
-        setattr(table, 'size', 3)
+        setattr(table, 'flange_size', 3)
         setattr(table, 'i', 0)
         setattr(table, 'p', 0)
         setattr(table, 'Homogeneous_tf', tf.transformations.identity_matrix())
@@ -2039,7 +2039,7 @@ class UrdfWriter:
         data = {'result': string,
                 'lastModule_type': table.type,
                 'lastModule_name': table.name,
-                'size': table.size,
+                'flange_size': table.flange_size,
                 'count': table.i}
 
         return data
@@ -2078,7 +2078,7 @@ class UrdfWriter:
         data = {'result': string,
                 'lastModule_type': socket.type,
                 'lastModule_name': socket.name,
-                'size': socket.size,
+                'flange_size': socket.flange_size,
                 'count': socket.i}
 
         # Update the parent_module attribute of the URDF_writer class
@@ -2114,8 +2114,8 @@ class UrdfWriter:
         # Set attributes of the newly added module object
         setattr(new_socket, 'i', self.parent_module.i)
         setattr(new_socket, 'p', self.parent_module.p)
-        # Size is already set from the YAML file
-        # setattr(new_socket, 'size', self.parent_module.size)
+        # flange_size is already set from the YAML file
+        # setattr(new_socket, 'flange_size', self.parent_module.flange_size)
 
         setattr(new_socket, 'angle_offset', angle_offset)
         setattr(new_socket, 'robot_id', 0)
@@ -2138,7 +2138,7 @@ class UrdfWriter:
                       type="link",
                       name=new_socket.name,
                       filename=new_socket.filename,
-                      size=str(new_socket.size))
+                      flange_size=str(new_socket.flange_size))
 
         self.add_gazebo_element(new_socket.gazebo.body_1 , new_socket.name)
 
@@ -2205,7 +2205,7 @@ class UrdfWriter:
         data = {'result': string,
                 'lastModule_type': new_socket.type,
                 'lastModule_name': new_socket.name,
-                'size': new_socket.size,
+                'flange_size': new_socket.flange_size,
                 'count': new_socket.i}
 
         # if new_module.name.endswith('_stator'):
@@ -2226,7 +2226,7 @@ class UrdfWriter:
 
         simple_ee = ModuleNode.ModuleNode(data, "simple_ee", parent=self.parent_module)
         setattr(simple_ee, 'tag', self.parent_module.tag)
-        setattr(simple_ee, 'size', self.parent_module.size)
+        setattr(simple_ee, 'flange_size', self.parent_module.flange_size)
         setattr(simple_ee, 'i', self.parent_module.i)
         setattr(simple_ee, 'p', self.parent_module.p+1)
         setattr(simple_ee, 'robot_id', 0)
@@ -2236,7 +2236,7 @@ class UrdfWriter:
                       "xacro:add_cylinder",
                       type="simple_ee",
                       name=simple_ee.name,
-                      size_z=str(z_offset),
+                      flange_size_z=str(z_offset),
                       mass=str(mass),
                       radius=str(radius))
 
@@ -2293,7 +2293,7 @@ class UrdfWriter:
         data = {'result': string,
                 'lastModule_type': simple_ee.type,
                 'lastModule_name': simple_ee.name,
-                'size': simple_ee.size,
+                'flange_size': simple_ee.flange_size,
                 'count': simple_ee.i}
 
         return data
@@ -2369,8 +2369,8 @@ class UrdfWriter:
         # Set attributes of the newly added module object
         setattr(new_module, 'i', self.parent_module.i)
         setattr(new_module, 'p', self.parent_module.p)
-        # Size is already set from the YAML file
-        # setattr(new_module, 'size', self.parent_module.size)
+        # flange_size is already set from the YAML file
+        # setattr(new_module, 'flange_size', self.parent_module.flange_size)
 
         setattr(new_module, 'angle_offset', angle_offset)
         setattr(new_module, 'reverse', reverse)
@@ -2452,7 +2452,7 @@ class UrdfWriter:
         data = {'result': string,
                 'lastModule_type': new_module.type,
                 'lastModule_name': new_module.name,
-                'size': new_module.size,
+                'flange_size': new_module.flange_size,
                 'count': new_module.i}
 
         # if new_module.name.endswith('_stator'):
@@ -2722,13 +2722,13 @@ class UrdfWriter:
             data = {'result': string,
                     'lastModule_type': father.type,
                     'lastModule_name': father.name,
-                    'size': father.size,
+                    'flange_size': father.flange_size,
                     'count': self.n_cubes}
         else:
             data = {'result': string,
                     'lastModule_type': father.type,
                     'lastModule_name': father.name,
-                    'size': father.size,
+                    'flange_size': father.flange_size,
                     'count': father.i}
         # data = jsonify(data)
 
@@ -2776,6 +2776,66 @@ class UrdfWriter:
         self.parent_module = queried_module
 
         return queried_module
+    
+    def select_module_from_id(self, id, selected_port=None):
+        """Allows to select a module from the tree. An inner call to access_module_by_id sets the selected module as the
+        current parent module. Returns info on the selected module, so that the GUI can display it.
+
+        Parameters
+        ----------
+        id: int
+            The id of the module to select. It will be used to call the access_module_by_id method.
+            The corresponding object module data is then put in a dictionary and returned.
+
+        selected_port: int
+            Represent the port selected if the module is a hub/box
+
+        Returns
+        -------
+        data: dict
+            The dictionary containing all necessary data about the selected module.
+
+        """
+        # global parent_module
+        self.print('id: ', id)
+
+        # Call the access_module_by_id method to find the selected module
+        selected_module = self.access_module_by_id(id)
+
+        # TODO: Replace this with select_ports
+        # binary XOR
+        free_ports = int(selected_module.active_ports, 2) ^ int(selected_module.occupied_ports, 2)
+        self.print("{0:04b}".format(free_ports))
+
+        selected_module.selected_port = self.ffs(free_ports)
+        self.print('selected_module.selected_port :', selected_module.selected_port)
+        
+        # # If parent topology is greater than 2 the parent is a switch/hub so we need to find the right port where the module is connected
+        # if active_ports >= 3:
+        #     for port_idx in range(2, len(mastercube.active_ports) - 1)
+        #         if mastercube.active_ports[-port_idx] == 1:
+        #             mastercube.selected_port = port_idx
+        #             break
+        
+        # if parent_active_ports == 3:
+        #     self.parent_module.selected_port = 3
+        # elif parent_active_ports == 5:
+        #     self.parent_module.selected_port = 4
+        # self.print('self.parent_module.selected_port: ', self.parent_module.selected_port)
+
+        # Create the dictionary with the relevant info on the selected module, so that the GUI can dispaly it.
+        if selected_module.type == 'cube':
+            data = {'lastModule_type': selected_module.type,
+                    'lastModule_name': selected_module.name,
+                    'flange_size': selected_module.flange_size,
+                    'count': self.n_cubes}
+        else:
+            data = {'lastModule_type': selected_module.type,
+                    'lastModule_name': selected_module.name,
+                    'flange_size': selected_module.flange_size,
+                    'count': selected_module.i}
+
+        return data
 
     def select_module_from_name(self, name, selected_port=None):
         """Allows to select a module from the tree. An inner call to access_module sets the selected module as the
@@ -2857,12 +2917,12 @@ class UrdfWriter:
         if selected_module.type == 'cube':
             data = {'lastModule_type': selected_module.type,
                     'lastModule_name': selected_module.name,
-                    'size': selected_module.size,
+                    'flange_size': selected_module.flange_size,
                     'count': self.n_cubes}
         else:
             data = {'lastModule_type': selected_module.type,
                     'lastModule_name': selected_module.name,
-                    'size': selected_module.size,
+                    'flange_size': selected_module.flange_size,
                     'count': selected_module.i}
 
         return data
@@ -2981,7 +3041,7 @@ class UrdfWriter:
                         #   size_in=new_Link.size_in,
                         #   size_out=new_Link.size_out
             )
-            setattr(new_Link, 'size', new_Link.size_out)
+            setattr(new_Link, 'flange_size', new_Link.size_out)
 
         self.add_gazebo_element(new_Link.gazebo.body_1, new_Link.name)
             
@@ -3032,6 +3092,9 @@ class UrdfWriter:
         interface_transform = self.get_cube_output_transform(past_Cube)
 
         transform = self.get_proximal_transform(interface_transform, offset, reverse)
+
+        # HACK: to handle 90° offset between PINO and CONCERT flanges
+        transform = self.apply_adapter_transform_rotation(transform, past_Cube.flange_size, new_Link.flange_size)
 
         self.add_link(new_Link, parent_name, transform, reverse)
 
@@ -3235,6 +3298,9 @@ class UrdfWriter:
 
         transform = self.get_proximal_transform(interface_transform, offset, reverse)
 
+        # HACK: to handle 90° offset between PINO and CONCERT flanges
+        transform = self.apply_adapter_transform_rotation(transform, past_Cube.flange_size, new_Joint.flange_size)
+
         setattr(new_Joint, 'i', 1)
         setattr(new_Joint, 'p', 0)
 
@@ -3262,6 +3328,9 @@ class UrdfWriter:
             
         transform = self.get_proximal_transform(interface_transform, offset, reverse)
 
+        # HACK: to handle 90° offset between PINO and CONCERT flanges
+        transform = self.apply_adapter_transform_rotation(transform, past_Joint.flange_size, new_Link.flange_size)
+
         parent_name = past_Joint.distal_link_name
 
         self.add_link(new_Link, parent_name, transform, reverse)
@@ -3286,6 +3355,9 @@ class UrdfWriter:
         interface_transform = self.get_joint_output_transform(past_Joint)
         
         transform = self.get_proximal_transform(interface_transform, offset, reverse)
+
+        # HACK: to handle 90° offset between PINO and CONCERT flanges
+        transform = self.apply_adapter_transform_rotation(transform, past_Joint.flange_size, new_Joint.flange_size)
 
         setattr(new_Joint, 'i', past_Joint.i + 1)
         setattr(new_Joint, 'p', 0)
@@ -3312,6 +3384,9 @@ class UrdfWriter:
         interface_transform = self.get_link_output_transform(past_Link)
 
         transform = self.get_proximal_transform(interface_transform, offset, reverse)
+
+        # HACK: to handle 90° offset between PINO and CONCERT flanges
+        transform = self.apply_adapter_transform_rotation(transform, past_Link.flange_size, new_Joint.flange_size)
 
         setattr(new_Joint, 'i', past_Link.i + 1)
         setattr(new_Joint, 'p', 0)
@@ -3341,6 +3416,9 @@ class UrdfWriter:
         interface_transform = self.get_link_output_transform(past_Link)
 
         transform = self.get_proximal_transform(interface_transform, offset, reverse)
+
+        # HACK: to handle 90° offset between PINO and CONCERT flanges
+        transform = self.apply_adapter_transform_rotation(transform, past_Link.flange_size, new_Link.flange_size)
 
         parent_name = past_Link.name
 

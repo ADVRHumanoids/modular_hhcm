@@ -51,7 +51,7 @@ class JSONInterpreter(object):
     def __init__(self, owner, d, json_file=None):
         self.owner = owner
         self.parse_dict(d)
-        self.owner.set_size()
+        self.owner.set_flange_size()
 
         # set filename
         if json_file is not None:
@@ -97,14 +97,14 @@ class JSONInterpreter(object):
             self.set_collision_properties(self.owner.collision.body_1, dict_body_1)
             # gazebo
             self.set_gazebo_properties(self.owner.gazebo.body_1, dict_body_1)
-            # size
-            #HACK: We assume the size is the same for all the connectors and load it from the output connector
-            output_size = output_connector['size']
+            # flange_size
+            #HACK: We assume the flange_size is the same for all the connectors and load it from the output connector
+            output_flange_size = output_connector['size']
             if self.owner.type is ModuleType.SIZE_ADAPTER:
-                self.owner.size_out = output_size
+                self.owner.size_out = output_flange_size
                 self.owner.size_in = d['bodies'][0]['connectors'][0]['size']
             else:
-                self.owner.size = output_size 
+                self.owner.flange_size = output_flange_size 
         elif self.owner.type in {ModuleType.JOINT, ModuleType.WHEEL}:
             if len(d['joints']) != 1:
                 raise ValueError('A joint must have exactly one joint')
@@ -147,9 +147,9 @@ class JSONInterpreter(object):
             # gazebo
             self.set_gazebo_properties(self.owner.gazebo.body_1, dict_body_1)
             self.set_gazebo_properties(self.owner.gazebo.body_2, dict_body_2)
-            # size
+            # flange_size
             output_connector = dict_body_2['connectors'][-1]
-            self.owner.size = output_connector['size']
+            self.owner.flange_size = output_connector['size']
             # CentAcESC
             self.owner.CentAcESC = Module.Attribute(dict_joint['control_parameters']['xbot'])
             # xbot_gz
@@ -178,9 +178,26 @@ class JSONInterpreter(object):
             self.set_collision_properties(self.owner.collision.body_1, body_1)
             # gazebo
             self.set_gazebo_properties(self.owner.gazebo.body_1, body_1)
-            # size
-            #HACK: We assume the size is the same for all the connectors and load it from the last connector (which we assume to be the connector for the arm)
-            self.owner.size = body_1['connectors'][-1]['size']
+            # flange_size
+            #HACK: We assume the flange_size is the same for all the connectors and load it from the last connector (which we assume to be the connector for the arm)
+            self.owner.flange_size = body_1['connectors'][-1]['size']
+        elif self.owner.type in {ModuleType.DAGANA}:
+            dict_joint = d['joints'][0]
+            # joint data
+            self.owner.actuator_data.type = dict_joint['type']
+            self.owner.actuator_data.upper_limit = dict_joint['limits']['positionUpper']
+            self.owner.actuator_data.lower_limit = dict_joint['limits']['positionLower']
+            self.owner.actuator_data.velocity = dict_joint['limits']['velocity']
+            self.owner.actuator_data.effort = dict_joint['limits']['peak_torque']
+            self.owner.actuator_data.gear_ratio = dict_joint['gear_ratio']
+            self.owner.actuator_data.zero_offset = 0.0
+            # CentAcESC
+            self.owner.CentAcESC = Module.Attribute(dict_joint['control_parameters']['xbot'])
+            # xbot_gz
+            self.owner.xbot_gz = Module.Attribute(dict_joint['control_parameters']['xbot_gz'])
+            self.owner.joint_gripper_adapter = Module.Attribute(dict_joint['control_parameters']['joint_gripper_adapter'])
+            #HACK: We hard-code the value for the flange_size of the dagana
+            self.owner.flange_size = 'big'
 
     @staticmethod
     def set_dynamic_properties(body, dict_body):
@@ -246,7 +263,7 @@ class YAMLInterpreter(object):
     def __init__(self, owner, d, yaml_file=None):
         self.owner = owner
         self.parse_dict(d)
-        self.owner.set_size()
+        self.owner.set_flange_size()
         # set filename
         self.owner.filename = yaml_file
 
@@ -303,8 +320,8 @@ class Module(object):
         return props
 
     # 
-    def set_size(self):
-        """Set the size of the module"""
+    def set_flange_size(self):
+        """Set the flange_size of the module"""
         switcher = {
                 'small': '1',
                 'medium': '2',
@@ -314,12 +331,12 @@ class Module(object):
             }
         if self.type == "size_adapter":
             #print(self.size_in)
-            setattr(self, 'size_in', switcher.get(self.size_in, "Invalid size"))
+            setattr(self, 'size_in', switcher.get(self.size_in, "Invalid flange_size"))
             #print(self.size_out)
-            setattr(self, 'size_out', switcher.get(self.size_out, "Invalid size"))
+            setattr(self, 'size_out', switcher.get(self.size_out, "Invalid flange_size"))
         else:
-            if hasattr(self, 'size'):
-                setattr(self, 'size', switcher.get(self.size, "Invalid size"))
+            if hasattr(self, 'flange_size'):
+                setattr(self, 'flange_size', switcher.get(self.flange_size, "Invalid flange_size"))
             else:
                 pass
     #

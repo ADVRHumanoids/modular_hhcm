@@ -677,7 +677,7 @@
 
         <script>
             var flag, reader, robots, doc;
-            var size = 3;
+            var flange_size = 3;
             var buildingModeON;
             var erasePrevious = false;
             var link_positions, joint_names;
@@ -918,11 +918,11 @@
                 // add_3011_ICM_20_v2.onclick = function() {addModule("innowelle/3011_ICM_20_v2", size_value=3)};
                 // add_3011_ICM_25_v3.onclick = function() {addModule("innowelle/3011_ICM_25_PRELIMINARY_v3", size_value=4)};
                 // add_3011_ICM_32_v2.onclick = function() {addModule("innowelle/3011_ICM_32_PRELIMINARY_v2", size_value=5)};
-                // add_size_adapter_MtoS.onclick = function() {addModule("innowelle/module_size_adapter_MtoS", size)};
-                // add_size_adapter_BtoM.onclick = function() {addModule("innowelle/module_size_adapter_BtoM", size)};
-                // add_size_adapter_LtoB.onclick = function() {addModule("innowelle/module_size_adapter_LtoB", size)};
-                // add_size_adapter_XLtoL.onclick = function() {addModule("innowelle/module_size_adapter_XLtoL", size)};
-                // add_innowelle_link.onclick = function() {addModule("innowelle/module_link", size)};
+                // add_size_adapter_MtoS.onclick = function() {addModule("innowelle/module_size_adapter_MtoS", flange_size)};
+                // add_size_adapter_BtoM.onclick = function() {addModule("innowelle/module_size_adapter_BtoM", flange_size)};
+                // add_size_adapter_LtoB.onclick = function() {addModule("innowelle/module_size_adapter_LtoB", flange_size)};
+                // add_size_adapter_XLtoL.onclick = function() {addModule("innowelle/module_size_adapter_XLtoL", flange_size)};
+                // add_innowelle_link.onclick = function() {addModule("innowelle/module_link", flange_size)};
                 // add_goose_neck.onclick = function() {addModule("innowelle/module_goose_neck", size_value=2)};
                 
                 
@@ -1017,10 +1017,10 @@
                     success: function(data) { //data is a JSON returned by the server containing 'result', which is the modified URDF
                         console.log(data)
                         robots = urdfViewer.updateURDF(data['result'])//, data['lastModule_name'])
-                        // Update size
-                        size = data['size']
-                        updateShownButtons(data['lastModule_type'], data['count'], data['size'])
-                        console.log(size)
+                        // Update flange_size
+                        flange_size = data['flange_size']
+                        updateShownButtons(data['lastModule_type'], data['count'], data['flange_size'])
+                        console.log(flange_size)
                         CURRENT_PARENT = data['lastModule_name']
                         //write the file
                         writeRequest(data['result'], true, function(){})
@@ -1070,10 +1070,10 @@
                     success: function(data) {
                         console.log(data)
                         robots = urdfViewer.updateURDF(data['result'])//, data['lastModule_name'])
-                        // Update size
-                        size = data['size']
-                        updateShownButtons(data['lastModule_type'], data['count'], data['size'])
-                        console.log(size)
+                        // Update flange_size
+                        flange_size = data['flange_size']
+                        updateShownButtons(data['lastModule_type'], data['count'], data['flange_size'])
+                        console.log(flange_size)
                         CURRENT_PARENT = data['lastModule_name']
                         //write the file
                         writeRequest(data['result'], true, function(){})
@@ -1194,10 +1194,10 @@
                     success: function(data) {
                         console.log(data)
                         robots = urdfViewer.updateURDF(data['result'])//, data['lastModule_name'])
-                        // Update size
-                        size = data['size']
-                        updateShownButtons(data['lastModule_type'], data['count'], data['size'])
-                        console.log(size)
+                        // Update flange_size
+                        flange_size = data['flange_size']
+                        updateShownButtons(data['lastModule_type'], data['count'], data['flange_size'])
+                        console.log(flange_size)
                         CURRENT_PARENT = data['lastModule_name']
                         
                         //write the file
@@ -1220,10 +1220,10 @@
                     success: function(data) {
                         console.log(data)
                         robots = urdfViewer.updateURDF(data['result'])//, data['lastModule_name'])
-                        // Update size
-                        size = data['size']
-                        updateShownButtons(data['lastModule_type'], data['count'], data['size'])
-                        console.log(size)
+                        // Update flange_size
+                        flange_size = data['flange_size']
+                        updateShownButtons(data['lastModule_type'], data['count'], data['flange_size'])
+                        console.log(flange_size)
                         CURRENT_PARENT = data['lastModule_name']
                         //write the file
                         writeRequest(data['result'], true, function(){})
@@ -1245,10 +1245,10 @@
                     success: function(data) {
                         console.log(data)
                         robots = urdfViewer.updateURDF(data['result'])//, data['lastModule_name'])
-                        // Update size
-                        size = data['size']
-                        updateShownButtons(data['lastModule_type'], data['count'], data['size'])
-                        console.log(size)
+                        // Update flange_size
+                        flange_size = data['flange_size']
+                        updateShownButtons(data['lastModule_type'], data['count'], data['flange_size'])
+                        console.log(flange_size)
                         CURRENT_PARENT = data['lastModule_name']
                         //write the file
                         writeRequest(data['result'], true, function(){})
@@ -1266,10 +1266,10 @@
                     success: function(data) {
                         console.log(data)
                         robots = urdfViewer.updateURDF(data['result'])
-                        // Update size
-                        size = data['size']
-                        updateShownButtons(data['lastModule_type'], data['count'], data['size'])
-                        console.log(size)
+                        // Update flange_size
+                        flange_size = data['flange_size']
+                        updateShownButtons(data['lastModule_type'], data['count'], data['flange_size'])
+                        console.log(flange_size)
                         CURRENT_PARENT = data['lastModule_name']
                         //write the file
                         writeRequest(data['result'], true, function(){})
