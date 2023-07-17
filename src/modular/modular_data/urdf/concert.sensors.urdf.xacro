@@ -404,6 +404,23 @@
         <xacro:insert_block name="ultrasound_rear_right_lateral_origin" />
     </xacro:add_ultrasound_sensor>
 
+    <!-- Add Dalsa Cameras -->
+    <joint name="fixed_dalsa_camera_right" type="fixed">
+        <axis xyz="0 0 1" rpy="0 0 0" />
+        <parent link="base_link"/>
+        <child link="dalsa_camera_right"/>
+        <origin xyz="0.445 -0.285 0.074" rpy="0.0 -0.26179278697487707 -0.5235508063884032"/>
+    </joint>
+    <link name="dalsa_camera_right"/>
+
+    <joint name="fixed_dalsa_camera_left" type="fixed">
+        <axis xyz="0 0 1" rpy="0 0 0" />
+        <parent link="base_link"/>
+        <child link="dalsa_camera_left"/>
+        <origin xyz="0.445 0.285 0.074" rpy="0.0 -0.26179278697487707 0.5235508063884032"/>
+    </joint>
+    <link name="dalsa_camera_left"/>
+
 </xacro:macro>
 
 </robot>
