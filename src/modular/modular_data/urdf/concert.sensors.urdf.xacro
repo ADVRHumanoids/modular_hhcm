@@ -28,46 +28,11 @@
     <xacro:property name="d435i_front_origin">
         <origin xyz="0.402872 0.0 -0.078218" rpy="0 0.261799 0"/>
     </xacro:property>
-
-    <xacro:if value="${ADD_D435I_FRONT}">
-        <xacro:include filename="$(find realsense_gazebo_description)/urdf/_d435i.urdf.xacro" />
-        
-        <xacro:sensor_d435i parent="${d435i_front_parent_name}"
-                            name="${d435i_front_name}" 
-                            topics_ns="${d435i_front_name}" 
-
-                            enable_pointCloud="true" 
-                            align_depth="true"
-                            unite_imu_method="false"
-                            
-                            visualize="true"
-                                    
-                            accel_fps="300"
-                            gyro_fps="300"
-
-                            depth_width="1280"
-                            depth_height="720"
-                            depth_fps="90"
-
-                            infra_width="1280"
-                            infra_height="720"
-                            infra_fps="90"
-
-                            color_width="1280"
-                            color_height="720"
-                            color_fps="30">
-            <xacro:insert_block name="d435i_front_origin" />
-        </xacro:sensor_d435i>
-    </xacro:if>
-    <xacro:unless value="${ADD_D435I_FRONT}">
-        <!-- camera body, with origin at bottom screw mount -->
-        <joint name="${d435i_front_name}_joint" type="fixed">
-            <xacro:insert_block name="d435i_front_origin"/>
-            <parent link="${d435i_front_parent_name}"/>
-            <child link="${d435i_front_name}_bottom_screw_frame"/>
-        </joint>
-        <link name="${d435i_front_name}_bottom_screw_frame"/>
-    </xacro:unless>
+    <xacro:add_realsense_d_camera name="${d435i_front_name}" 
+                                parent_name="${d435i_front_parent_name}" 
+                                add_gazebo_sensor="${ADD_D435I_FRONT}">
+        <xacro:insert_block name="d435i_front_origin" />
+    </xacro:add_realsense_d_camera>
 
     <!-- Add back D435i camera -->
     <xacro:property name="d435i_back_name" value="D435i_camera_back" />
@@ -76,45 +41,11 @@
         <origin xyz="-0.402872 0.0 -0.078218" rpy="0 0.261799 3.141593"/>
     </xacro:property>
 
-    <xacro:if value="${ADD_D435I_BACK}">
-        <xacro:include filename="$(find realsense_gazebo_description)/urdf/_d435i.urdf.xacro" />
-        
-        <xacro:sensor_d435i parent="${d435i_back_parent_name}"
-                            name="${d435i_back_name}" 
-                            topics_ns="${d435i_back_name}" 
-
-                            enable_pointCloud="true" 
-                            align_depth="true"
-                            unite_imu_method="false"
-                            
-                            visualize="true"
-                                    
-                            accel_fps="300"
-                            gyro_fps="300"
-
-                            depth_width="1280"
-                            depth_height="720"
-                            depth_fps="90"
-
-                            infra_width="1280"
-                            infra_height="720"
-                            infra_fps="90"
-
-                            color_width="1280"
-                            color_height="720"
-                            color_fps="30">
-            <xacro:insert_block name="d435i_back_origin" />
-        </xacro:sensor_d435i>
-    </xacro:if>
-    <xacro:unless value="${ADD_D435I_BACK}">
-        <!-- camera body, with origin at bottom screw mount -->
-        <joint name="${d435i_back_name}_joint" type="fixed">
-            <xacro:insert_block name="d435i_back_origin"/>
-            <parent link="${d435i_back_parent_name}"/>
-            <child link="${d435i_back_name}_bottom_screw_frame"/>
-        </joint>
-        <link name="${d435i_back_name}_bottom_screw_frame"/>
-    </xacro:unless>
+    <xacro:add_realsense_d_camera name="${d435i_back_name}" 
+                                parent_name="${d435i_back_parent_name}" 
+                                add_gazebo_sensor="${ADD_D435I_BACK}">
+        <xacro:insert_block name="d435i_back_origin" />
+    </xacro:add_realsense_d_camera>
 
     <!-- Add left T265 camera -->
     <xacro:property name="t265_left_name" value="T265_camera_left" />
@@ -123,37 +54,11 @@
         <origin xyz="0.02375 0.37245 -0.062" rpy="3.141593 0.0 1.570796"/>
     </xacro:property>
 
-    <xacro:if value="${ADD_T265_LEFT}">
-        <xacro:include filename="$(find realsense_gazebo_description)/urdf/_t265.urdf.xacro" />
-
-        <xacro:sensor_t265  parent="${t265_left_parent_name}" 
-                            name="${t265_left_name}" 
-                            topics_ns="${t265_left_name}"                  
-                                
-                            odom_xyz="0.0 0.0 0.25"
-                            odom_rpy="0.0 0.0 0.0"
-                            odom_fps="262"
-
-                            fisheye_width="848"
-                            fisheye_height="800"
-                            fisheye_fps="30"
-
-                            unite_imu_method="false"
-                            accel_fps="62.5"
-                            gyro_fps="200">
-            
-            <xacro:insert_block name="t265_left_origin" />
-        </xacro:sensor_t265>
-    </xacro:if>
-    <xacro:unless value="${ADD_T265_LEFT}">
-        <!-- camera body, with origin at bottom screw mount -->
-        <joint name="${t265_left_name}_joint" type="fixed">
-            <xacro:insert_block name="t265_left_origin"/>
-            <parent link="${t265_left_parent_name}"/>
-            <child link="${t265_left_name}_pose_frame"/>
-        </joint>
-        <link name="${t265_left_name}_pose_frame"/>
-    </xacro:unless>
+    <xacro:add_realsense_t_camera name="${t265_left_name}" 
+                                parent_name="${t265_left_parent_name}" 
+                                add_gazebo_sensor="${ADD_T265_LEFT}">
+        <xacro:insert_block name="t265_left_origin" />
+    </xacro:add_realsense_t_camera>
 
     <!-- Add right T265 camera -->
     <xacro:property name="t265_right_name" value="T265_camera_right" />
@@ -162,37 +67,11 @@
         <origin xyz="0.02375 -0.37245 -0.062" rpy="0 0.0 -1.570796"/>
     </xacro:property>
 
-    <xacro:if value="${ADD_T265_RIGHT}">
-        <xacro:include filename="$(find realsense_gazebo_description)/urdf/_t265.urdf.xacro" />
-
-        <xacro:sensor_t265  parent="${t265_right_parent_name}" 
-                            name="${t265_right_name}" 
-                            topics_ns="${t265_right_name}"                  
-                                
-                            odom_xyz="0.0 0.0 0.25"
-                            odom_rpy="0.0 0.0 0.0"
-                            odom_fps="262"
-
-                            fisheye_width="848"
-                            fisheye_height="800"
-                            fisheye_fps="30"
-
-                            unite_imu_method="false"
-                            accel_fps="62.5"
-                            gyro_fps="200">
-            
-            <xacro:insert_block name="t265_right_origin" />
-        </xacro:sensor_t265>
-    </xacro:if>
-    <xacro:unless value="${ADD_T265_RIGHT}">
-        <!-- camera body, with origin at bottom screw mount -->
-        <joint name="${t265_right_name}_joint" type="fixed">
-            <xacro:insert_block name="t265_right_origin"/>
-            <parent link="${t265_right_parent_name}"/>
-            <child link="${t265_right_name}_pose_frame"/>
-        </joint>
-        <link name="${t265_right_name}_pose_frame"/>
-    </xacro:unless>
+    <xacro:add_realsense_t_camera name="${t265_right_name}" 
+                                parent_name="${t265_right_parent_name}" 
+                                add_gazebo_sensor="${ADD_T265_RIGHT}">
+        <xacro:insert_block name="t265_right_origin" />
+    </xacro:add_realsense_t_camera>
 
     <!-- Add Velodyne front -->
     <xacro:property name="velodyne_front_name" value="VLP16_lidar_front" />
@@ -269,44 +148,7 @@
 
     </xacro:macro>
 
-    <!-- Macro for adding gazebo plugin for ultrasound sensors -->
-    <xacro:macro name="add_ultrasound_gazebo" params="name topic">
-        <gazebo reference="${name}">
-            <sensor type="ray" name="sonar">
-                <update_rate>5</update_rate>
-                <ray>
-                    <scan>
-                        <horizontal>
-                            <samples>5</samples>
-                            <resolution>1.0</resolution>
-                            <min_angle>-1.0</min_angle>
-                            <max_angle>1.0</max_angle>
-                        </horizontal>
-                        <vertical>
-                            <samples>5</samples>
-                            <resolution>1</resolution>
-                            <min_angle>-0.5</min_angle>
-                            <max_angle>0.5</max_angle>
-                        </vertical>
-                    </scan>
-                    <range>
-                        <min>0.2</min>
-                        <max>3.0</max>
-                        <resolution>0.01</resolution>
-                    </range>
-                </ray>
-                <plugin filename="libgazebo_ros_range.so" name="gazebo_ros_range">
-                    <gaussianNoise>0.005</gaussianNoise>
-                    <alwaysOn>true</alwaysOn>
-                    <updateRate>5</updateRate>
-                    <topicName>${topic}</topicName>
-                    <frameName>${name}</frameName>
-                    <fov>2.3</fov>
-                    <radiation>ultrasound</radiation>
-                </plugin>
-            </sensor>
-        </gazebo>
-    </xacro:macro>
+    
 
     <!-- Add front-left Bosch USS5 ultrasound sensor -->
     <xacro:property name="ultrasound_front_left_sagittal_name" value="ultrasound_fl_sag" />
@@ -420,6 +262,127 @@
         <origin xyz="0.445 0.285 0.074" rpy="0.0 -0.26179278697487707 0.5235508063884032"/>
     </joint>
     <link name="dalsa_camera_left"/>
+
+</xacro:macro>
+
+<!-- Macro for adding gazebo plugin for ultrasound sensors -->
+    <xacro:macro name="add_ultrasound_gazebo" params="name topic">
+        <gazebo reference="${name}">
+            <sensor type="ray" name="sonar">
+                <update_rate>5</update_rate>
+                <ray>
+                    <scan>
+                        <horizontal>
+                            <samples>5</samples>
+                            <resolution>1.0</resolution>
+                            <min_angle>-1.0</min_angle>
+                            <max_angle>1.0</max_angle>
+                        </horizontal>
+                        <vertical>
+                            <samples>5</samples>
+                            <resolution>1</resolution>
+                            <min_angle>-0.5</min_angle>
+                            <max_angle>0.5</max_angle>
+                        </vertical>
+                    </scan>
+                    <range>
+                        <min>0.2</min>
+                        <max>3.0</max>
+                        <resolution>0.01</resolution>
+                    </range>
+                </ray>
+                <plugin filename="libgazebo_ros_range.so" name="gazebo_ros_range">
+                    <gaussianNoise>0.005</gaussianNoise>
+                    <alwaysOn>true</alwaysOn>
+                    <updateRate>5</updateRate>
+                    <topicName>${topic}</topicName>
+                    <frameName>${name}</frameName>
+                    <fov>2.3</fov>
+                    <radiation>ultrasound</radiation>
+                </plugin>
+            </sensor>
+        </gazebo>
+    </xacro:macro>
+
+<!-- Macro for adding realsense D camera -->
+<xacro:macro name="add_realsense_d_camera" params="name parent_name *origin add_gazebo_sensor">
+
+    <xacro:if value="${add_gazebo_sensor}">
+        <xacro:include filename="$(find realsense_gazebo_description)/urdf/_d435i.urdf.xacro" />
+        
+        <xacro:sensor_d435i parent="${parent_name}"
+                            name="${name}" 
+                            topics_ns="${name}" 
+
+                            enable_pointCloud="true" 
+                            align_depth="true"
+                            unite_imu_method="false"
+                            
+                            visualize="true"
+                                    
+                            accel_fps="300"
+                            gyro_fps="300"
+
+                            depth_width="1280"
+                            depth_height="720"
+                            depth_fps="90"
+
+                            infra_width="1280"
+                            infra_height="720"
+                            infra_fps="90"
+
+                            color_width="1280"
+                            color_height="720"
+                            color_fps="30">
+            <xacro:insert_block name="origin" />
+        </xacro:sensor_d435i>
+    </xacro:if>
+    <xacro:unless value="${add_gazebo_sensor}">
+        <!-- camera body, with origin at bottom screw mount -->
+        <joint name="${name}_joint" type="fixed">
+            <xacro:insert_block name="origin"/>
+            <parent link="${parent_name}"/>
+            <child link="${name}_bottom_screw_frame"/>
+        </joint>
+        <link name="${name}_bottom_screw_frame"/>
+    </xacro:unless>
+
+</xacro:macro>
+
+<!-- Macro for adding realsense T camera -->
+<xacro:macro name="add_realsense_t_camera" params="name parent_name *origin add_gazebo_sensor">
+    
+    <xacro:if value="${add_gazebo_sensor}">
+        <xacro:include filename="$(find realsense_gazebo_description)/urdf/_t265.urdf.xacro" />
+
+        <xacro:sensor_t265  parent="${parent_name}" 
+                            name="${name}" 
+                            topics_ns="${name}"                  
+                                
+                            odom_xyz="0.0 0.0 0.25"
+                            odom_rpy="0.0 0.0 0.0"
+                            odom_fps="262"
+
+                            fisheye_width="848"
+                            fisheye_height="800"
+                            fisheye_fps="30"
+
+                            unite_imu_method="false"
+                            accel_fps="62.5"
+                            gyro_fps="200">
+            
+            <xacro:insert_block name="origin" />
+        </xacro:sensor_t265>
+    </xacro:if>
+    <xacro:unless value="${add_gazebo_sensor}">
+        <!-- camera body, with origin at bottom screw mount -->
+        <joint name="${name}_joint" type="fixed">
+            <xacro:insert_block name="origin"/>
+            <parent link="${parent_name}"/>
+            <child link="${name}_pose_frame"/>
+        </joint>
+        <link name="${name}_pose_frame"/>
+    </xacro:unless>
 
 </xacro:macro>
 
