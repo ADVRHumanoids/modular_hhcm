@@ -3139,7 +3139,7 @@ class UrdfWriter:
         elif new_Link.type == 'drill':
             setattr(new_Link, 'name', 'drill' + new_Link.tag)
             ET.SubElement(self.root,
-                          "xacro:add_link",
+                          "xacro:add_drill",
                           type="link",
                           name=new_Link.name,
                           filename=new_Link.filename)

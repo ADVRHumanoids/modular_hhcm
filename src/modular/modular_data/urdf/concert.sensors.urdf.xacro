@@ -11,6 +11,7 @@
     <xacro:property name="ADD_D435I_BACK" value="true" />
     <xacro:property name="ADD_T265_LEFT" value="true" />
     <xacro:property name="ADD_T265_RIGHT" value="true" />
+    <xacro:property name="ADD_DRILL_CAMERA" value="true" />
 </xacro:if>
 
 <xacro:property name="ADD_VELODYNE_FRONT" value="false" />
