@@ -203,7 +203,7 @@ class Plugin:
                     tip_link = joints_chain[-1].pen_name
                 if joints_chain[-1].type == 'gripper':
                     tip_link = joints_chain[-1].TCP_name
-                elif joints_chain[-1].type == 'simple_ee':
+                elif joints_chain[-1].type == 'simple_ee' or joints_chain[-1].type == 'drill':
                     tip_link = joints_chain[-1].name
                 elif joints_chain[-1].type == 'dagana':
                     tip_link = joints_chain[-1].dagana_link_name
@@ -781,6 +781,11 @@ class XBot2Plugin(Plugin):
                         joint_map['joint_map'][i] = name
                 elif joint_module.type == 'simple_ee':
                     continue
+                elif joint_module.type == 'drill':
+                    if use_robot_id:
+                        joint_map['joint_map'][int(joint_module.robot_id)] = "DRILL"
+                    else:
+                        joint_map['joint_map'][i] = "DRILL"
                 elif joint_module.type == 'gripper':
                     name = joint_module.name
                     fingers = [name + '_rightfinger', name + '_leftfinger']
@@ -1508,6 +1513,7 @@ class UrdfWriter:
         ## HACK: Manually add passive end effector for now!
         # self.add_simple_ee(0.0, 0.0, 0.135, mass=0.23)
         # data = self.add_module('concert/passive_end_effector_panel.json', 0, False)
+        # data = self.add_module('experimental/passive_end_effector_pen.json', 0, False)
 
         # doc = xacro.parse(string)
         # xacro.process_doc(doc, in_order=True)
@@ -3130,6 +3136,29 @@ class UrdfWriter:
 
             return
 
+        elif new_Link.type == 'drill':
+            setattr(new_Link, 'name', 'drill' + new_Link.tag)
+            ET.SubElement(self.root,
+                          "xacro:add_link",
+                          type="link",
+                          name=new_Link.name,
+                          filename=new_Link.filename)
+            x_ee, y_ee, z_ee, roll_ee, pitch_ee, yaw_ee = ModuleNode.get_xyzrpy(tf.transformations.numpy.array(new_Link.kinematics.link.pose))
+            setattr(new_Link, 'tcp_name', 'ee' + new_Link.tag)
+            ET.SubElement(self.root,
+                          "xacro:add_tcp",
+                          type="pen",
+                          name=new_Link.tcp_name,
+                          father=new_Link.name,
+                          filename=new_Link.filename,
+                          x=x_ee,
+                          y=y_ee,
+                          z=z_ee,
+                          roll=roll_ee,
+                          pitch=pitch_ee,
+                          yaw=yaw_ee)
+            # the drill gets added to the chain although it's not a joint. it's needed in the joint map and in the config!
+            self.add_to_chain(new_Link)
         elif new_Link.type == 'end_effector':
             setattr(new_Link, 'name', 'end_effector' + new_Link.tag)
             ET.SubElement(self.root,
@@ -3206,7 +3235,7 @@ class UrdfWriter:
 
         self.add_gazebo_element(new_Link.gazebo.body_1, new_Link.name)
             
-        if new_Link.type == 'tool_exchanger' or new_Link.type == 'gripper' or new_Link.type == 'end_effector':
+        if new_Link.type == 'tool_exchanger' or new_Link.type == 'gripper' or new_Link.type == 'end_effector' or new_Link.type == 'drill':
             fixed_joint_name = new_Link.name + '_fixed_joint'
         else:
             fixed_joint_name = 'L_' + str(new_Link.i) + '_fixed_joint_' + str(new_Link.p) + new_Link.tag

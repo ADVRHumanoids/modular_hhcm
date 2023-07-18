@@ -37,6 +37,7 @@ class ModuleType(str, Enum):
     SIZE_ADAPTER = 'size_adapter'
     SIMPLE_EE = 'simple_ee'
     END_EFFECTOR = 'end_effector'
+    DRILL = 'drill'
     DAGANA = 'dagana'
 
 # import collections.abc
@@ -104,7 +105,7 @@ class JSONInterpreter(object):
 
     def type_dispatcher(self, d):
         """Dispatch the parsing of the dictionary d according to the module type"""
-        if self.owner.type in {ModuleType.LINK, ModuleType.GRIPPER, ModuleType.TOOL_EXCHANGER, ModuleType.SIZE_ADAPTER, ModuleType.END_EFFECTOR}:
+        if self.owner.type in {ModuleType.LINK, ModuleType.GRIPPER, ModuleType.TOOL_EXCHANGER, ModuleType.SIZE_ADAPTER, ModuleType.END_EFFECTOR, ModuleType.DRILL}:
             if len(d['joints']) != 0:
                 raise ValueError('A link must have no joints')
             if len(d['bodies']) != 1:
@@ -530,6 +531,7 @@ class Module(object):
             'size_adapter': self.get_homogeneous_matrix,
             'tool_exchanger': self.get_homogeneous_matrix,
             'end_effector': self.get_homogeneous_matrix,
+            'drill': self.get_homogeneous_matrix,
             'dagana': lambda reverse: None,
             'gripper': self.get_homogeneous_matrix,
             'cube': self.get_hub_connections_tf, #  self.get_cube_connections_tf,
