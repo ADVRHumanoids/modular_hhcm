@@ -44,7 +44,7 @@ else:
 werkzeug_logger = logging.getLogger('werkzeug')
 
 # set verbosity levels
-verbose=False
+verbose=True
 if verbose:
     logger.setLevel(logging.DEBUG)
     logger.debug('Starting server')
@@ -325,6 +325,7 @@ def syncHW():
 
     reply = slave_description()
     reply = reply.cmd_info.msg
+    app.logger.debug("%s", reply)
     app.logger.debug("Exit")
 
     data = urdf_writer_fromHW.read_from_json(reply)
@@ -401,7 +402,7 @@ def byteify(input):
 
 def main():
     # Start Flask web-server
-    app.run(host='0.0.0.0', port=5000, debug=False, threaded=True)
+    app.run(host='0.0.0.0', port=5000, debug=True, threaded=True)
     # app.run(debug=False, threaded=True)
 
 

@@ -7,7 +7,6 @@ XBotInterface:
 
 ModelInterface:
   model_type: "RBDL"
-  is_model_floating_base: "false"
 
 ## XBot2 related configuration
 
@@ -40,52 +39,12 @@ xbotcore_plugins:
   homing:
     thread: rt_main
     type: homing_example
-    params:
-      time: { value: 5, type: double }
-  
-  cartesio_ik:
-    thread: rt_main
-    type: cartesio_rt
-    params:
-      ros_ns:
-        value: cartesian
-        type: string
-      problem_description:
-          value: $(rospack find modularbot)/cartesio/ModularBot_cartesio_IK_config.yaml
-          type: file
-      solver:
-          value: OpenSot
-          type: string
-      enable_feedback:
-          value: false
-          type: bool
-    
-  cartesio_imp: 
-    thread: rt_main 
-    type: albero_cartesio_rt
-    params:
-      switch_time:
-        value: 4.
-        type: double
-      ros_ns:
-        value: cartesian
-        type: string
-      problem_description:
-        value: $(rospack find modularbot)/cartesio/ModularBot_cartesio_Interaction_config.yaml
-        type: file
-      solver: {value: AlberoImpedance, type: string}
-      enable_feedback: {value: true, type: bool}
-      fc_map: {value: {grav: 0.2, dfl: 0.9}, type: map<double>}
-  
-  gripper:
-    thread: rt_main
-    type: albero_gripper_rt
-  
+
   ec_ros:
     thread: nrt_main
     type: ec_ros
 
 # additional parameters that don't relate to any plugin
 xbotcore_param:
-  /jm/tx_filter_autostart: { value: true, type: bool } # autostart joint filter
-  /jm/tx_filter_cutoff: { value: 2.0, type: double } # set default filter bandwidth
+  /xbot/hal/joint_safety/filter_autostart: {value: true, type: bool}
+  /xbot/hal/joint_safety/filter_cutoff_hz: {value: 2.0, type: double}

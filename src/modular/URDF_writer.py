@@ -1351,9 +1351,6 @@ class UrdfWriter:
             if parent_position :
                 parent = modules_list[parent_position -1]
                 self.print('parent:', parent)
-                # HACK: skip hub for discovery!
-                if parent['robot_id'] == -1:
-                    parent = modules_list[parent['position'] -2]
                 
                 parent_id = int(parent['robot_id'])
                 self.print('parent_id:', parent_id)
@@ -3093,9 +3090,6 @@ class UrdfWriter:
 
         transform = self.get_proximal_transform(interface_transform, offset, reverse)
 
-        # HACK: to handle 90° offset between PINO and CONCERT flanges
-        transform = self.apply_adapter_transform_rotation(transform, past_Cube.flange_size, new_Link.flange_size)
-
         self.add_link(new_Link, parent_name, transform, reverse)
 
         self.collision_elements.append((past_Cube.name, new_Link.name))
@@ -3298,9 +3292,6 @@ class UrdfWriter:
 
         transform = self.get_proximal_transform(interface_transform, offset, reverse)
 
-        # HACK: to handle 90° offset between PINO and CONCERT flanges
-        transform = self.apply_adapter_transform_rotation(transform, past_Cube.flange_size, new_Joint.flange_size)
-
         setattr(new_Joint, 'i', 1)
         setattr(new_Joint, 'p', 0)
 
@@ -3328,9 +3319,6 @@ class UrdfWriter:
             
         transform = self.get_proximal_transform(interface_transform, offset, reverse)
 
-        # HACK: to handle 90° offset between PINO and CONCERT flanges
-        transform = self.apply_adapter_transform_rotation(transform, past_Joint.flange_size, new_Link.flange_size)
-
         parent_name = past_Joint.distal_link_name
 
         self.add_link(new_Link, parent_name, transform, reverse)
@@ -3355,9 +3343,6 @@ class UrdfWriter:
         interface_transform = self.get_joint_output_transform(past_Joint)
         
         transform = self.get_proximal_transform(interface_transform, offset, reverse)
-
-        # HACK: to handle 90° offset between PINO and CONCERT flanges
-        transform = self.apply_adapter_transform_rotation(transform, past_Joint.flange_size, new_Joint.flange_size)
 
         setattr(new_Joint, 'i', past_Joint.i + 1)
         setattr(new_Joint, 'p', 0)
@@ -3384,9 +3369,6 @@ class UrdfWriter:
         interface_transform = self.get_link_output_transform(past_Link)
 
         transform = self.get_proximal_transform(interface_transform, offset, reverse)
-
-        # HACK: to handle 90° offset between PINO and CONCERT flanges
-        transform = self.apply_adapter_transform_rotation(transform, past_Link.flange_size, new_Joint.flange_size)
 
         setattr(new_Joint, 'i', past_Link.i + 1)
         setattr(new_Joint, 'p', 0)
@@ -3416,9 +3398,6 @@ class UrdfWriter:
         interface_transform = self.get_link_output_transform(past_Link)
 
         transform = self.get_proximal_transform(interface_transform, offset, reverse)
-
-        # HACK: to handle 90° offset between PINO and CONCERT flanges
-        transform = self.apply_adapter_transform_rotation(transform, past_Link.flange_size, new_Link.flange_size)
 
         parent_name = past_Link.name
 

@@ -6,13 +6,13 @@
 13: module_joint_double_elbow_ORANGE.yaml  # HACK: commented to work with CONCERT platform
 14: module_joint_double_elbow_ORANGE.yaml  # HACK: commented to work with CONCERT platform
 42: module_joint_double_elbow_ORANGE.yaml  # HACK: commented to work with CONCERT platform
-# # fhi joints
-# 21: module_joint_yaw_ORANGE.yaml  # HACK: commented to work with CONCERT platform
-# 22: module_joint_yaw_ORANGE.yaml  # HACK: commented to work with CONCERT platform
-# 23: module_joint_yaw_ORANGE.yaml  # HACK: commented to work with CONCERT platform
-# 24: module_joint_double_elbow_ORANGE.yaml  # HACK: commented to work with CONCERT platform
-# 25: module_joint_double_elbow_ORANGE.yaml  # HACK: commented to work with CONCERT platform
-# 26: module_joint_double_elbow_ORANGE.yaml  # HACK: commented to work with CONCERT platform
+# fhi joints
+21: module_joint_yaw_ORANGE.yaml  # HACK: commented to work with CONCERT platform
+22: module_joint_yaw_ORANGE.yaml  # HACK: commented to work with CONCERT platform
+23: module_joint_yaw_ORANGE.yaml  # HACK: commented to work with CONCERT platform
+24: module_joint_double_elbow_ORANGE.yaml  # HACK: commented to work with CONCERT platform
+25: module_joint_double_elbow_ORANGE.yaml  # HACK: commented to work with CONCERT platform
+26: module_joint_double_elbow_ORANGE.yaml  # HACK: commented to work with CONCERT platform
 # end-effectors
 89: module_gripper.yaml
 19: module_gripper.yaml
@@ -21,7 +21,7 @@
 # Links
 500: module_link_elbow_90.yaml
 501: module_link_straight_140.yaml
-# -1 : master_cube.yaml  # HACK: commented to work with CONCERT platform
+-1 : master_cube.yaml  # HACK: commented to work with CONCERT platform
 201: master_cube.yaml  # HACK: commented to work with CONCERT platform
 
 # CONCERT
