@@ -19,12 +19,12 @@ xbotcore_devices:
                 value: $PWD/../../joint_map/ModularBot_joint_map.yaml
                 type: yamlfile
 
-    imu_ec:
-        names: []
-        thread: rt_main
-        params:
-            robot_name: *rn
-            joint_id_map: *jim
+    # imu_ec:
+    #     names: []
+    #     thread: rt_main
+    #     params:
+    #         robot_name: *rn
+    #         joint_id_map: *jim
             
     pow_ec:
         names: []
