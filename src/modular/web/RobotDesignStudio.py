@@ -30,7 +30,7 @@ import modular.web.mock_resources as mock_resources
 base_path, _ = os.path.split(__file__)
 config = ConfigParser(interpolation=ExtendedInterpolation(), allow_no_value=True)
 config.read(os.path.join(base_path, 'web_config.ini'))
-host = config.get('MODULAR_SERVER', 'host', fallback=None)
+host = config.get('MODULAR_SERVER', 'host', fallback='0.0.0.0')
 port = config.getint('MODULAR_SERVER','port',fallback=5003)
 gui_route = config.get('MODULAR_API','gui_route',fallback='')
 api_base_route = config.get('MODULAR_API','base_route',fallback='')
