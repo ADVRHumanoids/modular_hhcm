@@ -7,6 +7,10 @@ xbotcore_devices:
             robot_name: &rn {value: NoNe, type: string}
             #ignore_id: {type: vector<int>, value: [89]}
 
+            config_ec_pos:
+                value: $PWD/../joint_config/ModularBot_pos3b.yaml
+                type: yamlfile
+
             config_ec_idle: 
                 value: $PWD/../joint_config/ModularBot_idle.yaml
                 type: yamlfile
