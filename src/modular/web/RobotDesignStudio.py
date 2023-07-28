@@ -296,7 +296,10 @@ def addNewModule():
         reverse = True if 'reverse' in req and req['reverse'] == 'true' else False
         app.logger.debug(reverse)
 
-        urdf_writer.add_module(filename, offset, reverse)
+        if building_mode_ON :
+            urdf_writer.add_module(filename, offset, reverse)
+        else:
+            urdf_writer_fromHW.add_module(filename, offset, reverse)
         return Response(status=204)
 
     except ValueError as e:
