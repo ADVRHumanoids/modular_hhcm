@@ -782,10 +782,11 @@ class XBot2Plugin(Plugin):
                 elif joint_module.type == 'simple_ee':
                     continue
                 elif joint_module.type == 'drill':
+                    name = joint_module.name
                     if use_robot_id:
-                        joint_map['joint_map'][int(joint_module.robot_id)] = "DRILL"
+                        joint_map['joint_map'][int(joint_module.robot_id)] = name
                     else:
-                        joint_map['joint_map'][i] = "DRILL"
+                        joint_map['joint_map'][i] = name
                 elif joint_module.type == 'gripper':
                     name = joint_module.name
                     fingers = [name + '_rightfinger', name + '_leftfinger']
