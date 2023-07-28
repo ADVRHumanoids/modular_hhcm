@@ -695,12 +695,12 @@ def deployRobot():
 
     building_mode_ON = True if request.form.get('buildingModeON', 0) == 'true' else False
 
+    name = request.form.get('name', 'modularbot')
+    app.logger.debug(name)
     if building_mode_ON :
-        name = request.form.get('name', 'ModularBot')
-        app.logger.debug(name)
         data = urdf_writer.deploy_robot(name)
     else:
-        data = urdf_writer_fromHW.deploy_robot('modularbot')
+        data = urdf_writer_fromHW.deploy_robot(name)
     #time.sleep(10)
     return data
 
