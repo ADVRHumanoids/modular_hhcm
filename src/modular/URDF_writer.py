@@ -227,7 +227,7 @@ class Plugin:
                 if joint_module.type == 'joint':
                     # Homing state
                     if builder_joint_map is not None:
-                        homing_value = float(builder_joint_map[joint_module.name]['angle'])
+                        homing_value = float(builder_joint_map[joint_module.name])
                     else:
                         homing_value = 0.1
                     # self.urdf_writer.print(homing_value)
@@ -235,7 +235,7 @@ class Plugin:
                 elif joint_module.type == 'dagana':
                     # Homing state
                     if builder_joint_map is not None:
-                        homing_value = float(builder_joint_map[joint_module.dagana_joint_name]['angle'])
+                        homing_value = float(builder_joint_map[joint_module.dagana_joint_name])
                     else:
                         homing_value = 0.1
                     # self.urdf_writer.print(homing_value)
@@ -243,7 +243,7 @@ class Plugin:
                 elif joint_module.type == 'wheel':
                     # Homing state
                     if builder_joint_map is not None:
-                        homing_value = float(builder_joint_map[joint_module.name]['angle'])
+                        homing_value = float(builder_joint_map[joint_module.name])
                     else:
                         homing_value = 0.1
                     # self.urdf_writer.print(homing_value)
@@ -481,7 +481,7 @@ class RosControlPlugin(Plugin):
                 if joint_module.type in {'joint', 'wheel'} :
                     # Homing state
                     if builder_joint_map is not None:
-                        homing_value = float(builder_joint_map[joint_module.name]['angle'])
+                        homing_value = float(builder_joint_map[joint_module.name])
                     else:
                         homing_value = 0.1
                     #self.urdf_writer.print(homing_value)
