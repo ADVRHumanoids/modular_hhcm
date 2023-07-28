@@ -19,21 +19,21 @@ stack:
 #     distal_link: ee_B
 EE:
     type: Interaction
-    base_link: ee_B
+    base_link: L_0_A
     distal_link: ee_A
     indices: [0,1,2,3,4]
     stiffness:
-        - 50.0
-        - 50.0
-        - 50.0
-        - 1.0
-        - 1.0
-        - 1.0
+        - 1500.0
+        - 1500.0
+        - 1500.0
+        - 200.0
+        - 200.0
+        - 200.0
     damping:
-        - 5.0
-        - 5.0
-        - 5.0
-        - 0.0
-        - 0.0
-        - 0.0
+        - 0.7
+        - 0.7
+        - 0.7
+        - 0.7
+        - 0.7
+        - 0.7
 
