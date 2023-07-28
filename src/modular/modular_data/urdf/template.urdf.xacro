@@ -24,6 +24,9 @@
     <xacro:arg name="use_gpu_ray" default="false"/>
     <xacro:property name="USE_GPU_RAY" value="$(arg use_gpu_ray)" />
 
+    <xacro:arg name="drill_camera" default="false"/>
+    <xacro:property name="ADD_DRILL_CAMERA" value="$(arg drill_camera)" />
+
     <!-- adding (or not) world link for Gazebo simulation -->
     <xacro:if value="${ADD_FLOATING_BASE}">
 

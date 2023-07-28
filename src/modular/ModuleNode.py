@@ -37,6 +37,7 @@ class ModuleType(str, Enum):
     SIZE_ADAPTER = 'size_adapter'
     SIMPLE_EE = 'simple_ee'
     END_EFFECTOR = 'end_effector'
+    DRILL = 'drill'
     DAGANA = 'dagana'
 
 # import collections.abc
@@ -81,7 +82,7 @@ class JSONInterpreter(object):
     def __init__(self, owner, d, json_file=None):
         self.owner = owner
         self.parse_dict(d)
-        self.owner.set_size()
+        self.owner.set_flange_size()
 
         # set filename
         if json_file is not None:
@@ -104,7 +105,7 @@ class JSONInterpreter(object):
 
     def type_dispatcher(self, d):
         """Dispatch the parsing of the dictionary d according to the module type"""
-        if self.owner.type in {ModuleType.LINK, ModuleType.GRIPPER, ModuleType.TOOL_EXCHANGER, ModuleType.SIZE_ADAPTER, ModuleType.END_EFFECTOR}:
+        if self.owner.type in {ModuleType.LINK, ModuleType.GRIPPER, ModuleType.TOOL_EXCHANGER, ModuleType.SIZE_ADAPTER, ModuleType.END_EFFECTOR, ModuleType.DRILL}:
             if len(d['joints']) != 0:
                 raise ValueError('A link must have no joints')
             if len(d['bodies']) != 1:
@@ -127,14 +128,14 @@ class JSONInterpreter(object):
             self.set_collision_properties(self.owner.collision, 'body_1', dict_body_1)
             # gazebo
             self.set_gazebo_properties(self.owner.gazebo.body_1, dict_body_1)
-            # size
-            #HACK: We assume the size is the same for all the connectors and load it from the output connector
-            output_size = output_connector['size']
+            # flange_size
+            #HACK: We assume the flange_size is the same for all the connectors and load it from the output connector
+            output_flange_size = output_connector['size']
             if self.owner.type is ModuleType.SIZE_ADAPTER:
-                self.owner.size_out = output_size
+                self.owner.size_out = output_flange_size
                 self.owner.size_in = d['bodies'][0]['connectors'][0]['size']
             else:
-                self.owner.size = output_size 
+                self.owner.flange_size = output_flange_size 
         elif self.owner.type in {ModuleType.JOINT, ModuleType.WHEEL}:
             if len(d['joints']) != 1:
                 raise ValueError('A joint must have exactly one joint')
@@ -177,9 +178,9 @@ class JSONInterpreter(object):
             # gazebo
             self.set_gazebo_properties(self.owner.gazebo.body_1, dict_body_1)
             self.set_gazebo_properties(self.owner.gazebo.body_2, dict_body_2)
-            # size
+            # flange_size
             output_connector = dict_body_2['connectors'][-1]
-            self.owner.size = output_connector['size']
+            self.owner.flange_size = output_connector['size']
             # CentAcESC
             self.owner.CentAcESC = Module.Attribute(dict_joint['control_parameters']['xbot'])
             # xbot_gz
@@ -208,9 +209,9 @@ class JSONInterpreter(object):
             self.set_collision_properties(self.owner.collision, 'body_1', body_1)
             # gazebo
             self.set_gazebo_properties(self.owner.gazebo.body_1, body_1)
-            # size
-            #HACK: We assume the size is the same for all the connectors and load it from the last connector (which we assume to be the connector for the arm)
-            self.owner.size = body_1['connectors'][-1]['size']
+            # flange_size
+            #HACK: We assume the flange_size is the same for all the connectors and load it from the last connector (which we assume to be the connector for the arm)
+            self.owner.flange_size = body_1['connectors'][-1]['size']
         elif self.owner.type in {ModuleType.DAGANA}:
             dict_joint = d['joints'][0]
             # joint data
@@ -226,8 +227,8 @@ class JSONInterpreter(object):
             # xbot_gz
             self.owner.xbot_gz = Module.Attribute(dict_joint['control_parameters']['xbot_gz'])
             self.owner.joint_gripper_adapter = Module.Attribute(dict_joint['control_parameters']['joint_gripper_adapter'])
-            #HACK: We hard-code the value for the size of the dagana
-            self.owner.size = 'big'
+            #HACK: We hard-code the value for the flange_size of the dagana
+            self.owner.flange_size = 'big'
 
     @staticmethod
     def set_dynamic_properties(body, dict_body):
@@ -295,7 +296,7 @@ class YAMLInterpreter(object):
     def __init__(self, owner, d, yaml_file=None):
         self.owner = owner
         self.parse_dict(d)
-        self.owner.set_size()
+        self.owner.set_flange_size()
         # set filename
         self.owner.filename = yaml_file
 
@@ -339,8 +340,8 @@ class Module(object):
                     setattr(self, a, Module.Attribute(b) if isinstance(b, dict) else b)
 
     # 
-    def set_size(self):
-        """Set the size of the module"""
+    def set_flange_size(self):
+        """Set the flange_size of the module"""
         switcher = {
                 'small': '1',
                 'medium': '2',
@@ -350,12 +351,12 @@ class Module(object):
             }
         if self.type == "size_adapter":
             #print(self.size_in)
-            setattr(self, 'size_in', switcher.get(self.size_in, "Invalid size"))
+            setattr(self, 'size_in', switcher.get(self.size_in, "Invalid flange_size"))
             #print(self.size_out)
-            setattr(self, 'size_out', switcher.get(self.size_out, "Invalid size"))
+            setattr(self, 'size_out', switcher.get(self.size_out, "Invalid flange_size"))
         else:
-            if hasattr(self, 'size'):
-                setattr(self, 'size', switcher.get(self.size, "Invalid size"))
+            if hasattr(self, 'flange_size'):
+                setattr(self, 'flange_size', switcher.get(self.flange_size, "Invalid flange_size"))
             else:
                 pass
     #
@@ -530,6 +531,7 @@ class Module(object):
             'size_adapter': self.get_homogeneous_matrix,
             'tool_exchanger': self.get_homogeneous_matrix,
             'end_effector': self.get_homogeneous_matrix,
+            'drill': self.get_homogeneous_matrix,
             'dagana': lambda reverse: None,
             'gripper': self.get_homogeneous_matrix,
             'cube': self.get_hub_connections_tf, #  self.get_cube_connections_tf,

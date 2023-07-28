@@ -7,13 +7,6 @@ xbotcore_devices:
             robot_name: &rn {value: NoNe, type: string}
             #ignore_id: {type: vector<int>, value: [89]}
 
-            # config_ec:
-            #     value: $PWD/../joint_config/centauro_pos3b.yaml
-            #     type: yamlfile
-            # config_ec_hybr: 
-            #     value: $PWD/../joint_config/centauro_hybr.yaml
-            #     type: yamlfile
-
             config_ec_idle: 
                 value: $PWD/../joint_config/ModularBot_idle.yaml
                 type: yamlfile
@@ -40,9 +33,12 @@ xbotcore_devices:
             robot_name: *rn
             joint_id_map: *jim
                 
-    joint_master:
-        master: true
-        thread: rt_main
+    drill_ec:
+        names: []
+        thread: nrt_main
+        params:
+            robot_name: *rn
+            joint_id_map: *jim
 
     joint_gripper_adapter:
         names: []

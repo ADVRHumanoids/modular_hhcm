@@ -803,8 +803,8 @@ class URDF_viewer extends HTMLElement {
             method: 'POST',
             success: function(data) {
                 console.log(data)
-                updateShownButtons(data['lastModule_type'], data['count'], data['size'])
-                //size=data['size']
+                updateShownButtons(data['lastModule_type'], data['count'], data['flange_size'])
+                //flange_size=data['flange_size']
             },
             async: true
         });

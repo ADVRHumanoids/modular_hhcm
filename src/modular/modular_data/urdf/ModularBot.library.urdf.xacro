@@ -105,8 +105,12 @@
                             <xacro:property name="body" value="${visual_bodies[i_bodies]}"/>
                             <xacro:add_origin body_pose="${body['pose']}"/>
                             <xacro:add_geometry body="${body}"/>
-                            <xacro:if value="${'color' in body}">
-                                <material name="${body['color']}"/>
+                            <xacro:if value="${'color' in body['parameters']}">
+                                <material name="${body['parameters']['color']['material_name']}">
+                                <xacro:if value="${'rgba' in body['parameters']['color']}">
+                                    <color rgba="${' '.join(str(x) for x in body['parameters']['color']['rgba'])}"/>
+                                </xacro:if>
+                                </material>
                             </xacro:if>
                         </visual>
                         <xacro:visual_loop visual_bodies="${visual_bodies}" n_bodies="${i_bodies}"/>
@@ -152,13 +156,25 @@
         </link>
     </xacro:macro>
 
-    <!-- Macro for adding a generic link -->       
+    <!-- Macro for adding dagana -->       
     <xacro:macro name="add_dagana" params="name type father x y z roll pitch yaw">
         <xacro:include filename="$(find dagana_urdf)/urdf/dagana_macro.urdf.xacro" />
 
         <xacro:dagana_gripper name="${name}" parent_link="${father}" joint_type="revolute">
             <origin xyz="${x} ${y} ${z}" rpy="${roll} ${pitch} ${yaw}"/>
         </xacro:dagana_gripper>
+    </xacro:macro>
+
+    <!-- Macro for adding the drill module -->       
+    <xacro:macro name="add_drill" params="name type filename">
+        <xacro:property name="module" value="${xacro.load_yaml(filename)}"/>
+        <xacro:property name="body_name" value="body_1"/>
+        <xacro:add_link_element name="${name}" type="${type}" module="${module}" body_name="${body_name}"/>
+        <!-- Add realsense D camera -->
+        <xacro:include filename="${MODULAR_PATH}/modular_data/urdf/concert.sensors.urdf.xacro"/>
+        <xacro:add_realsense_d_camera name="drill_camera" parent_name="${name}" add_gazebo_sensor="${ADD_DRILL_CAMERA}">
+            <origin xyz="0.103 0.0 0.25" rpy="0.0 0.0 0.0"/>
+        </xacro:add_realsense_d_camera>
     </xacro:macro>
 
     <!-- Macro for adding a generic link -->       
@@ -464,8 +480,8 @@
             <visual>
                 <xacro:add_origin body_pose="${dict(x=0.0, y=0.0, z=0.0, roll=0.0, pitch=0.0, yaw=pi)}"/>
                 <xacro:add_geometry body="${module['visual'][body_name][0]}"/>
-                <xacro:if value="${'color' in module['visual'][body_name][0]}">
-                    <material name="${module['visual'][body_name]['color'][0]}"/>
+                <xacro:if value="${'color' in module['visual'][body_name][0]['parameters']}">
+                    <material name="${module['visual'][body_name][0]['parameters']['color']}"/>
                 </xacro:if> 
             </visual>
             <collision>

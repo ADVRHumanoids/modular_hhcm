@@ -208,7 +208,7 @@ class Plugin:
                     tip_link = joints_chain[-1].pen_name
                 if joints_chain[-1].type == 'gripper':
                     tip_link = joints_chain[-1].TCP_name
-                elif joints_chain[-1].type == 'simple_ee':
+                elif joints_chain[-1].type == 'simple_ee' or joints_chain[-1].type == 'drill':
                     tip_link = joints_chain[-1].name
                 elif joints_chain[-1].type == 'dagana':
                     tip_link = joints_chain[-1].dagana_link_name
@@ -786,6 +786,12 @@ class XBot2Plugin(Plugin):
                         joint_map['joint_map'][i] = name
                 elif joint_module.type == 'simple_ee':
                     continue
+                elif joint_module.type == 'drill':
+                    name = joint_module.name
+                    if use_robot_id:
+                        joint_map['joint_map'][int(joint_module.robot_id)] = name
+                    else:
+                        joint_map['joint_map'][i] = name
                 elif joint_module.type == 'gripper':
                     name = joint_module.name
                     fingers = [name + '_rightfinger', name + '_leftfinger']
@@ -1252,7 +1258,7 @@ class UrdfWriter:
         self.base_link = ModuleNode.ModuleNode(data, "base_link")
         setattr(self.base_link, 'name', "base_link")
         setattr(self.base_link, 'tag', "_A")
-        setattr(self.base_link, 'size', 3)
+        setattr(self.base_link, 'flange_size', 3)
         setattr(self.base_link, 'i', 0)
         setattr(self.base_link, 'p', 0)
         setattr(self.base_link, 'Homogeneous_tf', tf.transformations.identity_matrix())
@@ -1531,6 +1537,7 @@ class UrdfWriter:
         ## HACK: Manually add passive end effector for now!
         # self.add_simple_ee(0.0, 0.0, 0.135, mass=0.23)
         # data = self.add_module('concert/passive_end_effector_panel.json', 0, False)
+        # data = self.add_module('experimental/passive_end_effector_pen.json', 0, False)
 
         # doc = xacro.parse(string)
         # xacro.process_doc(doc, in_order=True)
@@ -1712,8 +1719,8 @@ class UrdfWriter:
             # Set attributes of the newly added module object
             setattr(slavecube, 'i', self.parent_module.i)
             setattr(slavecube, 'p', self.parent_module.p)
-            # Size is already set from the YAML file
-            # setattr(slavecube, 'size', self.parent_module.size)
+            # flange_size is already set from the YAML file
+            # setattr(slavecube, 'flange_size', self.parent_module.flange_size)
 
             setattr(slavecube, 'angle_offset', angle_offset)
             setattr(slavecube, 'robot_id', robot_id)
@@ -1729,12 +1736,12 @@ class UrdfWriter:
 
             # # Generate name and dict for the 1st connector module
             # name_con1 = name + '_con1'
-            # data1 = {'Homogeneous_tf': T_con_inv, 'type': "con", 'name': name_con1, 'i': 0, 'p': 0, 'size': 3}
+            # data1 = {'Homogeneous_tf': T_con_inv, 'type': "con", 'name': name_con1, 'i': 0, 'p': 0, 'flange_size': 3}
             # self.print('T_con_inv:', T_con_inv)
 
             # Generate name and dict for the 1st connector module
             name_con1 = name + '_con1'
-            data1 = {'Homogeneous_tf': T_con_inv, 'type': "con", 'name': name_con1, 'i': 0, 'p': 0, 'size': 3}
+            data1 = {'Homogeneous_tf': T_con_inv, 'type': "con", 'name': name_con1, 'i': 0, 'p': 0, 'flange_size': 3}
             self.print('T_con_inv:', T_con_inv)
 
             if self.parent_module.type in { 'joint', 'wheel' }:
@@ -1839,7 +1846,7 @@ class UrdfWriter:
             data = {'result': string,
                     'lastModule_type': 'mastercube',
                     'lastModule_name': name,
-                    'size': 3,
+                    'flange_size': 3,
                     'count': self.n_cubes}
 
             return data
@@ -1890,22 +1897,22 @@ class UrdfWriter:
 
             # # instantate a ModuleNode for branch 1 connector
             # name_con1 = name + '_con1'
-            # data1 = {'Homogeneous_tf': mastercube.Con_1_tf, 'type': "con", 'name': name_con1, 'i': 0, 'p': 0, 'size': 3}
+            # data1 = {'Homogeneous_tf': mastercube.Con_1_tf, 'type': "con", 'name': name_con1, 'i': 0, 'p': 0, 'flange_size': 3}
             # slavecube_con1 = ModuleNode.ModuleNode(data1, name_con1, parent=mastercube)
 
             # # instantate a ModuleNode for branch 2 connector
             # name_con2 = name + '_con2'
-            # data2 = {'Homogeneous_tf': mastercube.Con_2_tf, 'type': "con", 'name': name_con2, 'i': 0, 'p': 0, 'size': 3}
+            # data2 = {'Homogeneous_tf': mastercube.Con_2_tf, 'type': "con", 'name': name_con2, 'i': 0, 'p': 0, 'flange_size': 3}
             # slavecube_con2 = ModuleNode.ModuleNode(data2, name_con2, parent=mastercube)
 
             # # instantate a ModuleNode for branch 3 connector
             # name_con3 = name + '_con3'
-            # data3 = {'Homogeneous_tf': mastercube.Con_3_tf, 'type': "con", 'name': name_con3, 'i': 0, 'p': 0, 'size': 3}
+            # data3 = {'Homogeneous_tf': mastercube.Con_3_tf, 'type': "con", 'name': name_con3, 'i': 0, 'p': 0, 'flange_size': 3}
             # slavecube_con3 = ModuleNode.ModuleNode(data3, name_con3, parent=mastercube)
 
             # # instantate a ModuleNode for branch 4 connector
             # name_con4 = name + '_con4'
-            # data4 = {'Homogeneous_tf': mastercube.Con_4_tf, 'type': "con", 'name': name_con4, 'i': 0, 'p': 0, 'size': 3}
+            # data4 = {'Homogeneous_tf': mastercube.Con_4_tf, 'type': "con", 'name': name_con4, 'i': 0, 'p': 0, 'flange_size': 3}
             # slavecube_con4 = ModuleNode.ModuleNode(data4, name_con4, parent=mastercube)
 
             # Render tree
@@ -1981,7 +1988,7 @@ class UrdfWriter:
             data = {'result': string,
                     'lastModule_type': 'mastercube',
                     'lastModule_name': name,
-                    'size': 3,
+                    'flange_size': 3,
                     'count': self.n_cubes}
 
             return data
@@ -2086,7 +2093,7 @@ class UrdfWriter:
         data = {'result': string,
                 'lastModule_type': 'mobile_base',
                 'lastModule_name': name,
-                'size': 3,
+                'flange_size': 3,
                 'count': 1}
 
         return data
@@ -2114,7 +2121,7 @@ class UrdfWriter:
         table = ModuleNode.ModuleNode(data, "table", parent=self.base_link)
         setattr(table, 'name', "table")
         setattr(table, 'tag', "_A")
-        setattr(table, 'size', 3)
+        setattr(table, 'flange_size', 3)
         setattr(table, 'i', 0)
         setattr(table, 'p', 0)
         setattr(table, 'Homogeneous_tf', tf.transformations.identity_matrix())
@@ -2140,7 +2147,7 @@ class UrdfWriter:
         data = {'result': string,
                 'lastModule_type': table.type,
                 'lastModule_name': table.name,
-                'size': table.size,
+                'flange_size': table.flange_size,
                 'count': table.i}
 
         return data
@@ -2179,7 +2186,7 @@ class UrdfWriter:
         data = {'result': string,
                 'lastModule_type': socket.type,
                 'lastModule_name': socket.name,
-                'size': socket.size,
+                'flange_size': socket.flange_size,
                 'count': socket.i}
 
         # Update the parent_module attribute of the URDF_writer class
@@ -2215,8 +2222,8 @@ class UrdfWriter:
         # Set attributes of the newly added module object
         setattr(new_socket, 'i', self.parent_module.i)
         setattr(new_socket, 'p', self.parent_module.p)
-        # Size is already set from the YAML file
-        # setattr(new_socket, 'size', self.parent_module.size)
+        # flange_size is already set from the YAML file
+        # setattr(new_socket, 'flange_size', self.parent_module.flange_size)
 
         setattr(new_socket, 'angle_offset', angle_offset)
         setattr(new_socket, 'robot_id', 0)
@@ -2239,7 +2246,7 @@ class UrdfWriter:
                       type="link",
                       name=new_socket.name,
                       filename=new_socket.filename,
-                      size=str(new_socket.size))
+                      flange_size=str(new_socket.flange_size))
 
         self.add_gazebo_element(new_socket.gazebo.body_1 , new_socket.name)
 
@@ -2306,7 +2313,7 @@ class UrdfWriter:
         data = {'result': string,
                 'lastModule_type': new_socket.type,
                 'lastModule_name': new_socket.name,
-                'size': new_socket.size,
+                'flange_size': new_socket.flange_size,
                 'count': new_socket.i}
 
         # if new_module.name.endswith('_stator'):
@@ -2327,7 +2334,7 @@ class UrdfWriter:
 
         simple_ee = ModuleNode.ModuleNode(data, "simple_ee", parent=self.parent_module)
         setattr(simple_ee, 'tag', self.parent_module.tag)
-        setattr(simple_ee, 'size', self.parent_module.size)
+        setattr(simple_ee, 'flange_size', self.parent_module.flange_size)
         setattr(simple_ee, 'i', self.parent_module.i)
         setattr(simple_ee, 'p', self.parent_module.p+1)
         setattr(simple_ee, 'robot_id', 0)
@@ -2337,7 +2344,7 @@ class UrdfWriter:
                       "xacro:add_cylinder",
                       type="simple_ee",
                       name=simple_ee.name,
-                      size_z=str(z_offset),
+                      flange_size_z=str(z_offset),
                       mass=str(mass),
                       radius=str(radius))
 
@@ -2394,7 +2401,7 @@ class UrdfWriter:
         data = {'result': string,
                 'lastModule_type': simple_ee.type,
                 'lastModule_name': simple_ee.name,
-                'size': simple_ee.size,
+                'flange_size': simple_ee.flange_size,
                 'count': simple_ee.i}
 
         return data
@@ -2470,8 +2477,8 @@ class UrdfWriter:
         # Set attributes of the newly added module object
         setattr(new_module, 'i', self.parent_module.i)
         setattr(new_module, 'p', self.parent_module.p)
-        # Size is already set from the YAML file
-        # setattr(new_module, 'size', self.parent_module.size)
+        # flange_size is already set from the YAML file
+        # setattr(new_module, 'flange_size', self.parent_module.flange_size)
 
         setattr(new_module, 'angle_offset', angle_offset)
         setattr(new_module, 'reverse', reverse)
@@ -2553,7 +2560,7 @@ class UrdfWriter:
         data = {'result': string,
                 'lastModule_type': new_module.type,
                 'lastModule_name': new_module.name,
-                'size': new_module.size,
+                'flange_size': new_module.flange_size,
                 'count': new_module.i}
 
         # if new_module.name.endswith('_stator'):
@@ -2823,13 +2830,13 @@ class UrdfWriter:
             data = {'result': string,
                     'lastModule_type': father.type,
                     'lastModule_name': father.name,
-                    'size': father.size,
+                    'flange_size': father.flange_size,
                     'count': self.n_cubes}
         else:
             data = {'result': string,
                     'lastModule_type': father.type,
                     'lastModule_name': father.name,
-                    'size': father.size,
+                    'flange_size': father.flange_size,
                     'count': father.i}
         # data = jsonify(data)
 
@@ -2954,12 +2961,12 @@ class UrdfWriter:
         if selected_module.type == 'cube':
             data = {'lastModule_type': selected_module.type,
                     'lastModule_name': selected_module.name,
-                    'size': selected_module.size,
+                    'flange_size': selected_module.flange_size,
                     'count': self.n_cubes}
         else:
             data = {'lastModule_type': selected_module.type,
                     'lastModule_name': selected_module.name,
-                    'size': selected_module.size,
+                    'flange_size': selected_module.flange_size,
                     'count': selected_module.i}
 
         return data
@@ -3044,12 +3051,12 @@ class UrdfWriter:
         if selected_module.type == 'cube':
             data = {'lastModule_type': selected_module.type,
                     'lastModule_name': selected_module.name,
-                    'size': selected_module.size,
+                    'flange_size': selected_module.flange_size,
                     'count': self.n_cubes}
         else:
             data = {'lastModule_type': selected_module.type,
                     'lastModule_name': selected_module.name,
-                    'size': selected_module.size,
+                    'flange_size': selected_module.flange_size,
                     'count': selected_module.i}
 
         return data
@@ -3153,6 +3160,29 @@ class UrdfWriter:
 
             return
 
+        elif new_Link.type == 'drill':
+            setattr(new_Link, 'name', 'drill' + new_Link.tag)
+            ET.SubElement(self.root,
+                          "xacro:add_drill",
+                          type="link",
+                          name=new_Link.name,
+                          filename=new_Link.filename)
+            x_ee, y_ee, z_ee, roll_ee, pitch_ee, yaw_ee = ModuleNode.get_xyzrpy(tf.transformations.numpy.array(new_Link.kinematics.link.pose))
+            setattr(new_Link, 'tcp_name', 'ee' + new_Link.tag)
+            ET.SubElement(self.root,
+                          "xacro:add_tcp",
+                          type="pen",
+                          name=new_Link.tcp_name,
+                          father=new_Link.name,
+                          filename=new_Link.filename,
+                          x=x_ee,
+                          y=y_ee,
+                          z=z_ee,
+                          roll=roll_ee,
+                          pitch=pitch_ee,
+                          yaw=yaw_ee)
+            # the drill gets added to the chain although it's not a joint. it's needed in the joint map and in the config!
+            self.add_to_chain(new_Link)
         elif new_Link.type == 'end_effector':
             setattr(new_Link, 'name', 'end_effector' + new_Link.tag)
             ET.SubElement(self.root,
@@ -3225,11 +3255,11 @@ class UrdfWriter:
                         #   size_in=new_Link.size_in,
                         #   size_out=new_Link.size_out
             )
-            setattr(new_Link, 'size', new_Link.size_out)
+            setattr(new_Link, 'flange_size', new_Link.size_out)
 
         self.add_gazebo_element(new_Link.gazebo.body_1, new_Link.name)
             
-        if new_Link.type == 'tool_exchanger' or new_Link.type == 'gripper' or new_Link.type == 'end_effector':
+        if new_Link.type == 'tool_exchanger' or new_Link.type == 'gripper' or new_Link.type == 'end_effector' or new_Link.type == 'drill':
             fixed_joint_name = new_Link.name + '_fixed_joint'
         else:
             fixed_joint_name = 'L_' + str(new_Link.i) + '_fixed_joint_' + str(new_Link.p) + new_Link.tag
@@ -3280,7 +3310,7 @@ class UrdfWriter:
         transform = self.get_proximal_transform(interface_transform, offset, reverse)
 
         # HACK: to handle 90° offset between PINO and CONCERT flanges
-        transform = self.apply_adapter_transform_rotation(transform, past_Cube.size, new_Link.size)
+        transform = self.apply_adapter_transform_rotation(transform, past_Cube.flange_size, new_Link.flange_size)
 
         self.add_link(new_Link, parent_name, transform, reverse)
 
@@ -3494,7 +3524,7 @@ class UrdfWriter:
         transform = self.get_proximal_transform(interface_transform, offset, reverse)
 
         # HACK: to handle 90° offset between PINO and CONCERT flanges
-        transform = self.apply_adapter_transform_rotation(transform, past_Cube.size, new_Joint.size)
+        transform = self.apply_adapter_transform_rotation(transform, past_Cube.flange_size, new_Joint.flange_size)
 
         setattr(new_Joint, 'i', 1)
         setattr(new_Joint, 'p', 0)
@@ -3524,7 +3554,7 @@ class UrdfWriter:
         transform = self.get_proximal_transform(interface_transform, offset, reverse)
 
         # HACK: to handle 90° offset between PINO and CONCERT flanges
-        transform = self.apply_adapter_transform_rotation(transform, past_Joint.size, new_Link.size)
+        transform = self.apply_adapter_transform_rotation(transform, past_Joint.flange_size, new_Link.flange_size)
 
         parent_name = past_Joint.distal_link_name
 
@@ -3552,7 +3582,7 @@ class UrdfWriter:
         transform = self.get_proximal_transform(interface_transform, offset, reverse)
 
         # HACK: to handle 90° offset between PINO and CONCERT flanges
-        transform = self.apply_adapter_transform_rotation(transform, past_Joint.size, new_Joint.size)
+        transform = self.apply_adapter_transform_rotation(transform, past_Joint.flange_size, new_Joint.flange_size)
 
         setattr(new_Joint, 'i', past_Joint.i + 1)
         setattr(new_Joint, 'p', 0)
@@ -3581,7 +3611,7 @@ class UrdfWriter:
         transform = self.get_proximal_transform(interface_transform, offset, reverse)
 
         # HACK: to handle 90° offset between PINO and CONCERT flanges
-        transform = self.apply_adapter_transform_rotation(transform, past_Link.size, new_Joint.size)
+        transform = self.apply_adapter_transform_rotation(transform, past_Link.flange_size, new_Joint.flange_size)
 
         setattr(new_Joint, 'i', past_Link.i + 1)
         setattr(new_Joint, 'p', 0)
@@ -3613,7 +3643,7 @@ class UrdfWriter:
         transform = self.get_proximal_transform(interface_transform, offset, reverse)
 
         # HACK: to handle 90° offset between PINO and CONCERT flanges
-        transform = self.apply_adapter_transform_rotation(transform, past_Link.size, new_Link.size)
+        transform = self.apply_adapter_transform_rotation(transform, past_Link.flange_size, new_Link.flange_size)
 
         parent_name = past_Link.name
 
