@@ -26,7 +26,8 @@
 
 # CONCERT
 # mobile base
-201: concert/mobile_platform_concert.json
+# 201: concert/mobile_platform_concert.json
+# -1: concert/mobile_platform_concert.json #  HACK for ecat hub
 # 11: concert/module_steering_concert_fr_rl.json # A0234
 # 12: concert/module_wheel_concert.json  # A0235
 # 21: concert/module_steering_concert_fl_rr.json # A0236
@@ -37,9 +38,9 @@
 # 42: concert/module_wheel_concert.json # A0241
 
 # manipulator
-51: concert/module_joint_yaw_A_concert.json # A0242
-52: concert/module_joint_elbow_A_concert.json # A0243
-53: concert/module_joint_elbow_A_concert.json # A0244
-54: concert/module_joint_elbow_B_concert.json # A0245
-55: concert/module_joint_yaw_B_concert.json # A0246
-56: concert/module_joint_yaw_B_concert.json # A0247
+# 51: concert/module_joint_yaw_A_concert.json # A0242
+# 52: concert/module_joint_elbow_A_concert.json # A0243
+# 53: concert/module_joint_elbow_A_concert.json # A0244
+# 54: concert/module_joint_elbow_B_concert.json # A0245
+# 55: concert/module_joint_yaw_B_concert.json # A0246
+# 56: concert/module_joint_yaw_B_concert.json # A0247

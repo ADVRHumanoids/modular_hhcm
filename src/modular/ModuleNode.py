@@ -36,6 +36,9 @@ class ModuleType(str, Enum):
     BASE_LINK = 'base_link'
     SIZE_ADAPTER = 'size_adapter'
     SIMPLE_EE = 'simple_ee'
+    END_EFFECTOR = 'end_effector'
+    DRILL = 'drill'
+    DAGANA = 'dagana'
 
 # import collections.abc
 def update_nested_dict(d, u):
@@ -46,12 +49,40 @@ def update_nested_dict(d, u):
             d[k] = v
     return d
 
+def as_dumpable_dict(obj):
+    """ Convert object to nested Python dictionary dumpable to YAML """
+    props = {}
+    if isinstance(obj, (Module, Module.Attribute)):
+       for k,v in vars(obj).items():
+        if isinstance(v, Module.Attribute):
+            props[k] = as_dumpable_dict(v)
+        elif isinstance(v, (list, tuple)):
+            props[k] = as_dumpable_dict(v)
+        elif isinstance(v, (KinematicsConvention, ModuleType)):
+            props[k] = v.value
+        else:
+            props[k] = v
+    elif isinstance(obj, (list, tuple)):
+        props = []
+        for x in obj:
+            if isinstance(x, (list, tuple)):
+                props.append(as_dumpable_dict(x))
+            elif isinstance(x, Module.Attribute):
+                props.append(as_dumpable_dict(x))
+            elif isinstance(x, (KinematicsConvention, ModuleType)):
+                props.append(x.value)
+            else:
+                props.append(x)
+    else:
+        props = obj
+    return props
+
 class JSONInterpreter(object):
     """Class used to interpret the JSON file describing a module"""
     def __init__(self, owner, d, json_file=None):
         self.owner = owner
         self.parse_dict(d)
-        self.owner.set_size()
+        self.owner.set_flange_size()
 
         # set filename
         if json_file is not None:
@@ -59,7 +90,7 @@ class JSONInterpreter(object):
             filename_without_extension = path_without_extension.split('/')[-1]
             new_filename = '/tmp/ModulesDescriptions/' + filename_without_extension + '.yaml'
             os.makedirs(os.path.dirname(new_filename), exist_ok=True)
-            out = self.owner.attributes_as_dict()
+            out = as_dumpable_dict(self.owner)
             with open(new_filename, 'w') as outfile:
                 yaml.safe_dump(out, outfile, default_flow_style=False)
             self.owner.filename = new_filename
@@ -74,7 +105,7 @@ class JSONInterpreter(object):
 
     def type_dispatcher(self, d):
         """Dispatch the parsing of the dictionary d according to the module type"""
-        if self.owner.type in {ModuleType.LINK, ModuleType.GRIPPER, ModuleType.TOOL_EXCHANGER, ModuleType.SIZE_ADAPTER}:
+        if self.owner.type in {ModuleType.LINK, ModuleType.GRIPPER, ModuleType.TOOL_EXCHANGER, ModuleType.SIZE_ADAPTER, ModuleType.END_EFFECTOR, ModuleType.DRILL}:
             if len(d['joints']) != 0:
                 raise ValueError('A link must have no joints')
             if len(d['bodies']) != 1:
@@ -92,19 +123,19 @@ class JSONInterpreter(object):
             # dynamics
             self.set_dynamic_properties(self.owner.dynamics.body_1, dict_body_1)
             # visual
-            self.set_visual_properties(self.owner.visual.body_1, dict_body_1)
+            self.set_visual_properties(self.owner.visual, 'body_1', dict_body_1)
             # collision
-            self.set_collision_properties(self.owner.collision.body_1, dict_body_1)
+            self.set_collision_properties(self.owner.collision, 'body_1', dict_body_1)
             # gazebo
             self.set_gazebo_properties(self.owner.gazebo.body_1, dict_body_1)
-            # size
-            #HACK: We assume the size is the same for all the connectors and load it from the output connector
-            output_size = output_connector['size']
+            # flange_size
+            #HACK: We assume the flange_size is the same for all the connectors and load it from the output connector
+            output_flange_size = output_connector['size']
             if self.owner.type is ModuleType.SIZE_ADAPTER:
-                self.owner.size_out = output_size
+                self.owner.size_out = output_flange_size
                 self.owner.size_in = d['bodies'][0]['connectors'][0]['size']
             else:
-                self.owner.size = output_size 
+                self.owner.flange_size = output_flange_size 
         elif self.owner.type in {ModuleType.JOINT, ModuleType.WHEEL}:
             if len(d['joints']) != 1:
                 raise ValueError('A joint must have exactly one joint')
@@ -139,17 +170,17 @@ class JSONInterpreter(object):
             self.set_dynamic_properties(self.owner.dynamics.body_1, dict_body_1)
             self.set_dynamic_properties(self.owner.dynamics.body_2, dict_body_2)
             # visual
-            self.set_visual_properties(self.owner.visual.body_1, dict_body_1)
-            self.set_visual_properties(self.owner.visual.body_2, dict_body_2)
+            self.set_visual_properties(self.owner.visual, 'body_1', dict_body_1)
+            self.set_visual_properties(self.owner.visual, 'body_2', dict_body_2)
             # collision
-            self.set_collision_properties(self.owner.collision.body_1, dict_body_1)
-            self.set_collision_properties(self.owner.collision.body_2, dict_body_2)
+            self.set_collision_properties(self.owner.collision, 'body_1', dict_body_1)
+            self.set_collision_properties(self.owner.collision, 'body_2', dict_body_2)
             # gazebo
             self.set_gazebo_properties(self.owner.gazebo.body_1, dict_body_1)
             self.set_gazebo_properties(self.owner.gazebo.body_2, dict_body_2)
-            # size
+            # flange_size
             output_connector = dict_body_2['connectors'][-1]
-            self.owner.size = output_connector['size']
+            self.owner.flange_size = output_connector['size']
             # CentAcESC
             self.owner.CentAcESC = Module.Attribute(dict_joint['control_parameters']['xbot'])
             # xbot_gz
@@ -173,14 +204,31 @@ class JSONInterpreter(object):
             # dynamics
             self.set_dynamic_properties(self.owner.dynamics.body_1, body_1)
             # visual
-            self.set_visual_properties(self.owner.visual.body_1, body_1)
+            self.set_visual_properties(self.owner.visual, 'body_1', body_1)
             # collision
-            self.set_collision_properties(self.owner.collision.body_1, body_1)
+            self.set_collision_properties(self.owner.collision, 'body_1', body_1)
             # gazebo
             self.set_gazebo_properties(self.owner.gazebo.body_1, body_1)
-            # size
-            #HACK: We assume the size is the same for all the connectors and load it from the last connector (which we assume to be the connector for the arm)
-            self.owner.size = body_1['connectors'][-1]['size']
+            # flange_size
+            #HACK: We assume the flange_size is the same for all the connectors and load it from the last connector (which we assume to be the connector for the arm)
+            self.owner.flange_size = body_1['connectors'][-1]['size']
+        elif self.owner.type in {ModuleType.DAGANA}:
+            dict_joint = d['joints'][0]
+            # joint data
+            self.owner.actuator_data.type = dict_joint['type']
+            self.owner.actuator_data.upper_limit = dict_joint['limits']['positionUpper']
+            self.owner.actuator_data.lower_limit = dict_joint['limits']['positionLower']
+            self.owner.actuator_data.velocity = dict_joint['limits']['velocity']
+            self.owner.actuator_data.effort = dict_joint['limits']['peak_torque']
+            self.owner.actuator_data.gear_ratio = dict_joint['gear_ratio']
+            self.owner.actuator_data.zero_offset = 0.0
+            # CentAcESC
+            self.owner.CentAcESC = Module.Attribute(dict_joint['control_parameters']['xbot'])
+            # xbot_gz
+            self.owner.xbot_gz = Module.Attribute(dict_joint['control_parameters']['xbot_gz'])
+            self.owner.joint_gripper_adapter = Module.Attribute(dict_joint['control_parameters']['joint_gripper_adapter'])
+            #HACK: We hard-code the value for the flange_size of the dagana
+            self.owner.flange_size = 'big'
 
     @staticmethod
     def set_dynamic_properties(body, dict_body):
@@ -197,34 +245,36 @@ class JSONInterpreter(object):
         body.CoM.z = dict_body['r_com'][2]
 
     @staticmethod
-    def set_visual_properties(body, dict_body):
+    def set_visual_properties(visual_obj, body_name, dict_body):
         """Set the visual properties of a body from a dictionary"""
         try:
-            if len(dict_body['visual']) != 1:
-                raise ValueError('A body must have exactly one visual property')
-            visual = dict_body['visual'][0]
-            attr = Module.Attribute(visual)
-            if visual:
-                # NOTE: pose of visual properties should be expressed in urdf format at the moment
-                x, y, z, roll, pitch, yaw = get_xyzrpy(tf.transformations.numpy.array(visual['pose']))
-                attr.pose = Module.Attribute({'x': x, 'y': y, 'z': z, 'roll': roll, 'pitch': pitch, 'yaw': yaw})
-            update_nested_dict(body.__dict__, attr.__dict__)
+            visual_properties = []
+            for visual in dict_body['visual']:
+                attr = Module.Attribute(visual)
+                if visual:
+                    # NOTE: pose of visual properties should be expressed in urdf format at the moment
+                    x, y, z, roll, pitch, yaw = get_xyzrpy(tf.transformations.numpy.array(visual['pose']))
+                    attr.pose = Module.Attribute({'x': x, 'y': y, 'z': z, 'roll': roll, 'pitch': pitch, 'yaw': yaw})
+                visual_properties.append(attr)
+            visual_attr = Module.Attribute({body_name: visual_properties})
+            update_nested_dict(visual_obj.__dict__, visual_attr.__dict__)
         except KeyError:
             pass
 
     @staticmethod
-    def set_collision_properties(body, dict_body):
+    def set_collision_properties(collision_obj, body_name, dict_body):
         """Set the collision properties of a body from a dictionary"""
         try:
-            if len(dict_body['collision']) != 1:
-                raise ValueError('A body must have exactly one collision property')
-            collision = dict_body['collision'][0]
-            attr = Module.Attribute(collision) 
-            if collision:
-                # NOTE: pose of collision properties should be expressed in urdf format at the moment
-                x, y, z, roll, pitch, yaw = get_xyzrpy(tf.transformations.numpy.array(collision['pose']))
-                attr.pose = Module.Attribute({'x': x, 'y': y, 'z': z, 'roll': roll, 'pitch': pitch, 'yaw': yaw})
-            update_nested_dict(body.__dict__, attr.__dict__)
+            collision_properties = []
+            for collision in dict_body['collision']:
+                attr = Module.Attribute(collision) 
+                if collision:
+                    # NOTE: pose of collision properties should be expressed in urdf format at the moment
+                    x, y, z, roll, pitch, yaw = get_xyzrpy(tf.transformations.numpy.array(collision['pose']))
+                    attr.pose = Module.Attribute({'x': x, 'y': y, 'z': z, 'roll': roll, 'pitch': pitch, 'yaw': yaw})
+                collision_properties.append(attr)
+            collision_attr = Module.Attribute({body_name: collision_properties})
+            update_nested_dict(collision_obj.__dict__, collision_attr.__dict__)
         except KeyError:
             pass
 
@@ -246,7 +296,7 @@ class YAMLInterpreter(object):
     def __init__(self, owner, d, yaml_file=None):
         self.owner = owner
         self.parse_dict(d)
-        self.owner.set_size()
+        self.owner.set_flange_size()
         # set filename
         self.owner.filename = yaml_file
 
@@ -256,7 +306,7 @@ class YAMLInterpreter(object):
         update_nested_dict(self.owner.__dict__, attr.__dict__)
         self.owner.type = ModuleType(self.owner.type)
         self.owner.kinematics_convention = KinematicsConvention(self.owner.kinematics_convention)
-    
+
 #
 class Module(object):
     """
@@ -289,22 +339,9 @@ class Module(object):
                 else:
                     setattr(self, a, Module.Attribute(b) if isinstance(b, dict) else b)
 
-        def as_dict(self):
-            """ Convert object to nested Python dictionary """
-            return {k:v.as_dict() if isinstance(v, Module.Attribute) else v for k,v in vars(self).items()}
-
-    #
-    def attributes_as_dict(self):
-        """ Convert object to nested Python dictionary """
-        props = {}
-        for k,v in vars(self).items():
-            if isinstance(v, Module.Attribute):
-                props[k] = v.as_dict()
-        return props
-
     # 
-    def set_size(self):
-        """Set the size of the module"""
+    def set_flange_size(self):
+        """Set the flange_size of the module"""
         switcher = {
                 'small': '1',
                 'medium': '2',
@@ -314,12 +351,12 @@ class Module(object):
             }
         if self.type == "size_adapter":
             #print(self.size_in)
-            setattr(self, 'size_in', switcher.get(self.size_in, "Invalid size"))
+            setattr(self, 'size_in', switcher.get(self.size_in, "Invalid flange_size"))
             #print(self.size_out)
-            setattr(self, 'size_out', switcher.get(self.size_out, "Invalid size"))
+            setattr(self, 'size_out', switcher.get(self.size_out, "Invalid flange_size"))
         else:
-            if hasattr(self, 'size'):
-                setattr(self, 'size', switcher.get(self.size, "Invalid size"))
+            if hasattr(self, 'flange_size'):
+                setattr(self, 'flange_size', switcher.get(self.flange_size, "Invalid flange_size"))
             else:
                 pass
     #
@@ -493,6 +530,9 @@ class Module(object):
             'link': self.get_homogeneous_matrix,
             'size_adapter': self.get_homogeneous_matrix,
             'tool_exchanger': self.get_homogeneous_matrix,
+            'end_effector': self.get_homogeneous_matrix,
+            'drill': self.get_homogeneous_matrix,
+            'dagana': lambda reverse: None,
             'gripper': self.get_homogeneous_matrix,
             'cube': self.get_hub_connections_tf, #  self.get_cube_connections_tf,
             'mobile_base': self.get_hub_connections_tf, #  self.get_mobile_base_connections_tf,
@@ -547,7 +587,6 @@ def inverse(transform_matrix):
     inv = tf.transformations.inverse_matrix(transform_matrix)
 
     return inv
-
 
 # 
 def module_from_yaml(filename, father=None, yaml_template=None, reverse=False):
