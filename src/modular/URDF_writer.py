@@ -1235,7 +1235,7 @@ class UrdfWriter:
         self.base_link = ModuleNode.ModuleNode(data, "base_link")
         setattr(self.base_link, 'name', "base_link")
         setattr(self.base_link, 'tag', "_A")
-        setattr(self.base_link, 'flange_size', 3)
+        setattr(self.base_link, 'flange_size', '3')
         setattr(self.base_link, 'i', 0)
         setattr(self.base_link, 'p', 0)
         setattr(self.base_link, 'Homogeneous_tf', tf.transformations.identity_matrix())
