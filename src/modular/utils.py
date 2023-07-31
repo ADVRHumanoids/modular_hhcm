@@ -2,14 +2,11 @@ import pkg_resources
 import yaml
 import os
 import subprocess
-import rospkg
 import io
 
 class ResourceFinder:
     def __init__(self, config_file='config_file.yaml'):
         self.cfg = self.get_yaml(config_file)
-        # init RosPack
-        rospack = rospkg.RosPack()
 
     def nested_access(self, keylist):
         val = dict(self.cfg)
@@ -22,9 +19,14 @@ class ResourceFinder:
         expanded_dir = os.path.expandvars(expanded_dir)
         if '$' in expanded_dir:
             expanded_dir = expanded_dir[1:]
+            
             if (expanded_dir.startswith('{',) and expanded_dir.endswith('}')) or (expanded_dir.startswith('(',) and expanded_dir.endswith(')')):
                 expanded_dir = expanded_dir[1:-1]
-            expanded_dir = subprocess.check_output(expanded_dir.split()).decode('utf-8').rstrip()
+
+            try:
+                expanded_dir = subprocess.check_output(expanded_dir.split(), stderr=subprocess.DEVNULL).decode('utf-8').rstrip()
+            except subprocess.CalledProcessError:
+                expanded_dir = ''
 
         return expanded_dir
 
