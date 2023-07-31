@@ -757,7 +757,7 @@ def byteify(input_raw):
         return input_raw
 
 
-def main(host = None, port = None):
+def main():
     app.run(host=host, port=port, debug=False, threaded=True)
 
 
