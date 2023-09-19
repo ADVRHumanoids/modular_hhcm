@@ -163,11 +163,6 @@ class Plugin:
     # TODO: This should be fixed. Should not be here, probably a SRDFwriter class could be implemented
     def write_srdf(self, builder_joint_map=None):
         """Generates a basic srdf so that the model can be used right away with XBotCore"""
-        # global path_name
-        srdf_filename = path_name + '/ModularBot/srdf/ModularBot.srdf'
-        # srdf_filename = path_superbuild + '/configs/ADVR_shared/ModularBot/srdf/ModularBot.srdf'
-        # srdf_filename = self.urdf_writer.resource_finder.get_filename('srdf/ModularBot.srdf', 'modularbot_path')
-        # srdf_filename = "/tmp/modular/srdf/ModularBot.srdf"
 
         root = ET.Element('robot', name="ModularBot")
 
@@ -257,17 +252,7 @@ class Plugin:
                     end_effectors += filter(lambda item: item is not None, [self.add_gripper_to_srdf(root, joint_module.name, hand_name, group_name)])
             i += 1
 
-        # Create folder if doesen't exist
-        if not os.path.exists(os.path.dirname(srdf_filename)):
-            try:
-                os.makedirs(os.path.dirname(srdf_filename))
-            except OSError as exc:  # Guard against race condition
-                if exc.errno != errno.EEXIST:
-                    raise
-
         xmlstr = xml.dom.minidom.parseString(ET.tostring(root)).toprettyxml(indent="   ")
-        with open(srdf_filename, 'w+') as f:
-            f.write(xmlstr)
 
         return xmlstr
 
@@ -379,12 +364,7 @@ class RosControlPlugin(Plugin):
 
     def write_srdf(self, builder_joint_map=None):
         """Generates a basic srdf so that the model can be used right away with XBotCore"""
-        # global path_name
-        srdf_filename = path_name + '/ModularBot/srdf/ModularBot.srdf'
-        # srdf_filename = path_superbuild + '/configs/ADVR_shared/ModularBot/srdf/ModularBot.srdf'
-        ## srdf_filename = self.urdf_writer.resource_finder.get_filename('srdf/ModularBot.srdf', 'modularbot_path')
-        #srdf_filename = "/tmp/modular/srdf/ModularBot.srdf"
-
+        
         root = ET.Element('robot', name="ModularBot")
 
         groups = []
@@ -510,17 +490,7 @@ class RosControlPlugin(Plugin):
         for coll_elem in self.urdf_writer.collision_elements:
             ET.SubElement(root, 'disable_collisions', link1=coll_elem[0], link2=coll_elem[1], reason='Adjacent')
 
-        # Create folder if doesen't exist
-        if not os.path.exists(os.path.dirname(srdf_filename)):
-            try:
-                os.makedirs(os.path.dirname(srdf_filename))
-            except OSError as exc: # Guard against race condition
-                if exc.errno != errno.EEXIST:
-                    raise
-
         xmlstr = xml.dom.minidom.parseString(ET.tostring(root)).toprettyxml(indent="   ")
-        with open(srdf_filename, 'w+') as f:
-            f.write(xmlstr)
 
         ###################################
         # Moveit configs: TO BE FIXED
@@ -1235,7 +1205,7 @@ class UrdfWriter:
         self.base_link = ModuleNode.ModuleNode(data, "base_link")
         setattr(self.base_link, 'name', "base_link")
         setattr(self.base_link, 'tag', "_A")
-        setattr(self.base_link, 'flange_size', 3)
+        setattr(self.base_link, 'flange_size', '3')
         setattr(self.base_link, 'i', 0)
         setattr(self.base_link, 'p', 0)
         setattr(self.base_link, 'Homogeneous_tf', tf.transformations.identity_matrix())
@@ -3768,9 +3738,65 @@ class UrdfWriter:
         
         return joint_map
 
-    def write_srdf(self, builder_joint_map=None):
+    def write_srdf(self, builder_joint_map=None, compute_acm=True):
         """Generates a basic srdf so that the model can be used right away with XBotCore"""
-        srdf = self.control_plugin.write_srdf(builder_joint_map)
+        
+        global path_name
+        srdf_filename = path_name + '/ModularBot/srdf/ModularBot.srdf'
+        # srdf_filename = path_superbuild + '/configs/ADVR_shared/ModularBot/srdf/ModularBot.srdf'
+        # srdf_filename = self.urdf_writer.resource_finder.get_filename('srdf/ModularBot.srdf', 'modularbot_path')
+        # srdf_filename = "/tmp/modular/srdf/ModularBot.srdf"
+        
+        # Generate srdf string
+        srdf_string = self.control_plugin.write_srdf(builder_joint_map)
+
+        # Compute Allowed Collision Matrix (ACM) using MoveIt!
+        if compute_acm:
+            srdf_string = self.add_acm_to_srdf(srdf_string)
+
+        # Create folder if doesen't exist
+        if not os.path.exists(os.path.dirname(srdf_filename)):
+            try:
+                os.makedirs(os.path.dirname(srdf_filename))
+            except OSError as exc:  # Guard against race condition
+                if exc.errno != errno.EEXIST:
+                    raise
+
+        with open(srdf_filename, 'w+') as f:
+            f.write(srdf_string)
+
+        return srdf_string
+    
+    def add_acm_to_srdf(self, srdf):
+        """Compute Allowed Collision Matrix (ACM) using MoveIt!"""
+        
+        try:
+            # importing python bindings of https://github.com/ADVRHumanoids/moveit_compute_default_collisions
+            from moveit_compute_default_collisions import pymcdc
+
+            # ensure the urdf string has been already generated
+            if self.urdf_string is None:
+                self.write_urdf()
+
+            # set verbosity level of the mcdc module
+            if self.logger.level == logging.DEBUG:
+                mcdc_verbose = True
+                self.print("Allowed Collision Matrix (ACM) computation")
+            else:
+                mcdc_verbose = False
+
+            # generate acm and write it into srdf
+            acm = pymcdc.MoveitComputeDefaultCollisions()
+            acm.setVerbose(mcdc_verbose)
+            acm.initFromString(self.urdf_string, srdf, False)
+            acm.computeDefaultCollisions(int(1e5))
+            if mcdc_verbose:
+                acm.printDisabledCollisions()
+            srdf_with_acm = acm.getXmlString()
+            srdf = srdf_with_acm 
+
+        except ImportError:
+            self.info_print("Cannot import moveit_compute_default_collisions (pymcdc), skipping ACM computation")
 
         return srdf
 
@@ -3808,6 +3834,8 @@ class UrdfWriter:
         string_urdf_xbot = self.process_urdf(xacro_mappings={'gazebo_urdf': 'false', 'velodyne': 'false', 'realsense': 'false', 'ultrasound': 'false'})
         out.write(string_urdf_xbot)
         out.close()
+
+        self.urdf_string = string_urdf_xbot
 
         return string_urdf_xbot
 
