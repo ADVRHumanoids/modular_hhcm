@@ -3786,7 +3786,8 @@ class UrdfWriter:
                 mcdc_verbose = False
 
             # generate acm and write it into srdf
-            acm = pymcdc.MoveitComputeDefaultCollisions(mcdc_verbose)
+            acm = pymcdc.MoveitComputeDefaultCollisions()
+            acm.setVerbose(mcdc_verbose)
             acm.initFromString(self.urdf_string, srdf, False)
             acm.computeDefaultCollisions(int(1e5))
             if mcdc_verbose:
