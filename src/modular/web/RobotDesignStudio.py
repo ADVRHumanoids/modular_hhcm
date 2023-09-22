@@ -136,6 +136,7 @@ def setMode():
         urdf_writer.reset(**urdfwriter_kwargs_dict)
         urdf_writer_fromHW.reset(**urdfwriter_kwargs_dict)
 
+        app.logger.info("Switched workspace mode to '%s'", mode)
         return Response(status=204)
 
     except ValueError as e:
