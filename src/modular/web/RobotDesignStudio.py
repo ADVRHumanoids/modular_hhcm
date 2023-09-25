@@ -664,21 +664,17 @@ def removeModules():
     )
 
     try:
-        ids = request.args.getlist('families')
-        if len(ids)==0:
-            # remove last module
-            urdf_writer.remove_module()
-            return Response(status=204)
-
-        module_ids = [m['id'] for m in getModulesMap()]
-        for t in ids:
-            if t in module_ids:
-                return Response(
-                    response=json.dumps({"message": 'Deletion of multiple modules at once is currently not supported'}),
-                    status=501,
-                    mimetype="application/json"
+        ids = request.args.getlist('ids[]')
+        if len(ids)>1:
+            return Response(
+                response=json.dumps({"message": 'Deletion of multiple ids at once is currently not supported'}),
+                status=501,
+                mimetype="application/json"
             )
-        return Response(status=304) # NOTHING CHANGED
+        elif len(ids)==1:
+            urdf_writer.select_module_from_name(ids[0], None)
+        urdf_writer.remove_module()
+        return Response(status=204)
 
     except Exception as e:
         # validation failed
