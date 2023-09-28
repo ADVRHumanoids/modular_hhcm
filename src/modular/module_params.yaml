@@ -85,3 +85,8 @@
     1: # CONCERT wheel
         5: # CONCERT leg flange size
             0: concert/module_wheel_concert.json #rev 0
+
+6: #passive base link module
+    1: # straight 600 mm
+        4: #size CONCERT arm flange
+            0: concert/module_base_link_600_concert.json # rev 0
