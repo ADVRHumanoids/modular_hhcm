@@ -449,6 +449,33 @@ paths:
               example:
                 message: "Deletion of multiple modules at once is currently not supported"
 
+  /model/stats:
+    get:
+      tags:
+        - Robot Model
+      summary: Get a set of statistics for the curent robot model
+      responses:
+        # 200:
+        #   description: "OK: the URDF to render!"
+        #   content:
+        #     application/xml:
+        #       schema:
+        #         type: object
+        500:
+          description: "INTERNAL SERVER ERROR"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        501:
+          description: "NOT IMPLEMENTED: This implies future availability (e.g., a new feature of the API)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+              example:
+                message: "Model statistics are currently not supported"
+
   /resources/modules:
     get:
       tags:

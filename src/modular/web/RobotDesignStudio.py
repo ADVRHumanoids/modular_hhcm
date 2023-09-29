@@ -742,6 +742,17 @@ def deployROSModel():
             mimetype="application/json"
         )
 
+# get current model stats
+@app.route(f'{api_base_route}/model/stats', methods=['POST'])
+def getModelStats():
+    """Returns a set of statistics for the curent robot model.
+    """
+    return Response(
+        response=json.dumps({"message": 'Model statistics are currently not supported'}),
+        status=501,
+        mimetype="application/json"
+    )
+
 def byteify(input_raw):
     if isinstance(input_raw, dict):
         return {byteify(key): byteify(value)
