@@ -275,7 +275,7 @@ def resources_families_get():
             mimetype="application/json"
         )
 
-@app.route(f'{api_base_route}/urdf/modules', methods=['POST'])
+@app.route(f'{api_base_route}/model/urdf/modules', methods=['POST'])
 def addNewModule():
     req = request.get_json()
     try:
@@ -491,7 +491,7 @@ def openFile():
 
 
 # request the urdf generated from the currently stored tree
-@app.route(f'{api_base_route}/urdf', methods=['GET'])
+@app.route(f'{api_base_route}/model/urdf', methods=['GET'])
 def getURDF():
     try:
         if building_mode_ON:
@@ -563,7 +563,7 @@ def send_file(path):
 
 #TODO: to be included in the next versions (requires ROS etc.)
 # send a request to the poller thread to get ECat topology and synchronize with hardware
-@app.route(f'{api_base_route}/urdf', methods=['PUT'])
+@app.route(f'{api_base_route}/model/urdf', methods=['PUT'])
 @app.route('/syncHW/', methods=['POST'])
 def syncHW():
     srv_name = '/ec_client/get_slaves_description'
@@ -629,7 +629,7 @@ def getModulesMap():
     return modules
 
 # get list of modules of robot
-@app.route(f'{api_base_route}/urdf/modules', methods=['GET'])
+@app.route(f'{api_base_route}/model/urdf/modules', methods=['GET'])
 def getModelModules():
     try:
         modules = getModulesMap()
@@ -649,7 +649,7 @@ def getModelModules():
         )
 
 # call URDF_writer.py to remove the last module
-@app.route(f'{api_base_route}/urdf/modules', methods=['DELETE'])
+@app.route(f'{api_base_route}/model/urdf/modules', methods=['DELETE'])
 def removeModules():
     """Delete one or more modules from the robot model. By default it removes the last element.
 
@@ -715,7 +715,7 @@ def removeConnectors():
     return data
 
 # deploy the package of the built robot
-@app.route(f'{api_base_route}/urdf', methods=['POST'])
+@app.route(f'{api_base_route}/model/urdf', methods=['POST'])
 def deployROSModel():
     try:
         req = request.get_json()

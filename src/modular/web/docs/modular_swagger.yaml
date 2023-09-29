@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: Modular
-  version: 1.0.0-alpha.0
+  version: 1.0.0-alpha.1.0
   # description: Alberobitcs API for RobotBuilder
   contact:
     email: alberobotics@iit.it
@@ -67,7 +67,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorMessage"
 
-  /urdf:
+  /model/urdf:
     get:
       tags:
         - Robot Model
@@ -177,7 +177,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorMessage"
 
-  /urdf/modules:
+  /model/urdf/modules:
     get:
       tags:
         - Robot Model
