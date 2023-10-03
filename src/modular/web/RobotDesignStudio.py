@@ -25,6 +25,7 @@ if ec_srvs_spec is not None:
 
 # Add Mock Resources lists
 import modular.web.mock_resources as mock_resources
+import modular.web.mock_stats as mock_stats
 
 # import custom server config (if any)
 base_path, _ = os.path.split(__file__)
@@ -743,15 +744,24 @@ def deployROSModel():
         )
 
 # get current model stats
-@app.route(f'{api_base_route}/model/stats', methods=['POST'])
+@app.route(f'{api_base_route}/model/stats', methods=['GET'])
 def getModelStats():
     """Returns a set of statistics for the curent robot model.
     """
-    return Response(
-        response=json.dumps({"message": 'Model statistics are currently not supported'}),
-        status=501,
-        mimetype="application/json"
-    )
+    try:
+        return Response(
+            response=json.dumps(mock_stats.get_stats()),
+            status=200,
+            mimetype="application/json"
+        )
+    except Exception as e:
+        # validation failed
+        print(f'{type(e).__name__}: {e}')
+        return Response(
+            response=json.dumps({"message": f'{type(e).__name__}: {e}'}),
+            status=500,
+            mimetype="application/json"
+        )
 
 def byteify(input_raw):
     if isinstance(input_raw, dict):
