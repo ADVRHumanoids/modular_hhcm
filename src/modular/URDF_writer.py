@@ -276,15 +276,16 @@ class Plugin:
                 joint_map['joint_map'][i] = "HUB_" + str(i)
         for joints_chain in self.urdf_writer.listofchains:
             for joint_module in joints_chain:
+                if joint_module.type not in {'joint', 'dagana', 'wheel', 'tool_exchanger', 'gripper', 'drill'}:
+                    continue
                 i += 1
                 if joint_module.type == 'tool_exchanger':
                     name = joint_module.name + '_fixed_joint'
-                elif joint_module.type == 'simple_ee':
-                    continue
                 elif joint_module.type == 'gripper':
                     name = joint_module.name + '_fixed_joint'
                 else:
                     name = joint_module.name
+
                 if use_robot_id:
                     joint_map['joint_map'][int(joint_module.robot_id)] = name
                 else:
@@ -453,7 +454,7 @@ class RosControlPlugin(Plugin):
             kinematics.update([(group_name, copy.deepcopy(tmp_kinematics['group_name']))])
             ompl.update([(group_name, copy.deepcopy(tmp_ompl['group_name']))])
             for joint_module in joints_chain:
-                if joint_module.type in {'joint', 'wheel'} :
+                if joint_module.type in {'joint', 'dagana', 'wheel'} :
                     # Homing state
                     if builder_joint_map is not None:
                         homing_value = float(builder_joint_map[joint_module.name]['angle'])
@@ -615,6 +616,8 @@ class XBotCorePlugin(Plugin):
             # HACK
             p += 1
             for joint_module in joints_chain:
+                if joint_module.type not in {'joint', 'dagana', 'wheel', 'tool_exchanger', 'gripper'}:
+                    continue
                 if joint_module.type in { 'joint', 'wheel' }:
                     i += 1
                     lowlevel_config['GazeboXBotPlugin']['gains'][joint_module.name] = OrderedDict(
@@ -651,8 +654,7 @@ class XBotCorePlugin(Plugin):
                     value = joint_module.LpESC
                     self.urdf_writer.print(yaml.dump(joint_module.LpESC))
                     lowlevel_config['HALInterface']['IEndEffectors'].append(xbot_ecat_interface)
-                elif joint_module.type == 'simple_ee':
-                    continue
+
                 lowlevel_config[key] = value
                 self.urdf_writer.print(joint_module.kinematics.__dict__.items())
                 self.urdf_writer.print(lowlevel_config[key])
@@ -736,27 +738,13 @@ class XBot2Plugin(Plugin):
                 joint_map['joint_map'][i] = "HUB_" + str(i)
         for joints_chain in self.urdf_writer.listofchains:
             for joint_module in joints_chain:
+                if joint_module.type not in {'joint', 'dagana', 'wheel', 'tool_exchanger', 'gripper', 'drill'}:
+                    continue
                 i += 1
                 if joint_module.type == 'tool_exchanger':
                     name = joint_module.name + '_fixed_joint'
-                    if use_robot_id:
-                        joint_map['joint_map'][int(joint_module.robot_id)] = name
-                    else:
-                        joint_map['joint_map'][i] = name
-                if joint_module.type == 'dagana':
+                elif joint_module.type == 'dagana':
                     name = joint_module.dagana_joint_name
-                    if use_robot_id:
-                        joint_map['joint_map'][int(joint_module.robot_id)] = name
-                    else:
-                        joint_map['joint_map'][i] = name
-                elif joint_module.type == 'simple_ee':
-                    continue
-                elif joint_module.type == 'drill':
-                    name = joint_module.name
-                    if use_robot_id:
-                        joint_map['joint_map'][int(joint_module.robot_id)] = name
-                    else:
-                        joint_map['joint_map'][i] = name
                 elif joint_module.type == 'gripper':
                     name = joint_module.name
                     fingers = [name + '_rightfinger', name + '_leftfinger']
@@ -766,10 +754,11 @@ class XBot2Plugin(Plugin):
                         joint_map['albero_gripper_map'][i] = {'name': name, 'fingers': fingers}
                 else:
                     name = joint_module.name
-                    if use_robot_id:
-                        joint_map['joint_map'][int(joint_module.robot_id)] = name
-                    else:
-                        joint_map['joint_map'][i] = name
+                
+                if use_robot_id:
+                    joint_map['joint_map'][int(joint_module.robot_id)] = name
+                else:
+                    joint_map['joint_map'][i] = name
                 
             # self.urdf_writer.print(str(i), joint_module.name)
             # self.urdf_writer.print(joint_map)
@@ -808,6 +797,8 @@ class XBot2Plugin(Plugin):
         i = 0
         for joints_chain in self.urdf_writer.listofchains:
             for joint_module in joints_chain:
+                if joint_module.type not in {'joint', 'dagana', 'wheel', 'tool_exchanger', 'gripper', 'drill'}:
+                    continue
                 i += 1
                 if joint_module.type in ('tool_exchanger', 'gripper'):
                     if use_robot_id:
@@ -900,8 +891,9 @@ class XBot2Plugin(Plugin):
             # HACK
             p += 1
             for joint_module in joints_chain:
+                if joint_module.type not in {'joint', 'dagana', 'wheel', 'tool_exchanger', 'gripper', 'drill'}:
+                    continue
                 if joint_module.type in ['joint', 'dagana']:
-                    i += 1
                     if joint_module.type == 'dagana':
                         key = joint_module.dagana_joint_name
                     else:    
@@ -947,7 +939,6 @@ class XBot2Plugin(Plugin):
                     #     value.pid.impedance = [500.0, 20.0, 1.0, 0.003, 0.99]
 
                 elif joint_module.type == 'wheel':
-                    i += 1
                     key = joint_module.name
                     value = joint_module.CentAcESC
                     # Remove parameters that are now not used by XBot2 (they are handled by the EtherCat master on a different config file)
@@ -971,7 +962,6 @@ class XBot2Plugin(Plugin):
                             del idle_joint_config[key].pid.velocity
 
                 elif joint_module.type == 'dagana':
-                    i += 1
                     key = joint_module.name
                     value = joint_module.CentAcESC
                     # Remove parameters that are now not used by XBot2 (they are handled by the EtherCat master on a different config file)
@@ -1002,9 +992,6 @@ class XBot2Plugin(Plugin):
 
                     idle_joint_config[key] = copy.deepcopy(value)
                     idle_joint_config[key].control_mode = 'idle'
-                    
-                elif joint_module.type == 'simple_ee':
-                    continue
 
                 # idle_joint_config[key] = copy.deepcopy(value)
                 # idle_joint_config[key].control_mode = 'idle'
@@ -2300,8 +2287,6 @@ class UrdfWriter:
         except AttributeError:
             pass
 
-        # self.add_to_chain(simple_ee)
-
         trasl = tf.transformations.translation_matrix((x_offset, y_offset, z_offset))
         rot = tf.transformations.euler_matrix(0.0, 0.0, angle_offset, 'sxyz')
         rototrasl = ModuleNode.get_rototranslation(trasl, rot)
@@ -2450,7 +2435,7 @@ class UrdfWriter:
         self.print('occupied_ports: ', new_module.occupied_ports)
 
         # Depending on the type of the parent module and the new module, call the right method to add the new module.
-        # If the new module is a joint add it to the correct chain via the 'add_to_chain' method.
+        # Add the module to the correct chain via the 'add_to_chain' method.
         
         #if self.parent_module.type == "base_link":
 
@@ -2459,8 +2444,6 @@ class UrdfWriter:
                 # joint + joint
                 self.print("joint + joint")
                 self.joint_after_joint(new_module, self.parent_module, angle_offset, reverse=reverse)
-                # Add the joint to the list of chains
-                self.add_to_chain(new_module)
             else:
                 # joint + link
                 self.print("joint + link")
@@ -2472,8 +2455,6 @@ class UrdfWriter:
             if new_module.type in { 'joint', 'wheel' }:
                 # cube + joint
                 self.joint_after_cube(new_module, self.parent_module, angle_offset, reverse=reverse)
-                # Add the joint to the list of chains
-                self.add_to_chain(new_module)
             else:
                 # cube + link
                 self.link_after_cube(new_module, self.parent_module, angle_offset, reverse=reverse)
@@ -2482,12 +2463,13 @@ class UrdfWriter:
                 # link + joint
                 self.print("link + joint")
                 self.joint_after_link(new_module, self.parent_module, angle_offset, reverse=reverse)
-                # Add the joint to the list of chains
-                self.add_to_chain(new_module)
             else:
                 # link + link
                 self.print("link + link")
                 self.link_after_link(new_module, self.parent_module, angle_offset, reverse=reverse)
+
+        # Add the module to the list of chains
+        self.add_to_chain(new_module)
 
         if self.speedup:
             string = ""
@@ -3102,7 +3084,7 @@ class UrdfWriter:
                           yaw="0.0")
 
             # the dagana gets added to the chain. it's needed in the joint map and in the config!
-            self.add_to_chain(new_Link)
+            # self.add_to_chain(new_Link)
             self.control_plugin.add_joint(new_Link.dagana_joint_name)
 
             return
@@ -3129,7 +3111,7 @@ class UrdfWriter:
                           pitch=pitch_ee,
                           yaw=yaw_ee)
             # the drill gets added to the chain although it's not a joint. it's needed in the joint map and in the config!
-            self.add_to_chain(new_Link)
+            # self.add_to_chain(new_Link)
         elif new_Link.type == 'end_effector':
             setattr(new_Link, 'name', 'end_effector' + new_Link.tag)
             ET.SubElement(self.root,
@@ -3159,7 +3141,7 @@ class UrdfWriter:
                           name=new_Link.name,
                           filename=new_Link.filename)
             # the end-effector gets added to the chain although it's not a joint. it's needed in the joint map and in the config!
-            self.add_to_chain(new_Link)
+            # self.add_to_chain(new_Link)
             # HACK: add pen after tool_exchanger
             setattr(new_Link, 'pen_name', 'pen' + new_Link.tag)
             ET.SubElement(self.root,
@@ -3175,7 +3157,7 @@ class UrdfWriter:
                         name=new_Link.name,
                         filename=new_Link.filename)
             # the end-effector gets added to the chain although it's not a joint. it's needed in the joint map and in the config!
-            self.add_to_chain(new_Link)
+            # self.add_to_chain(new_Link)
             # add fingers and tcp after gripper
             setattr(new_Link, 'TCP_name', 'TCP_' + new_Link.name)
             setattr(new_Link, 'joint_name_finger1', new_Link.name + '_finger_joint1')
