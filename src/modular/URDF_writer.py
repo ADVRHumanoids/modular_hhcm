@@ -25,6 +25,7 @@ import copy
 from collections import OrderedDict
 
 from modular.utils import ResourceFinder
+from modular.ModelStats import ModelStats
 import modular.ModuleNode  as ModuleNode
 import argparse
 
@@ -1163,6 +1164,8 @@ class UrdfWriter:
 
         # update generator expression
         self.update_generator()
+
+        self.model_stats = ModelStats(self)
 
     def set_floating_base(self, floating_base):
         """Set the floating base flag"""
@@ -3854,6 +3857,10 @@ class UrdfWriter:
                                 roll=roll, 
                                 pitch=pitch, 
                                 yaw=yaw)
+                
+    def compute_payload(self, samples):
+        self.model_stats.update_model()
+        return self.model_stats.compute_payload(n_samples=samples)
 
 
 from contextlib import contextmanager

@@ -397,6 +397,17 @@ def byteify(input):
         return input.encode('utf-8')
     else:
         return input
+    
+
+@app.route('/getPayload/', methods=['GET'])
+def getPayload():
+    if building_mode_ON :
+        payload = urdf_writer.compute_payload(samples=10000)
+    else:
+        payload = urdf_writer_fromHW.compute_payload(samples=10000)
+    
+    print(payload)
+    return "{:.2f}".format(payload)
 
 
 def main():
