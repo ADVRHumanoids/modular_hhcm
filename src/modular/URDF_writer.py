@@ -173,8 +173,6 @@ class Plugin:
         end_effectors = []
         groups_in_chains_group = []
         groups_in_arms_group = []
-        # base_link = ""
-        # tip_link = ""
         i = 0
 
         self.urdf_writer.print(self.urdf_writer.listofchains)
@@ -182,26 +180,8 @@ class Plugin:
             group_name = "chain" + self.urdf_writer.branch_switcher.get(i + 1)
             # group_name = "arm" + self.urdf_writer.branch_switcher.get(i + 1)
             groups.append(ET.SubElement(root, 'group', name=group_name))
-            if "con_" in joints_chain[0].parent.name:
-                base_link = joints_chain[0].parent.parent.name
-            else:
-                base_link = joints_chain[0].parent.name
-            if joints_chain[-1].children:
-                if "con_" in joints_chain[-1].children[0].name:
-                    tip_link = joints_chain[-1].children[0].children[0].name
-                else:
-                    tip_link = joints_chain[-1].children[0].name
-            else:
-                if joints_chain[-1].type in { 'joint', 'wheel' }:
-                    tip_link = joints_chain[-1].distal_link_name
-                if joints_chain[-1].type == 'tool_exchanger':
-                    tip_link = joints_chain[-1].pen_name
-                if joints_chain[-1].type == 'gripper':
-                    tip_link = joints_chain[-1].TCP_name
-                elif joints_chain[-1].type == 'simple_ee' or joints_chain[-1].type == 'drill':
-                    tip_link = joints_chain[-1].name
-                elif joints_chain[-1].type == 'dagana':
-                    tip_link = joints_chain[-1].dagana_link_name
+            base_link = self.urdf_writer.get_chain_base_link(joints_chain)
+            tip_link = self.urdf_writer.get_chain_tip_link(joints_chain)
             chains.append(ET.SubElement(groups[i], 'chain', base_link=base_link, tip_link=tip_link))
             i += 1
         i = 0
@@ -375,8 +355,6 @@ class RosControlPlugin(Plugin):
         groups_in_chains_group = []
         groups_in_arms_group = []
         # groups_in_hands_group = []
-        # base_link = ""
-        # tip_link = ""
         i = 0
 
         # MoveIt
@@ -414,25 +392,8 @@ class RosControlPlugin(Plugin):
             group_name = "arm" + self.urdf_writer.branch_switcher.get(i + 1)
             #group_name = "chain_"+str(i+1)
             groups.append(ET.SubElement(root, 'group', name=group_name))
-            if "con_" in joints_chain[0].parent.name:
-                base_link = joints_chain[0].parent.parent.name
-            else:
-                base_link = joints_chain[0].parent.name
-            if joints_chain[-1].children:
-                if "con_" in joints_chain[-1].children[0].name:
-                    tip_link = joints_chain[-1].children[0].children[0].name
-                else:
-                    tip_link = joints_chain[-1].children[0].name
-            else:
-                tip_link = 'L_' + str(joints_chain[-1].i) + joints_chain[-1].tag
-                if joints_chain[-1].type == 'tool_exchanger':
-                    # tip_link = joints_chain[-1].name
-                    tip_link = joints_chain[-1].pen_name
-                if joints_chain[-1].type == 'gripper':
-                    # tip_link = joints_chain[-1].name
-                    tip_link = joints_chain[-1].TCP_name
-                elif joints_chain[-1].type == 'simple_ee':
-                    tip_link = joints_chain[-1].name
+            base_link = self.urdf_writer.get_chain_base_link(joints_chain)
+            tip_link = self.urdf_writer.get_chain_tip_link(joints_chain)
             chains.append(ET.SubElement(groups[i], 'chain', base_link=base_link, tip_link=tip_link))
             i += 1
         i = 0
@@ -2037,6 +1998,37 @@ class UrdfWriter:
 
     def get_parent_module(self):
         return self.parent_module
+    
+    @staticmethod
+    def find_chain_tip_link(chain):
+        if chain[-1].children:
+            if "con_" in chain[-1].children[0].name:
+                tip_link = chain[-1].children[0].children[0].name
+            else:
+                tip_link = chain[-1].children[0].name
+        else:
+            if chain[-1].type in { 'joint', 'wheel' }:
+                tip_link = chain[-1].distal_link_name
+            if chain[-1].type == 'tool_exchanger':
+                tip_link = chain[-1].pen_name
+            if chain[-1].type == 'gripper':
+                tip_link = chain[-1].TCP_name
+            elif chain[-1].type in { 'simple_ee', 'link', 'size_adapter'}:
+                tip_link = chain[-1].name
+            elif chain[-1].type in { 'end_effector', 'drill'}:
+                tip_link = chain[-1].tcp_name
+            elif chain[-1].type == 'dagana':
+                tip_link = chain[-1].dagana_link_name
+        return tip_link
+    
+    @staticmethod
+    def find_chain_base_link(chain):
+        if "con_" in chain[0].parent.name:
+            base_link = chain[0].parent.parent.name
+        else:
+            base_link = chain[0].parent.name
+        return base_link
+    
 
     def update_generator(self):
         # Generator expression for list of urdf elements without the gazebo tag.
@@ -3609,29 +3601,10 @@ class UrdfWriter:
             probdesc['stack'] = stack
             probdesc[ee_name] = copy.deepcopy(probdesc['EE'])
 
-            if joints_chain[-1].children:
-                if "con_" in joints_chain[-1].children[0].name:
-                    tip_link = joints_chain[-1].children[0].children[0].name
-                else:
-                    tip_link = joints_chain[-1].children[0].name
-            else:
-                tip_link = 'L_' + str(joints_chain[-1].i) + joints_chain[-1].tag
-                if joints_chain[-1].type == 'tool_exchanger':
-                    # tip_link = joints_chain[-1].name
-                    tip_link = joints_chain[-1].pen_name
-                elif joints_chain[-1].type == 'gripper':
-                    # tip_link = joints_chain[-1].name
-                    tip_link = joints_chain[-1].TCP_name
-                elif joints_chain[-1].type == 'simple_ee':
-                    tip_link = joints_chain[-1].name
-                elif joints_chain[-1].type == 'wheel':
-                    tip_link = joints_chain[-1].name
+            tip_link = self.find_chain_tip_link(joints_chain)
             probdesc[ee_name]['distal_link'] = tip_link
 
-            if "con_" in joints_chain[0].parent.name:
-                base_link = joints_chain[0].parent.parent.name
-            else:
-                base_link = joints_chain[0].parent.name
+            base_link = self.find_chain_base_link(joints_chain)
             probdesc[ee_name]['base_link'] = base_link
             # probdesc[ee_name]['type'] = "Interaction"
             probdesc[ee_name]['type'] = "Cartesian"
@@ -3677,21 +3650,7 @@ class UrdfWriter:
                 
         self.print(probdesc.items())
         joints_chain = self.listofchains[0]
-        if joints_chain[-1].children:
-            if "con_" in joints_chain[-1].children[0].name:
-                tip_link = joints_chain[-1].children[0].children[0].name
-            else:
-                tip_link = joints_chain[-1].children[0].name
-        else:
-            tip_link = 'L_' + str(joints_chain[-1].i) + joints_chain[-1].tag
-            if joints_chain[-1].type == 'tool_exchanger':
-                # tip_link = joints_chain[-1].name
-                tip_link = joints_chain[-1].pen_name
-            if joints_chain[-1].type == 'gripper':
-                # tip_link = joints_chain[-1].name
-                tip_link = joints_chain[-1].TCP_name
-            elif joints_chain[-1].type == 'simple_ee':
-                tip_link = joints_chain[-1].name
+        tip_link = self.find_chain_tip_link(joints_chain)
         probdesc['EE']['distal_link'] = tip_link
 
          # Create folder if doesen't exist
