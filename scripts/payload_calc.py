@@ -11,7 +11,7 @@ urdfpath = os.path.join(pkgpath, 'urdf', 'ModularBot.urdf')
 urdf = open(urdfpath, 'r').read()
 
 # Load the urdf model
-model = pinocchio.buildModelFromUrdf(urdfpath)
+model = pinocchio.buildModelFromXML(urdf)
 
 # Create data required by the algorithms
 data = model.createData()
@@ -41,7 +41,7 @@ nq = model.nq
 # n_samples = len(q_configurations)
 
 ## Random Sampling
-n_samples = 100000
+n_samples = 1000
 q_configurations = [pinocchio.randomConfiguration(model) for i in range(n_samples)]
 
 c = np.array([0, 0, -1, 0, 0, 0])

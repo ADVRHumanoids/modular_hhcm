@@ -811,8 +811,18 @@ def getModelStats():
     """Returns a set of statistics for the curent robot model.
     """
     try:
+        if building_mode_ON :
+            stats = urdf_writer.compute_stats(samples=1000)
+        else:
+            stats = urdf_writer_fromHW.compute_stats(samples=1000)
+
+        response = {
+                "modules": { "label": 'Modules', "value": stats['modules'], "unit": '' },
+                "payload": { "label": 'Payload', "value": stats['payload'], "unit": 'Kg' },
+                "reach": { "label": 'Reach', "value": stats['max_reach'], "unit": 'm' },
+        }
         return Response(
-            response=json.dumps(mock_stats.get_stats()),
+            response=json.dumps(response),
             status=200,
             mimetype="application/json"
         )

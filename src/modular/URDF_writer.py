@@ -3895,14 +3895,14 @@ class UrdfWriter:
 
         # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string
         # Update the urdf file, removing the module
-        string = self.process_urdf()
+        self.urdf_string = self.process_urdf()
 
         if self.verbose:
             # Render tree
             for pre, _, node in anytree.render.RenderTree(self.base_link):
                 self.print("%s%s" % (pre, node.name))
 
-        return string
+        return self.urdf_string
 
     def findall_by_type(self, types=[]):
         # Serch the tree by name for the selected module
@@ -3931,6 +3931,11 @@ class UrdfWriter:
     def compute_payload(self, samples):
         self.model_stats.update_model()
         return self.model_stats.compute_payload(n_samples=samples)
+    
+
+    def compute_stats(self, samples):
+        self.model_stats.update_model()
+        return self.model_stats.compute_stats(n_samples=samples)
 
 
 from contextlib import contextmanager

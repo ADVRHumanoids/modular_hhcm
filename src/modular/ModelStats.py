@@ -1,8 +1,6 @@
 import pinocchio
 import numpy as np
-import scipy
-import rospkg
-import os
+import scipy.optimize
 
 class ModelStats:
     def __init__(self, urdf_writer):
@@ -11,23 +9,25 @@ class ModelStats:
         # ensure the urdf string has been already generated
         if getattr(self.urdf_writer, 'urdf_string', None) is None:
             self.urdf_writer.write_urdf()
-        self.urdf = self.urdf_writer.urdf_string
 
         self.update_model()
 
     def update_model(self):
         # Load the urdf model
-        self.model = pinocchio.buildModelFromUrdf(self.urdf)
+        self.model = pinocchio.buildModelFromXML(self.urdf_writer.urdf_string)
 
         # Create data required by the algorithms
         self.data = self.model.createData()
 
         # Get the tip link name
         # HACK: we take the last chain in the list of chains. This should be changed to be the one selected by the user
-        tip_link_name = self.urdf_writer.get_chain_tip_link(self.listofchains[-1])
+        if len(self.urdf_writer.listofchains) > 0:
+            self.tip_link_name = self.urdf_writer.find_chain_tip_link(self.urdf_writer.listofchains[-1])
+        else:
+            self.tip_link_name = 'base_link'
         
         # Get the frame index for the end-effector
-        self.frame_idx = self.model.getFrameId(tip_link_name)  # 'TCP_gripper_A'
+        self.frame_idx = self.model.getFrameId(self.tip_link_name)  # 'TCP_gripper_A'
 
         self.lower_limits = self.model.lowerPositionLimit
         self.upper_limits = self.model.upperPositionLimit
@@ -35,8 +35,6 @@ class ModelStats:
         self.nq = self.model.nq
 
     def compute_payload(self, n_samples=10000):
-        self.update_model()
-        
         ## Random Sampling
         samples = n_samples
         q_configurations = [pinocchio.randomConfiguration(self.model) for i in range(samples)]
@@ -51,7 +49,7 @@ class ModelStats:
 
         c = np.array([0, 0, -1, 0, 0, 0])
 
-        lb = np.zeros((self.nq))
+        lb = np.zeros(6)
         ub = np.array([0, 0, np.inf, 0, 0, 0])
 
         self.worst_case_force = np.array([0, 0, np.inf, 0, 0, 0])
@@ -100,3 +98,33 @@ class ModelStats:
     
     def get_payload(self):
         return self.payload
+    
+    def compute_max_reach(self, n_samples=10000):
+        self.max_reach = None
+        return self.max_reach
+    
+    def get_max_reach(self):
+        return self.max_reach
+    
+    def compute_modules(self):
+        self.n_modules =  sum(len(chain) for chain in self.urdf_writer.listofchains)
+        return self.n_modules
+    
+    def get_modules(self):
+        return self.n_modules
+    
+    def compute_stats(self, n_samples):
+        self.payload = self.compute_payload(n_samples=n_samples)
+        self.max_reach = self.compute_max_reach(n_samples=n_samples)
+        self.n_modules = self.compute_modules()
+
+        return self.get_stats()
+
+    def get_stats(self):
+        stats={
+                'modules': self.n_modules,
+                'payload': self.payload,
+                'max_reach': self.max_reach
+        }
+
+        return stats
