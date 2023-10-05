@@ -3775,7 +3775,7 @@ class UrdfWriter:
             from moveit_compute_default_collisions import pymcdc
 
             # ensure the urdf string has been already generated
-            if self.urdf_string is None:
+            if getattr(self, 'urdf_string', None) is None:
                 self.write_urdf()
 
             # set verbosity level of the mcdc module
