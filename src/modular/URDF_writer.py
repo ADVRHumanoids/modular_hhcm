@@ -1437,11 +1437,11 @@ class UrdfWriter:
         # doc = xacro.parse(string)
         # xacro.process_doc(doc, in_order=True)
         # string = doc.toprettyxml(indent='  ')
-        string = self.process_urdf()
+        self.urdf_string = self.process_urdf()
 
         self.info_print("Discovery completed")
 
-        data = {'string': string}
+        data = {'string': self.urdf_string}
         return data
 
     def render_tree(self):
@@ -1709,11 +1709,11 @@ class UrdfWriter:
                     self.print("%s%s" % (pre, node.name))
 
             if self.speedup:
-                string = ""
+                self.urdf_string = ""
             else:
                 # Process the urdf string by calling the process_urdf method.
                 # Parse, convert from xacro and write to string.
-                string = self.process_urdf()
+                self.urdf_string = self.process_urdf()
 
             # Update the EtherCAT port connected to the electro-mechanical interface where the new module/slave will be added 
             #    1           2           3           4
@@ -1738,7 +1738,7 @@ class UrdfWriter:
             self.listofhubs.append(slavecube)
 
             # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
-            data = {'result': string,
+            data = {'result': self.urdf_string,
                     'lastModule_type': 'mastercube',
                     'lastModule_name': name,
                     'flange_size': 3,
@@ -1839,10 +1839,10 @@ class UrdfWriter:
             # string = write_urdf(path_name + '/urdf/ModularBot_test.urdf', urdf_tree)
 
             if self.speedup:
-                string = ""
+                self.urdf_string = ""
             else:
                 # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string.
-                string = self.process_urdf()
+                self.urdf_string = self.process_urdf()
 
             # Update the EtherCAT port connected to the electro-mechanical interface where the new module/slave will be added 
             #    1           2           3           4
@@ -1880,7 +1880,7 @@ class UrdfWriter:
             self.listofhubs.append(mastercube)
 
             # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
-            data = {'result': string,
+            data = {'result': self.urdf_string,
                     'lastModule_type': 'mastercube',
                     'lastModule_name': name,
                     'flange_size': 3,
@@ -1959,10 +1959,10 @@ class UrdfWriter:
         self.add_gazebo_element(mobilebase.gazebo.body_1, mobilebase.name)
         
         if self.speedup:
-            string = ""
+            self.urdf_string = ""
         else:
             # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string.
-            string = self.process_urdf()
+            self.urdf_string = self.process_urdf()
 
         # Update the EtherCAT port connected to the electro-mechanical interface where the new module/slave will be added 
         #    1           2           3           4
@@ -1985,7 +1985,7 @@ class UrdfWriter:
         self.listofhubs.append(mobilebase)
 
         # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
-        data = {'result': string,
+        data = {'result': self.urdf_string,
                 'lastModule_type': 'mobile_base',
                 'lastModule_name': name,
                 'flange_size': 3,
@@ -2064,13 +2064,13 @@ class UrdfWriter:
         self.parent_module = table
 
         if self.speedup:
-            string = ""
+            self.urdf_string = ""
         else:
             # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string
-            string = self.process_urdf()
+            self.urdf_string = self.process_urdf()
 
         # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
-        data = {'result': string,
+        data = {'result': self.urdf_string,
                 'lastModule_type': table.type,
                 'lastModule_name': table.name,
                 'flange_size': table.flange_size,
@@ -2098,10 +2098,10 @@ class UrdfWriter:
                 pass
 
         if self.speedup:
-            string = ""
+            self.urdf_string = ""
         else:
             # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string
-            string = self.process_urdf()
+            self.urdf_string = self.process_urdf()
 
         if self.verbose:
             # Render tree
@@ -2109,7 +2109,7 @@ class UrdfWriter:
                 self.print("%s%s" % (pre, node.name))
 
         # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
-        data = {'result': string,
+        data = {'result': self.urdf_string,
                 'lastModule_type': socket.type,
                 'lastModule_name': socket.name,
                 'flange_size': socket.flange_size,
@@ -2222,10 +2222,10 @@ class UrdfWriter:
         self.collision_elements.append((self.parent_module.name, new_socket.name))
 
         if self.speedup:
-            string = ""
+            self.urdf_string = ""
         else:
             # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string
-            string = self.process_urdf()
+            self.urdf_string = self.process_urdf()
 
         # update the urdf file, adding the new module
         # string = write_urdf(path_name + '/urdf/ModularBot_test.urdf', urdf_tree)
@@ -2236,7 +2236,7 @@ class UrdfWriter:
                 self.print("%s%s" % (pre, node.name))
 
         # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
-        data = {'result': string,
+        data = {'result': self.urdf_string,
                 'lastModule_type': new_socket.type,
                 'lastModule_name': new_socket.name,
                 'flange_size': new_socket.flange_size,
@@ -2316,13 +2316,13 @@ class UrdfWriter:
         self.add_to_chain(simple_ee)
 
         if self.speedup:
-            string = ""
+            self.urdf_string = ""
         else:
             # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string
-            string = self.process_urdf()
+            self.urdf_string = self.process_urdf()
 
         # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
-        data = {'result': string,
+        data = {'result': self.urdf_string,
                 'lastModule_type': simple_ee.type,
                 'lastModule_name': simple_ee.name,
                 'flange_size': simple_ee.flange_size,
@@ -2464,10 +2464,10 @@ class UrdfWriter:
         self.add_to_chain(new_module)
 
         if self.speedup:
-            string = ""
+            self.urdf_string = ""
         else:
             # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string
-            string = self.process_urdf()
+            self.urdf_string = self.process_urdf()
 
         # update the urdf file, adding the new module
         # string = write_urdf(path_name + '/urdf/ModularBot_test.urdf', urdf_tree)
@@ -2478,7 +2478,7 @@ class UrdfWriter:
                 self.print("%s%s" % (pre, node.name))
 
         # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
-        data = {'result': string,
+        data = {'result': self.urdf_string,
                 'lastModule_type': new_module.type,
                 'lastModule_name': new_module.name,
                 'flange_size': new_module.flange_size,
@@ -2736,11 +2736,11 @@ class UrdfWriter:
             #             self.gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
 
         if self.speedup:
-            string = ""
+            self.urdf_string = ""
         else:
             # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string
             # Update the urdf file, removing the module
-            string = self.process_urdf()
+            self.urdf_string = self.process_urdf()
 
         # Update parent module attribute. TODO: understand why and if it's needed
         if not self.parent_module.children:
@@ -2748,13 +2748,13 @@ class UrdfWriter:
 
         # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
         if father.type == 'cube':
-            data = {'result': string,
+            data = {'result': self.urdf_string,
                     'lastModule_type': father.type,
                     'lastModule_name': father.name,
                     'flange_size': father.flange_size,
                     'count': self.n_cubes}
         else:
-            data = {'result': string,
+            data = {'result': self.urdf_string,
                     'lastModule_type': father.type,
                     'lastModule_name': father.name,
                     'flange_size': father.flange_size,
