@@ -15,6 +15,8 @@ import sys
 from importlib import reload, util
 from configparser import ConfigParser, ExtendedInterpolation
 
+import numpy as np
+
 import rospy
 from flask import Flask, Response, render_template, request, jsonify, send_from_directory, abort
 import werkzeug
@@ -26,7 +28,6 @@ if ec_srvs_spec is not None:
 
 # Add Mock Resources lists
 import modular.web.mock_resources as mock_resources
-import modular.web.mock_stats as mock_stats
 
 # import custom server config (if any)
 base_path, _ = os.path.split(__file__)
@@ -816,11 +817,11 @@ def getModelStats():
         else:
             stats = urdf_writer_fromHW.compute_stats(samples=1000)
 
-        response = {
-                "modules": { "label": 'Modules', "value": stats['modules'], "unit": '' },
-                "payload": { "label": 'Payload', "value": stats['payload'], "unit": 'Kg' },
-                "reach": { "label": 'Reach', "value": stats['max_reach'], "unit": 'm' },
-        }
+        response = dict()
+        response["modules"]= { "label": 'Modules', "value": str(stats['modules']) }
+        response["payload"]= { "label": 'Payload', "value": str(stats['payload']), "unit": 'Kg' }
+        response["max_reach"]= { "label": 'Reach', "value": str(stats['max_reach']), "unit": 'm' }
+
         return Response(
             response=json.dumps(response),
             status=200,
