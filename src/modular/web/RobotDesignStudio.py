@@ -819,8 +819,10 @@ def getModelStats():
 
         response = dict()
         response["modules"]= { "label": 'Modules', "value": str(stats['modules']) }
-        response["payload"]= { "label": 'Payload', "value": str(stats['payload']), "unit": 'Kg' }
-        response["max_reach"]= { "label": 'Reach', "value": str(stats['max_reach']), "unit": 'm' }
+        if  stats['payload'] and np.isfinite(stats['payload']):
+            response["payload"]= { "label": 'Payload', "value":"{:.2f}".format(stats['payload']), "unit": 'Kg' }
+        if  stats['max_reach'] and np.isfinite(stats['max_reach']):
+            response["max_reach"]= { "label": 'Reach', "value": "{:.2f}".format(stats['max_reach']), "unit": 'm' }
 
         return Response(
             response=json.dumps(response),
