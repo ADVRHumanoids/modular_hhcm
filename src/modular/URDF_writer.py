@@ -3905,6 +3905,7 @@ def write_file_to_stdout(urdf_writer: UrdfWriter, homing_map, robot_name='modula
             open(f'/tmp/{robot_name}.urdf', 'w').write(content)
 
         elif args.output == 'srdf':
+            urdf_writer.urdf_string = urdf_writer.process_urdf(xacro_mappings=xacro_mappings)
             content = urdf_writer.write_srdf(homing_map)
             open(f'/tmp/{robot_name}.srdf', 'w').write(content)
     
