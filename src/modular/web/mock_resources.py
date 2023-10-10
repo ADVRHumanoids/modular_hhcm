@@ -31,6 +31,7 @@ resources = {
     "type": "joint",
     "product":"module_joint_elbow_ORANGE.yaml",
     "label":"Elbow Joint",
+    # "addons": ['concert/drill_bit_10.json','concert/drill_bit_12.json'],
     "disabled": True
   },
 
@@ -132,6 +133,7 @@ resources = {
     "type": "tool_exchanger",
     "product": "concert/module_drill_concert.json",
     "label": "Drill",
+    "addons": ['concert/drill_bit_10.json','concert/drill_bit_12.json'],
   },
   { # [CONCERT] Elbow Joint (Type A) - module_joint_elbow_A_concert
     "family": "alberoboticsGenB",
@@ -204,9 +206,32 @@ resources = {
     "type": "end_effector",
     "product": "concert/passive_end_effector_tube.json",
     "label": "Passive End Effector Tube",
+
   },
-  ]
+  ],
+"addons":[
+  { # [CONCERT] Drill bit 10 - concert/drill_bit_12.json
+    "family": "alberoboticsGenB",
+    "type": "end_effector",
+    "product": "concert/drill_bit_10.json",
+    "label": "Drill bit 10",
+  },
+  { # [CONCERT] Drill bit 12 - concert/drill_bit_12.json
+    "family": "alberoboticsGenB",
+    "type": "end_effector",
+    "product": "concert/drill_bit_12.json",
+    "label": "Drill bit 12",
+  },]
 }
+
+# Addons
+addons = resources['addons']
+def get_avalilable_addons():
+    return addons
+
+def get_avalilable_addon_types():
+    module_types = [el['type'] for el in modules]
+    return list(dict.fromkeys(module_types))
 
 # Modules
 modules = resources['modules']
