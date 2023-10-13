@@ -1,3 +1,8 @@
+#!/usr/bin/env python3
+# Disable some of the pylint violations in this file
+# see https://pylint.pycqa.org/en/latest/user_guide/messages/message_control.html#block-disables
+# pylint: disable=line-too-long, missing-function-docstring, missing-module-docstring
+
 from __future__ import print_function
 from future.utils import iteritems
 from abc import ABCMeta, abstractmethod
@@ -198,7 +203,7 @@ class Plugin:
                 if joint_module.type == 'joint':
                     # Homing state
                     if builder_joint_map is not None:
-                        homing_value = float(builder_joint_map[joint_module.name]['angle'])
+                        homing_value = float(builder_joint_map[joint_module.name])
                     else:
                         homing_value = 0.1
                     # self.urdf_writer.print(homing_value)
@@ -206,7 +211,7 @@ class Plugin:
                 elif joint_module.type == 'dagana':
                     # Homing state
                     if builder_joint_map is not None:
-                        homing_value = float(builder_joint_map[joint_module.dagana_joint_name]['angle'])
+                        homing_value = float(builder_joint_map[joint_module.dagana_joint_name])
                     else:
                         homing_value = 0.1
                     # self.urdf_writer.print(homing_value)
@@ -214,7 +219,7 @@ class Plugin:
                 elif joint_module.type == 'wheel':
                     # Homing state
                     if builder_joint_map is not None:
-                        homing_value = float(builder_joint_map[joint_module.name]['angle'])
+                        homing_value = float(builder_joint_map[joint_module.name])
                     else:
                         homing_value = 0.1
                     # self.urdf_writer.print(homing_value)
@@ -419,7 +424,7 @@ class RosControlPlugin(Plugin):
                 if joint_module.type in {'joint', 'dagana', 'wheel'} :
                     # Homing state
                     if builder_joint_map is not None:
-                        homing_value = float(builder_joint_map[joint_module.name]['angle'])
+                        homing_value = float(builder_joint_map[joint_module.name])
                     else:
                         homing_value = 0.1
                     #self.urdf_writer.print(homing_value)
@@ -664,7 +669,7 @@ class XBot2Plugin(Plugin):
             if pid.attrib['name'] == joint_name:
                 self.pid_node.remove(pid)
 
-    # SRDF     
+    # SRDF
     def add_gripper_to_srdf(self, root, gripper_name, hand_name, parent_group_name):
         return None
 
@@ -716,12 +721,11 @@ class XBot2Plugin(Plugin):
                         joint_map['albero_gripper_map'][i] = {'name': name, 'fingers': fingers}
                 else:
                     name = joint_module.name
-                
-                if use_robot_id:
-                    joint_map['joint_map'][int(joint_module.robot_id)] = name
-                else:
-                    joint_map['joint_map'][i] = name
-                
+                    if use_robot_id:
+                        joint_map['joint_map'][int(joint_module.robot_id)] = name
+                    else:
+                        joint_map['joint_map'][i] = name
+
             # self.urdf_writer.print(str(i), joint_module.name)
             # self.urdf_writer.print(joint_map)
 
@@ -863,11 +867,11 @@ class XBot2Plugin(Plugin):
                     value = joint_module.CentAcESC
                     # Remove parameters that are now not used by XBot2 (they are handled by the EtherCat master on a different config file)
                     if hasattr(value, 'sign'):
-                        del value.sign 
+                        del value.sign
                     if hasattr(value, 'pos_offset'):
-                        del value.pos_offset 
+                        del value.pos_offset
                     if hasattr(value, 'max_current_A'):
-                        del value.max_current_A 
+                        del value.max_current_A
 
                     impd4_joint_config[key] = copy.deepcopy(value)
                     impd4_joint_config[key].control_mode = 'D4_impedance_ctrl'
@@ -905,11 +909,11 @@ class XBot2Plugin(Plugin):
                     value = joint_module.CentAcESC
                     # Remove parameters that are now not used by XBot2 (they are handled by the EtherCat master on a different config file)
                     if hasattr(value, 'sign'):
-                        del value.sign 
+                        del value.sign
                     if hasattr(value, 'pos_offset'):
-                        del value.pos_offset 
+                        del value.pos_offset
                     if hasattr(value, 'max_current_A'):
-                        del value.max_current_A 
+                        del value.max_current_A
 
                     impd4_joint_config[key] = copy.deepcopy(value)
                     impd4_joint_config[key].control_mode = '71_motor_vel_ctrl'
@@ -943,11 +947,11 @@ class XBot2Plugin(Plugin):
                     value = joint_module.LpESC
                     # Remove parameters that are now not used by XBot2 (they are handled by the EtherCat master on a different config file)
                     if hasattr(value, 'sign'):
-                        del value.sign 
+                        del value.sign
                     if hasattr(value, 'pos_offset'):
-                        del value.pos_offset 
+                        del value.pos_offset
                     if hasattr(value, 'max_current_A'):
-                        del value.max_current_A 
+                        del value.max_current_A
 
                     impd4_joint_config[key] = copy.deepcopy(value)
                     impd4_joint_config[key].control_mode = '3B_motor_pos_ctrl'
@@ -958,9 +962,9 @@ class XBot2Plugin(Plugin):
                 # idle_joint_config[key] = copy.deepcopy(value)
                 # idle_joint_config[key].control_mode = 'idle'
                 # Remove parameters that are now not used by XBot2 (they are handled by the EtherCat master on a different config file)
-                # del idle_joint_config[key].sign 
-                # del idle_joint_config[key].pos_offset 
-                # del idle_joint_config[key].max_current_A 
+                # del idle_joint_config[key].sign
+                # del idle_joint_config[key].pos_offset
+                # del idle_joint_config[key].max_current_A
 
         with open(xbot2_config_template, 'r') as stream:
             try:
@@ -1023,12 +1027,30 @@ class XBot2Plugin(Plugin):
 
 # noinspection PyUnresolvedReferences
 class UrdfWriter:
-    def __init__(self, 
-                config_file='config_file.yaml', 
-                control_plugin='xbot2', 
-                elementree=None, 
-                speedup=False, 
-                parent=None, 
+    def __init__(self,
+                config_file='config_file.yaml',
+                control_plugin='xbot2',
+                elementree=None,
+                speedup=False,
+                parent=None,
+                floating_base=False,
+                verbose=False,
+                logger=None):
+        self.reset(config_file,
+                control_plugin,
+                elementree,
+                speedup,
+                parent,
+                floating_base,
+                verbose,
+                logger)
+
+    def reset(self,
+                config_file='config_file.yaml',
+                control_plugin='xbot2',
+                elementree=None,
+                speedup=False,
+                parent=None,
                 floating_base=False,
                 verbose=False,
                 logger=None):
@@ -1051,13 +1073,13 @@ class UrdfWriter:
         self.set_floating_base(floating_base)
 
         if logger is None:
-            self.logger = logging.getLogger('URDF_writer') 
+            self.logger = logging.getLogger('URDF_writer')
         else:
             self.logger = logger
-        
+
         self.verbose = verbose
         if self.verbose and self.logger is not None:
-            self.logger.setLevel(logging.DEBUG)  
+            self.logger.setLevel(logging.DEBUG)
         else:
             pass
 
@@ -1091,7 +1113,7 @@ class UrdfWriter:
             #self.root = ET.fromstring(string)
 
             self.urdf_tree = ET.ElementTree(self.root)
-            
+
             # change path to xacro library
             library_filename = self.resource_finder.get_filename('urdf/ModularBot.library.urdf.xacro', ['data_path'])
             control_filename = self.resource_finder.get_filename('urdf/ModularBot.control.urdf.xacro', ['data_path'])
@@ -1225,7 +1247,7 @@ class UrdfWriter:
             else:
                 continue
         return found_module, found_module_id
-    
+
     def sort_modules(self, modules_dict):
 
         ordered_chain = [None] * len(modules_dict)
@@ -1236,11 +1258,11 @@ class UrdfWriter:
 
             try:
                 ordered_chain[module_position - 1] = item
-            
+
             except IndexError:
                 self.print('unexpected module position {}, modules number: {}'.format(module_position, len(modules_dict)))
                 return list()
-        
+
         return ordered_chain
 
 
@@ -1268,12 +1290,12 @@ class UrdfWriter:
         # If a tree representing the topology was already instantiated, re-initialize and start from scratch
         if self.root != 0:
             self.print("Re-initialization")
-            self.__init__(config_file=self.config_file, 
-                control_plugin=self.control_plugin, 
-                speedup=self.speedup, 
+            self.__init__(config_file=self.config_file,
+                control_plugin=self.control_plugin,
+                speedup=self.speedup,
                 verbose=self.verbose,
                 logger=self.logger)
-        
+
         # # Open the base xacro file
         # filename = path_name + '/urdf/ModularBot_new.urdf.xacro'
         # with codecs.open(filename, 'r') as f:
@@ -1354,7 +1376,7 @@ class UrdfWriter:
                 
                 parent_id = int(parent['robot_id'])
                 self.print('parent_id:', parent_id)
-                
+
                 parent_active_ports = int(parent['active_ports'])
                 self.print('parent_active_ports:', parent_active_ports)
 
@@ -1501,7 +1523,7 @@ class UrdfWriter:
 
     def process_urdf(self, xacro_mappings={}):
         """Process the urdf to convert from xacro and perform macro substitutions. Returns urdf string"""
-        
+
         # write the urdf tree to a string
         xmlstr = xml.dom.minidom.parseString(ET.tostring(self.urdf_tree.getroot())).toprettyxml(indent="   ")
         self.print(xmlstr)
@@ -1567,15 +1589,15 @@ class UrdfWriter:
 
         is_structural: float
             Bool variable indicating if the box is a structural part of the robot or it's just used as computation unit away from the robot.
-            In the second case the different chains are placed in default locations in a xy plane 
+            In the second case the different chains are placed in default locations in a xy plane
             (the user will then be queried to specify their actual location once the robot model is recontructed)
 
         robot_id: int
-            Value of the robot_id set in the firmware of the module. 
+            Value of the robot_id set in the firmware of the module.
             This is obtained in Discovery Mode when reading the JSON from the EtherCAT master. This is not used when in Bulding Mode.
 
         active_ports: int
-            The number of active ports of the cube (how many ports have established a connection to a module). 
+            The number of active ports of the cube (how many ports have established a connection to a module).
             The value is the conversion to int of the 4-bit binary string where each bit represent one port (1 if port is active, 0 if port is unactive)
 
         Returns
@@ -1587,7 +1609,7 @@ class UrdfWriter:
         """
         # global T_con, L_0a, n_cubes, parent_module
 
-        # TODO: This part below the "if" is deprecated. It still uses "connectors" separate module. 
+        # TODO: This part below the "if" is deprecated. It still uses "connectors" separate module.
         # It was made to handle creating robots with multiple "boxes", which will be probably never done.
         # If important should be reviewed and modify it as the part below the "else".
 
@@ -1674,7 +1696,7 @@ class UrdfWriter:
                                                        tf.transformations.rotation_matrix(angle_offset,
                                                                                           self.zaxis))
             cube_transform = ModuleNode.get_rototranslation(parent_transform, cube_proximal_tf)
-            
+
             x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(cube_transform)
 
             # Generate the name of the fixed joint used to connect the cube
@@ -1718,7 +1740,7 @@ class UrdfWriter:
                 # Parse, convert from xacro and write to string.
                 string = self.process_urdf()
 
-            # Update the EtherCAT port connected to the electro-mechanical interface where the new module/slave will be added 
+            # Update the EtherCAT port connected to the electro-mechanical interface where the new module/slave will be added
             #    1           2           3           4
             #    o           o           o           o
             #    |           |           |           |
@@ -1847,7 +1869,7 @@ class UrdfWriter:
                 # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string.
                 string = self.process_urdf()
 
-            # Update the EtherCAT port connected to the electro-mechanical interface where the new module/slave will be added 
+            # Update the EtherCAT port connected to the electro-mechanical interface where the new module/slave will be added
             #    1           2           3           4
             #    o           o           o           o
             #    |           |           |           |
@@ -1902,11 +1924,11 @@ class UrdfWriter:
             Value of the angle between the parent module output frame and the cube input frame
 
         robot_id: int
-            Value of the robot_id set in the firmware of the module. 
+            Value of the robot_id set in the firmware of the module.
             This is obtained in Discovery Mode when reading the JSON from the EtherCAT master. This is not used when in Bulding Mode.
 
         active_ports: int
-            The number of active ports of the cube (how many ports have established a connection to a module). 
+            The number of active ports of the cube (how many ports have established a connection to a module).
             The value is the conversion to int of the 4-bit binary string where each bit represent one port (1 if port is active, 0 if port is unactive)
 
         Returns
@@ -1960,14 +1982,14 @@ class UrdfWriter:
                 self.parent_module.n_child_hubs += 1
 
         self.add_gazebo_element(mobilebase.gazebo.body_1, mobilebase.name)
-        
+
         if self.speedup:
             string = ""
         else:
             # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string.
             string = self.process_urdf()
 
-        # Update the EtherCAT port connected to the electro-mechanical interface where the new module/slave will be added 
+        # Update the EtherCAT port connected to the electro-mechanical interface where the new module/slave will be added
         #    1           2           3           4
         #    o           o           o           o
         #    |           |           |           |
@@ -2294,7 +2316,7 @@ class UrdfWriter:
         x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(transform)
 
         fixed_joint_name = 'L_' + str(simple_ee.i) + '_fixed_joint_' + str(simple_ee.p) + simple_ee.tag
-        
+
         if self.parent_module.type == 'joint':
             father_name = 'L_' + str(self.parent_module.i) + self.parent_module.tag
         else:
@@ -2339,7 +2361,7 @@ class UrdfWriter:
         wheel_data = self.add_module(wheel_filename, angle_offset, reverse, robot_id[1])
 
         return wheel_data, steering_data
-    
+
 
     def add_module(self, filename, angle_offset, reverse=False, robot_id=0, active_ports=3):
         """Add a module specified by filename as child of the currently selected module.
@@ -2422,7 +2444,7 @@ class UrdfWriter:
         self.print('mastercube.selected_port :', new_module.selected_port)
 
         # save the active ports as a binary string
-        setattr(new_module, 'active_ports', "{0:04b}".format(active_ports)) 
+        setattr(new_module, 'active_ports', "{0:04b}".format(active_ports))
         self.print('active_ports: ', new_module.active_ports)
 
         # save the occupied ports as a binary string
@@ -2430,8 +2452,8 @@ class UrdfWriter:
         self.print('occupied_ports: ', new_module.occupied_ports)
 
         # Depending on the type of the parent module and the new module, call the right method to add the new module.
-        # Add the module to the correct chain via the 'add_to_chain' method.
-        
+        # If the new module is a joint add it to the correct chain via the 'add_to_chain' method.
+
         #if self.parent_module.type == "base_link":
 
         if self.parent_module.type == 'joint':
@@ -2506,14 +2528,14 @@ class UrdfWriter:
         """
         # Add the gazebo element to the new module
         if new_module_gazebo is not None:
-            gazebo_if_el = ET.SubElement(self.root, 
+            gazebo_if_el = ET.SubElement(self.root,
                                     'xacro:if',
                                     value="${GAZEBO_URDF}")
-            gazebo_el = ET.SubElement(gazebo_if_el, 
+            gazebo_el = ET.SubElement(gazebo_if_el,
                                     'gazebo',
                                     reference=new_module_name)
             self.add_gazebo_element_children(new_module_gazebo, gazebo_el)
-                    
+
     def add_gazebo_element_children(self, new_module_gazebo, gazebo_element):
         """
         Add the gazebo element children to the new module
@@ -2829,7 +2851,7 @@ class UrdfWriter:
         queried_module = anytree.search.findall_by_attr(self.base_link, queried_module_name)[0]
 
         self.print('queried_module.type: ', queried_module.type)
-        
+
         # Update parent_module attribute
         self.parent_module = queried_module
 
@@ -2942,7 +2964,7 @@ class UrdfWriter:
         self.print(selected_module.robot_id)
         self.print(selected_module.active_ports)
         self.print(selected_module.occupied_ports)
-        
+
         # TODO: Replace this with select_ports
         # binary XOR
         free_ports = int(selected_module.active_ports, 2) ^ int(selected_module.occupied_ports, 2)
@@ -2950,14 +2972,14 @@ class UrdfWriter:
 
         selected_module.selected_port = self.ffs(free_ports)
         self.print('selected_module.selected_port :', selected_module.selected_port)
-        
+
         # # If parent topology is greater than 2 the parent is a switch/hub so we need to find the right port where the module is connected
         # if active_ports >= 3:
         #     for port_idx in range(2, len(mastercube.active_ports) - 1)
         #         if mastercube.active_ports[-port_idx] == 1:
         #             mastercube.selected_port = port_idx
         #             break
-        
+
         # if parent_active_ports == 3:
         #     self.parent_module.selected_port = 3
         # elif parent_active_ports == 5:
@@ -2967,7 +2989,7 @@ class UrdfWriter:
         # Select the correct port where to add the module to
         if '_con' in name:
             selected_module.selected_port = selected_port
-        
+
         # # Update active and occupied port of the ESC and select the right port
         # self.select_ports(selected_module, name)
 
@@ -3239,7 +3261,7 @@ class UrdfWriter:
         self.add_link(new_Link, parent_name, transform, reverse)
 
         self.collision_elements.append((past_Cube.name, new_Link.name))
-        
+
 
     def get_cube_output_transform(self, past_Cube):
         # index for connector and selecte port are shifted by 1
@@ -3276,7 +3298,7 @@ class UrdfWriter:
         if reverse:
             transform = ModuleNode.get_rototranslation(transform,
                                                        tf.transformations.rotation_matrix(3.14, self.yaxis))
-        
+
         return transform
     
     # HACK: to handle 90° offset between PINO and CONCERT flanges
@@ -3370,7 +3392,7 @@ class UrdfWriter:
 
         ####
         #ET.SubElement(self.xbot2_pid, "xacro:add_xbot2_pid", name=new_Joint.name, profile="small_mot")
-        self.control_plugin.add_joint(new_Joint.name, 
+        self.control_plugin.add_joint(new_Joint.name,
                                     control_params=new_Joint.xbot_gz if hasattr(new_Joint, 'xbot_gz') else None)
         ####
 
@@ -3443,7 +3465,7 @@ class UrdfWriter:
         else:
             parent_name = past_Cube.parent.name
 
-        interface_transform = self.get_cube_output_transform(past_Cube)        
+        interface_transform = self.get_cube_output_transform(past_Cube)
 
         transform = self.get_proximal_transform(interface_transform, offset, reverse)
 
@@ -3474,7 +3496,7 @@ class UrdfWriter:
         setattr(new_Link, 'p', past_Joint.p + 1)
 
         interface_transform = self.get_joint_output_transform(past_Joint)
-            
+
         transform = self.get_proximal_transform(interface_transform, offset, reverse)
 
         # HACK: to handle 90° offset between PINO and CONCERT flanges
@@ -3502,7 +3524,7 @@ class UrdfWriter:
             Value of the angle between the parent module output frame and the module input frame
         """
         interface_transform = self.get_joint_output_transform(past_Joint)
-        
+
         transform = self.get_proximal_transform(interface_transform, offset, reverse)
 
         # HACK: to handle 90° offset between PINO and CONCERT flanges
@@ -3650,7 +3672,7 @@ class UrdfWriter:
                 self.print(list(probdesc.items())[0])
             except yaml.YAMLError as exc:
                 self.print(exc)
-                
+
         self.print(probdesc.items())
         joints_chain = self.listofchains[0]
         tip_link = self.find_chain_tip_link(joints_chain)
@@ -3673,13 +3695,13 @@ class UrdfWriter:
     def write_lowlevel_config(self, use_robot_id=False):
         """Creates the low level config file needed by XBotCore """
         lowlevel_config = self.control_plugin.write_lowlevel_config(use_robot_id)
-        
+
         return lowlevel_config
 
     def write_joint_map(self, use_robot_id=False):
         """Creates the joint map needed by XBotCore """
         joint_map = self.control_plugin.write_joint_map(use_robot_id)
-        
+
         return joint_map
 
     def write_srdf(self, builder_joint_map=None, compute_acm=True):
@@ -3784,7 +3806,7 @@ class UrdfWriter:
         return string_urdf_xbot
 
     # Save URDF/SRDF etc. in a directory with the specified robot_name
-    def deploy_robot(self, robot_name, deploy_dir=None):
+    def deploy_robot(self, robot_name='modularbot', deploy_dir=None):
         script = self.resource_finder.get_filename('deploy.sh', ['data_path'])
 
         if deploy_dir is None:
@@ -3795,7 +3817,7 @@ class UrdfWriter:
             output = subprocess.check_output([script, robot_name, "--destination-folder", deploy_dir, "-v"])
         else:
             output = subprocess.check_output([script, robot_name, "--destination-folder", deploy_dir])
-        
+
         self.info_print(str(output, 'utf-8', 'ignore'))
 
         hubs = self.findall_by_type(types=['cube', 'mobile_base'])
@@ -3838,7 +3860,7 @@ class UrdfWriter:
         # Serch the tree by name for the selected module
         modulenodes = anytree.search.findall(self.base_link, filter_=lambda node: node.type in types)
         return modulenodes
-        
+
     def add_connectors(self, modulenode):
         max_num_con = 10
         for i in range(1, max_num_con):
@@ -3846,16 +3868,16 @@ class UrdfWriter:
                 con_tf = getattr(modulenode, 'Con_{}_tf'.format(i))
                 x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(con_tf)
                 con_name = modulenode.name + '_con{}'.format(i)
-                ET.SubElement(self.root, 
-                                "xacro:add_connector", 
+                ET.SubElement(self.root,
+                                "xacro:add_connector",
                                 name=con_name,
-                                type='connectors', 
-                                parent_name=modulenode.name, 
-                                x=x, 
-                                y=y, 
-                                z=z, 
-                                roll=roll, 
-                                pitch=pitch, 
+                                type='connectors',
+                                parent_name=modulenode.name,
+                                x=x,
+                                y=y,
+                                z=z,
+                                roll=roll,
+                                pitch=pitch,
                                 yaw=yaw)
                 
     def compute_payload(self, samples):
@@ -3875,7 +3897,7 @@ def suppress_stdout():
     """
     old_stdout = sys.stdout
     sys.stdout = sys.stderr
-    try:  
+    try:
         yield
     finally:
         sys.stdout = old_stdout
@@ -3884,7 +3906,7 @@ def suppress_stdout():
 def write_file_to_stdout(urdf_writer: UrdfWriter, homing_map, robot_name='modularbot'):
 
     import argparse
-    parser = argparse.ArgumentParser(prog='Modular URDF/SRDF generator and deployer', 
+    parser = argparse.ArgumentParser(prog='Modular URDF/SRDF generator and deployer',
                 usage='./script_name.py --output urdf writes URDF to stdout \n./script_name.py --deploy deploy_dir generates a ros package at deploy_dir')
 
     parser.add_argument('--output', '-o', required=False, choices=('urdf', 'srdf'),      help='write requested file to stdout and exit')
@@ -3904,7 +3926,7 @@ def write_file_to_stdout(urdf_writer: UrdfWriter, homing_map, robot_name='modula
 
     content = None
     with suppress_stdout():
-        
+
         urdf_writer.remove_connectors()
 
         if args.output == 'urdf':
@@ -3914,8 +3936,8 @@ def write_file_to_stdout(urdf_writer: UrdfWriter, homing_map, robot_name='modula
         elif args.output == 'srdf':
             content = urdf_writer.write_srdf(homing_map)
             open(f'/tmp/{robot_name}.srdf', 'w').write(content)
-    
-    if content is not None: 
+
+    if content is not None:
         print(content)
 
     if args.deploy is not None:
