@@ -2327,17 +2327,8 @@ class UrdfWriter:
 
         return data
 
-    def add_handle(self, x_offset=0.0, y_offset=0.25, z_offset=-0.18):
+    def add_handle(self, x_offset=0.0, y_offset=0.25, z_offset=-0.18, mass=0.330, radius=0.025):
         handle_name = 'handle'+ self.parent_module.tag
-        # ET.SubElement(self.root,
-        #     "xacro:add_handle",
-        #     type="handle",
-        #     name=handle_name,
-        #     x_offset=str(x_offset),
-        #     y_offset=str(y_offset),
-        #     z_offset=str(z_offset))
-        mass=0.330
-        radius=0.025
         ET.SubElement(self.root,
             "xacro:add_cylinder",
             type="drillbit",
@@ -2493,6 +2484,28 @@ class UrdfWriter:
         wheel_data = self.add_module(wheel_filename, angle_offset, reverse, robot_id[1])
 
         return wheel_data, steering_data
+    
+
+    def add_addon(self, addon_filename):
+        new_addon = None
+        try:
+            addons_dict = self.modular_resources_manager.get_available_addons_dict()
+            new_addon = addons_dict[addon_filename]
+            if new_addon['type'] == 'drillbit':
+                data = self.add_drillbit(length=new_addon['length'], radius=new_addon['radius'], mass=new_addon['mass'])
+            elif new_addon['type'] == 'handle':
+                data = self.add_handle(x_offset=new_addon['x_offset'], y_offset=new_addon['y_offset'], z_offset=new_addon['z_offset'], mass=new_addon['mass'], radius=new_addon['radius'])
+            else:
+                self.logger.info('Addon type not supported')
+                data = {'result': self.urdf_string,
+                        'lastModule_type': self.parent_module.type,
+                        'lastModule_name': self.parent_module.name,
+                        'flange_size': self.parent_module.flange_size,
+                        'count': self.parent_module.i}
+        except FileNotFoundError:
+            raise FileNotFoundError(addon_filename+' was not found in the available resources')
+
+        return data
 
 
     def add_module(self, filename, angle_offset, reverse=False, robot_id=0, active_ports=3):

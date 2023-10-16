@@ -234,10 +234,10 @@ def resources_addons_get():
     query_params = request.args
     try:
         #get complete list
-        addons = mock_resources.get_avalilable_addons()
+        addons = urdf_writer.modular_resources_manager.get_available_addons()
 
         # filter by family (from query params)
-        valid_families = mock_resources.get_avalilable_family_ids()
+        valid_families = urdf_writer.modular_resources_manager.get_available_family_ids()
 
         filter_families = query_params.getlist('families[]')
         for t in filter_families:
@@ -247,7 +247,7 @@ def resources_addons_get():
             addons = [el for el in addons if el['family'] in filter_families]
 
         # filter by type (from query params)
-        valid_types = mock_resources.get_avalilable_module_types()
+        valid_types = urdf_writer.modular_resources_manager.get_available_addon_types()
         filter_types = query_params.getlist('types[]')
         for t in filter_types:
             if t not in valid_types:
@@ -365,6 +365,17 @@ def addNewModule():
             urdf_writer.add_module(filename, offset, reverse)
         else:
             urdf_writer_fromHW.add_module(filename, offset, reverse)
+
+        addons = req['addons'] if 'addons' in req else []
+        for addon in addons:
+            try:
+                if building_mode_ON :
+                    urdf_writer.add_addon(addon_filename=addon)
+                else:
+                    urdf_writer_fromHW.add_addon(addon_filename=addon)
+            except FileNotFoundError:
+                app.logger.error(f'Addon {addon} not found, skipping it')
+
         return Response(status=204)
 
     except ValueError as e:
