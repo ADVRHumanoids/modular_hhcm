@@ -173,7 +173,7 @@
         <!-- Add realsense D camera -->
         <xacro:include filename="${MODULAR_PATH}/modular_data/urdf/concert.sensors.urdf.xacro"/>
         <xacro:add_realsense_d_camera name="drill_camera" parent_name="${name}" add_gazebo_sensor="${ADD_DRILL_CAMERA}">
-            <origin xyz="0.103 0.0 0.25" rpy="0.0 0.0 0.0"/>
+            <origin xyz="0.12 0.0 0.26" rpy="0.05 0.22 0.05"/>
         </xacro:add_realsense_d_camera>
     </xacro:macro>
 
