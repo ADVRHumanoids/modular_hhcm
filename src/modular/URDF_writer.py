@@ -2327,6 +2327,89 @@ class UrdfWriter:
 
         return data
 
+    def add_handle(self, x_offset=0.0, y_offset=0.25, z_offset=-0.18):
+        handle_name = 'handle'+ self.parent_module.tag
+        # ET.SubElement(self.root,
+        #     "xacro:add_handle",
+        #     type="handle",
+        #     name=handle_name,
+        #     x_offset=str(x_offset),
+        #     y_offset=str(y_offset),
+        #     z_offset=str(z_offset))
+        mass=0.330
+        radius=0.025
+        ET.SubElement(self.root,
+            "xacro:add_cylinder",
+            type="drillbit",
+            name=handle_name,
+            size_z=str(abs(y_offset)),
+            mass=str(mass),
+            radius=str(radius))
+
+        trasl = tf.transformations.translation_matrix((x_offset, y_offset, z_offset))
+        if y_offset >= 0.0:
+            rot = tf.transformations.euler_matrix(-1.57, 0.0, 0.0, 'sxyz')
+        else:
+            rot = tf.transformations.euler_matrix(1.57, 0.0, 0.0, 'sxyz')
+        transform = ModuleNode.get_rototranslation(trasl, rot)
+        x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(transform)
+
+        father_name = self.parent_module.tcp_name
+
+        ET.SubElement(self.root,
+                      "xacro:add_fixed_joint",
+                      type="fixed_joint",
+                      name="fixed_" + handle_name,
+                      father=father_name,
+                      child=handle_name,
+                      x=x,
+                      y=y,
+                      z=z,
+                      roll=roll,
+                      pitch=pitch,
+                      yaw=yaw)
+        
+        self.collision_elements.append((father_name, handle_name))
+
+        # Add also a frame on the handle gripping point
+        trasl = tf.transformations.translation_matrix((0.0, y_offset/2, z_offset))
+        rot = tf.transformations.euler_matrix(0.0, 0.0, 0.0, 'sxyz')
+        transform = ModuleNode.get_rototranslation(trasl, rot)
+        x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(transform)
+
+        handle_gripping_point_name = 'handle_gripping_point'+ self.parent_module.tag
+        ET.SubElement(self.root,
+                      "xacro:add_fixed_joint",
+                      type="fixed_joint",
+                      name="fixed_" + handle_gripping_point_name,
+                      father=father_name,
+                      child=handle_gripping_point_name,
+                      x=x,
+                      y=y,
+                      z=z,
+                      roll=roll,
+                      pitch=pitch,
+                      yaw=yaw)
+        
+        ET.SubElement(self.root,
+                        "link",
+                        name=handle_gripping_point_name)
+
+        if self.speedup:
+            self.urdf_string = ""
+        else:
+            # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string
+            self.urdf_string = self.process_urdf()
+
+        # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
+        data = {'result': self.urdf_string,
+                'lastModule_type': self.parent_module.type,
+                'lastModule_name': self.parent_module.name,
+                'flange_size': self.parent_module.flange_size,
+                'count': self.parent_module.i}
+
+        return data
+
     # Add a cylinder as a fake end-effector
     def add_simple_ee(self, x_offset=0.0, y_offset=0.0, z_offset=0.0, angle_offset=0.0, mass=1.0, radius=0.02):
         # TODO: treat this as a link in the link_after_* methods!
