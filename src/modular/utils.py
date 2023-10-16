@@ -181,33 +181,14 @@ class ModularResourcesManager:
     def get_available_module_types(self):
         module_types = [el['type'] for el in self.available_modules_headers]
         return list(dict.fromkeys(module_types))
+    
+    def get_available_families(self):
+        return self.available_families
 
-    def get_avalilable_family_ids(self):
+    def get_available_family_ids(self):
         family_ids = [el['id'] for el in self.available_families]
         return list(dict.fromkeys(family_ids))
     
-    def get_avalilable_family_groups(self):
+    def get_available_family_groups(self):
         family_groups = [el['group'] for el in self.available_families]
         return list(dict.fromkeys(family_groups))
-
-# # Modules
-# modules = resources['modules']
-# def get_avalilable_modules():
-#     return modules
-
-# def get_avalilable_module_types():
-#     module_types = [el['type'] for el in modules]
-#     return list(dict.fromkeys(module_types))
-
-# # Families
-# families = resources['families']
-# def get_avalilable_families():
-#     return families
-
-# def get_avalilable_family_ids():
-#     family_ids = [el['id'] for el in families]
-#     return list(dict.fromkeys(family_ids))
-
-# def get_avalilable_family_groups():
-#     family_groups = [el['group'] for el in families]
-#     return list(dict.fromkeys(family_groups))

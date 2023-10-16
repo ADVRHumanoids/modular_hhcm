@@ -173,10 +173,10 @@ def resources_modules_get():
     query_params = request.args
     try:
         #get complete list
-        modules = mock_resources.get_avalilable_modules()
+        modules = urdf_writer.modular_resources_manager.get_available_modules()
 
         # filter by family (from query params)
-        valid_families = mock_resources.get_avalilable_family_ids()
+        valid_families = urdf_writer.modular_resources_manager.get_available_family_ids()
 
         filter_families = query_params.getlist('families[]')
         for t in filter_families:
@@ -186,7 +186,7 @@ def resources_modules_get():
             modules = [el for el in modules if el['family'] in filter_families]
 
         # filter by type (from query params)
-        valid_types = mock_resources.get_avalilable_module_types()
+        valid_types = urdf_writer.modular_resources_manager.get_available_module_types()
         filter_types = query_params.getlist('types[]')
         for t in filter_types:
             if t not in valid_types:
@@ -294,10 +294,10 @@ def resources_families_get():
     query_params = request.args
     try:
         #get complete list
-        families = mock_resources.get_avalilable_families()
+        families = urdf_writer.modular_resources_manager.get_available_families()
 
         # filter by family (from query params)
-        valid_families = mock_resources.get_avalilable_family_ids()
+        valid_families = urdf_writer.modular_resources_manager.get_available_family_ids()
         filter_families = query_params.getlist('families')
         for t in filter_families:
             if t not in valid_families:
@@ -306,7 +306,7 @@ def resources_families_get():
             families = [el for el in families if el['family'] in filter_families]
 
         # filter by group (from query params)
-        valid_groups = mock_resources.get_avalilable_family_groups()
+        valid_groups = urdf_writer.modular_resources_manager.get_available_family_groups()
         filter_groups = query_params.getlist('groups')
         for t in filter_groups:
             if t not in valid_groups:
@@ -349,7 +349,7 @@ def addNewModule():
                 mimetype="application/json"
             )
 
-        filename = req['product']
+        filename = req['name']
         app.logger.debug(filename)
 
         app.logger.debug(req['parent'] if 'parent' in req else 'no parent')
@@ -686,7 +686,7 @@ def getModulesMap():
             module['id']=el.name
             module['family']= "" #"alberoboticsGenA"
             module['type']= el.type
-            module['product']= el.filename
+            module['name']= el.filename
             module['label']= el.name
             modules.append(module)
     return modules
