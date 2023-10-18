@@ -2491,10 +2491,10 @@ class UrdfWriter:
         try:
             addons_dict = self.modular_resources_manager.get_available_addons_dict()
             new_addon = addons_dict[addon_filename]
-            if new_addon['type'] == 'drillbit':
-                data = self.add_drillbit(length=new_addon['length'], radius=new_addon['radius'], mass=new_addon['mass'])
-            elif new_addon['type'] == 'handle':
-                data = self.add_handle(x_offset=new_addon['x_offset'], y_offset=new_addon['y_offset'], z_offset=new_addon['z_offset'], mass=new_addon['mass'], radius=new_addon['radius'])
+            if new_addon['header']['type'] == 'drillbit':
+                self.parent_module.addon_elements += self.add_drillbit(length=new_addon['parameters']['length'], radius=new_addon['parameters']['radius'], mass=new_addon['parameters']['mass'])
+            elif new_addon['header']['type'] == 'handle':
+                self.parent_module.addon_elements += self.add_handle(x_offset=new_addon['parameters']['x_offset'], y_offset=new_addon['parameters']['y_offset'], z_offset=new_addon['parameters']['z_offset'], mass=new_addon['parameters']['mass'], radius=new_addon['parameters']['radius'])
             else:
                 self.logger.info('Addon type not supported')
                 data = {'result': self.urdf_string,
