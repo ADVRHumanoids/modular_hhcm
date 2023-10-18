@@ -2912,6 +2912,31 @@ class UrdfWriter:
                 except KeyError:
                     pass
 
+        elif selected_module.type in ['drill', 'end_effector']:
+            #remove the tool exchanger from the chain
+            self.remove_from_chain(selected_module)
+
+            # save parent of the module to remove. This will be the last element of the chain after removal,
+            # and its data will be returned by the function
+            father = selected_module.parent
+
+            # Generate te name of the fixed joint connecting the module with its parent
+            fixed_joint_name = str(selected_module.name) + '_fixed_joint'
+
+            for node in self.gen:
+                try:
+                    if node.attrib['name'] == fixed_joint_name:
+                        self.root.remove(node)
+                    elif node.attrib['name'] == selected_module.name:
+                        self.root.remove(node)
+                    elif node.attrib['name'] == selected_module.tcp_name:
+                        self.root.remove(node)
+                    elif node.attrib['name'] == 'fixed_'+selected_module.tcp_name:
+                        self.root.remove(node)
+
+                except KeyError:
+                    pass
+
         else:
             # save parent of the module to remove. This will be the last element of the chain after removal,
             # and its data will be returned by the function
