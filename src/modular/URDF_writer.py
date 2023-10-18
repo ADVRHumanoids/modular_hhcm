@@ -2483,15 +2483,8 @@ class UrdfWriter:
                 self.parent_module.addon_elements += self.add_handle(x_offset=new_addon['parameters']['x_offset'], y_offset=new_addon['parameters']['y_offset'], z_offset=new_addon['parameters']['z_offset'], mass=new_addon['parameters']['mass'], radius=new_addon['parameters']['radius'])
             else:
                 self.logger.info('Addon type not supported')
-                data = {'result': self.urdf_string,
-                        'lastModule_type': self.parent_module.type,
-                        'lastModule_name': self.parent_module.name,
-                        'flange_size': self.parent_module.flange_size,
-                        'count': self.parent_module.i}
         except FileNotFoundError:
             raise FileNotFoundError(addon_filename+' was not found in the available resources')
-
-        return data
 
 
     def add_module(self, filename, angle_offset, reverse=False, addons =[], robot_id=0, active_ports=3):
@@ -2622,6 +2615,9 @@ class UrdfWriter:
         # Add the module to the list of chains
         self.add_to_chain(new_module)
 
+        # Update the parent_module attribute of the URDF_writer class
+        self.parent_module = new_module
+
         for addon in addons:
             try:
                 self.add_addon(addon_filename=addon)
@@ -2653,8 +2649,6 @@ class UrdfWriter:
         #     new_module.name = selected_module[:-7]
         # last_module = anytree.search.findall_by_attr(L_0a, selected_module)[0]
 
-        # Update the parent_module attribute of the URDF_writer class
-        self.parent_module = new_module
 
         # self.print(self.parent_module)
 
@@ -2704,19 +2698,25 @@ class UrdfWriter:
 
         # remove addons
         if(getattr(selected_module, 'addon_elements')):
-            for el in selected_module.addon_elements:
-                for node in self.gen:
-                    try:
-                        if node.attrib['name'] == el:
-                            self.root.remove(node)
-                    except KeyError:
-                        pass
+            for node in self.gen:
+                try:
+                    if node.attrib['name'] in selected_module.addon_elements:
+                        self.root.remove(node)
+                except KeyError:
+                    pass
 
         for addon in addons:
             try:
                 self.add_addon(addon_filename=addon)
             except FileNotFoundError:
                 self.logger.error(f'Addon {addon} not found, skipping it')
+
+        if self.speedup:
+            self.urdf_string = ""
+        else:
+            # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string
+            # Update the urdf file, removing the module
+            self.urdf_string = self.process_urdf()
 
         # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
         data = {'result': self.urdf_string,
@@ -2769,17 +2769,18 @@ class UrdfWriter:
 
         # update generator expression
         self.update_generator()
-        #self.gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
 
         # remove addons
         if(getattr(selected_module, 'addon_elements')):
-            for el in selected_module.addon_elements:
-                for node in self.gen:
-                    try:
-                        if node.attrib['name'] == el:
-                            self.root.remove(node)
-                    except KeyError:
-                        pass
+            for node in self.gen:
+                try:
+                    if node.attrib['name'] in selected_module.addon_elements:
+                        self.root.remove(node)
+                except KeyError:
+                    pass
+
+        # update generator expression
+        self.update_generator()
 
         # switch depending on module type
         if selected_module.type in { 'joint', 'wheel' }:
