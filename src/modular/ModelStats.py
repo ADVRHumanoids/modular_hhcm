@@ -114,9 +114,20 @@ class ModelStats:
         return self.n_modules
     
     def compute_stats(self, n_samples):
-        self.payload = self.compute_payload(n_samples=n_samples)
-        self.max_reach = self.compute_max_reach(n_samples=n_samples)
-        self.n_modules = self.compute_modules()
+        try:
+            self.payload = self.compute_payload(n_samples=n_samples)
+        except RuntimeError as e:
+            self.payload = None
+
+        try:
+            self.max_reach = self.compute_max_reach(n_samples=n_samples)
+        except e:
+            self.max_reach = None
+
+        try:
+            self.n_modules = str(self.compute_modules())
+        except e:
+            self.n_modules = None
 
         return self.get_stats()
 
