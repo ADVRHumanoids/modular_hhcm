@@ -829,7 +829,8 @@ def getModelStats():
             stats = urdf_writer_fromHW.compute_stats(samples=1000)
 
         response = dict()
-        response["modules"]= { "label": 'Modules', "value": str(stats['modules']) }
+        if  stats['modules']:
+            response["modules"]= { "label": 'Modules', "value": str(stats['modules']) }
         if  stats['payload'] and np.isfinite(stats['payload']):
             response["payload"]= { "label": 'Payload', "value":"{:.2f}".format(stats['payload']), "unit": 'Kg' }
         if  stats['max_reach'] and np.isfinite(stats['max_reach']):
@@ -838,6 +839,14 @@ def getModelStats():
         return Response(
             response=json.dumps(response),
             status=200,
+            mimetype="application/json"
+        )
+    except RuntimeError as e:
+        # validation failed
+        app.logger.error(f'{type(e).__name__}: {e}')
+        return Response(
+            response=json.dumps({"message": f'Error in computing stats -> {type(e).__name__}: {e}'}),
+            status=400,
             mimetype="application/json"
         )
     except Exception as e:
