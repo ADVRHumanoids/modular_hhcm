@@ -144,7 +144,7 @@ def setMode():
 
     except ValueError as e:
         # validation failed
-        print(f'{type(e).__name__}: {e}')
+        app.logger.error(f'{type(e).__name__}: {e}')
         return Response(
             response=json.dumps({"message": f'{type(e).__name__}: {e}'}),
             status=400,
@@ -152,7 +152,7 @@ def setMode():
         )
     except Exception as e:
         # validation failed
-        print(f'{type(e).__name__}: {e}')
+        app.logger.error(f'{type(e).__name__}: {e}')
         return Response(
             response=json.dumps({"message": f'{type(e).__name__}: {e}'}),
             status=500,
@@ -204,7 +204,7 @@ def resources_modules_get():
 
     except ValueError as e:
         # validation failed
-        print(f'{type(e).__name__}: {e}')
+        app.logger.error(f'{type(e).__name__}: {e}')
         return Response(
             response=json.dumps({"message": f'{type(e).__name__}: {e}'}),
             status=400,
@@ -212,7 +212,7 @@ def resources_modules_get():
         )
     except Exception as e:
         # validation failed
-        print(f'{type(e).__name__}: {e}')
+        app.logger.error(f'{type(e).__name__}: {e}')
         return Response(
             response=json.dumps({"message": f'{type(e).__name__}: {e}'}),
             status=500,
@@ -264,7 +264,7 @@ def resources_addons_get():
 
     except ValueError as e:
         # validation failed
-        print(f'{type(e).__name__}: {e}')
+        app.logger.error(f'{type(e).__name__}: {e}')
         return Response(
             response=json.dumps({"message": f'{type(e).__name__}: {e}'}),
             status=400,
@@ -272,7 +272,7 @@ def resources_addons_get():
         )
     except Exception as e:
         # validation failed
-        print(f'{type(e).__name__}: {e}')
+        app.logger.error(f'{type(e).__name__}: {e}')
         return Response(
             response=json.dumps({"message": f'{type(e).__name__}: {e}'}),
             status=500,
@@ -324,7 +324,7 @@ def resources_families_get():
 
     except ValueError as e:
         # validation failed
-        print(f'{type(e).__name__}: {e}')
+        app.logger.error(f'{type(e).__name__}: {e}')
         return Response(
             response=json.dumps({"message": f'{type(e).__name__}: {e}'}),
             status=400,
@@ -332,7 +332,7 @@ def resources_families_get():
         )
     except Exception as e:
         # validation failed
-        print(f'{type(e).__name__}: {e}')
+        app.logger.error(f'{type(e).__name__}: {e}')
         return Response(
             response=json.dumps({"message": f'{type(e).__name__}: {e}'}),
             status=500,
@@ -361,26 +361,27 @@ def addNewModule():
         reverse = True if 'reverse' in req and req['reverse'] == 'true' else False
         app.logger.debug(reverse)
 
-        if building_mode_ON :
-            urdf_writer.add_module(filename, offset, reverse)
-        else:
-            urdf_writer_fromHW.add_module(filename, offset, reverse)
-
         addons = req['addons'] if 'addons' in req else []
-        for addon in addons:
-            try:
-                if building_mode_ON :
-                    urdf_writer.add_addon(addon_filename=addon)
-                else:
-                    urdf_writer_fromHW.add_addon(addon_filename=addon)
-            except FileNotFoundError:
-                app.logger.error(f'Addon {addon} not found, skipping it')
+        
+        if building_mode_ON :
+            urdf_writer.add_module(filename, offset, reverse, addons)
+        else:
+            urdf_writer_fromHW.add_module(filename, offset, reverse, addons)
+
+        # for addon in addons:
+        #     try:
+        #         if building_mode_ON :
+        #             urdf_writer.add_addon(addon_filename=addon)
+        #         else:
+        #             urdf_writer_fromHW.add_addon(addon_filename=addon)
+        #     except FileNotFoundError:
+        #         app.logger.error(f'Addon {addon} not found, skipping it')
 
         return Response(status=204)
 
     except ValueError as e:
         # validation failed
-        print(f'{type(e).__name__}: {e}')
+        app.logger.error(f'{type(e).__name__}: {e}')
         return Response(
             response=json.dumps({"message": f'{type(e).__name__}: {e}'}),
             status=400,
@@ -388,7 +389,7 @@ def addNewModule():
         )
     except Exception as e:
         # validation failed
-        print(f'{type(e).__name__}: {e}')
+        app.logger.error(f'{type(e).__name__}: {e}')
         return Response(
             response=json.dumps({"message": f'{type(e).__name__}: {e}'}),
             status=500,
@@ -588,7 +589,7 @@ def getURDF():
         )
     except Exception as e:
         # validation failed
-        print( f'{type(e).__name__}: {e}')
+        app.logger.error( f'{type(e).__name__}: {e}')
         return Response(
             response=json.dumps({"message": f'{type(e).__name__}: {e}'}),
             status=500,
@@ -716,7 +717,7 @@ def getModelModules():
 
     except Exception as e:
         # validation failed
-        print(f'{type(e).__name__}: {e}')
+        app.logger.error(f'{type(e).__name__}: {e}')
         return Response(
             response=json.dumps({"message": f'{type(e).__name__}: {e}'}),
             status=500,
@@ -753,7 +754,43 @@ def removeModules():
 
     except Exception as e:
         # validation failed
-        print(f'{type(e).__name__}: {e}')
+        app.logger.error(f'{type(e).__name__}: {e}')
+        return Response(
+            response=json.dumps({"message": f'{type(e).__name__}: {e}'}),
+            status=500,
+            mimetype="application/json"
+        )
+
+# call URDF_writer.py to update the last module
+@app.route(f'{api_base_route}/model/urdf/modules', methods=['PUT'])
+def updateModule():
+    req = request.get_json()
+    try:
+        ids = request.args.getlist('ids[]')
+        if len(ids)>1:
+            return Response(
+                response=json.dumps({"message": 'Deletion of multiple ids at once is currently not supported'}),
+                status=501,
+                mimetype="application/json"
+            )
+        elif len(ids)==1:
+            urdf_writer.select_module_from_name(ids[0], None)
+
+        app.logger.debug(req['parent'] if 'parent' in req else 'no parent')
+
+        offset = float(req['offset']['yaw'] if 'offset' in req and 'yaw' in req['offset'] else 0) # we user RPY notation
+        app.logger.debug(offset)
+
+        reverse = True if 'reverse' in req and req['reverse'] == 'true' else False
+        app.logger.debug(reverse)
+
+        addons = req['addons'] if 'addons' in req else []
+
+        urdf_writer.update_module(angle_offset=offset, reverse=reverse, addons=addons)
+        return Response(status=204)
+    except Exception as e:
+        # validation failed
+        app.logger.error(f'{type(e).__name__}: {e}')
         return Response(
             response=json.dumps({"message": f'{type(e).__name__}: {e}'}),
             status=500,
@@ -810,7 +847,7 @@ def deployROSModel():
 
     except Exception as e:
         # validation failed
-        print(f'{type(e).__name__}: {e}')
+        app.logger.error(f'{type(e).__name__}: {e}')
         return Response(
             response=json.dumps({"message": f'{type(e).__name__}: {e}'}),
             status=500,
@@ -851,7 +888,7 @@ def getModelStats():
         )
     except Exception as e:
         # validation failed
-        print(f'{type(e).__name__}: {e}')
+        app.logger.error(f'{type(e).__name__}: {e}')
         return Response(
             response=json.dumps({"message": f'{type(e).__name__}: {e}'}),
             status=500,

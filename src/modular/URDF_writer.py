@@ -2318,14 +2318,7 @@ class UrdfWriter:
             # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string
             self.urdf_string = self.process_urdf()
 
-        # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
-        data = {'result': self.urdf_string,
-                'lastModule_type': self.parent_module.type,
-                'lastModule_name': self.parent_module.name,
-                'flange_size': self.parent_module.flange_size,
-                'count': self.parent_module.i}
-
-        return data
+        return [drillbit_name, "fixed_" + drillbit_name]
 
     def add_handle(self, x_offset=0.0, y_offset=0.25, z_offset=-0.18, mass=0.330, radius=0.025):
         handle_name = 'handle'+ self.parent_module.tag
@@ -2392,14 +2385,7 @@ class UrdfWriter:
             # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string
             self.urdf_string = self.process_urdf()
 
-        # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
-        data = {'result': self.urdf_string,
-                'lastModule_type': self.parent_module.type,
-                'lastModule_name': self.parent_module.name,
-                'flange_size': self.parent_module.flange_size,
-                'count': self.parent_module.i}
-
-        return data
+        return [handle_name, "fixed_" + handle_name, handle_gripping_point_name, "fixed_" + handle_gripping_point_name]
 
     # Add a cylinder as a fake end-effector
     def add_simple_ee(self, x_offset=0.0, y_offset=0.0, z_offset=0.0, angle_offset=0.0, mass=1.0, radius=0.02):
@@ -2480,8 +2466,8 @@ class UrdfWriter:
 
 
     def add_wheel_module(self, wheel_filename, steering_filename, angle_offset, reverse=False, robot_id=(0,0)):
-        steering_data = self.add_module(steering_filename, angle_offset, reverse, robot_id[0])
-        wheel_data = self.add_module(wheel_filename, angle_offset, reverse, robot_id[1])
+        steering_data = self.add_module(steering_filename, angle_offset, reverse, robot_id=robot_id[0])
+        wheel_data = self.add_module(wheel_filename, angle_offset, reverse, robot_id=robot_id[1])
 
         return wheel_data, steering_data
     
@@ -2508,7 +2494,7 @@ class UrdfWriter:
         return data
 
 
-    def add_module(self, filename, angle_offset, reverse=False, robot_id=0, active_ports=3):
+    def add_module(self, filename, angle_offset, reverse=False, addons =[], robot_id=0, active_ports=3):
         """Add a module specified by filename as child of the currently selected module.
 
         Parameters
@@ -2596,6 +2582,9 @@ class UrdfWriter:
         setattr(new_module, 'occupied_ports', "0001")
         self.print('occupied_ports: ', new_module.occupied_ports)
 
+        # add list of addons as attribute
+        setattr(new_module, 'addon_elements', [])
+
         # Depending on the type of the parent module and the new module, call the right method to add the new module.
         # Add the module to the correct chain via the 'add_to_chain' method.
         
@@ -2632,6 +2621,12 @@ class UrdfWriter:
 
         # Add the module to the list of chains
         self.add_to_chain(new_module)
+
+        for addon in addons:
+            try:
+                self.add_addon(addon_filename=addon)
+            except FileNotFoundError:
+                self.logger.error(f'Addon {addon} not found, skipping it')
 
         if self.speedup:
             self.urdf_string = ""
@@ -2694,6 +2689,44 @@ class UrdfWriter:
                 self.print(value)
                 gazebo_child_el.text = str(value)
 
+    
+    def update_module(self, selected_module=0, angle_offset=0.0, reverse=False, addons=[]):
+        if selected_module == 0:
+            selected_module = (self.parent_module)
+        # If the selected module is a connector module, select his parent (the cube) instead
+        if '_con' in selected_module.name:
+            selected_module = selected_module.parent
+
+        self.info_print('Updating module: ' + str(selected_module.name))
+
+        # update generator expression
+        self.update_generator()
+
+        # remove addons
+        if(getattr(selected_module, 'addon_elements')):
+            for el in selected_module.addon_elements:
+                for node in self.gen:
+                    try:
+                        if node.attrib['name'] == el:
+                            self.root.remove(node)
+                    except KeyError:
+                        pass
+
+        for addon in addons:
+            try:
+                self.add_addon(addon_filename=addon)
+            except FileNotFoundError:
+                self.logger.error(f'Addon {addon} not found, skipping it')
+
+        # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
+        data = {'result': self.urdf_string,
+                'lastModule_type': selected_module.type,
+                'lastModule_name': selected_module.name,
+                'flange_size': selected_module.flange_size,
+                'count': selected_module.i}
+        
+        return data
+
 
     def remove_module(self, selected_module=0):
         """Remove the selected module (and all its childs and descendants) and return info on its parent
@@ -2737,6 +2770,16 @@ class UrdfWriter:
         # update generator expression
         self.update_generator()
         #self.gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
+
+        # remove addons
+        if(getattr(selected_module, 'addon_elements')):
+            for el in selected_module.addon_elements:
+                for node in self.gen:
+                    try:
+                        if node.attrib['name'] == el:
+                            self.root.remove(node)
+                    except KeyError:
+                        pass
 
         # switch depending on module type
         if selected_module.type in { 'joint', 'wheel' }:
