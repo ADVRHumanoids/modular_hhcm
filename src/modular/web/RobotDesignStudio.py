@@ -692,25 +692,37 @@ def getModulesMap():
     else:
         chains = urdf_writer_fromHW.listofchains
 
-    modules=[]
+    modules={}
     for chain in chains:
         for el in chain:
             module={}
-            module['id']=el.name
-            module['family']= "" #"alberoboticsGenA"
+            module['id']= el.name
+            module['family']= el.header.family
             module['type']= el.type
             module['name']= el.filename
-            module['label']= el.name
-            modules.append(module)
+            module['label']= el.header.label
+            modules[el.name]= module
     return modules
 
 # get list of modules of robot
 @app.route(f'{api_base_route}/model/urdf/modules', methods=['GET'])
 def getModelModules():
     try:
+        ids = request.args.getlist('ids[]')
+
         modules = getModulesMap()
+        filtered_modules = {}
+        if len(ids)==0:
+            filtered_modules=modules # use joint name as key
+        else:
+            current_parent = urdf_writer.parent_module.name
+            for id in ids: 
+                urdf_writer.select_module_from_name(id, None)
+                filtered_modules[id] = modules[urdf_writer.parent_module.name]
+            urdf_writer.select_module_from_name(current_parent, None)
+            
         return Response(
-            response=json.dumps({'modules': modules}),
+            response=json.dumps({'modules': filtered_modules}),
             status=200,
             mimetype="application/json"
         )
@@ -760,6 +772,7 @@ def removeModules():
             status=500,
             mimetype="application/json"
         )
+
 
 # call URDF_writer.py to update the last module
 @app.route(f'{api_base_route}/model/urdf/modules', methods=['PUT'])
