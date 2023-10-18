@@ -571,9 +571,9 @@ def openFile():
 def getURDF():
     try:
         if building_mode_ON:
-            urdf_string = urdf_writer.process_urdf()
+            urdf_string = urdf_writer.urdf_string
         else:
-            urdf_string = urdf_writer_fromHW.process_urdf()
+            urdf_string = urdf_writer_fromHW.urdf_string
 
         # replace path for remote access of STL meshes that will be served with '/meshes/<path:path>' route
         # urdf= urdf_string.replace('package://modular/src/modular/web/static/models/modular/,'package://')
