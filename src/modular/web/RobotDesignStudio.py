@@ -233,11 +233,16 @@ def resources_addons_get():
     """
     query_params = request.args
     try:
+        if building_mode_ON :
+            writer = urdf_writer
+        else:
+            writer = urdf_writer_fromHW
+
         #get complete list
-        addons = urdf_writer.modular_resources_manager.get_available_addons()
+        addons = writer.modular_resources_manager.get_available_addons()
 
         # filter by family (from query params)
-        valid_families = urdf_writer.modular_resources_manager.get_available_family_ids()
+        valid_families = writer.modular_resources_manager.get_available_family_ids()
 
         filter_families = query_params.getlist('families[]')
         for t in filter_families:
@@ -247,7 +252,7 @@ def resources_addons_get():
             addons = [el for el in addons if el['family'] in filter_families]
 
         # filter by type (from query params)
-        valid_types = urdf_writer.modular_resources_manager.get_available_addon_types()
+        valid_types = writer.modular_resources_manager.get_available_addon_types()
         filter_types = query_params.getlist('types[]')
         for t in filter_types:
             if t not in valid_types:
@@ -711,16 +716,21 @@ def getModelModules():
     try:
         ids = request.args.getlist('ids[]')
 
+        if building_mode_ON :
+            writer = urdf_writer
+        else:
+            writer = urdf_writer_fromHW
+
         modules = getModulesMap()
         filtered_modules = {}
         if len(ids)==0:
             filtered_modules=modules # use joint name as key
         else:
-            current_parent = urdf_writer.parent_module.name
+            current_parent = writer.parent_module.name
             for id in ids: 
-                urdf_writer.select_module_from_name(id, None)
-                filtered_modules[id] = modules[urdf_writer.parent_module.name]
-            urdf_writer.select_module_from_name(current_parent, None)
+                writer.select_module_from_name(id, None)
+                filtered_modules[id] = modules[writer.parent_module.name]
+            writer.select_module_from_name(current_parent, None)
             
         return Response(
             response=json.dumps({'modules': filtered_modules}),
@@ -779,6 +789,12 @@ def removeModules():
 @app.route(f'{api_base_route}/model/urdf/modules', methods=['PUT'])
 def updateModule():
     req = request.get_json()
+    
+    if building_mode_ON :
+        writer = urdf_writer
+    else:
+        writer = urdf_writer_fromHW
+
     try:
         ids = request.args.getlist('ids[]')
         if len(ids)>1:
@@ -788,7 +804,7 @@ def updateModule():
                 mimetype="application/json"
             )
         elif len(ids)==1:
-            urdf_writer.select_module_from_name(ids[0], None)
+            writer.select_module_from_name(ids[0], None)
 
         app.logger.debug(req['parent'] if 'parent' in req else 'no parent')
 
@@ -800,7 +816,8 @@ def updateModule():
 
         addons = req['addons'] if 'addons' in req else []
 
-        urdf_writer.update_module(angle_offset=offset, reverse=reverse, addons=addons)
+        writer.update_module(angle_offset=offset, reverse=reverse, addons=addons)
+
         return Response(status=204)
     except Exception as e:
         # validation failed
