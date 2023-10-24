@@ -70,8 +70,8 @@ else:
 
 
 template_folder='modular_frontend'
-static_folder = 'modular_frontend/static'
-static_url_path = '/static'
+static_folder = 'modular_frontend'  # '/static'
+static_url_path = ''
 # determine if it's running on a Pyinstaller bundle
 if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
     template_folder = os.path.join(sys._MEIPASS, 'modular/web',template_folder)
