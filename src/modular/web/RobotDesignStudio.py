@@ -706,7 +706,8 @@ def getModulesMap():
             module['type']= el.type
             module['name']= el.filename
             module['label']= el.header.label
-            module['addons']= el.header.addons
+            if hasattr(el.header, "addons"):
+                module['addons']= el.header.addons
             modules[el.name]= module
     return modules
 
