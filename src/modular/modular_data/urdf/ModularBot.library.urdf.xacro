@@ -80,13 +80,13 @@
         <xacro:property name="visual_bool" value="false"/>
         <xacro:unless value="${not module['visual'][body_name]}">
             <xacro:property name="visual_bool" value="true"/>
-            <xacro:property name="visual_body" value="${module['visual'][body_name]}"/>
+            <xacro:property name="visual_bodies" value="${module['visual'][body_name]}"/>
         </xacro:unless>
 
         <xacro:property name="collision_bool" value="false"/>
         <xacro:unless value="${not module['collision'][body_name]}">
             <xacro:property name="collision_bool" value="true"/>
-            <xacro:property name="collision_body" value="${module['collision'][body_name]}"/>
+            <xacro:property name="collision_bodies" value="${module['collision'][body_name]}"/>
         </xacro:unless>
 
         <xacro:property name="dynamics_bool" value="false"/>
@@ -97,19 +97,43 @@
         
         <link name="${name}">
             <xacro:unless value="${visual_bool == 0}">
-                <visual>
-                    <xacro:add_origin body_pose="${visual_body['pose']}"/>
-                    <xacro:add_geometry body="${visual_body}"/>
-                    <xacro:if value="${'color' in visual_body}">
-                        <material name="${visual_body['color']}"/>
-                    </xacro:if> 
-                </visual>
+                <!-- xacro loop -->
+                <xacro:macro name="visual_loop" params="visual_bodies n_bodies">
+                    <xacro:property name="i_bodies" value="${n_bodies-1}"/>
+                    <xacro:unless value="${i_bodies == -1}"> 
+                        <visual>    
+                            <xacro:property name="body" value="${visual_bodies[i_bodies]}"/>
+                            <xacro:add_origin body_pose="${body['pose']}"/>
+                            <xacro:add_geometry body="${body}"/>
+                            <xacro:if value="${'color' in body['parameters']}">
+                                <material name="${body['parameters']['color']['material_name']}">
+                                <xacro:if value="${'rgba' in body['parameters']['color']}">
+                                    <color rgba="${' '.join(str(x) for x in body['parameters']['color']['rgba'])}"/>
+                                </xacro:if>
+                                </material>
+                            </xacro:if>
+                        </visual>
+                        <xacro:visual_loop visual_bodies="${visual_bodies}" n_bodies="${i_bodies}"/>
+                    </xacro:unless> 
+                </xacro:macro>
+                <!-- call the macro -->
+                <xacro:visual_loop visual_bodies="${visual_bodies}" n_bodies="${len(visual_bodies)}"/>
             </xacro:unless>
             <xacro:unless value="${collision_bool == 0}">
-                <collision>
-                    <xacro:add_origin body_pose="${collision_body['pose']}"/>
-                    <xacro:add_geometry body="${collision_body}"/>
-                </collision>
+                <!-- xacro loop -->
+                <xacro:macro name="collision_loop" params="collision_bodies n_bodies">
+                    <xacro:property name="i_bodies" value="${n_bodies-1}"/>
+                    <xacro:unless value="${i_bodies == -1}"> 
+                        <collision>
+                            <xacro:property name="body" value="${collision_bodies[i_bodies]}"/>
+                            <xacro:add_origin body_pose="${body['pose']}"/>
+                            <xacro:add_geometry body="${body}"/>
+                        </collision>
+                        <xacro:collision_loop collision_bodies="${collision_bodies}" n_bodies="${i_bodies}"/>
+                    </xacro:unless>
+                </xacro:macro> 
+                <!-- call the macro -->
+                <xacro:collision_loop collision_bodies="${collision_bodies}" n_bodies="${len(collision_bodies)}"/>
             </xacro:unless>
             <xacro:if value="${dynamics_bool == 0}">
                 <xacro:default_inertial mass="${mass}"/>
@@ -130,6 +154,27 @@
                 </inertial>
             </xacro:unless>
         </link>
+    </xacro:macro>
+
+    <!-- Macro for adding dagana -->       
+    <xacro:macro name="add_dagana" params="name type father x y z roll pitch yaw">
+        <xacro:include filename="$(find dagana_urdf)/urdf/dagana_macro.urdf.xacro" />
+
+        <xacro:dagana_gripper name="${name}" parent_link="${father}" joint_type="revolute">
+            <origin xyz="${x} ${y} ${z}" rpy="${roll} ${pitch} ${yaw}"/>
+        </xacro:dagana_gripper>
+    </xacro:macro>
+
+    <!-- Macro for adding the drill module -->       
+    <xacro:macro name="add_drill" params="name type filename">
+        <xacro:property name="module" value="${xacro.load_yaml(filename)}"/>
+        <xacro:property name="body_name" value="body_1"/>
+        <xacro:add_link_element name="${name}" type="${type}" module="${module}" body_name="${body_name}"/>
+        <!-- Add realsense D camera -->
+        <xacro:include filename="${MODULAR_PATH}/modular_data/urdf/concert.sensors.urdf.xacro"/>
+        <xacro:add_realsense_d_camera name="drill_camera" parent_name="${name}" add_gazebo_sensor="${ADD_DRILL_CAMERA}">
+            <origin xyz="0.12 0.0 0.26" rpy="0.05 0.22 0.05"/>
+        </xacro:add_realsense_d_camera>
     </xacro:macro>
 
     <!-- Macro for adding a generic link -->       
@@ -404,6 +449,21 @@
         </joint>
     </xacro:macro>
 
+    <!-- Add a tcp. Length may vary -->
+    <xacro:macro name="add_tcp" params="type name father filename x y z roll pitch yaw">
+        <xacro:property name="module" value="${xacro.load_yaml(filename)}"/>
+
+        <link name="${name}"/>
+        <joint name="fixed_${name}" type="fixed">
+            <axis xyz="0 0 1" rpy="0 0 0" />
+            <parent link="${father}"/>
+            <child link="${name}"/>
+            <origin
+            rpy="${roll} ${pitch} ${yaw}"
+            xyz="${x} ${y} ${z}"/>
+        </joint>
+    </xacro:macro>
+
     <xacro:macro name="add_gripper_body" params="type name filename">
         <xacro:property name="module" value="${xacro.load_yaml(filename)}"/>
         <xacro:property name="body_name" value="body_1"/>
@@ -419,14 +479,14 @@
         <link name="${name}_finger2">
             <visual>
                 <xacro:add_origin body_pose="${dict(x=0.0, y=0.0, z=0.0, roll=0.0, pitch=0.0, yaw=pi)}"/>
-                <xacro:add_geometry body="${module['visual'][body_name]}"/>
-                <xacro:if value="${'color' in module['visual'][body_name]}">
-                    <material name="${module['visual'][body_name]['color']}"/>
+                <xacro:add_geometry body="${module['visual'][body_name][0]}"/>
+                <xacro:if value="${'color' in module['visual'][body_name][0]['parameters']}">
+                    <material name="${module['visual'][body_name][0]['parameters']['color']}"/>
                 </xacro:if> 
             </visual>
             <collision>
                 <xacro:add_origin body_pose="${dict(x=0.0, y=0.0, z=0.0, roll=0.0, pitch=0.0, yaw=pi)}"/>
-                <xacro:add_geometry body="${module['collision'][body_name]}"/>
+                <xacro:add_geometry body="${module['collision'][body_name][0]}"/>
             </collision>
             <inertial>
                 <origin

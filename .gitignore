@@ -160,3 +160,6 @@ venv.bak/
 
 # VS Code folder
 .vscode/*
+
+# Custom setting for API
+src/modular/web/web_config.ini

@@ -38,7 +38,9 @@ xbotcore_plugins:
   # different names and possibly different parameters
   homing:
     thread: rt_main
-    type: homing_example
+    type: homing
+    params:
+      time: { value: 5, type: double }
 
   ec_ros:
     thread: nrt_main

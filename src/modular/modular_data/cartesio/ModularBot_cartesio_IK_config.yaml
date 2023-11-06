@@ -24,7 +24,7 @@ constraints:
 #     indices: [0,1,2,3,4]
 EE:
     type: Cartesian
-    base_link: L_0_A
+    base_link: base_link
     distal_link: ee_A
     indices: [0,1,2,3,4]
 

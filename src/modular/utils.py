@@ -2,14 +2,12 @@ import pkg_resources
 import yaml
 import os
 import subprocess
-import rospkg
 import io
+import json
 
 class ResourceFinder:
     def __init__(self, config_file='config_file.yaml'):
         self.cfg = self.get_yaml(config_file)
-        # init RosPack
-        rospack = rospkg.RosPack()
 
     def nested_access(self, keylist):
         val = dict(self.cfg)
@@ -22,9 +20,14 @@ class ResourceFinder:
         expanded_dir = os.path.expandvars(expanded_dir)
         if '$' in expanded_dir:
             expanded_dir = expanded_dir[1:]
+            
             if (expanded_dir.startswith('{',) and expanded_dir.endswith('}')) or (expanded_dir.startswith('(',) and expanded_dir.endswith(')')):
                 expanded_dir = expanded_dir[1:-1]
-            expanded_dir = subprocess.check_output(expanded_dir.split()).decode('utf-8').rstrip()
+
+            try:
+                expanded_dir = subprocess.check_output(expanded_dir.split(), stderr=subprocess.DEVNULL).decode('utf-8').rstrip()
+            except subprocess.CalledProcessError:
+                expanded_dir = ''
 
         return expanded_dir
 
@@ -88,6 +91,36 @@ class ResourceFinder:
         else:
             resource_filename = pkg_resources.resource_filename(resource_package, resource_path)
         return resource_filename
+    
+    def get_listdir(self, resource_name, relative_path=None):
+        resource_package = __name__
+        resource_path = self.find_resource_path(resource_name, relative_path)
+        if self.resource_exists(resource_name, relative_path):
+            if self.is_resource_external(relative_path):
+                resource_listdir = os.listdir(resource_path)
+            else:
+                resource_listdir = pkg_resources.resource_listdir(resource_package, resource_path)
+        else:
+            resource_listdir = []
+        return resource_listdir
+    
+    def resource_exists(self, resource_name, relative_path=None):
+        resource_package = __name__
+        resource_path = self.find_resource_path(resource_name, relative_path)
+        if self.is_resource_external(relative_path):
+            resource_exists = os.path.exists(resource_path) # TODO: check if correct
+        else:
+            resource_exists = pkg_resources.resource_exists(resource_package, resource_path)
+        return resource_exists
+    
+    def resource_isdir(self, resource_name, relative_path=None):
+        resource_package = __name__
+        resource_path = self.find_resource_path(resource_name, relative_path)
+        if self.is_resource_external(relative_path):
+            resource_isdir = os.path.isdir(resource_path)
+        else:
+            resource_isdir = pkg_resources.resource_isdir(resource_package, resource_path)
+        return resource_isdir
 
     def get_yaml(self, resource_name, relative_path=None):
         with self.get_stream(resource_name, relative_path) as stream:
@@ -97,3 +130,101 @@ class ResourceFinder:
                 yaml_dict = {}
                 print(exc)
         return yaml_dict
+    
+class ModularResourcesManager:
+    def __init__(self, resource_finder, resources_paths):
+        self.resource_finder = resource_finder
+        self.resources_paths = resources_paths
+
+        self.available_modules_dict = {}
+        self.available_modules_headers = []
+        self.init_available_modules()
+
+        self.available_families = []
+        self.init_available_families()
+
+        self.available_addons_dict = {}
+        self.available_addons_headers = []
+        self.init_available_addons()
+
+    def expand_listdir(self, starting_path, res_path):
+        listdir = self.resource_finder.get_listdir(starting_path, res_path)
+        list_to_remove = []
+        list_to_add = []
+        for el in listdir:
+            if self.resource_finder.resource_isdir(starting_path + '/' + el, res_path):
+                new_listdir = self.expand_listdir(starting_path + '/'+ el, res_path)
+                new_listdir = [el + '/' + new_el for new_el in new_listdir]
+                list_to_remove.append(el)
+                list_to_add += new_listdir
+        for el in list_to_remove:
+            listdir.remove(el)
+        listdir += list_to_add
+        return listdir
+    
+    def init_available_modules(self):
+        for res_path in self.resources_paths:
+            resource_names_list = ['yaml/' + el for el in self.expand_listdir('yaml', res_path)]
+            resource_names_list += ['json/' + el for el in self.expand_listdir('json', res_path)]
+            for res_name in resource_names_list:
+                if res_name.endswith('.json'):
+                    res_stream = self.resource_finder.get_stream(res_name, res_path)
+                    res_dict = json.load(res_stream)
+                    self.available_modules_dict[res_dict['header']['name']] = res_dict
+                    self.available_modules_headers.append(res_dict['header'])
+                elif res_name.endswith('.yaml'):
+                    res_dict = self.resource_finder.get_yaml(res_name, res_path)
+                    self.available_modules_dict[res_dict['header']['name']] = res_dict
+                    self.available_modules_headers.append(res_dict['header'])
+
+    def init_available_families(self):
+        for res_path in self.resources_paths:
+            if self.resource_finder.resource_exists('families.yaml', res_path):
+                self.available_families += (self.resource_finder.get_yaml('families.yaml', res_path)['families'])
+
+    def init_available_addons(self):
+        for res_path in self.resources_paths:
+            resource_names_list = ['module_addons/yaml/' + el for el in self.expand_listdir('module_addons/yaml', res_path)]
+            resource_names_list += ['module_addons/json/' + el for el in self.expand_listdir('module_addons/json', res_path)]
+            for res_name in resource_names_list:
+                if res_name.endswith('.json'):
+                    res_stream = self.resource_finder.get_stream(res_name, res_path)
+                    res_dict = json.load(res_stream)
+                    self.available_addons_dict[res_dict['header']['name']] = res_dict
+                    self.available_addons_headers.append(res_dict['header'])
+                elif res_name.endswith('.yaml'):
+                    res_dict = self.resource_finder.get_yaml(res_name, res_path)
+                    self.available_addons_dict[res_dict['header']['name']] = res_dict
+                    self.available_addons_headers.append(res_dict['header'])
+
+    def get_available_modules(self):
+        return self.available_modules_headers
+    
+    def get_available_modules_dict(self):
+        return self.available_modules_dict
+    
+    def get_available_module_types(self):
+        module_types = [el['type'] for el in self.available_modules_headers]
+        return list(dict.fromkeys(module_types))
+    
+    def get_available_families(self):
+        return self.available_families
+
+    def get_available_family_ids(self):
+        family_ids = [el['id'] for el in self.available_families]
+        return list(dict.fromkeys(family_ids))
+    
+    def get_available_family_groups(self):
+        family_groups = [el['group'] for el in self.available_families]
+        return list(dict.fromkeys(family_groups))
+
+    def get_available_addons(self):
+        return self.available_addons_headers
+    
+    def get_available_addons_dict(self):
+        return self.available_addons_dict
+    
+    def get_available_addon_types(self):
+        addon_types = [el['type'] for el in self.available_addons_headers]
+        return list(dict.fromkeys(addon_types))
+    

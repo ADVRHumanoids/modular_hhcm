@@ -927,14 +927,14 @@
                 
                 
                 addYawJoint.onclick = function() {addModule("module_joint_yaw_ORANGE", size_value=null)};
-                addConcertYawJoint.onclick = function() {addModule("concert/module_joint_yaw_concert", size_value=null)};
+                addConcertYawJoint.onclick = function() {addModule("concert/module_joint_yaw_A_concert", size_value=null, json=true)};
 
                 addDoubleElbowJoint.onclick = function() {addModule("module_joint_double_elbow_ORANGE", size_value=null)};
-                addConcertElbowJoint.onclick = function() {addModule("concert/module_joint_elbow_concert", size_value=null)};
-                addConcertWheel.onclick = function() {addWheel("concert/module_wheel_concert", "concert/module_steering_concert", size_value=null)};
-                addPassiveLink10.onclick = function() {addModule("concert/module_link_concert_straight_10", size_value=null)};
-                addPassiveLink20.onclick = function() {addModule("concert/module_link_concert_straight_20", size_value=null)};
-                addPassiveLink50.onclick = function() {addModule("concert/module_link_concert_straight_50", size_value=null)};
+                addConcertElbowJoint.onclick = function() {addModule("concert/module_joint_elbow_A_concert", size_value=null, json=true)};
+                addConcertWheel.onclick = function() {addWheel("concert/module_wheel_concert", "concert/module_steering_concert", size_value=null, json=true)};
+                addPassiveLink10.onclick = function() {addModule("concert/module_link_straight_10_concert", size_value=null, json=true)};
+                addPassiveLink20.onclick = function() {addModule("concert/module_link_straight_20_concert", size_value=null, json=true)};
+                addPassiveLink50.onclick = function() {addModule("concert/module_link_straight_50_concert", size_value=null, json=true)};
                 
                 var ros = new ROSLIB.Ros({
                     url : 'ws://10.24.8.100:9090'
@@ -974,7 +974,7 @@
             // }
 
             //Function to add a new module. Called at the click of the linked button
-            function    addModule(modulename, size_value) {
+            function    addModule(modulename, size_value, json=false) {
                 var offset = parseFloat(prompt("Enter the angle offset for the module:", "0"));
                 var reverse = confirm("Do you want to connect it backwards?");
                 
@@ -1002,10 +1002,15 @@
                         break;
                 }
                 
+                if (json) {
+                    filename = modulename + '.json'
+                } 
+                else {
                 if (modulename.indexOf("module_size_adapter") >= 0) {
                     filename = modulename + '.yaml'
                 } else {
                     filename = modulename + size_tag + '.yaml'
+                    }
                 }
                 
                 //making an ajax request to the server to proceed to write the modified URDF
