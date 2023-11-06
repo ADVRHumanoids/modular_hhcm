@@ -59,7 +59,7 @@ else:
 werkzeug_logger = logging.getLogger('werkzeug')
 
 # set verbosity levels
-verbose=True
+verbose=False
 if verbose:
     logger.setLevel(logging.DEBUG)
     logger.debug('Starting server')
