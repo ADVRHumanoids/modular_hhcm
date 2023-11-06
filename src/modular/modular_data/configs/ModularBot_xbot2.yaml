@@ -15,10 +15,8 @@ xbotcore_device_configs:
     sim: $(rospack find PACKAGE_NAME)/config/hal/ModularBot_gz.yaml
     dummy: $(rospack find PACKAGE_NAME)/config/hal/ModularBot_dummy.yaml
     ec_imp: $(rospack find PACKAGE_NAME)/config/hal/ModularBot_ec_all.yaml
-    
-    # ec: $(rospack find PACKAGE_NAME)/config/hal/ModularBot_ec_all.yaml
-    # ec_hybr: $(rospack find PACKAGE_NAME)/config/hal/ModularBot_ec_all.yaml
     ec_idle: $(rospack find PACKAGE_NAME)/config/hal/ModularBot_ec_all.yaml
+    ec_pos: $(rospack find PACKAGE_NAME)/config/hal/ModularBot_ec_all.yaml
 
 # define threads to be created
 xbotcore_threads:
@@ -50,3 +48,6 @@ xbotcore_plugins:
 xbotcore_param:
   /xbot/hal/joint_safety/filter_autostart: {value: true, type: bool}
   /xbot/hal/joint_safety/filter_cutoff_hz: {value: 2.0, type: double}
+  /xbot/trigger_safety_on_shutdown:
+      value: true
+      type: bool
