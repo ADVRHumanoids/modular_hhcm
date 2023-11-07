@@ -145,6 +145,16 @@ class ResourceFinder:
                 print(exc)
         return yaml_dict
     
+    def get_json(self, resource_name, relative_path=None):
+        """Load the json file specified resource and return it as a dict"""
+        with self.get_stream(resource_name, relative_path) as stream:
+            try:
+                json_dict = json.load(stream)
+            except json.JSONDecodeError as exc:
+                json_dict = {}
+                print(exc)
+        return json_dict
+    
 class ModularResourcesManager:
     """Class to manage modular resources"""
     def __init__(self, resource_finder, resources_paths):
@@ -185,8 +195,7 @@ class ModularResourcesManager:
             resource_names_list += ['json/' + el for el in self.expand_listdir('json', res_path)]
             for res_name in resource_names_list:
                 if res_name.endswith('.json'):
-                    res_stream = self.resource_finder.get_stream(res_name, res_path)
-                    res_dict = json.load(res_stream)
+                    res_dict = self.resource_finder.get_json(res_name, res_path)
                     self.available_modules_dict[res_dict['header']['name']] = res_dict
                     self.available_modules_headers.append(res_dict['header'])
                 elif res_name.endswith('.yaml'):
@@ -207,8 +216,7 @@ class ModularResourcesManager:
             resource_names_list += ['module_addons/json/' + el for el in self.expand_listdir('module_addons/json', res_path)]
             for res_name in resource_names_list:
                 if res_name.endswith('.json'):
-                    res_stream = self.resource_finder.get_stream(res_name, res_path)
-                    res_dict = json.load(res_stream)
+                    res_dict = self.resource_finder.get_json(res_name, res_path)
                     self.available_addons_dict[res_dict['header']['name']] = res_dict
                     self.available_addons_headers.append(res_dict['header'])
                 elif res_name.endswith('.yaml'):

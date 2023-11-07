@@ -1621,20 +1621,15 @@ class UrdfWriter:
             # Generate name according to the # of cubes already in the tree
             name = 'L_0' + self.cube_switcher.get(self.n_cubes)
             self.n_cubes += 1
-
-            slavecube = None
-            for resource_path in self.resources_paths:
-                filename = self.resource_finder.get_filename('yaml/master_cube.yaml', resource_path)
-                template_name = self.resource_finder.get_filename('yaml/template.yaml', ['resources_path'])
-
-                # call the method that reads the yaml file describing the cube and instantiate a new module object
-                try:
-                    slavecube = ModuleNode.module_from_yaml(filename, self.parent_module, template_name)
-                    break
-                except FileNotFoundError:
-                    continue
-            if slavecube is None:
-                raise FileNotFoundError(filename+' was not found in the available resources')
+            filename = 'master_cube.yaml'
+            
+            # call the method that reads the yaml file describing the cube and instantiate a new module object
+            try:
+                module_dict = self.modular_resources_manager.get_available_modules_dict()[filename]
+                template_dict = self.modular_resources_manager.get_available_modules_dict()['template.yaml']
+                slavecube = ModuleNode.module_from_yaml_dict(module_dict, self.parent_module, template_dict)
+            except KeyError:
+                raise KeyError(filename+' was not found in the available resources')
 
             setattr(slavecube, 'name', name)
 
@@ -1779,23 +1774,18 @@ class UrdfWriter:
             # Generate name according to the # of cubes already in the tree
             name = 'L_0' + self.cube_switcher.get(self.n_cubes)
             self.n_cubes += 1
+            filename = 'master_cube.yaml'
 
             # self.T_con = tf.transformations.translation_matrix((0, 0, 0.1))
             # self.T_con = self.mastercube.geometry.connector_length))
 
-            mastercube = None
-            for resource_path in self.resources_paths:
-                filename = self.resource_finder.get_filename('yaml/master_cube.yaml', resource_path)
-                template_name = self.resource_finder.get_filename('yaml/template.yaml', ['resources_path'])
-
-                # call the method that reads the yaml file describing the cube and instantiate a new module object
-                try:
-                    mastercube = ModuleNode.module_from_yaml(filename, self.parent_module, template_name)
-                    break
-                except FileNotFoundError:
-                    continue
-            if mastercube is None:
-                raise FileNotFoundError(filename+' was not found in the available resources')
+            # call the method that reads the yaml file describing the cube and instantiate a new module object
+            try:
+                module_dict = self.modular_resources_manager.get_available_modules_dict()[filename]
+                template_dict = self.modular_resources_manager.get_available_modules_dict()['template.yaml']
+                mastercube = ModuleNode.module_from_yaml_dict(module_dict, self.parent_module, template_dict)
+            except KeyError:
+                raise KeyError(filename+' was not found in the available resources')
 
             # set attributes of the newly added module object
             setattr(mastercube, 'name', name)
@@ -1947,25 +1937,18 @@ class UrdfWriter:
         #     self.parent_module = self.base_link
 
         self.print('add_mobile_platform')
-        # Generate name according to the # of cubes already in the tree
-        name = 'mobile_base' #  _' + str(len(self.listofhubs))
 
-        mobilebase = None
-        for resource_path in self.resources_paths:
-            filename = self.resource_finder.get_filename('json/concert/mobile_platform_concert.json', resource_path)
-            template_name = self.resource_finder.get_filename('yaml/template.yaml', ['resources_path'])
+        filename = 'concert/mobile_platform_concert.json'
 
-            # call the method that reads the yaml file describing the cube and instantiate a new module object
-            try:
-                mobilebase = ModuleNode.module_from_json(filename, self.parent_module, template_name)
-                break
-            except FileNotFoundError:
-                continue
-        if mobilebase is None:
-            raise FileNotFoundError(filename+' was not found in the available resources')
+        try:
+            module_dict = self.modular_resources_manager.get_available_modules_dict()[filename]
+            template_dict = self.modular_resources_manager.get_available_modules_dict()['template.yaml']
+            mobilebase = ModuleNode.module_from_json_dict(module_dict, self.parent_module, template_dict)
+        except KeyError:
+            raise KeyError(filename+' was not found in the available resources')
 
         # set attributes of the newly added module object
-        setattr(mobilebase, 'name', name)
+        setattr(mobilebase, 'name', 'mobile_base')
         setattr(mobilebase, 'i', 0)
         setattr(mobilebase, 'p', 0)
 
@@ -2014,7 +1997,7 @@ class UrdfWriter:
         # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
         data = {'result': self.urdf_string,
                 'lastModule_type': 'mobile_base',
-                'lastModule_name': name,
+                'lastModule_name': mobilebase.name,
                 'flange_size': 3,
                 'count': 1}
 
@@ -2152,20 +2135,13 @@ class UrdfWriter:
         # Set base_link as parent
         self.parent_module = self.base_link
 
-        new_socket = None
-        # Generate the path to the required YAML file
-        for resource_path in self.resources_paths:
-            module_name = self.resource_finder.get_filename('yaml/'+filename, resource_path)
-            template_name = self.resource_finder.get_filename('yaml/template.yaml', ['resources_path'])
-
-            # create a ModuleNode instance for the socket
-            try:
-                new_socket = ModuleNode.module_from_yaml(module_name, self.parent_module, template_name, reverse=0)
-                break
-            except FileNotFoundError:
-                continue
-        if new_socket is None:
-            raise FileNotFoundError(filename+' was not found in the available resources')
+        # call the method that reads the yaml file describing the cube and instantiate a new module object
+        try:
+            module_dict = self.modular_resources_manager.get_available_modules_dict()[filename]
+            template_dict = self.modular_resources_manager.get_available_modules_dict()['template.yaml']
+            new_socket = ModuleNode.module_from_yaml_dict(module_dict, self.parent_module, template_dict)
+        except KeyError:
+            raise KeyError(filename+' was not found in the available resources')
 
         # assign a new tag to the chain
         tag_letter = self.branch_switcher.get(self.tag_num)
@@ -2511,28 +2487,19 @@ class UrdfWriter:
         self.print(path_name)
         self.print(filename)
 
-        new_module = None
-        # Generate the path and access the required YAML file
-        for resource_path in self.resources_paths:
-            template_name = self.resource_finder.get_filename('yaml/template.yaml', ['resources_path'])
-            try:
-                if filename.lower().endswith(('.yaml', '.yml')):
-                    # Generate the path to the required YAML file
-                    module_name = self.resource_finder.get_filename('yaml/'+filename, resource_path)
-                    # Load the module from YAML and create a ModuleNode instance
-                    new_module = ModuleNode.module_from_yaml(module_name, self.parent_module, template_name, reverse)
-                    self.print("Module loaded from YAML: " + new_module.name)
-                elif filename.lower().endswith(('.json')):
-                    # Generate the path to the required YAML file
-                    module_name = self.resource_finder.get_filename('json/'+filename, resource_path)
-                    # Load the module from YAML and create a ModuleNode instance
-                    new_module = ModuleNode.module_from_json(module_name, self.parent_module, template_name, reverse)
-                    self.print("Module loaded from JSON: " + new_module.name)
-                break
-            except FileNotFoundError:
-                continue
-        if new_module is None:
-            raise FileNotFoundError(filename+' was not found in the available resources')
+        try:
+            module_dict = self.modular_resources_manager.get_available_modules_dict()[filename]
+            template_dict = self.modular_resources_manager.get_available_modules_dict()['template.yaml']
+            if filename.lower().endswith(('.yaml', '.yml')):
+                # Load the module from YAML and create a ModuleNode instance
+                new_module = ModuleNode.module_from_yaml_dict(module_dict, self.parent_module, template_dict, reverse)
+                self.print("Module loaded from YAML: " + new_module.name)
+            elif filename.lower().endswith(('.json')):
+                # Load the module from YAML and create a ModuleNode instance
+                new_module = ModuleNode.module_from_json_dict(module_dict, self.parent_module, template_dict, reverse)
+                self.print("Module loaded from JSON: " + new_module.name)
+        except KeyError:
+            raise KeyError(filename+' was not found in the available resources')
 
         # If the parent is a connector module, it means we are starting a new branch from a cube.
         # Then assign the correct tag (A, B, C, ...) to the new module (and therefore start a new branch)

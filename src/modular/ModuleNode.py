@@ -608,11 +608,20 @@ def module_from_yaml(filename, father=None, yaml_template=None, reverse=False):
             print(exc)
     # Create an instance of a ModuleNode class from the dictionary obtained from YAML
     result = ModuleNode(data, filename, format=ModuleDescriptionFormat.YAML, parent=father, template_dictionary=template_data)
-    # result.set_type(filename)
     result.get_transform(reverse)
     return result 
 
-
+#
+def module_from_yaml_dict(yaml_dict, father=None, yaml_template_dict=None, reverse=False):
+    """Function parsing YAML dictionary describing a generic module and returning an instance of a Module class"""
+    if yaml_template_dict:
+        template_dict = yaml_template_dict
+    else:
+        template_dict = {}
+    # Create an instance of a ModuleNode class from the dictionary obtained from YAML
+    result = ModuleNode(yaml_dict, yaml_dict['header']['name'], format=ModuleDescriptionFormat.YAML, parent=father, template_dictionary=template_dict)
+    result.get_transform(reverse)
+    return result
 # 
 def module_from_json(filename, father=None, yaml_template=None, reverse=False):
     """Function parsing JSON file describing a generic module and returning an instance of a Module class"""
@@ -634,6 +643,17 @@ def module_from_json(filename, father=None, yaml_template=None, reverse=False):
     result.get_transform(reverse)
     return result 
 
+#
+def module_from_json_dict(json_dict, father=None, yaml_template_dict=None, reverse=False):
+    """Function parsing JSON dictionary describing a generic module and returning an instance of a Module class"""
+    if yaml_template_dict:
+        template_dict = yaml_template_dict
+    else:
+        template_dict = {}
+    # Create an instance of a ModuleNode class from the dictionary obtained from JSON
+    result = ModuleNode(json_dict, json_dict['header']['name'], format=ModuleDescriptionFormat.JSON, parent=father, template_dictionary=template_dict)
+    result.get_transform(reverse)
+    return result
 
 def main():
     # module = module_from_yaml(sys.argv[1], None, False)
