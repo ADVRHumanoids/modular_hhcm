@@ -105,6 +105,12 @@ urdf_writer_fromHW = UrdfWriter(**urdfwriter_kwargs_dict)
 # Flags defining which mode are in
 building_mode_ON = True
 
+def get_writer():
+    if building_mode_ON :
+        return urdf_writer
+    else:
+        return urdf_writer_fromHW
+
 # load view_urdf.html
 @app.route(f'{gui_route}/', methods=['GET'])
 def index():
@@ -173,11 +179,14 @@ def resources_modules_get():
     """
     query_params = request.args
     try:
+        # Get the right writer instance depending on the mode
+        writer = get_writer()
+
         #get complete list
-        modules = urdf_writer.modular_resources_manager.get_available_modules()
+        modules = writer.modular_resources_manager.get_available_modules()
 
         # filter by family (from query params)
-        valid_families = urdf_writer.modular_resources_manager.get_available_family_ids()
+        valid_families = writer.modular_resources_manager.get_available_family_ids()
 
         filter_families = query_params.getlist('families[]')
         for t in filter_families:
@@ -187,7 +196,7 @@ def resources_modules_get():
             modules = [el for el in modules if el['family'] in filter_families]
 
         # filter by type (from query params)
-        valid_types = urdf_writer.modular_resources_manager.get_available_module_types()
+        valid_types = writer.modular_resources_manager.get_available_module_types()
         filter_types = query_params.getlist('types[]')
         for t in filter_types:
             if t not in valid_types:
@@ -233,10 +242,8 @@ def resources_addons_get():
     """
     query_params = request.args
     try:
-        if building_mode_ON :
-            writer = urdf_writer
-        else:
-            writer = urdf_writer_fromHW
+        # Get the right writer instance depending on the mode
+        writer = get_writer()
 
         #get complete list
         addons = writer.modular_resources_manager.get_available_addons()
@@ -299,11 +306,14 @@ def resources_families_get():
     """
     query_params = request.args
     try:
+        # Get the right writer instance depending on the mode
+        writer = get_writer()
+
         #get complete list
-        families = urdf_writer.modular_resources_manager.get_available_families()
+        families = writer.modular_resources_manager.get_available_families()
 
         # filter by family (from query params)
-        valid_families = urdf_writer.modular_resources_manager.get_available_family_ids()
+        valid_families = writer.modular_resources_manager.get_available_family_ids()
         filter_families = query_params.getlist('families')
         for t in filter_families:
             if t not in valid_families:
@@ -312,7 +322,7 @@ def resources_families_get():
             families = [el for el in families if el['family'] in filter_families]
 
         # filter by group (from query params)
-        valid_groups = urdf_writer.modular_resources_manager.get_available_family_groups()
+        valid_groups = writer.modular_resources_manager.get_available_family_groups()
         filter_groups = query_params.getlist('groups')
         for t in filter_groups:
             if t not in valid_groups:
@@ -367,20 +377,11 @@ def addNewModule():
         app.logger.debug(reverse)
 
         addons = req['addons'] if 'addons' in req else []
+    
+        # Get the right writer instance depending on the mode
+        writer = get_writer()
 
-        if building_mode_ON :
-            urdf_writer.add_module(filename, offset, reverse, addons)
-        else:
-            urdf_writer_fromHW.add_module(filename, offset, reverse, addons)
-
-        # for addon in addons:
-        #     try:
-        #         if building_mode_ON :
-        #             urdf_writer.add_addon(addon_filename=addon)
-        #         else:
-        #             urdf_writer_fromHW.add_addon(addon_filename=addon)
-        #     except FileNotFoundError:
-        #         app.logger.error(f'Addon {addon} not found, skipping it')
+        writer.add_module(filename, offset, reverse, addons)
 
         return Response(status=204)
 
@@ -412,7 +413,9 @@ def changeURDF():
     app.logger.debug(offset)
     reverse = True if request.form.get('reverse', 0) == 'true' else False
     app.logger.debug(reverse)
-    data = urdf_writer.add_module(filename, offset, reverse)
+    # Get the right writer instance depending on the mode
+    writer = get_writer()
+    data = writer.add_module(filename, offset, reverse)
     data = jsonify(data)
     return data
 
@@ -429,7 +432,9 @@ def addWheel():
     app.logger.debug(offset)
     reverse = True if request.form.get('reverse', 0) == 'true' else False
     app.logger.debug(reverse)
-    wheel_data, steering_data = urdf_writer.add_wheel_module(wheel_filename, steering_filename, offset, reverse)
+    # Get the right writer instance depending on the mode
+    writer = get_writer()
+    wheel_data, steering_data = writer.add_wheel_module(wheel_filename, steering_filename, offset, reverse)
     data = jsonify(wheel_data)
     return data
 
@@ -485,7 +490,9 @@ def addCube():
     app.logger.debug(parent)
     offset = float(request.form.get('angle_offset', 0))
     app.logger.debug(offset)
-    data = urdf_writer.add_slave_cube(offset)
+    # Get the right writer instance depending on the mode
+    writer = get_writer()
+    data = writer.add_slave_cube(offset)
     data = jsonify(data)
     return data
 
@@ -498,7 +505,9 @@ def addMobilePlatform():
     app.logger.debug(parent)
     offset = float(request.form.get('angle_offset', 0))
     app.logger.debug(offset)
-    data = urdf_writer.add_mobile_platform(offset)
+    # Get the right writer instance depending on the mode
+    writer = get_writer()
+    data = writer.add_mobile_platform(offset)
     data = jsonify(data)
     return data
 
@@ -516,6 +525,7 @@ def addSocket():
 
     building_mode_ON = True if request.form.get('buildingModeON', 0) == 'true' else False
 
+    #TODO: fix this hack
     if building_mode_ON :
         data = urdf_writer.add_socket(float(offset.get('x_offset')), float(offset.get('y_offset')),
                                   float(offset.get('z_offset')), float(angle_offset))
@@ -537,7 +547,9 @@ def moveSocket():
     app.logger.debug(offset)
     angle_offset = values['angle_offset']
     app.logger.debug(angle_offset)
-    data = urdf_writer_fromHW.move_socket("L_0_B", float(offset.get('x_offset')), float(offset.get('y_offset')),
+    # Get the right writer instance depending on the mode
+    writer = get_writer()
+    data = writer.move_socket("L_0_B", float(offset.get('x_offset')), float(offset.get('y_offset')),
                                   float(offset.get('z_offset')), float(angle_offset))
     data = jsonify(data)
     return data
@@ -545,7 +557,9 @@ def moveSocket():
 @app.route('/removeModule/', methods=['POST'])
 def remove():
     parent = request.form.get('parent', 0)
-    data = urdf_writer.remove_module()
+    # Get the right writer instance depending on the mode
+    writer = get_writer()
+    data = writer.remove_module()
     data = jsonify(data)
     return data
 
@@ -554,7 +568,9 @@ def remove():
 @app.route('/updateLastModule/', methods=['POST'])
 def accessModule():
     parent = request.form.get('parent', 0)
-    data = urdf_writer.select_module_from_name(parent)
+    # Get the right writer instance depending on the mode
+    writer = get_writer()
+    data = writer.select_module_from_name(parent)
     data = jsonify(data)
     return data
 
@@ -575,10 +591,10 @@ def openFile():
 @app.route(f'{api_base_route}/model/urdf', methods=['GET'])
 def getURDF():
     try:
-        if building_mode_ON:
-            urdf_string = urdf_writer.urdf_string
-        else:
-            urdf_string = urdf_writer_fromHW.urdf_string
+        
+        # Get the right writer instance depending on the mode
+        writer = get_writer()
+        urdf_string = writer.urdf_string
 
         # replace path for remote access of STL meshes that will be served with '/meshes/<path:path>' route
         # urdf= urdf_string.replace('package://modular/src/modular/web/static/models/modular/,'package://')
@@ -605,7 +621,9 @@ def getURDF():
 def requestURDF():
     # building_mode_on_str = request.form.get('mode', 0)
     # app.logger.debug(building_mode_on_str)
-    urdf_string = urdf_writer.process_urdf()
+    # Get the right writer instance depending on the mode
+    writer = get_writer()
+    urdf_string = writer.process_urdf()
     data = {'string': urdf_string}
     app.logger.debug('data: %s', data)
     data = jsonify(data)
@@ -623,12 +641,15 @@ def requestURDF():
 @app.route(f'{api_base_route}/resources/meshes/<path:path>', methods=['GET'])
 @app.route('/modular_resources/<path:path>')
 def send_file(path):
+    # Get the right writer instance depending on the mode
+    writer = get_writer()
+
     resources_paths = []
-    resources_paths += [urdf_writer.resource_finder.find_resource_absolute_path('', ['resources_path'])]
+    resources_paths += [writer.resource_finder.find_resource_absolute_path('', ['resources_path'])]
 
     # upload also external resources (concert_resources, etc.)
-    external_paths_dict = urdf_writer.resource_finder.nested_access(['external_resources'])
-    external_paths = [ urdf_writer.resource_finder.get_expanded_path(['external_resources', p]) for p in external_paths_dict]
+    external_paths_dict = writer.resource_finder.nested_access(['external_resources'])
+    external_paths = [ writer.resource_finder.get_expanded_path(['external_resources', p]) for p in external_paths_dict]
     resources_paths += external_paths
 
     # if isinstance(resources_path, str):
@@ -662,7 +683,6 @@ def syncHW():
     app.logger.debug("Exit")
 
     data = urdf_writer_fromHW.read_from_json(reply)
-    # data = urdf_writer_fromHW.read_from_json_alt(reply)
     if urdf_writer_fromHW.verbose:
         urdf_writer_fromHW.render_tree()
     app.logger.debug('data: %s', data)
@@ -692,10 +712,9 @@ def changeMode():
 
 def getModulesMap():
     chains=[]
-    if building_mode_ON :
-        chains = urdf_writer.listofchains
-    else:
-        chains = urdf_writer_fromHW.listofchains
+
+    writer = get_writer()
+    chains = writer.listofchains
 
     modules={}
     for chain in chains:
@@ -715,12 +734,10 @@ def getModulesMap():
 @app.route(f'{api_base_route}/model/urdf/modules', methods=['GET'])
 def getModelModules():
     try:
+        # Get the right writer instance depending on the mode
+        writer = get_writer()
+        
         ids = request.args.getlist('ids[]')
-
-        if building_mode_ON :
-            writer = urdf_writer
-        else:
-            writer = urdf_writer_fromHW
 
         modules = getModulesMap()
         filtered_modules = {}
@@ -764,6 +781,9 @@ def removeModules():
     )
 
     try:
+        # Get the right writer instance depending on the mode
+        writer = get_writer()
+
         ids = request.args.getlist('ids[]')
         if len(ids)>1:
             return Response(
@@ -772,8 +792,8 @@ def removeModules():
                 mimetype="application/json"
             )
         elif len(ids)==1:
-            urdf_writer.select_module_from_name(ids[0], None)
-        urdf_writer.remove_module()
+            writer.select_module_from_name(ids[0], None)
+        writer.remove_module()
         return Response(status=204)
 
     except Exception as e:
@@ -791,10 +811,8 @@ def removeModules():
 def updateModule():
     req = request.get_json()
 
-    if building_mode_ON :
-        writer = urdf_writer
-    else:
-        writer = urdf_writer_fromHW
+    # Get the right writer instance depending on the mode
+    writer = get_writer()
 
     try:
         ids = request.args.getlist('ids[]')
@@ -838,10 +856,11 @@ def deployRobot():
 
     name = request.form.get('name', 'modularbot')
     app.logger.debug(name)
-    if building_mode_ON :
-        data = urdf_writer.deploy_robot(name)
-    else:
-        data = urdf_writer_fromHW.deploy_robot(name)
+    
+    # Get the right writer instance depending on the mode
+    writer = get_writer()
+
+    data = writer.deploy_robot(name)
     #time.sleep(10)
     return data
 
@@ -852,10 +871,10 @@ def removeConnectors():
 
     building_mode_ON = True if request.form.get('buildingModeON', 0) == 'true' else False
 
-    if building_mode_ON :
-        data = urdf_writer.remove_connectors()
-    else:
-        data = urdf_writer_fromHW.remove_connectors()
+    # Get the right writer instance depending on the mode
+    writer = get_writer()
+    
+    data = writer.remove_connectors()
     return data
 
 # deploy the package of the built robot
@@ -866,17 +885,15 @@ def deployROSModel():
         name = req['name']
         builder_jm =  req['jointMap']
 
-        if building_mode_ON : # taken from removeConnectors(), to be removed and itergrated inside .deploy_robot
-            urdf_writer.remove_connectors()
-        else:
-            urdf_writer_fromHW.remove_connectors()
+        # Get the right writer instance depending on the mode
+        writer = get_writer()
+
+        writer.remove_connectors() # taken from removeConnectors(), to be removed and itergrated inside .deploy_robot()
+        
         writeRobotURDF(builder_jm)
 
-        if building_mode_ON :
-            app.logger.debug(name)
-            urdf_writer.deploy_robot(name)
-        else:
-            urdf_writer_fromHW.deploy_robot(name)
+        app.logger.debug(name)
+        writer.deploy_robot(name)
 
         return Response(status=204)
 
@@ -895,10 +912,10 @@ def getModelStats():
     """Returns a set of statistics for the curent robot model.
     """
     try:
-        if building_mode_ON :
-            stats = urdf_writer.compute_stats(samples=1000)
-        else:
-            stats = urdf_writer_fromHW.compute_stats(samples=1000)
+        # Get the right writer instance depending on the mode
+        writer = get_writer()
+        
+        stats = writer.compute_stats(samples=1000)
 
         response = dict()
         if  stats['modules']:
