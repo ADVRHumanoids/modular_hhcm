@@ -468,15 +468,11 @@ def writeRobotURDF(builder_jm):
 
 @app.route('/writeURDF/', methods=['POST'])
 def writeURDF():
-    global building_mode_ON
-    #string = request.form.get('string', 0)
-    # app.logger.debug(string)
-    # app.logger.debug (building_mode_ON)
     app.logger.debug('jointMap')
     json_jm = request.form.get('jointMap', 0)
     app.logger.debug(json_jm)
     builder_jm = json.loads(json_jm)
-    building_mode_ON = True if request.form.get('buildingModeON', 0) == 'true' else False
+
     data = writeRobotURDF(builder_jm)
     data = jsonify(data)
     return data
@@ -522,9 +518,6 @@ def addSocket():
     app.logger.debug(angle_offset)
 
     global building_mode_ON
-
-    building_mode_ON = True if request.form.get('buildingModeON', 0) == 'true' else False
-
     #TODO: fix this hack
     if building_mode_ON :
         data = urdf_writer.add_socket(float(offset.get('x_offset')), float(offset.get('y_offset')),
@@ -850,10 +843,6 @@ def updateModule():
 # deploy the package of the built robot
 @app.route('/deployRobot/', methods=['POST'])
 def deployRobot():
-    global building_mode_ON
-
-    building_mode_ON = True if request.form.get('buildingModeON', 0) == 'true' else False
-
     name = request.form.get('name', 'modularbot')
     app.logger.debug(name)
     
@@ -867,10 +856,6 @@ def deployRobot():
 
 @app.route('/removeConnectors/', methods=['POST'])
 def removeConnectors():
-    global building_mode_ON
-
-    building_mode_ON = True if request.form.get('buildingModeON', 0) == 'true' else False
-
     # Get the right writer instance depending on the mode
     writer = get_writer()
     
