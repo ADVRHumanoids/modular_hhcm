@@ -367,7 +367,7 @@ def addNewModule():
         app.logger.debug(reverse)
 
         addons = req['addons'] if 'addons' in req else []
-        
+
         if building_mode_ON :
             urdf_writer.add_module(filename, offset, reverse, addons)
         else:
@@ -728,11 +728,11 @@ def getModelModules():
             filtered_modules=modules # use joint name as key
         else:
             current_parent = writer.parent_module.name
-            for id in ids: 
+            for id in ids:
                 writer.select_module_from_name(id, None)
                 filtered_modules[id] = modules[writer.parent_module.name]
             writer.select_module_from_name(current_parent, None)
-            
+
         return Response(
             response=json.dumps({'modules': filtered_modules}),
             status=200,
@@ -790,7 +790,7 @@ def removeModules():
 @app.route(f'{api_base_route}/model/urdf/modules', methods=['PUT'])
 def updateModule():
     req = request.get_json()
-    
+
     if building_mode_ON :
         writer = urdf_writer
     else:
@@ -866,7 +866,10 @@ def deployROSModel():
         name = req['name']
         builder_jm =  req['jointMap']
 
-        removeConnectors() # to be removed and itergrated inside .deploy_robot
+        if building_mode_ON : # taken from removeConnectors(), to be removed and itergrated inside .deploy_robot
+            urdf_writer.remove_connectors()
+        else:
+            urdf_writer_fromHW.remove_connectors()
         writeRobotURDF(builder_jm)
 
         if building_mode_ON :
