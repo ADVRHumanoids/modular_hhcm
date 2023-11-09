@@ -1958,7 +1958,9 @@ class UrdfWriter:
         setattr(mobilebase, 'is_structural', is_structural)
         if is_structural:
             # add the master cube to the xml tree
-            ET.SubElement(self.root, "xacro:add_mobile_base", type='mobile_base', name=mobilebase.name, filename=mobilebase.filename)
+            ET.SubElement(self.root, "xacro:add_fixed_joint", type='fixed_joint', name='fixed', father='base_link', child=mobilebase.name, x=0, y=0, z=0, roll=0, pitch=0, yaw=0)
+            self.add_link_element(mobilebase.name, mobilebase, 'body_1') #  , type='mobile_base')
+            ET.SubElement(self.root, "xacro:add_mobile_base_sensors", parent_name=mobilebase.name)
             self.add_connectors(mobilebase)
         else:
             # the added module is a hub (not structural) extension to the mobile base
@@ -2020,9 +2022,9 @@ class UrdfWriter:
             if chain[-1].type in { 'joint', 'wheel' }:
                 tip_link = chain[-1].distal_link_name
             if chain[-1].type == 'tool_exchanger':
-                tip_link = chain[-1].pen_name
+                tip_link = chain[-1].tcp_name
             if chain[-1].type == 'gripper':
-                tip_link = chain[-1].TCP_name
+                tip_link = chain[-1].tcp_name
             elif chain[-1].type in { 'simple_ee', 'link', 'size_adapter'}:
                 tip_link = chain[-1].name
             elif chain[-1].type in { 'end_effector', 'drill'}:
@@ -2871,9 +2873,9 @@ class UrdfWriter:
                         self.root.remove(node)
                     elif node.attrib['name'] == selected_module.name:
                         self.root.remove(node)
-                    elif node.attrib['name'] == selected_module.pen_name:
+                    elif node.attrib['name'] == selected_module.tcp_name:
                         self.root.remove(node)
-                    elif node.attrib['name'] == 'fixed_'+selected_module.pen_name:
+                    elif node.attrib['name'] == 'fixed_'+selected_module.tcp_name:
                         self.root.remove(node)
 
                 except KeyError:
@@ -3240,17 +3242,14 @@ class UrdfWriter:
         """
         return (x & -x).bit_length()
 
-
+    # TODO: handle reverse also for links
     def add_link(self, new_Link, parent_name, transform, reverse):
         x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(transform)
 
         if new_Link.type == 'link':
             setattr(new_Link, 'name', 'L_' + str(new_Link.i) + '_link_' + str(new_Link.p) + new_Link.tag)
-            ET.SubElement(self.root,
-                          "xacro:add_link",
-                          type="link",
-                          name=new_Link.name,
-                          filename=new_Link.filename)
+            self.add_link_element(new_Link.name, new_Link, 'body_1') #  , type='link')
+        
         elif new_Link.type == 'dagana':
             setattr(new_Link, 'name', 'dagana' + new_Link.tag)
             ET.SubElement(self.root,
@@ -3273,7 +3272,6 @@ class UrdfWriter:
                           type="pen",
                           name=new_Link.tcp_name,
                           father=new_Link.dagana_tcp_name,
-                          filename=new_Link.filename,
                           x="0.0",
                           y="0.0",
                           z="0.0",
@@ -3289,11 +3287,19 @@ class UrdfWriter:
 
         elif new_Link.type == 'drill':
             setattr(new_Link, 'name', 'drill' + new_Link.tag)
+            self.add_link_element(new_Link.name, new_Link, 'body_1') #  , type='link')
+            
             ET.SubElement(self.root,
-                          "xacro:add_drill",
+                          "xacro:add_realsense_d_camera",
                           type="link",
-                          name=new_Link.name,
-                          filename=new_Link.filename)
+                          name="drill_camera" + new_Link.tag,
+                          parent_name=new_Link.name)
+            # <xacro:property name="velodyne_back_origin">
+            #     # <origin xyz="-0.5305 -0.315 -0.1" rpy="0.0 0.0 3.141593"/>
+            # </xacro:property>
+            # 
+            # <xacro:insert_block name="velodyne_back_origin" />
+
             x_ee, y_ee, z_ee, roll_ee, pitch_ee, yaw_ee = ModuleNode.get_xyzrpy(tf.transformations.numpy.array(new_Link.kinematics.link.pose))
             setattr(new_Link, 'tcp_name', 'ee' + new_Link.tag)
             ET.SubElement(self.root,
@@ -3301,7 +3307,6 @@ class UrdfWriter:
                           type="pen",
                           name=new_Link.tcp_name,
                           father=new_Link.name,
-                          filename=new_Link.filename,
                           x=x_ee,
                           y=y_ee,
                           z=z_ee,
@@ -3310,13 +3315,11 @@ class UrdfWriter:
                           yaw=yaw_ee)
             # the drill gets added to the chain although it's not a joint. it's needed in the joint map and in the config!
             # self.add_to_chain(new_Link)
+
         elif new_Link.type == 'end_effector':
             setattr(new_Link, 'name', 'end_effector' + new_Link.tag)
-            ET.SubElement(self.root,
-                          "xacro:add_link",
-                          type="link",
-                          name=new_Link.name,
-                          filename=new_Link.filename)
+            self.add_link_element(new_Link.name, new_Link, 'body_1') #   , type='link')
+
             x_ee, y_ee, z_ee, roll_ee, pitch_ee, yaw_ee = ModuleNode.get_xyzrpy(tf.transformations.numpy.array(new_Link.kinematics.link.pose))
             setattr(new_Link, 'tcp_name', 'ee' + new_Link.tag)
             ET.SubElement(self.root,
@@ -3324,53 +3327,57 @@ class UrdfWriter:
                           type="pen",
                           name=new_Link.tcp_name,
                           father=new_Link.name,
-                          filename=new_Link.filename,
                           x=x_ee,
                           y=y_ee,
                           z=z_ee,
                           roll=roll_ee,
                           pitch=pitch_ee,
                           yaw=yaw_ee)
+            
         elif new_Link.type == 'tool_exchanger':
             setattr(new_Link, 'name', 'tool_exchanger' + new_Link.tag)
-            ET.SubElement(self.root,
-                          "xacro:add_tool_exchanger",
-                          type="tool_exchanger",
-                          name=new_Link.name,
-                          filename=new_Link.filename)
+            self.add_link_element(new_Link.name, new_Link, 'body_1') #  , type='tool_exchanger')
+
             # the end-effector gets added to the chain although it's not a joint. it's needed in the joint map and in the config!
             # self.add_to_chain(new_Link)
             # HACK: add pen after tool_exchanger
-            setattr(new_Link, 'pen_name', 'pen' + new_Link.tag)
+            setattr(new_Link, 'tcp_name', 'pen' + new_Link.tag)
             ET.SubElement(self.root,
-                          "xacro:add_pen",
+                          "xacro:add_tcp",
                           type="pen",
-                          name=new_Link.pen_name,
-                          father=new_Link.name)
+                          name=new_Link.tcp_name,
+                          father=new_Link.name,
+                          x="0.0",
+                          y="0.0",
+                          z="0.222",
+                          roll="0.0",
+                          pitch="0.0",
+                          yaw="0.0")
+            
         elif new_Link.type == 'gripper':
             setattr(new_Link, 'name', 'gripper' + new_Link.tag)
-            ET.SubElement(self.root,
-                        "xacro:add_gripper_body",
-                        type="gripper_body",
-                        name=new_Link.name,
-                        filename=new_Link.filename)
+            self.add_link_element(new_Link.name, new_Link, 'body_1') #   , type='gripper_body')
+            
             # the end-effector gets added to the chain although it's not a joint. it's needed in the joint map and in the config!
             # self.add_to_chain(new_Link)
             # add fingers and tcp after gripper
-            setattr(new_Link, 'TCP_name', 'TCP_' + new_Link.name)
+            setattr(new_Link, 'tcp_name', 'TCP_' + new_Link.name)
             setattr(new_Link, 'joint_name_finger1', new_Link.name + '_finger_joint1')
             setattr(new_Link, 'joint_name_finger2', new_Link.name + '_finger_joint2')
+            
+            #  TODO: add_gripper_fingers still use the xacro to load the yaml file and get the parameters. It should be changed to use the python function for uniformity
             ET.SubElement(self.root,
                             "xacro:add_gripper_fingers",
                             type="gripper_fingers",
                             name=new_Link.name,
                             joint_name_finger1=new_Link.joint_name_finger1,
                             joint_name_finger2=new_Link.joint_name_finger2,
-                            TCP_name=new_Link.TCP_name,
+                            TCP_name=new_Link.tcp_name,
                             filename=new_Link.filename)
             # TO BE FIXED: ok for ros_control. How will it be for xbot2?
             self.control_plugin.add_joint(new_Link.joint_name_finger1)
             self.control_plugin.add_joint(new_Link.joint_name_finger2)
+
         elif new_Link.type == 'size_adapter':
             setattr(new_Link, 'name', 'L_' + str(new_Link.i) + '_size_adapter_' + str(new_Link.p) + new_Link.tag)
             ET.SubElement(self.root,
@@ -3494,6 +3501,100 @@ class UrdfWriter:
 
         return transform
 
+    def add_origin(self, parent_el, pose):
+        # x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(pose)  # TODO: migrate to JSON format and use this
+        
+        ET.SubElement(parent_el, "origin",
+                      xyz=str(pose.x) + " " + str(pose.y) + " " + str(pose.z),
+                      rpy=str(pose.roll) + " " + str(pose.pitch) + " " + str(pose.yaw))
+
+
+    def add_geometry(self, parent_el, geometry):
+        geometry_el = ET.SubElement(parent_el, "geometry")
+        if geometry.type == "mesh":
+            ET.SubElement(geometry_el, "mesh",
+                          filename=geometry.parameters.file,
+                          scale=' '.join(str(x) for x in geometry.parameters.scale))
+        elif geometry.type == "box":
+            ET.SubElement(geometry_el, "box",
+                          size=' '.join(str(x) for x in geometry.parameters.size))
+        elif geometry.type == "cylinder":
+            ET.SubElement(geometry_el, "cylinder",
+                          radius=str(geometry.parameters.radius),
+                          length=str(geometry.parameters.length))
+        elif geometry.type == "sphere":
+            ET.SubElement(geometry_el, "sphere",
+                          radius=str(geometry.parameters.radius))
+
+    
+    def add_material(self, parent_el, color):
+        material_el = ET.SubElement(parent_el, "material", 
+                                    name = color.material_name)
+        if hasattr(color, 'rgba'):
+            ET.SubElement(material_el, "color",
+                      rgba=' '.join(str(x) for x in color.rgba))
+        if hasattr(color, 'texture'):
+            ET.SubElement(material_el, "texture",
+                      filename=color.texture.filename)
+
+
+    def add_inertial(self, parent_el, dynamics, gear_ratio=1.0):
+        inertial_el = ET.SubElement(parent_el, "inertial")
+        #  We interpret the mass as a flag to enable/disable the inertial properties
+        if dynamics.mass > 0.0:
+            ET.SubElement(parent_el, "origin",
+                        xyz=str(dynamics.CoM.x) + " " + str(dynamics.CoM.y) + " " + str(dynamics.CoM.z),
+                        rpy=str(0) + " " + str(0) + " " + str(0))
+            ET.SubElement(inertial_el, "mass",
+                        value=str(dynamics.mass))
+            ET.SubElement(inertial_el, "inertia",
+                        ixx=str(dynamics.inertia_tensor.I_xx),
+                        ixy=str(dynamics.inertia_tensor.I_xy),
+                        ixz=str(dynamics.inertia_tensor.I_xz),
+                        iyy=str(dynamics.inertia_tensor.I_yy),
+                        iyz=str(dynamics.inertia_tensor.I_yz),
+                        izz=str(gear_ratio*gear_ratio*dynamics.inertia_tensor.I_zz))
+        # If the mass is 0.0 we set the inertial properties to a default value to avoid issues with the dynamics libraries using the URDF
+        else:
+            ET.SubElement(inertial_el, "mass",
+                        value=str(1e-04))
+            ET.SubElement(inertial_el, "inertia",  
+                        ixx=str(1e-09),
+                        ixy=str(0),
+                        ixz=str(0),
+                        iyy=str(1e-09),
+                        iyz=str(0),
+                        izz=str(1e-09))
+
+
+    def add_link_element(self, link_name, module_obj, body_name, is_geared=False):
+        link_el = ET.SubElement(self.root,
+                                    'link',
+                                    name=link_name)
+        visual_bodies = getattr(module_obj.visual, body_name, None)
+        collision_bodies = getattr(module_obj.collision, body_name, None)
+        dynamics_body = getattr(module_obj.dynamics, body_name, None)
+
+        for body in visual_bodies or []:
+            visual_el = ET.SubElement(link_el,
+                                    'visual')
+            self.add_origin(visual_el, body.pose)
+            self.add_geometry(visual_el, body)
+            if hasattr(body.parameters, 'color'):
+                self.add_material(visual_el, body.parameters.color)
+        
+        for body in collision_bodies or []:
+            collision_el = ET.SubElement(link_el,
+                                    'collision')
+            self.add_origin(collision_el, body.pose)
+            self.add_geometry(collision_el, body)
+
+        if dynamics_body:
+            if is_geared:
+                self.add_inertial(link_el, dynamics_body, module_obj.actuator_data.gear_ratio)
+            else:
+                self.add_inertial(link_el, dynamics_body)
+
 
     def add_joint(self, new_Joint, parent_name, transform, reverse):
         x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(transform)
@@ -3509,7 +3610,7 @@ class UrdfWriter:
         ET.SubElement(self.root, "xacro:add_fixed_joint",
                       type="fixed_joint_stator",
                       name=new_Joint.fixed_joint_stator_name,
-                      father=parent_name,  # TODO: check!
+                      father=parent_name,  
                       child=new_Joint.stator_name,
                       x=x,
                       y=y,
@@ -3536,12 +3637,8 @@ class UrdfWriter:
             prox_mesh_transform = mesh_transform
         x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(prox_mesh_transform)
 
-        ET.SubElement(self.root,
-                      "xacro:add_proximal",
-                      type="joint_stator",
-                      name=new_Joint.stator_name,
-                      filename=new_Joint.filename)
-
+        # Add proximal link
+        self.add_link_element(new_Joint.stator_name, new_Joint, 'body_1')
         self.add_gazebo_element(new_Joint.gazebo.body_1, new_Joint.stator_name)
 
         joint_transform = ModuleNode.get_rototranslation(tf.transformations.identity_matrix(),
@@ -3584,15 +3681,12 @@ class UrdfWriter:
 
         x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(dist_mesh_transform)
 
-        ET.SubElement(self.root,
-                      "xacro:add_distal",
-                      type="add_distal",
-                      name=new_Joint.distal_link_name,
-                      filename=new_Joint.filename)
-
-        self.collision_elements.append((new_Joint.stator_name, new_Joint.distal_link_name))
-
+        # Add distal link
+        self.add_link_element(new_Joint.distal_link_name, new_Joint, 'body_2')
         self.add_gazebo_element(new_Joint.gazebo.body_2, new_Joint.distal_link_name)
+       
+        # Add proximal/distal links pair to the list of collision elements to ignore
+        self.collision_elements.append((new_Joint.stator_name, new_Joint.distal_link_name))
 
         if reverse:
             new_Joint.Distal_tf = ModuleNode.get_rototranslation(new_Joint.Distal_tf,
@@ -3600,6 +3694,7 @@ class UrdfWriter:
 
         # add the fast rotor part to the inertia of the link/rotor part as a new link. NOTE: right now this is
         # attached at the rotating part not to the fixed one (change it so to follow Pholus robot approach)
+        # TODO: create a switch between the different methods to consider the fast rotor part
         if hasattr(new_Joint.dynamics, 'body_2_fast'):
             ET.SubElement(self.root,
                         "xacro:add_fixed_joint",
@@ -3613,17 +3708,8 @@ class UrdfWriter:
                         roll=roll,
                         pitch=pitch,
                         yaw=yaw)
-            ET.SubElement(self.root,
-                        "xacro:add_rotor_fast",
-                        type="add_rotor_fast",
-                        name=new_Joint.distal_link_name + '_rotor_fast',
-                        filename=new_Joint.filename,
-                        x=x,
-                        y=y,
-                        z=z,
-                        roll=roll,
-                        pitch=pitch,
-                        yaw=yaw)
+            
+            self.add_link_element(new_Joint.distal_link_name + '_rotor_fast', new_Joint, 'body_2_fast', is_geared=True)
 
 
     # noinspection PyPep8Naming
@@ -4014,7 +4100,6 @@ class UrdfWriter:
         # update generator expression
         self.update_generator()
 
-        # Remove the fixed joints that join the connectors to the boxes (by checking if 'con' is in the name of the child)
         # Catch KeyError when the node has no child element and continue with the loop.
         for node in self.gen:
             try:

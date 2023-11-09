@@ -177,6 +177,14 @@
         </xacro:add_realsense_d_camera>
     </xacro:macro>
 
+    <!-- Add realsense D camera -->
+    <xacro:macro name="add_realsense_d_camera" params="name type parent_name">
+        <xacro:include filename="${MODULAR_PATH}/modular_data/urdf/concert.sensors.urdf.xacro" ns="concert_sensors"/>
+        <xacro:concert_sensors.add_realsense_d_camera name="${name}" parent_name="${parent_name}" add_gazebo_sensor="${ADD_DRILL_CAMERA}">
+            <origin xyz="0.12 0.0 0.26" rpy="0.05 0.22 0.05"/>
+        </xacro:concert_sensors.add_realsense_d_camera>
+    </xacro:macro>
+
     <!-- Macro for adding a generic link -->       
     <xacro:macro name="add_link" params="name type filename">
         <xacro:property name="module" value="${xacro.load_yaml(filename)}"/>
@@ -185,8 +193,8 @@
     </xacro:macro>
 
     <!-- Macro for adding the proximal part of the joint (the physical module housing the actuator) -->
-    <xacro:macro name="add_proximal" params="type name filename">
-        <xacro:property name="module" value="${xacro.load_yaml(filename)}"/>
+    <xacro:macro name="add_proximal" params="type name module">
+        <!-- <xacro:property name="module" value="${xacro.load_yaml(filename)}"/> -->
         <xacro:property name="body_name" value="body_1"/>
         <xacro:add_link_element name="${name}" type="${type}" module="${module}" body_name="${body_name}"/>
     </xacro:macro>
@@ -219,7 +227,7 @@
         </joint>
     </xacro:macro>
 
-    <xacro:macro name="add_rotor_fast" params="type name filename x y z roll pitch yaw">
+    <xacro:macro name="add_rotor_fast" params="type name filename">
 
         <xacro:property name="module" value="${xacro.load_yaml(filename)}"/>
         <xacro:property name="gear_ratio" value="${module['actuator_data']['gear_ratio']}"/>
@@ -260,6 +268,11 @@
         <xacro:include filename="${MODULAR_PATH}/modular_data/urdf/concert.sensors.urdf.xacro"/>
         <xacro:add_mobile_base_sensors parent_name="${name}"/>
 
+    </xacro:macro>
+
+    <xacro:macro name="add_mobile_base_sensors" params="parent_name">
+        <xacro:include filename="${MODULAR_PATH}/modular_data/urdf/concert.sensors.urdf.xacro" ns="concert_sensors"/>
+        <xacro:concert_sensors.add_mobile_base_sensors parent_name="${parent_name}"/>
     </xacro:macro>
 
     <!-- Macro for adding a master cube -->
@@ -450,8 +463,7 @@
     </xacro:macro>
 
     <!-- Add a tcp. Length may vary -->
-    <xacro:macro name="add_tcp" params="type name father filename x y z roll pitch yaw">
-        <xacro:property name="module" value="${xacro.load_yaml(filename)}"/>
+    <xacro:macro name="add_tcp" params="type name father x y z roll pitch yaw">
 
         <link name="${name}"/>
         <joint name="fixed_${name}" type="fixed">
