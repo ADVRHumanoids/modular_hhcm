@@ -1187,7 +1187,7 @@ class UrdfWriter:
         self.parent_module = self.base_link
 
         # update generator expression
-        self.update_generator()
+        self.update_generators()
 
         self.model_stats = ModelStats(self)
 
@@ -2042,14 +2042,18 @@ class UrdfWriter:
         return base_link
     
 
-    def update_generator(self):
+    def update_generators(self):
         # Generator expression for list of urdf elements without the gazebo tag.
         # This is needed because of the change in the xacro file, as gazebo simulation tags
         # are now added from the start and this creates problems with the search
         nodes = set(self.root.findall("*"))
         gazebo_nodes = set(self.root.findall("./gazebo"))
         xacro_include_nodes = set(self.root.findall('./xacro:include', ns))
-        filtered_nodes = nodes.difference(gazebo_nodes).difference(xacro_include_nodes)
+        xacro_if_nodes = set(self.root.findall('./xacro:if', ns))
+        # xacro_macro_nodes = set(self.root.findall('./xacro:macro', ns))
+        xacro_property_nodes = set(self.root.findall('./xacro:property', ns))
+        xacro_arg_nodes = set(self.root.findall('./xacro:arg', ns))
+        filtered_nodes = nodes.difference(gazebo_nodes).difference(xacro_include_nodes).difference(xacro_if_nodes).difference(xacro_property_nodes).difference(xacro_arg_nodes)
         self.urdf_nodes_generator = (node for node in filtered_nodes)
         self.gazebo_nodes_generator = (node for node in gazebo_nodes)
 
@@ -2096,7 +2100,7 @@ class UrdfWriter:
         fixed_joint_name = 'L_' + str(socket.i) + socket.tag + '_fixed_joint_' + str(socket.p)
 
         # Update generator expression
-        self.update_generator()
+        self.update_generators()
 
         # From the list of xml elements find the ones with name corresponding to the relative joint, stator link
         # and fixed joint before the stator link and remove them from the xml tree
@@ -2672,7 +2676,7 @@ class UrdfWriter:
         self.info_print('Updating module: ' + str(selected_module.name))
 
         # update generator expression
-        self.update_generator()
+        self.update_generators()
 
         # remove addons
         if(getattr(selected_module, 'addon_elements')):
@@ -2746,7 +2750,7 @@ class UrdfWriter:
         self.print(selected_module.parent.name)
 
         # update generator expression
-        self.update_generator()
+        self.update_generators()
 
         # remove addons
         if(getattr(selected_module, 'addon_elements')):
@@ -2758,7 +2762,7 @@ class UrdfWriter:
                     pass
 
         # # update generator expression
-        # self.update_generator()
+        # self.update_generators()
 
         # TODO: This is not working in the urdf. The ModuleNode obj is removed but the elment from the tree is not
         if selected_module.type == 'cube':
@@ -4044,7 +4048,7 @@ class UrdfWriter:
     def remove_connectors(self):
 
         # update generator expression
-        self.update_generator()
+        self.update_generators()
 
         # Catch KeyError when the node has no child element and continue with the loop.
         for node in self.urdf_nodes_generator:
