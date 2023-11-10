@@ -52,6 +52,12 @@
         </inertial>
     </xacro:macro>
 
+    <xacro:macro name="xacro_if_guard" params="name value *block">
+        <xacro:if value="${value}">
+            <xacro:insert_block name="block"/>
+        </xacro:if>
+    </xacro:macro>
+
     <xacro:macro name="add_geometry" params="body">
         <geometry>
             <xacro:if value="${body['type'] == 'mesh'}">

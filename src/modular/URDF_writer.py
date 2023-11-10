@@ -2641,7 +2641,7 @@ class UrdfWriter:
         if gazebo_obj is not None:
             gazebo_el_name = 'gazebo_' + new_module_name
             gazebo_if_el = ET.SubElement(self.root,
-                                    'xacro:if',
+                                    'xacro:xacro_if_guard',
                                     value="${GAZEBO_URDF}",
                                     name = gazebo_el_name)
             new_module_obj.xml_tree_elements.append(gazebo_el_name)
