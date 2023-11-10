@@ -2050,7 +2050,8 @@ class UrdfWriter:
         gazebo_nodes = set(self.root.findall("./gazebo"))
         xacro_include_nodes = set(self.root.findall('./xacro:include', ns))
         filtered_nodes = nodes.difference(gazebo_nodes).difference(xacro_include_nodes)
-        self.gen = (node for node in filtered_nodes)
+        self.urdf_nodes_generator = (node for node in filtered_nodes)
+        self.gazebo_nodes_generator = (node for node in gazebo_nodes)
 
     # Adds a table for simulation purposes
     def add_table(self):
@@ -2099,7 +2100,7 @@ class UrdfWriter:
 
         # From the list of xml elements find the ones with name corresponding to the relative joint, stator link
         # and fixed joint before the stator link and remove them from the xml tree
-        for node in self.gen:
+        for node in self.urdf_nodes_generator:
             try:
                 if node.attrib['name'] == fixed_joint_name:
                     node.set('x', str(x_offset))
@@ -2547,6 +2548,9 @@ class UrdfWriter:
         # add list of addons as attribute
         setattr(new_module, 'addon_elements', [])
 
+        # add list of urdf elements as attribute
+        setattr(new_module, 'xml_tree_elements', [])
+
         # Depending on the type of the parent module and the new module, call the right method to add the new module.
         # Add the module to the correct chain via the 'add_to_chain' method.
         
@@ -2667,7 +2671,7 @@ class UrdfWriter:
 
         # remove addons
         if(getattr(selected_module, 'addon_elements')):
-            for node in self.gen:
+            for node in self.urdf_nodes_generator:
                 try:
                     if node.attrib['name'] in selected_module.addon_elements:
                         self.root.remove(node)
@@ -2741,48 +2745,18 @@ class UrdfWriter:
 
         # remove addons
         if(getattr(selected_module, 'addon_elements')):
-            for node in self.gen:
+            for node in self.urdf_nodes_generator:
                 try:
                     if node.attrib['name'] in selected_module.addon_elements:
                         self.root.remove(node)
                 except KeyError:
                     pass
 
-        # update generator expression
-        self.update_generator()
-
-        # switch depending on module type
-        if selected_module.type in { 'joint', 'wheel' }:
-            #remove the joints from the list of chains
-            self.remove_from_chain(selected_module)
-
-            # save parent of the module to remove. This will be the last element of the chain after removal,
-            # and it'll be returned by the function
-            father = selected_module.parent
-
-            # From the list of xml elements find the ones with name corresponding to the relative joint, stator link
-            # and fixed joint before the stator link and remove them from the xml tree
-            for node in self.gen:
-                try:
-                    if node.attrib['name'] == selected_module.name:
-                        self.root.remove(node)
-                    elif node.attrib['name'] == selected_module.stator_name:
-                        self.root.remove(node)
-                    elif node.attrib['name'] == selected_module.fixed_joint_stator_name:
-                        self.root.remove(node)
-                    elif node.attrib['name'] == selected_module.distal_link_name:
-                        self.root.remove(node)
-                    elif node.attrib['name'] == selected_module.distal_link_name + '_rotor_fast':
-                        self.root.remove(node)
-                    elif node.attrib['name'] == 'fixed_' + selected_module.distal_link_name + '_rotor_fast':
-                        self.root.remove(node)
-                except KeyError:
-                    pass
-
-            self.control_plugin.remove_joint(selected_module.name)
+        # # update generator expression
+        # self.update_generator()
 
         # TODO: This is not working in the urdf. The ModuleNode obj is removed but the elment from the tree is not
-        elif selected_module.type == 'cube':
+        if selected_module.type == 'cube':
             self.listofhubs.remove(selected_module)
             # save parent of the module to remove. This will be the last element of the chain after removal,
             # and its data will be returned by the function
@@ -2794,7 +2768,7 @@ class UrdfWriter:
 
             # Remove childs of the cube (so connectors!)
             for child in selected_module.children:
-                for node in self.gen:
+                for node in self.urdf_nodes_generator:
                     try:
                         if node.attrib['name'] == child.name:
                             self.root.remove(node)
@@ -2802,7 +2776,7 @@ class UrdfWriter:
                         pass
 
             # Remove the cube module from the xml tree
-            for node in self.gen:
+            for node in self.urdf_nodes_generator:
                 try:
                     if node.attrib['name'] == selected_module.name:
                         self.root.remove(node)
@@ -2819,7 +2793,7 @@ class UrdfWriter:
             self.print(joint_name)
 
             # Remove the fixed joint
-            for node in self.gen:
+            for node in self.urdf_nodes_generator:
                 try:
                     if node.attrib['name'] == joint_name:
                         #self.print(joint_name)
@@ -2832,116 +2806,50 @@ class UrdfWriter:
 
             # delete object father_module
             del father_module
-        elif selected_module.type == 'gripper':
-            #remove the gripper from their chain
-            self.remove_from_chain(selected_module)
-
-            # save parent of the module to remove. This will be the last element of the chain after removal,
-            # and its data will be returned by the function
-            father = selected_module.parent
-
-            # Generate te name of the fixed joint connecting the module with its parent
-            fixed_joint_name = str(selected_module.name) + '_fixed_joint'
-
-            for node in self.gen:
-                try:
-                    if node.attrib['name'] == fixed_joint_name:
-                        self.root.remove(node)
-                    elif node.attrib['name'] == selected_module.name:
-                        self.root.remove(node)
-                except KeyError:
-                    pass
-
-            # TO BE FIXED: ok for ros_control. How will it be for xbot2?
-            self.control_plugin.remove_joint(selected_module.name+'_finger_joint1')
-            self.control_plugin.remove_joint(selected_module.name+'_finger_joint2')
-
-        elif selected_module.type == 'tool_exchanger':
-            #remove the tool exchanger from the chain
-            self.remove_from_chain(selected_module)
-
-            # save parent of the module to remove. This will be the last element of the chain after removal,
-            # and its data will be returned by the function
-            father = selected_module.parent
-
-            # Generate te name of the fixed joint connecting the module with its parent
-            fixed_joint_name = str(selected_module.name) + '_fixed_joint'
-
-            for node in self.gen:
-                try:
-                    if node.attrib['name'] == fixed_joint_name:
-                        self.root.remove(node)
-                    elif node.attrib['name'] == selected_module.name:
-                        self.root.remove(node)
-                    elif node.attrib['name'] == selected_module.tcp_name:
-                        self.root.remove(node)
-                    elif node.attrib['name'] == 'fixed_'+selected_module.tcp_name:
-                        self.root.remove(node)
-
-                except KeyError:
-                    pass
-
-        elif selected_module.type in ['drill', 'end_effector']:
-            #remove the tool exchanger from the chain
-            self.remove_from_chain(selected_module)
-
-            # save parent of the module to remove. This will be the last element of the chain after removal,
-            # and its data will be returned by the function
-            father = selected_module.parent
-
-            # Generate te name of the fixed joint connecting the module with its parent
-            fixed_joint_name = str(selected_module.name) + '_fixed_joint'
-
-            for node in self.gen:
-                try:
-                    if node.attrib['name'] == fixed_joint_name:
-                        self.root.remove(node)
-                    elif node.attrib['name'] == selected_module.name:
-                        self.root.remove(node)
-                    elif node.attrib['name'] == selected_module.tcp_name:
-                        self.root.remove(node)
-                    elif node.attrib['name'] == 'fixed_'+selected_module.tcp_name:
-                        self.root.remove(node)
-
-                except KeyError:
-                    pass
 
         else:
             # save parent of the module to remove. This will be the last element of the chain after removal,
             # and its data will be returned by the function
             father = selected_module.parent
 
-            # Generate te name of the fixed joint connecting the module with its parent
-            fixed_joint_name = 'L_' + str(selected_module.i) + '_fixed_joint_' + str(
-                selected_module.p) + selected_module.tag
+            #remove the module from the list of chains
+            self.remove_from_chain(selected_module)
 
-            for node in self.gen:
-                try:
-                    if node.attrib['name'] == fixed_joint_name:
-                        self.root.remove(node)
-                    elif node.attrib['name'] == selected_module.name:
-                        self.root.remove(node)
-                except KeyError:
-                    pass
+            if(getattr(selected_module, 'xml_tree_elements')):
+                for node in self.urdf_nodes_generator:
+                    try:
+                        if node.attrib['name'] in selected_module.xml_tree_elements:
+                            self.root.remove(node)
+                    except KeyError:
+                        pass
+
+            # switch depending on module type
+            if selected_module.type in { 'joint', 'wheel' }:
+                self.control_plugin.remove_joint(selected_module.name)
+
+            elif selected_module.type == 'gripper':
+                # TO BE FIXED: ok for ros_control. How will it be for xbot2?
+                self.control_plugin.remove_joint(selected_module.name+'_finger_joint1')
+                self.control_plugin.remove_joint(selected_module.name+'_finger_joint2')
 
             # if selected_module.type == 'link':
             #     #root.remove(root.findall("*[@name=selected_module.name]", ns)[-1])
-            #     for node in self.gen:
+            #     for node in self.urdf_nodes_generator:
             #         if node.attrib['name'] == selected_module.name:
             #             self.root.remove(node)
-            #             self.gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
+            #             self.urdf_nodes_generator = (node for node in self.root.findall("*") if node.tag != 'gazebo')
             # elif selected_module.type == 'elbow':
             #     #root.remove(root.findall("*[@name=selected_module.name]", ns)[-1])
-            #     for node in self.gen:
+            #     for node in self.urdf_nodes_generator:
             #         if node.attrib['name'] == selected_module.name:
             #             self.root.remove(node)
-            #             self.gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
+            #             self.urdf_nodes_generator = (node for node in self.root.findall("*") if node.tag != 'gazebo')
             # elif selected_module.type == 'size_adapter':
             #     #root.remove(root.findall("*[@name=selected_module.name]", ns)[-1])
-            #     for node in self.gen:
+            #     for node in self.urdf_nodes_generator:
             #         if node.attrib['name'] == selected_module.name:
             #             self.root.remove(node)
-            #             self.gen = (node for node in self.root.findall("*") if node.tag != 'gazebo')
+            #             self.urdf_nodes_generator = (node for node in self.root.findall("*") if node.tag != 'gazebo')
 
         if self.speedup:
             self.urdf_string = ""
@@ -3263,6 +3171,9 @@ class UrdfWriter:
                           roll=roll,
                           pitch=pitch,
                           yaw=yaw)
+            # add the xacro:add_dagana element to the list of urdf elements
+            new_Link.xml_tree_elements.append(new_Link.name)
+
             setattr(new_Link, 'dagana_joint_name', new_Link.name + '_claw_joint')
             setattr(new_Link, 'dagana_link_name', new_Link.name + '_bottom_link')
             setattr(new_Link, 'dagana_tcp_name', new_Link.name + '_tcp')
@@ -3278,6 +3189,8 @@ class UrdfWriter:
                           roll="0.0",
                           pitch="0.0",
                           yaw="0.0")
+            # add the xacro:add_tcp element to the list of urdf elements
+            new_Link.xml_tree_elements.append(new_Link.tcp_name)
 
             # the dagana gets added to the chain. it's needed in the joint map and in the config!
             # self.add_to_chain(new_Link)
@@ -3289,11 +3202,15 @@ class UrdfWriter:
             setattr(new_Link, 'name', 'drill' + new_Link.tag)
             self.add_link_element(new_Link.name, new_Link, 'body_1') #  , type='link')
             
+            setattr(new_Link, 'camera_name', 'drill_camera' + new_Link.tag)
             ET.SubElement(self.root,
                           "xacro:add_realsense_d_camera",
                           type="link",
-                          name="drill_camera" + new_Link.tag,
+                          name=new_Link.camera_name,
                           parent_name=new_Link.name)
+            # add the xacro:add_realsense_d_camera to the list of urdf elements
+            new_Link.xml_tree_elements.append(new_Link.camera_name)
+
             # <xacro:property name="velodyne_back_origin">
             #     # <origin xyz="-0.5305 -0.315 -0.1" rpy="0.0 0.0 3.141593"/>
             # </xacro:property>
@@ -3313,6 +3230,9 @@ class UrdfWriter:
                           roll=roll_ee,
                           pitch=pitch_ee,
                           yaw=yaw_ee)
+            # add the xacro:add_tcp element to the list of urdf elements
+            new_Link.xml_tree_elements.append(new_Link.tcp_name)
+
             # the drill gets added to the chain although it's not a joint. it's needed in the joint map and in the config!
             # self.add_to_chain(new_Link)
 
@@ -3333,6 +3253,8 @@ class UrdfWriter:
                           roll=roll_ee,
                           pitch=pitch_ee,
                           yaw=yaw_ee)
+            # add the xacro:add_tcp element to the list of urdf elements
+            new_Link.xml_tree_elements.append(new_Link.tcp_name)
             
         elif new_Link.type == 'tool_exchanger':
             setattr(new_Link, 'name', 'tool_exchanger' + new_Link.tag)
@@ -3353,6 +3275,8 @@ class UrdfWriter:
                           roll="0.0",
                           pitch="0.0",
                           yaw="0.0")
+            # add the xacro:add_tcp element to the list of urdf elements
+            new_Link.xml_tree_elements.append(new_Link.tcp_name)
             
         elif new_Link.type == 'gripper':
             setattr(new_Link, 'name', 'gripper' + new_Link.tag)
@@ -3374,6 +3298,9 @@ class UrdfWriter:
                             joint_name_finger2=new_Link.joint_name_finger2,
                             TCP_name=new_Link.tcp_name,
                             filename=new_Link.filename)
+            # add the xacro:add_gripper_fingers element to the list of urdf elements
+            new_Link.xml_tree_elements.append(new_Link.name)
+
             # TO BE FIXED: ok for ros_control. How will it be for xbot2?
             self.control_plugin.add_joint(new_Link.joint_name_finger1)
             self.control_plugin.add_joint(new_Link.joint_name_finger2)
@@ -3389,6 +3316,8 @@ class UrdfWriter:
                         #   size_in=new_Link.size_in,
                         #   size_out=new_Link.size_out
             )
+            # add the xacro:add_size_adapter element to the list of urdf elements
+            new_Link.xml_tree_elements.append(new_Link.name)
             setattr(new_Link, 'flange_size', new_Link.size_out)
 
         self.add_gazebo_element(new_Link.gazebo.body_1, new_Link.name)
@@ -3410,6 +3339,8 @@ class UrdfWriter:
                       roll=roll,
                       pitch=pitch,
                       yaw=yaw)
+        # add the xacro:add_gripper_fingers element to the list of urdf elements
+        new_Link.xml_tree_elements.append(fixed_joint_name)
         
         return
 
@@ -3571,6 +3502,9 @@ class UrdfWriter:
         link_el = ET.SubElement(self.root,
                                     'link',
                                     name=link_name)
+        # Add the link to the list of urdf elements of the module
+        module_obj.xml_tree_elements.append(link_name)
+
         visual_bodies = getattr(module_obj.visual, body_name, None)
         collision_bodies = getattr(module_obj.collision, body_name, None)
         dynamics_body = getattr(module_obj.dynamics, body_name, None)
@@ -3618,6 +3552,8 @@ class UrdfWriter:
                       roll=roll,
                       pitch=pitch,
                       yaw=yaw)
+        # add the xacro:add_fixed_joint element to the list of urdf elements
+        new_Joint.xml_tree_elements.append(new_Joint.fixed_joint_stator_name)
 
         self.collision_elements.append((parent_name, new_Joint.stator_name))
 
@@ -3667,6 +3603,8 @@ class UrdfWriter:
                       lower_lim=lower_lim,
                       effort=effort,
                       velocity=velocity)
+        # add the xacro:add_joint element to the list of urdf elements
+        new_Joint.xml_tree_elements.append(new_Joint.name)
 
         ####
         #ET.SubElement(self.xbot2_pid, "xacro:add_xbot2_pid", name=new_Joint.name, profile="small_mot")
@@ -3696,10 +3634,11 @@ class UrdfWriter:
         # attached at the rotating part not to the fixed one (change it so to follow Pholus robot approach)
         # TODO: create a switch between the different methods to consider the fast rotor part
         if hasattr(new_Joint.dynamics, 'body_2_fast'):
+            setattr(new_Joint, 'fixed_joint_rotor_fast_name', "fixed_" + new_Joint.distal_link_name + '_rotor_fast')
             ET.SubElement(self.root,
                         "xacro:add_fixed_joint",
                         type="fixed_joint",
-                        name="fixed_" + new_Joint.distal_link_name + '_rotor_fast',
+                        name=new_Joint.fixed_joint_rotor_fast_name,
                         father=new_Joint.distal_link_name,  # stator_name, #
                         child=new_Joint.distal_link_name + '_rotor_fast',
                         x=x,
@@ -3708,6 +3647,8 @@ class UrdfWriter:
                         roll=roll,
                         pitch=pitch,
                         yaw=yaw)
+            # add the xacro:add_fixed_joint element to the list of urdf elements
+            new_Joint.xml_tree_elements.append(new_Joint.fixed_joint_rotor_fast_name)
             
             self.add_link_element(new_Joint.distal_link_name + '_rotor_fast', new_Joint, 'body_2_fast', is_geared=True)
 
@@ -4101,7 +4042,7 @@ class UrdfWriter:
         self.update_generator()
 
         # Catch KeyError when the node has no child element and continue with the loop.
-        for node in self.gen:
+        for node in self.urdf_nodes_generator:
             try:
                 node_type = node.attrib['type']
                 if node_type == 'connectors':
