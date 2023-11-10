@@ -1646,7 +1646,7 @@ class UrdfWriter:
             ET.SubElement(self.root, "xacro:add_slave_cube", type='cube', name=name, filename=filename)
             self.add_connectors(slavecube)
 
-            self.add_gazebo_element(slavecube.gazebo.body_1, slavecube.name)
+            self.add_gazebo_element(slavecube, slavecube.gazebo.body_1, slavecube.name)
 
             # # Get inverse of the transform of the connector
             # T_con_inv = tf.transformations.inverse_matrix(self.T_con)
@@ -1805,7 +1805,7 @@ class UrdfWriter:
                 #ET.SubElement(self.root, "xacro:add_connectors", type='connectors', name=name, filename=filename)
                 pass
 
-            self.add_gazebo_element(mastercube.gazebo.body_1, mastercube.name)
+            self.add_gazebo_element(mastercube, mastercube.gazebo.body_1, mastercube.name)
 
             # # instantate a ModuleNode for branch 1 connector
             # name_con1 = name + '_con1'
@@ -1968,7 +1968,7 @@ class UrdfWriter:
                 # if the parent is a mobile base, the n_child_hubs attribute is incremented, in order to keep track of the number of hubs connected to the mobile base and therefore the number of ports occupied. This is needed to select the right connector where to connect the new module 
                 self.parent_module.n_child_hubs += 1
 
-        self.add_gazebo_element(mobilebase.gazebo.body_1, mobilebase.name)
+        self.add_gazebo_element(mobilebase, mobilebase.gazebo.body_1, mobilebase.name)
 
         if self.speedup:
             self.urdf_string = ""
@@ -2180,7 +2180,7 @@ class UrdfWriter:
                       filename=new_socket.filename,
                       flange_size=str(new_socket.flange_size))
 
-        self.add_gazebo_element(new_socket.gazebo.body_1 , new_socket.name)
+        self.add_gazebo_element(new_socket, new_socket.gazebo.body_1 , new_socket.name)
 
         if self.parent_module.type == 'cube' or self.parent_module.type == "mobile_base":
             if self.parent_module.is_structural:
@@ -2388,7 +2388,7 @@ class UrdfWriter:
                       radius=str(radius))
 
         try:
-            self.add_gazebo_element(simple_ee.gazebo.body_1, simple_ee.name)
+            self.add_gazebo_element(simple_ee, simple_ee.gazebo.body_1, simple_ee.name)
         except AttributeError:
             pass
 
@@ -2629,25 +2629,30 @@ class UrdfWriter:
 
         return data
 
-    def add_gazebo_element(self, new_module_gazebo, new_module_name):
+    def add_gazebo_element(self, new_module_obj, gazebo_obj, new_module_name):
         """
         Add a gazebo element to the new module
         """
         # Add the gazebo element to the new module
-        if new_module_gazebo is not None:
+        if gazebo_obj is not None:
+            gazebo_el_name = 'gazebo_' + new_module_name
             gazebo_if_el = ET.SubElement(self.root,
                                     'xacro:if',
-                                    value="${GAZEBO_URDF}")
+                                    value="${GAZEBO_URDF}",
+                                    name = gazebo_el_name)
+            new_module_obj.xml_tree_elements.append(gazebo_el_name)
+            
             gazebo_el = ET.SubElement(gazebo_if_el,
                                     'gazebo',
                                     reference=new_module_name)
-            self.add_gazebo_element_children(new_module_gazebo, gazebo_el)
+            self.add_gazebo_element_children(gazebo_obj, gazebo_el)
 
-    def add_gazebo_element_children(self, new_module_gazebo, gazebo_element):
+
+    def add_gazebo_element_children(self, gazebo_child_obj, gazebo_element):
         """
         Add the gazebo element children to the new module
         """
-        for key, value in vars(new_module_gazebo).items():
+        for key, value in vars(gazebo_child_obj).items():
             gazebo_child_el = ET.SubElement(gazebo_element, key)
             if isinstance(value, ModuleNode.Module.Attribute):
                 self.print(vars(value))
@@ -3320,8 +3325,8 @@ class UrdfWriter:
             new_Link.xml_tree_elements.append(new_Link.name)
             setattr(new_Link, 'flange_size', new_Link.size_out)
 
-        self.add_gazebo_element(new_Link.gazebo.body_1, new_Link.name)
-            
+        self.add_gazebo_element(new_Link, new_Link.gazebo.body_1, new_Link.name)
+
         if new_Link.type == 'tool_exchanger' or new_Link.type == 'gripper' or new_Link.type == 'end_effector' or new_Link.type == 'drill':
             fixed_joint_name = new_Link.name + '_fixed_joint'
         else:
@@ -3575,7 +3580,7 @@ class UrdfWriter:
 
         # Add proximal link
         self.add_link_element(new_Joint.stator_name, new_Joint, 'body_1')
-        self.add_gazebo_element(new_Joint.gazebo.body_1, new_Joint.stator_name)
+        self.add_gazebo_element(new_Joint, new_Joint.gazebo.body_1, new_Joint.stator_name)
 
         joint_transform = ModuleNode.get_rototranslation(tf.transformations.identity_matrix(),
                                                          new_Joint.Proximal_tf)
@@ -3621,7 +3626,7 @@ class UrdfWriter:
 
         # Add distal link
         self.add_link_element(new_Joint.distal_link_name, new_Joint, 'body_2')
-        self.add_gazebo_element(new_Joint.gazebo.body_2, new_Joint.distal_link_name)
+        self.add_gazebo_element(new_Joint, new_Joint.gazebo.body_2, new_Joint.distal_link_name)
        
         # Add proximal/distal links pair to the list of collision elements to ignore
         self.collision_elements.append((new_Joint.stator_name, new_Joint.distal_link_name))
