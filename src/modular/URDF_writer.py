@@ -1528,7 +1528,7 @@ class UrdfWriter:
 
         # write the urdf tree to a string
         xmlstr = xml.dom.minidom.parseString(ET.tostring(self.urdf_tree.getroot())).toprettyxml(indent="   ")
-        self.print(xmlstr)
+        # self.print(xmlstr)
 
         # parse the string to convert from xacro
         doc = xacro.parse(xmlstr)
