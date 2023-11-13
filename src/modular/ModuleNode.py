@@ -105,6 +105,8 @@ class JSONInterpreter(object):
 
     def type_dispatcher(self, d):
         """Dispatch the parsing of the dictionary d according to the module type"""
+        header_obj = getattr(self.owner, "header")
+        update_nested_dict(header_obj.__dict__, d['header'])
         if self.owner.type in {ModuleType.LINK, ModuleType.GRIPPER, ModuleType.TOOL_EXCHANGER, ModuleType.SIZE_ADAPTER, ModuleType.END_EFFECTOR, ModuleType.DRILL}:
             if len(d['joints']) != 0:
                 raise ValueError('A link must have no joints')

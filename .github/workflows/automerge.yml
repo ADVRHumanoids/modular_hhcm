@@ -1,6 +1,6 @@
 name: Automerge master into alberobotics
 
-on: 
+on:
   push:
     branches:
       - "master"
@@ -8,22 +8,24 @@ on:
 jobs:
   merge-master-into-alberobotics:
     runs-on: ubuntu-20.04
-    env: 
-      CI_COMMIT_MESSAGE: Continuous Integration Build Artifacts
-      CI_COMMIT_AUTHOR: Continuous Integration
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout
+      uses: actions/checkout@v3
 
-    - name: Set Git config
+    - name: Set up git
       run: |
-          git config --global user.name "${{ env.CI_COMMIT_AUTHOR }}"
-          git config --global user.email "marcoruzzon@users.noreply.github.com"
-    
+        git config --global user.name $USER_NAME
+        git config --global user.email $USER_EMAIL
+      env:
+        # see https://github.com/orgs/community/discussions/26560#discussioncomment-3531273
+        USER_NAME: 'github-actions[bot]'
+        USER_EMAIL: '41898282+github-actions[bot]@users.noreply.github.com'
+
     - name: Get changed files
       id: changed-files
       uses: tj-actions/changed-files@v35
-    
+
     - name: Merge master into alberobotics
       run: |
 
@@ -39,14 +41,14 @@ jobs:
             "src/modular/modular_data/cartesio/ModularBot_cartesio_multichain_config.yaml"
           )
 
-          git fetch --unshallow 
+          git fetch --unshallow
           git checkout alberobotics
 
           git merge --no-ff --no-commit master
           for file in "${to_keep[@]}"; do
             git reset HEAD $file
-            git checkout -- $file        
+            git checkout -- $file
           done
 
-          git commit -m "merged master"          
+          git commit -m "merged master"
           git push

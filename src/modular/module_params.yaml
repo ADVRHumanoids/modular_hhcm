@@ -82,10 +82,10 @@
 
     6: #passive link 40 cm
         4: #size CONCERT arm flange
-            0: experimental/module_link_straight_40_concert.json
+            0: concert/module_link_straight_40_concert.json
     7: #passive link 30 cm
         4: #size CONCERT arm flange
-            0: experimental/module_link_straight_30_concert.json
+            0: concert/module_link_straight_30_concert.json
     # ...
 
 5: #wheel module

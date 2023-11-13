@@ -21,17 +21,21 @@ xbotcore_devices:
             config_ec_imp: 
                 value: $PWD/../joint_config/ModularBot_impd4.yaml
                 type: yamlfile
+
+            config_ec_pos:
+                value: $PWD/../joint_config/ModularBot_pos3b.yaml
+                type: yamlfile
             
             joint_id_map: &jim
                 value: $PWD/../../joint_map/ModularBot_joint_map.yaml
                 type: yamlfile
 
-    imu_ec:
-        names: []
-        thread: rt_main
-        params:
-            robot_name: *rn
-            joint_id_map: *jim
+    # imu_ec:
+    #     names: []
+    #     thread: rt_main
+    #     params:
+    #         robot_name: *rn
+    #         joint_id_map: *jim
             
     pow_ec:
         names: []
