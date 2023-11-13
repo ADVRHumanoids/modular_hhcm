@@ -1133,6 +1133,7 @@ class UrdfWriter:
 
         self.tag_num = 1
         self.branch_switcher = {
+            0: '',
             1: '_A',
             2: '_B',
             3: '_C',
@@ -1177,7 +1178,7 @@ class UrdfWriter:
 
         self.base_link = ModuleNode.ModuleNode(data, "base_link")
         setattr(self.base_link, 'name', "base_link")
-        setattr(self.base_link, 'tag', "_A")
+        setattr(self.base_link, 'tag', self.branch_switcher.get(self.tag_num))
         setattr(self.base_link, 'flange_size', '3')
         setattr(self.base_link, 'i', 0)
         setattr(self.base_link, 'p', 0)
@@ -1423,7 +1424,9 @@ class UrdfWriter:
 
             #add the module
             if module_filename=='master_cube.yaml':
-                data = self.add_slave_cube(0, is_structural=False, robot_id=robot_id, active_ports=active_ports)
+                # data = self.add_slave_cube(0, is_structural=False, robot_id=robot_id, active_ports=active_ports)
+                # HACK: se hard-code is_structural to be False, because we usually don't use it as a structural part of the robot.
+                data = self.add_module('master_cube.yaml', 0.0, reverse=False,  robot_id=robot_id, active_ports=active_ports, is_structural=False)  
             elif module_filename=='concert/mobile_platform_concert.json':
                 is_structural = True
                 if self.parent_module.type == 'mobile_base':
@@ -1477,7 +1480,7 @@ class UrdfWriter:
 
         return 0
 
-
+    # TODO: remove it -> unused
     def process_connections(self, connections_list, modules_list, name, m_type):
         """Process connections of the module as described in the JSON as a list"""
         self.print('enter!')
@@ -1807,53 +1810,6 @@ class UrdfWriter:
 
             self.add_gazebo_element(mastercube, mastercube.gazebo.body_1, mastercube.name)
 
-            # # instantate a ModuleNode for branch 1 connector
-            # name_con1 = name + '_con1'
-            # data1 = {'Homogeneous_tf': mastercube.Con_1_tf, 'type': "con", 'name': name_con1, 'i': 0, 'p': 0, 'flange_size': 3}
-            # slavecube_con1 = ModuleNode.ModuleNode(data1, name_con1, parent=mastercube)
-
-            # # instantate a ModuleNode for branch 2 connector
-            # name_con2 = name + '_con2'
-            # data2 = {'Homogeneous_tf': mastercube.Con_2_tf, 'type': "con", 'name': name_con2, 'i': 0, 'p': 0, 'flange_size': 3}
-            # slavecube_con2 = ModuleNode.ModuleNode(data2, name_con2, parent=mastercube)
-
-            # # instantate a ModuleNode for branch 3 connector
-            # name_con3 = name + '_con3'
-            # data3 = {'Homogeneous_tf': mastercube.Con_3_tf, 'type': "con", 'name': name_con3, 'i': 0, 'p': 0, 'flange_size': 3}
-            # slavecube_con3 = ModuleNode.ModuleNode(data3, name_con3, parent=mastercube)
-
-            # # instantate a ModuleNode for branch 4 connector
-            # name_con4 = name + '_con4'
-            # data4 = {'Homogeneous_tf': mastercube.Con_4_tf, 'type': "con", 'name': name_con4, 'i': 0, 'p': 0, 'flange_size': 3}
-            # slavecube_con4 = ModuleNode.ModuleNode(data4, name_con4, parent=mastercube)
-
-            # Render tree
-            #for pre, _, node in anytree.render.RenderTree(self.base_link):
-                #self.print("%s%s" % (pre, node.name))
-
-            # new_Link = slavecube_con1
-            # past_Link = parent_module
-            # new_Link.get_rototranslation(past_Link.Homogeneous_tf, tf.transformations.identity_matrix())
-            # self.print(new_Link.z)
-
-            # ET.SubElement(root, "xacro:add_master_cube", name=name)
-
-            # fixed_joint_name = 'cube_joint'
-            # ET.SubElement(root,
-            #               "xacro:add_fixed_joint",
-            #               name=fixed_joint_name,
-            #               type="fixed_joint",
-            #               father=past_Link.name,
-            #               child=new_Link.name,
-            #               x=new_Link.x,
-            #               y=new_Link.y,
-            #               z=new_Link.z,
-            #               roll=new_Link.roll,
-            #               pitch=new_Link.pitch,
-            #               yaw=new_Link.yaw)
-
-            # update the urdf file, adding the new module
-            # string = write_urdf(path_name + '/urdf/ModularBot_test.urdf', urdf_tree)
 
             if self.speedup:
                 self.urdf_string = ""
@@ -2151,9 +2107,9 @@ class UrdfWriter:
             raise KeyError(filename+' was not found in the available resources')
 
         # assign a new tag to the chain
+        self.tag_num += 1
         tag_letter = self.branch_switcher.get(self.tag_num)
         setattr(new_socket, 'tag', tag_letter)
-        self.tag_num += 1
 
         # Set attributes of the newly added module object
         setattr(new_socket, 'i', self.parent_module.i)
@@ -2470,7 +2426,7 @@ class UrdfWriter:
             raise FileNotFoundError(addon_filename+' was not found in the available resources')
 
 
-    def add_module(self, filename, angle_offset, reverse=False, addons =[], robot_id=0, active_ports=3):
+    def add_module(self, filename, angle_offset, reverse=False, addons =[], robot_id=0, active_ports=3, is_structural=True):
         """Add a module specified by filename as child of the currently selected module.
 
         Parameters
@@ -2482,6 +2438,16 @@ class UrdfWriter:
         reverse: bool
             Bool value expressing if the module is mounted in reverse direction (true) or in standard one (false).
             By default it is false.
+            Not used for hub types (cube, mobile base, etc.).
+        robot_id: int
+            Value of the robot_id set in the firmware of the module.
+            This is obtained in Discovery Mode when reading the JSON from the EtherCAT master. This is not used when in Bulding Mode.
+        active_ports: int
+            The number of active ports of the cube (how many ports have established a connection to a module).
+            This is the integer conversion of the 4-bit binary string where each bit represent one port (1 if port is active, 0 if port is unactive)
+        is_structural: bool
+            Bool value expressing if the module is structural (true) or not (false).
+            Used only for hub types (cube, mobile base, etc.).
 
         Returns
         -------
@@ -2508,14 +2474,14 @@ class UrdfWriter:
         except KeyError:
             raise KeyError(filename+' was not found in the available resources')
 
-        # If the parent is a connector module, it means we are starting a new branch from a cube.
+        # If the parent is a hub module, it means we are starting a new branch.
         # Then assign the correct tag (A, B, C, ...) to the new module (and therefore start a new branch)
         # by looking at the current tag_num (1, 2, 3, ...) and so at how many branches are already present in the robot.
         # If the parent is any other kind of module, assign as tag the same of his parent.
-        if self.parent_module.type == 'cube' or self.parent_module.type == 'mobile_base' :
+        if self.parent_module.type in {'cube', 'mobile_base'} :
+            self.tag_num += 1
             tag_letter = self.branch_switcher.get(self.tag_num)
             setattr(new_module, 'tag', tag_letter)
-            self.tag_num += 1
         else:
             setattr(new_module, 'tag', self.parent_module.tag)
 
@@ -2530,6 +2496,9 @@ class UrdfWriter:
         setattr(new_module, 'angle_offset', angle_offset)
         setattr(new_module, 'reverse', reverse)
         setattr(new_module, 'robot_id', robot_id)
+
+        # Attribute specifying if the module is structural or not. Useful for those types of modules that are not structural (e.g. hubs), in particular if they are present in the network and discovered by EtherCAT, but they are not part of the robot structure.
+        setattr(new_module, 'is_structural', is_structural)
 
         self.print("parent module:", self.parent_module.name, ", type :", self.parent_module.type)
 
@@ -2565,6 +2534,10 @@ class UrdfWriter:
                 # joint + joint
                 self.print("joint + joint")
                 self.joint_after_joint(new_module, self.parent_module, angle_offset, reverse=reverse)
+            elif new_module.type in { 'cube', 'mobile_base' }:
+                # joint + cube
+                self.print("joint + cube")
+                self.cube_after_joint(new_module, self.parent_module, angle_offset, reverse=reverse, is_structural=is_structural)
             else:
                 # joint + link
                 self.print("joint + link")
@@ -2575,22 +2548,33 @@ class UrdfWriter:
         elif self.parent_module.type == 'cube' or self.parent_module.type == "mobile_base":
             if new_module.type in { 'joint', 'wheel' }:
                 # cube + joint
+                self.print("cube + joint")
                 self.joint_after_cube(new_module, self.parent_module, angle_offset, reverse=reverse)
+            elif new_module.type in { 'cube', 'mobile_base' }:
+                # cube + cube
+                self.print("cube + cube")
+                self.cube_after_cube(new_module, self.parent_module, angle_offset, reverse=reverse, is_structural=is_structural)
             else:
                 # cube + link
+                self.print("cube + link")
                 self.link_after_cube(new_module, self.parent_module, angle_offset, reverse=reverse)
         else:
             if new_module.type in { 'joint', 'wheel' }:
                 # link + joint
                 self.print("link + joint")
                 self.joint_after_link(new_module, self.parent_module, angle_offset, reverse=reverse)
+            elif new_module.type in { 'cube', 'mobile_base' }:
+                # link + cube
+                self.print("link + cube")
+                self.cube_after_link(new_module, self.parent_module, angle_offset, reverse=reverse, is_structural=is_structural)
             else:
                 # link + link
                 self.print("link + link")
                 self.link_after_link(new_module, self.parent_module, angle_offset, reverse=reverse)
 
-        # Add the module to the list of chains
-        self.add_to_chain(new_module)
+        # Add the module to the list of chains if there is at least a joint before it
+        if new_module.i > 0:
+            self.add_to_chain(new_module)
 
         # Update the parent_module attribute of the URDF_writer class
         self.parent_module = new_module
@@ -3354,43 +3338,6 @@ class UrdfWriter:
         return
 
 
-    # noinspection PyPep8Naming
-    def link_after_cube(self, new_Link, past_Cube, offset, reverse):
-        """Adds to the URDF tree a link module as a child of a cube module
-
-        Parameters
-        ----------
-        new_Link: ModuleNode.ModuleNode
-            ModuleNode object of the link module to add
-
-        past_Cube: ModuleNode.ModuleNode
-            ModuleNode object of the cube module to which attach the link
-
-        offset: float
-            Value of the angle between the parent module output frame and the module input frame
-        """
-        setattr(new_Link, 'p', past_Cube.p + 1)
-
-        self.print('past_Cube: ', past_Cube)
-        self.print('past_Cube.selected_port: ', past_Cube.selected_port)
-
-        if past_Cube.is_structural:
-            parent_name = past_Cube.name
-        else:
-            parent_name = past_Cube.parent.name
-
-        interface_transform = self.get_cube_output_transform(past_Cube)
-
-        transform = self.get_proximal_transform(interface_transform, offset, reverse)
-
-        # HACK: to handle 90° offset between PINO and CONCERT flanges
-        transform = self.apply_adapter_transform_rotation(transform, past_Cube.flange_size, new_Link.flange_size)
-
-        self.add_link(new_Link, parent_name, transform, reverse)
-
-        self.collision_elements.append((past_Cube.name, new_Link.name))
-
-
     def get_cube_output_transform(self, past_Cube):
         # index for connector and selecte port are shifted by 1
         connector_idx = (past_Cube.selected_port -1)
@@ -3481,7 +3428,7 @@ class UrdfWriter:
     def add_inertial(self, parent_el, dynamics, gear_ratio=1.0):
         inertial_el = ET.SubElement(parent_el, "inertial")
         #  We interpret the mass as a flag to enable/disable the inertial properties
-        if dynamics.mass > 0.0:
+        if dynamics.mass:
             ET.SubElement(parent_el, "origin",
                         xyz=str(dynamics.CoM.x) + " " + str(dynamics.CoM.y) + " " + str(dynamics.CoM.z),
                         rpy=str(0) + " " + str(0) + " " + str(0))
@@ -3662,6 +3609,82 @@ class UrdfWriter:
             self.add_link_element(new_Joint.distal_link_name + '_rotor_fast', new_Joint, 'body_2_fast', is_geared=True)
 
 
+    def add_cube(self, new_Cube, parent_name, transform):
+        x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(transform)
+
+        setattr(new_Cube, 'name', 'L_' + str(new_Cube.i) + '_link_' + str(new_Cube.p) + new_Cube.tag)
+
+        self.add_link_element(new_Cube.name, new_Cube, 'body_1')
+        self.add_gazebo_element(new_Cube, new_Cube.gazebo.body_1, new_Cube.name)
+        
+        self.add_connectors(new_Cube)
+
+        fixed_joint_name = 'L_' + str(new_Cube.i) + '_fixed_joint_' + str(new_Cube.p) + new_Cube.tag
+
+        ET.SubElement(self.root,
+                        "xacro:add_fixed_joint",
+                        name=fixed_joint_name,
+                        type="fixed_joint",
+                        father=parent_name,
+                        child=new_Cube.name,
+                        x=x,
+                        y=y,
+                        z=z,
+                        roll=roll,
+                        pitch=pitch,
+                        yaw=yaw)
+        # add the xacro:add_gripper_fingers element to the list of urdf elements
+        new_Cube.xml_tree_elements.append(fixed_joint_name)
+
+        #  Add the cube to the list of hubs
+        self.listofhubs.append(new_Cube)
+
+        # Set the number of child hubs to 0 (it will be incremented when a child hub is added)
+        setattr(new_Cube, 'n_child_hubs', 0)
+        if not new_Cube.is_structural:
+            if self.parent_module.type in {'cube', 'mobile_base'}:
+                # if the parent is a hub, the n_child_hubs attribute is incremented, in order to keep track of the number of hubs connected to the parent hub and therefore the number of ports occupied. This is needed to select the right connector where to connect the new module 
+                self.parent_module.n_child_hubs += 1            
+
+    
+    # noinspection PyPep8Naming
+    def link_after_cube(self, new_Link, past_Cube, offset, reverse):
+        """Adds to the URDF tree a link module as a child of a cube module
+
+        Parameters
+        ----------
+        new_Link: ModuleNode.ModuleNode
+            ModuleNode object of the link module to add
+
+        past_Cube: ModuleNode.ModuleNode
+            ModuleNode object of the cube module to which attach the link
+
+        offset: float
+            Value of the angle between the parent module output frame and the module input frame
+        """
+        setattr(new_Link, 'p', 0) #  past_Cube.p + 1)
+        setattr(new_Link, 'i', 0) #  past_Cube.i)
+
+        self.print('past_Cube: ', past_Cube)
+        self.print('past_Cube.selected_port: ', past_Cube.selected_port)
+
+        if past_Cube.is_structural:
+            parent_name = past_Cube.name
+        else:
+            parent_name = past_Cube.parent.name
+
+        interface_transform = self.get_cube_output_transform(past_Cube)
+
+        transform = self.get_proximal_transform(interface_transform, offset, reverse)
+
+        # HACK: to handle 90° offset between PINO and CONCERT flanges
+        transform = self.apply_adapter_transform_rotation(transform, past_Cube.flange_size, new_Link.flange_size)
+
+        self.add_link(new_Link, parent_name, transform, reverse)
+
+        self.collision_elements.append((past_Cube.name, new_Link.name))
+
+
     # noinspection PyPep8Naming
     def joint_after_cube(self, new_Joint, past_Cube, offset, reverse):
         """Adds to the URDF tree a joint module as a child of a cube module
@@ -3694,6 +3717,106 @@ class UrdfWriter:
 
         self.add_joint(new_Joint, parent_name, transform, reverse)
 
+    
+    def cube_after_cube(self, new_Cube, past_Cube, offset, reverse, is_structural=True):
+        """Adds to the URDF tree a cube module as a child of a cube module
+
+        Parameters
+        ----------
+        new_Cube: ModuleNode.ModuleNode
+            ModuleNode object of the cube module to add
+
+        past_Cube: ModuleNode.ModuleNode
+            ModuleNode object of the cube module to which the cube will be attached
+
+        offset: float
+            Value of the angle between the parent module output frame and the module input frame
+        """
+        if past_Cube.is_structural:
+            parent_name = past_Cube.name
+        else:
+            parent_name = past_Cube.parent.name
+
+        setattr(new_Cube, 'i', 0)
+        setattr(new_Cube, 'p', 1)
+
+        interface_transform = self.get_cube_output_transform(past_Cube)
+
+        transform = self.get_proximal_transform(interface_transform, offset, reverse)
+
+        # HACK: to handle 90° offset between PINO and CONCERT flanges
+        transform = self.apply_adapter_transform_rotation(transform, past_Cube.flange_size, new_Cube.flange_size)
+
+        if is_structural:
+            self.add_cube(new_Cube, parent_name, transform)
+
+            self.collision_elements.append((past_Cube.name, new_Cube.name))
+
+
+    def cube_after_link(self, new_Cube, past_Link, offset, reverse, is_structural=True):
+        """Adds to the URDF tree a cube module as a child of a link module
+
+        Parameters
+        ----------
+        new_Cube: ModuleNode.ModuleNode
+            ModuleNode object of the cube module to add
+
+        past_Link: ModuleNode.ModuleNode
+            ModuleNode object of the link module to which the cube will be attached
+
+        offset: float
+            Value of the angle between the parent module output frame and the module input frame
+        """
+        setattr(new_Cube, 'i', past_Link.i)
+        setattr(new_Cube, 'p', past_Link.p + 1)
+
+        interface_transform = self.get_link_output_transform(past_Link)
+
+        transform = self.get_proximal_transform(interface_transform, offset, reverse=reverse) # TODO check reverse
+
+        # HACK: to handle 90° offset between PINO and CONCERT flanges
+        transform = self.apply_adapter_transform_rotation(transform, past_Link.flange_size, new_Cube.flange_size)
+
+        parent_name = past_Link.name
+
+        if is_structural:
+            self.add_cube(new_Cube, parent_name, transform)
+
+            self.collision_elements.append((past_Link.name, new_Cube.name))
+
+
+    def cube_after_joint(self, new_Cube, past_Joint, offset, reverse, is_structural=True):
+        """Adds to the URDF tree a cube module as a child of a joint module
+
+        Parameters
+        ----------
+        new_Cube: ModuleNode.ModuleNode
+            ModuleNode object of the cube module to add
+
+        past_Joint: ModuleNode.ModuleNode
+            ModuleNode object of the joint module to which the cube will be attached
+
+        offset: float
+            Value of the angle between the parent module output frame and the module input frame
+        """
+        setattr(new_Cube, 'i', past_Joint.i)
+        setattr(new_Cube, 'p', past_Joint.p + 1)
+
+        interface_transform = self.get_joint_output_transform(past_Joint)
+
+        transform = self.get_proximal_transform(interface_transform, offset, reverse=reverse)  # TODO check reverse
+
+        # HACK: to handle 90° offset between PINO and CONCERT flanges
+        transform = self.apply_adapter_transform_rotation(transform, past_Joint.flange_size, new_Cube.flange_size)
+
+        parent_name = past_Joint.distal_link_name
+
+        if is_structural:
+            self.add_cube(new_Cube, parent_name, transform)
+
+            self.collision_elements.append((past_Joint.distal_link_name, new_Cube.name))
+
+
     # noinspection PyPep8Naming
     def link_after_joint(self, new_Link, past_Joint, offset, reverse):
         """Adds to the URDF tree a link module as a child of a joint module
@@ -3709,7 +3832,7 @@ class UrdfWriter:
         offset: float
             Value of the angle between the parent module output frame and the module input frame
         """
-
+        setattr(new_Link, 'i', past_Joint.i)
         setattr(new_Link, 'p', past_Joint.p + 1)
 
         interface_transform = self.get_joint_output_transform(past_Joint)
@@ -3799,6 +3922,7 @@ class UrdfWriter:
             Value of the angle between the parent module output frame and the module input frame
         """
 
+        setattr(new_Link, 'i', past_Link.i)
         setattr(new_Link, 'p', past_Link.p + 1)
 
         interface_transform = self.get_link_output_transform(past_Link)
@@ -3813,6 +3937,7 @@ class UrdfWriter:
         self.add_link(new_Link, parent_name, transform, reverse)
 
         self.collision_elements.append((past_Link.name, new_Link.name))
+
 
     # TODO: remove hard-coded values
     def write_problem_description_multi(self):
