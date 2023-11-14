@@ -2717,19 +2717,12 @@ class UrdfWriter:
         if selected_module == 0:
             selected_module = (self.parent_module)
 
-        # If the selected module is a connector module, select his parent (the cube) instead
-        if '_con' in selected_module.name:
-            selected_module = selected_module.parent
-
         self.info_print('Removing module: ' + str(selected_module.name) + ' (and all its descendants)')
 
         # Remove the module childs and its descendants recursively
         for child in selected_module.children:
             self.print('eliminate child: ' + child.name + ' of type: ' + child.type + ' of parent: ' + selected_module.name)
             self.remove_module(child)
-
-        self.print(selected_module.children)
-        self.print(selected_module.parent.name)
 
         # update generator expression
         self.update_generators()
@@ -2776,24 +2769,9 @@ class UrdfWriter:
             # if the module is a hub, remove its connectors elements from URDF
             self.remove_connectors()
 
-            # if selected_module.type == 'link':
-            #     #root.remove(root.findall("*[@name=selected_module.name]", ns)[-1])
-            #     for node in self.urdf_nodes_generator:
-            #         if node.attrib['name'] == selected_module.name:
-            #             self.root.remove(node)
-            #             self.urdf_nodes_generator = (node for node in self.root.findall("*") if node.tag != 'gazebo')
-            # elif selected_module.type == 'elbow':
-            #     #root.remove(root.findall("*[@name=selected_module.name]", ns)[-1])
-            #     for node in self.urdf_nodes_generator:
-            #         if node.attrib['name'] == selected_module.name:
-            #             self.root.remove(node)
-            #             self.urdf_nodes_generator = (node for node in self.root.findall("*") if node.tag != 'gazebo')
-            # elif selected_module.type == 'size_adapter':
-            #     #root.remove(root.findall("*[@name=selected_module.name]", ns)[-1])
-            #     for node in self.urdf_nodes_generator:
-            #         if node.attrib['name'] == selected_module.name:
-            #             self.root.remove(node)
-            #             self.urdf_nodes_generator = (node for node in self.root.findall("*") if node.tag != 'gazebo')
+        # if the parent module is a cube, decrease the tag number. A chain has been removed, tag should be reset accordingly
+        if father.type in {'cube', 'mobile_base'} :
+            self.tag_num -= 1
 
         if self.speedup:
             self.urdf_string = ""
@@ -2802,9 +2780,8 @@ class UrdfWriter:
             # Update the urdf file, removing the module
             self.urdf_string = self.process_urdf()
 
-        # Update parent module attribute. TODO: understand why and if it's needed
-        if not self.parent_module.children:
-            self.parent_module = father
+        # Update the parent_module attribute of the URDF_writer class
+        self.parent_module = father
 
         # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
         if father.type == 'cube':
@@ -2821,12 +2798,8 @@ class UrdfWriter:
                     'count': father.i}
         # data = jsonify(data)
 
-        if '_con' in father.name:
-            self.tag_num -= 1
-
         # before deleting selected_module set his parent property to None. Otherwise this will mess up the obj tree
         selected_module.parent = None
-        # selected_module.parent.children = None
 
         # delete object selected_module
         del selected_module
