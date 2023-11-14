@@ -2745,8 +2745,8 @@ class UrdfWriter:
                 except KeyError:
                     pass
 
-        # # update generator expression
-        # self.update_generators()
+        # update generator expression
+        self.update_generators()
 
         # TODO: This is not working in the urdf. The ModuleNode obj is removed but the elment from the tree is not
         if selected_module.type == 'cube':
