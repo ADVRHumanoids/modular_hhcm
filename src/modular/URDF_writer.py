@@ -2572,6 +2572,7 @@ class UrdfWriter:
                 self.print("link + link")
                 self.link_after_link(new_module, self.parent_module, angle_offset, reverse=reverse)
 
+        # TODO: check if this is correct
         # Add the module to the list of chains if there is at least a joint before it
         if new_module.i > 0:
             self.add_to_chain(new_module)
@@ -2700,8 +2701,7 @@ class UrdfWriter:
         Parameters
         ----------
         selected_module: ModuleNode.ModuleNode
-            NodeModule object of the module to remove. Default value is 0, in which case the current parent_module is
-            selected as the module to be removed.
+            NodeModule object of the module to remove. Default value is 0, in which case the current parent_module is selected as the module to be removed.
 
         Returns
         -------
@@ -2723,12 +2723,10 @@ class UrdfWriter:
 
         self.info_print('Removing module: ' + str(selected_module.name) + ' (and all its descendants)')
 
-        # If the selected module is NOT a cube start by first removing its child and descendants.
-        # There is a recursive call to this function inside the loop to remove each module.
-        if selected_module.type != 'cube':
-            self.print('eliminate child')
-            for child in selected_module.children:
-                self.remove_module(child)
+        # Remove the module childs and its descendants recursively
+        for child in selected_module.children:
+            self.print('eliminate child: ' + child.name + ' of type: ' + child.type + ' of parent: ' + selected_module.name)
+            self.remove_module(child)
 
         self.print(selected_module.children)
         self.print(selected_module.parent.name)
@@ -2745,85 +2743,38 @@ class UrdfWriter:
                 except KeyError:
                     pass
 
+        # save parent of the module to remove. This will be the last element of the chain after removal,
+        # and its data will be returned by the function
+        father = selected_module.parent
+
+        # remove the module from the list of chains
+        self.remove_from_chain(selected_module)
+
         # update generator expression
         self.update_generators()
 
-        # TODO: This is not working in the urdf. The ModuleNode obj is removed but the elment from the tree is not
-        if selected_module.type == 'cube':
+        if(getattr(selected_module, 'xml_tree_elements')):
+            for node in self.urdf_nodes_generator:
+                try:
+                    if node.attrib['name'] in selected_module.xml_tree_elements:
+                        self.root.remove(node)
+                except KeyError:
+                    pass
+
+        # switch depending on module type
+        if selected_module.type in { 'joint', 'wheel' }:
+            self.control_plugin.remove_joint(selected_module.name)
+
+        elif selected_module.type == 'gripper':
+            # TO BE FIXED: ok for ros_control. How will it be for xbot2?
+            self.control_plugin.remove_joint(selected_module.name+'_finger_joint1')
+            self.control_plugin.remove_joint(selected_module.name+'_finger_joint2')
+
+        elif selected_module.type in { 'cube', 'mobile_base' }:
+            # if the module is a hub, remove it from the list of hubs
             self.listofhubs.remove(selected_module)
-            # save parent of the module to remove. This will be the last element of the chain after removal,
-            # and its data will be returned by the function
-            father = selected_module.parent.parent
-            self.print(selected_module.parent.name)
-
-            # update attribute representing number of cubes present in the model
-            self.n_cubes -= 1
-
-            # Remove childs of the cube (so connectors!)
-            for child in selected_module.children:
-                for node in self.urdf_nodes_generator:
-                    try:
-                        if node.attrib['name'] == child.name:
-                            self.root.remove(node)
-                    except KeyError:
-                        pass
-
-            # Remove the cube module from the xml tree
-            for node in self.urdf_nodes_generator:
-                try:
-                    if node.attrib['name'] == selected_module.name:
-                        self.root.remove(node)
-                except KeyError:
-                    pass
-
-            # selected_module.parent = None
-
-            # select the father module of the cube
-            father_module = self.access_module_by_name(selected_module.parent.name)
-
-            # Generate the name of the fixed joint between parent and cube
-            joint_name = 'FJ_' + father_module.parent.parent.name + '_' + father_module.name
-            self.print(joint_name)
-
-            # Remove the fixed joint
-            for node in self.urdf_nodes_generator:
-                try:
-                    if node.attrib['name'] == joint_name:
-                        #self.print(joint_name)
-                        self.root.remove(node)
-                except KeyError:
-                    pass
-
-            # before deleting father_module set his parent property to None. Otherwise this will mess up the obj tree
-            father_module.parent = None
-
-            # delete object father_module
-            del father_module
-
-        else:
-            # save parent of the module to remove. This will be the last element of the chain after removal,
-            # and its data will be returned by the function
-            father = selected_module.parent
-
-            #remove the module from the list of chains
-            self.remove_from_chain(selected_module)
-
-            if(getattr(selected_module, 'xml_tree_elements')):
-                for node in self.urdf_nodes_generator:
-                    try:
-                        if node.attrib['name'] in selected_module.xml_tree_elements:
-                            self.root.remove(node)
-                    except KeyError:
-                        pass
-
-            # switch depending on module type
-            if selected_module.type in { 'joint', 'wheel' }:
-                self.control_plugin.remove_joint(selected_module.name)
-
-            elif selected_module.type == 'gripper':
-                # TO BE FIXED: ok for ros_control. How will it be for xbot2?
-                self.control_plugin.remove_joint(selected_module.name+'_finger_joint1')
-                self.control_plugin.remove_joint(selected_module.name+'_finger_joint2')
+            # if the module is a hub, remove its connectors elements from URDF
+            self.remove_connectors()
 
             # if selected_module.type == 'link':
             #     #root.remove(root.findall("*[@name=selected_module.name]", ns)[-1])
