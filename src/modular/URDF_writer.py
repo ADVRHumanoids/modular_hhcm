@@ -2727,14 +2727,21 @@ class UrdfWriter:
         # update generator expression
         self.update_generators()
 
+        xml_elements_to_remove = []
         # remove addons
         if(getattr(selected_module, 'addon_elements')):
-            for node in self.urdf_nodes_generator:
-                try:
-                    if node.attrib['name'] in selected_module.addon_elements:
-                        self.root.remove(node)
-                except KeyError:
-                    pass
+            xml_elements_to_remove += selected_module.addon_elements
+        # remove module xml elements
+        if(getattr(selected_module, 'xml_tree_elements')):
+            xml_elements_to_remove += selected_module.xml_tree_elements
+            
+        # remove all required xml elements from the tree
+        for node in self.urdf_nodes_generator:
+            try:
+                if node.attrib['name'] in xml_elements_to_remove:
+                    self.root.remove(node)
+            except KeyError:
+                pass
 
         # save parent of the module to remove. This will be the last element of the chain after removal,
         # and its data will be returned by the function
@@ -2742,17 +2749,6 @@ class UrdfWriter:
 
         # remove the module from the list of chains
         self.remove_from_chain(selected_module)
-
-        # update generator expression
-        self.update_generators()
-
-        if(getattr(selected_module, 'xml_tree_elements')):
-            for node in self.urdf_nodes_generator:
-                try:
-                    if node.attrib['name'] in selected_module.xml_tree_elements:
-                        self.root.remove(node)
-                except KeyError:
-                    pass
 
         # switch depending on module type
         if selected_module.type in { 'joint', 'wheel' }:
