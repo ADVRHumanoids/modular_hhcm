@@ -4186,16 +4186,6 @@ class UrdfWriter:
                 #self.print('missing type', node.attrib['name'])
                 continue
 
-        # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string
-        # Update the urdf file, removing the module
-        self.urdf_string = self.process_urdf()
-
-        if self.verbose:
-            # Render tree
-            for pre, _, node in anytree.render.RenderTree(self.base_link):
-                self.print("%s%s" % (pre, node.name))
-
-        return self.urdf_string
 
     def findall_by_type(self, types=[]):
         # Serch the tree by name for the selected module

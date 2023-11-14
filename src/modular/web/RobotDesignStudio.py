@@ -860,8 +860,11 @@ def removeConnectors():
     # Get the right writer instance depending on the mode
     writer = get_writer()
     
-    data = writer.remove_connectors()
-    return data
+    writer.remove_connectors()
+    
+    urdf_string = writer.process_urdf()
+
+    return urdf_string
 
 # deploy the package of the built robot
 @app.route(f'{api_base_route}/model/urdf', methods=['POST'])
