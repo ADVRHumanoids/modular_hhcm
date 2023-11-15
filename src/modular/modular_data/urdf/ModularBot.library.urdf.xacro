@@ -330,7 +330,7 @@
     </xacro:macro>
 
     <!-- Macro for adding a socket -->
-    <xacro:macro name="add_socket" params="name type filename size">
+    <xacro:macro name="add_socket" params="name type filename">
 
         <xacro:property name="module" value="${xacro.load_yaml(filename)}"/>
         <xacro:property name="body_name" value="body_1"/>

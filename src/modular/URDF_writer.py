@@ -2137,8 +2137,7 @@ class UrdfWriter:
                       "xacro:add_socket",
                       type="link",
                       name=new_socket.name,
-                      filename=new_socket.filename,
-                      flange_size=str(new_socket.flange_size))
+                      filename=new_socket.filename)
 
         self.add_gazebo_element(new_socket, new_socket.gazebo.body_1 , new_socket.name)
 
