@@ -1312,7 +1312,8 @@ class UrdfWriter:
                 control_plugin=self.control_plugin,
                 speedup=self.speedup,
                 verbose=self.verbose,
-                logger=self.logger)
+                logger=self.logger,
+                slave_desc_mode=self.slave_desc_mode)
 
         # # Open the base xacro file
         # filename = path_name + '/urdf/ModularBot_new.urdf.xacro'
