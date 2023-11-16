@@ -36,7 +36,8 @@ parser = argparse.ArgumentParser(prog='robot-design-studio', description='Robot 
 parser.add_argument('-d', '--debug', required=False, action='store_true')
 parser.add_argument('-v', '--verbose', required=False, action='store_true')
 parser.add_argument('--use_ros_logger', required=False, action='store_true')
-parser.set_defaults(debug=False, verbose=False, use_ros_logger=False)
+parser.add_argument('--slave_desc_mode', required=False, choices=('use_ids', 'use_pos'))
+parser.set_defaults(debug=False, verbose=False, use_ros_logger=False, slave_desc_mode='use_pos')
 
 args = parser.parse_args()
 
@@ -102,7 +103,8 @@ else:
 
 urdfwriter_kwargs_dict={
     'verbose': args.verbose,
-    'logger': logger
+    'logger': logger,
+    'slave_desc_mode': args.slave_desc_mode
 }
 
 # Instance of UrdfWriter class

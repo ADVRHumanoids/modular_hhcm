@@ -72,6 +72,12 @@ path_superbuild = os.path.abspath(os.path.join(path_name, '../..'))
 # Use /tmp folder to store urdf, srdf, etc.
 path_name = "/tmp"
 
+from enum import Enum
+class SlaveDescMode(str, Enum):
+    """Slave description mode"""
+    USE_POSITIONS = 'use_pos'
+    USE_IDS = 'use_ids'
+
 # noinspection PyPep8Naming
 def ordered_load(stream, Loader=yaml.SafeLoader, object_pairs_hook=OrderedDict):
     class OrderedLoader(Loader):
@@ -1036,7 +1042,8 @@ class UrdfWriter:
                 parent=None,
                 floating_base=False,
                 verbose=False,
-                logger=None):
+                logger=None,
+                slave_desc_mode='use_pos'):
         self.reset(config_file,
                 control_plugin,
                 elementree,
@@ -1044,7 +1051,8 @@ class UrdfWriter:
                 parent,
                 floating_base,
                 verbose,
-                logger)
+                logger,
+                slave_desc_mode)
 
     def reset(self,
                 config_file='config_file.yaml',
@@ -1054,7 +1062,8 @@ class UrdfWriter:
                 parent=None,
                 floating_base=False,
                 verbose=False,
-                logger=None):
+                logger=None,
+                slave_desc_mode='use_pos'):
 
         # Setting this variable to True, speed up the robot building.
         # To be used when the urdf does not need to be shown at every iteration
@@ -1191,6 +1200,13 @@ class UrdfWriter:
 
         self.model_stats = ModelStats(self)
 
+        # set the slave description mode
+        try:
+            self.slave_desc_mode = SlaveDescMode(slave_desc_mode)
+        except ValueError:
+            self.slave_desc_mode = SlaveDescMode.USE_POSITIONS
+            self.info_print('Slave description mode not recognized! Defaulting to USE_POSITIONS')
+
     def set_floating_base(self, floating_base):
         """Set the floating base flag"""
         self.floating_base = floating_base
@@ -1318,7 +1334,15 @@ class UrdfWriter:
 
         # Process the modules described in the json to create the tree
         modules_dict = yaml.safe_load(json_data)
-        modules_list = self.sort_modules_by_pos(modules_dict)
+        
+        if self.slave_desc_mode is SlaveDescMode.USE_POSITIONS:
+            # Sort the modules by position
+            modules_list = self.sort_modules_by_pos(modules_dict)
+        elif self.slave_desc_mode is SlaveDescMode.USE_IDS:
+            # Sort the modules by id
+            modules_list = self.sort_modules(modules_dict)
+        else:
+            raise ValueError('Slave description mode not recognized!')
 
         for module in modules_list:
 
