@@ -29,6 +29,17 @@ if ec_srvs_spec is not None:
 # Add Mock Resources lists
 import modular.web.mock_resources as mock_resources
 
+import argparse
+
+parser = argparse.ArgumentParser(prog='robot-design-studio', description='Robot Design Studio server')
+
+parser.add_argument('-d', '--debug', required=False, action='store_true')
+parser.add_argument('-v', '--verbose', required=False, action='store_true')
+parser.add_argument('--use_ros_logger', required=False, action='store_true')
+parser.set_defaults(debug=False, verbose=False, use_ros_logger=False)
+
+args = parser.parse_args()
+
 # import custom server config (if any)
 base_path, _ = os.path.split(__file__)
 config = ConfigParser(interpolation=ExtendedInterpolation(), allow_no_value=True)
@@ -42,8 +53,7 @@ api_base_route = config.get('MODULAR_API','base_route',fallback='')
 rospy.init_node('robot_builder', disable_signals=True) # , log_level=rospy.DEBUG)
 
 # set if ROS logger should be used
-use_ros_logger = False
-if use_ros_logger:
+if args.use_ros_logger:
     # roslogger = logging.getLogger('rosout')
     roslogger = logging.getLogger(f'rosout.{__name__}')
     logger = roslogger
@@ -59,8 +69,7 @@ else:
 werkzeug_logger = logging.getLogger('werkzeug')
 
 # set verbosity levels
-verbose=False
-if verbose:
+if args.verbose:
     logger.setLevel(logging.DEBUG)
     logger.debug('Starting server')
     werkzeug_logger.setLevel(logging.INFO)
@@ -92,7 +101,7 @@ else:
     app.logger.debug('running in a normal Python process')
 
 urdfwriter_kwargs_dict={
-    'verbose': verbose,
+    'verbose': args.verbose,
     'logger': logger
 }
 
@@ -946,7 +955,7 @@ def byteify(input_raw):
 
 
 def main():
-    app.run(host=host, port=port, debug=False, threaded=True)
+    app.run(host=host, port=port, debug=args.debug, threaded=True)
 
 
 if __name__ == '__main__':
