@@ -1969,24 +1969,14 @@ class UrdfWriter:
     
     @staticmethod
     def find_chain_tip_link(chain):
-        if chain[-1].children:
-            if "con_" in chain[-1].children[0].name:
-                tip_link = chain[-1].children[0].children[0].name
-            else:
-                tip_link = chain[-1].children[0].name
-        else:
-            if chain[-1].type in { 'joint', 'wheel' }:
-                tip_link = chain[-1].distal_link_name
-            if chain[-1].type == 'tool_exchanger':
-                tip_link = chain[-1].tcp_name
-            if chain[-1].type == 'gripper':
-                tip_link = chain[-1].tcp_name
-            elif chain[-1].type in { 'simple_ee', 'link', 'size_adapter'}:
-                tip_link = chain[-1].name
-            elif chain[-1].type in { 'end_effector', 'drill'}:
-                tip_link = chain[-1].tcp_name
-            elif chain[-1].type == 'dagana':
-                tip_link = chain[-1].dagana_link_name
+        if chain[-1].type in { 'joint', 'wheel' }:
+            tip_link = chain[-1].distal_link_name
+        elif chain[-1].type in { 'simple_ee', 'link', 'size_adapter', 'cube', 'mobile_base', 'base_link'}:
+            tip_link = chain[-1].name
+        elif chain[-1].type in { 'end_effector', 'drill', 'tool_exchanger', 'gripper'}:
+            tip_link = chain[-1].tcp_name
+        elif chain[-1].type == 'dagana':
+            tip_link = chain[-1].dagana_link_name
         return tip_link
     
     @staticmethod
