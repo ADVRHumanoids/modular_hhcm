@@ -1131,7 +1131,7 @@ class UrdfWriter:
             self.root = elementree
             self.urdf_tree = ET.ElementTree(self.root)
 
-        self.tag_num = 1
+        self.tag_num = 0
         self.branch_switcher = {
             0: '',
             1: '_A',
@@ -1560,14 +1560,14 @@ class UrdfWriter:
         tag_index = self.inverse_branch_switcher.get(new_joint.tag)
         chain = [new_joint]
         self.print("tag_index: ", tag_index, "list of chains: ", len(self.listofchains))
-        # if tag_index is bigger than the length of the list of chains, it means this chain hasn't been added yet.
+        # if tag_index (offseted by one, since now we start from 0) is bigger than the length of the list of chains, it means this chain hasn't been added yet.
         # then we need to append a new list representing the new chain formed by the new joint only
-        if tag_index > len(self.listofchains):
+        if (tag_index + 1) > len(self.listofchains):
             self.listofchains.append(chain)
         # if instead tag_index is not bigger it means the chain the new joint is part of has already beeen added.
         # then the new joint is appended to the list representing the chain it's part of.
         else:
-            self.listofchains[tag_index - 1].append(new_joint)
+            self.listofchains[tag_index].append(new_joint)
 
     def remove_from_chain(self, joint):
         """Remove joint from the list of the robot kinematic chains
@@ -2467,7 +2467,7 @@ class UrdfWriter:
         # Then assign the correct tag (A, B, C, ...) to the new module (and therefore start a new branch)
         # by looking at the current tag_num (1, 2, 3, ...) and so at how many branches are already present in the robot.
         # If the parent is any other kind of module, assign as tag the same of his parent.
-        if self.parent_module.type in {'cube', 'mobile_base'} :
+        if self.parent_module.type in {'cube', 'mobile_base', 'base_link'} and new_module.type not in {'cube', 'mobile_base'}:
             self.tag_num += 1
             tag_letter = self.branch_switcher.get(self.tag_num)
             setattr(new_module, 'tag', tag_letter)
@@ -2561,10 +2561,11 @@ class UrdfWriter:
                 self.print("link + link")
                 self.link_after_link(new_module, self.parent_module, angle_offset, reverse=reverse)
 
-        # TODO: check if this is correct
-        # Add the module to the list of chains if there is at least a joint before it
-        if new_module.i > 0:
-            self.add_to_chain(new_module)
+        # # TODO: check if this is correct
+        # # Add the module to the list of chains if there is at least a joint before it
+        # if new_module.i > 0:
+        #     self.add_to_chain(new_module)
+        self.add_to_chain(new_module)
 
         # Update the parent_module attribute of the URDF_writer class
         self.parent_module = new_module
@@ -2755,7 +2756,7 @@ class UrdfWriter:
             self.remove_connectors()
 
         # if the parent module is a cube, decrease the tag number. A chain has been removed, tag should be reset accordingly
-        if father.type in {'cube', 'mobile_base'} :
+        if father.type in {'cube', 'mobile_base', 'base_link'} and selected_module.type not in {'cube', 'mobile_base'}:
             self.tag_num -= 1
 
         if self.speedup:
@@ -3647,7 +3648,7 @@ class UrdfWriter:
             parent_name = past_Cube.parent.name
 
         setattr(new_Cube, 'i', 0)
-        setattr(new_Cube, 'p', 1)
+        setattr(new_Cube, 'p', past_Cube.p + 1)
 
         interface_transform = self.get_cube_output_transform(past_Cube)
 
