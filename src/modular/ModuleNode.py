@@ -39,6 +39,7 @@ class ModuleType(str, Enum):
     END_EFFECTOR = 'end_effector'
     DRILL = 'drill'
     DAGANA = 'dagana'
+    INTERFACE_ADAPTER = 'interface_adapter'
 
 # import collections.abc
 def update_nested_dict(d, u):
@@ -107,7 +108,7 @@ class JSONInterpreter(object):
         """Dispatch the parsing of the dictionary d according to the module type"""
         header_obj = getattr(self.owner, "header")
         update_nested_dict(header_obj.__dict__, d['header'])
-        if self.owner.type in {ModuleType.LINK, ModuleType.GRIPPER, ModuleType.TOOL_EXCHANGER, ModuleType.SIZE_ADAPTER, ModuleType.END_EFFECTOR, ModuleType.DRILL}:
+        if self.owner.type in {ModuleType.LINK, ModuleType.GRIPPER, ModuleType.TOOL_EXCHANGER, ModuleType.SIZE_ADAPTER, ModuleType.INTERFACE_ADAPTER, ModuleType.END_EFFECTOR, ModuleType.DRILL}:
             if len(d['joints']) != 0:
                 raise ValueError('A link must have no joints')
             if len(d['bodies']) != 1:
@@ -531,6 +532,7 @@ class Module(object):
             'wheel': self.get_proximal_distal_matrices,
             'link': self.get_homogeneous_matrix,
             'size_adapter': self.get_homogeneous_matrix,
+            'interface_adapter': self.get_homogeneous_matrix,
             'tool_exchanger': self.get_homogeneous_matrix,
             'end_effector': self.get_homogeneous_matrix,
             'drill': self.get_homogeneous_matrix,

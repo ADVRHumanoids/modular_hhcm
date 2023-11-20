@@ -2065,7 +2065,7 @@ class UrdfWriter:
                 tip_link = chain[-1].pen_name
             if chain[-1].type == 'gripper':
                 tip_link = chain[-1].TCP_name
-            elif chain[-1].type in { 'simple_ee', 'link', 'size_adapter'}:
+            elif chain[-1].type in { 'simple_ee', 'link', 'size_adapter', 'interface_adapter'}:
                 tip_link = chain[-1].name
             elif chain[-1].type in { 'end_effector', 'drill'}:
                 tip_link = chain[-1].tcp_name
@@ -3302,7 +3302,7 @@ class UrdfWriter:
     def add_link(self, new_Link, parent_name, transform, reverse):
         x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(transform)
 
-        if new_Link.type == 'link':
+        if new_Link.type in {'link', 'interface_adapter'}:
             setattr(new_Link, 'name', 'L_' + str(new_Link.i) + '_link_' + str(new_Link.p) + new_Link.tag)
             ET.SubElement(self.root,
                           "xacro:add_link",
