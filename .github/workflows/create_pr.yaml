@@ -55,7 +55,8 @@ jobs:
           --body-file ./src/modular/web/modular_frontend/frontend_release_notes/CHANGELOG.$RELEASE_VERSION.md \
           --base ${{ env.TARGET_BRANCH }} \
           --label refactor  \
-          --reviewer "m-tartari"
+          --assignee "m-tartari"
+          --reviewer "EdoardoRomiti"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
