@@ -267,8 +267,10 @@ def resources_modules_types_allowed_get():
         elif len(ids)==1:
             writer.select_module_from_name(ids[0], None)
 
-        # if building_mode_ON:
-        valid_types = writer.modular_resources_manager.get_available_module_types()
+        if building_mode_ON:
+            valid_types = writer.modular_resources_manager.get_available_module_types()
+        else:
+            valid_types = ['end_effector', 'interface_adapter']
 
 
         return Response(
