@@ -323,7 +323,7 @@ paths:
               example:
                 message: "Offset along x,y,z axis is currently not supported"
 
-    patch: # or put?
+    put: # or patch?
       tags:
         - Robot Model
       summary: Edit a module's parameters

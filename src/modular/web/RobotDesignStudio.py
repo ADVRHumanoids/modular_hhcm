@@ -239,7 +239,54 @@ def resources_modules_get():
             mimetype="application/json"
         )
 
-# Get a list of the available modules
+# Get a list of the module types that can currently be added to the model.
+@app.route(f'{api_base_route}/resources/modules/types/allowed', methods=['GET'])
+def resources_modules_types_allowed_get():
+    """Get a list of the module types that can currently be added to the model.
+
+    :param ids: Optionally, you can provide one or more IDs of modules. (Currently not supported)
+    :type ids: List[str]
+
+    :rtype: List[str]
+    """
+    query_params = request.args
+    try:
+        # Get the right writer instance depending on the mode
+        writer = get_writer()
+
+        # get complete list of modules
+        # modules = writer.modular_resources_manager.get_available_modules()
+
+        ids = query_params.getlist('ids[]')
+        if len(ids)>1:
+            return Response(
+                response=json.dumps({"message": 'Use of multiple ids at once is currently not supported'}),
+                status=501,
+                mimetype="application/json"
+            )
+        elif len(ids)==1:
+            writer.select_module_from_name(ids[0], None)
+
+        # if building_mode_ON:
+        valid_types = writer.modular_resources_manager.get_available_module_types()
+
+
+        return Response(
+                response=json.dumps({"types": valid_types}),
+                status=200,
+                mimetype="application/json"
+            )
+
+    except Exception as e:
+        # validation failed
+        app.logger.error(f'{type(e).__name__}: {e}')
+        return Response(
+            response=json.dumps({"message": f'{type(e).__name__}: {e}'}),
+            status=500,
+            mimetype="application/json"
+        )
+
+# Get a list of the available module addons
 @app.route(f'{api_base_route}/resources/addons', methods=['GET'])
 def resources_addons_get():
     """Get available addons
@@ -301,7 +348,6 @@ def resources_addons_get():
             status=500,
             mimetype="application/json"
         )
-
 
 # Get a list of the available families of modules
 @app.route(f'{api_base_route}/resources/families', methods=['GET'])
@@ -388,7 +434,7 @@ def addNewModule():
         app.logger.debug(reverse)
 
         addons = req['addons'] if 'addons' in req else []
-    
+
         # Get the right writer instance depending on the mode
         writer = get_writer()
 
@@ -595,7 +641,7 @@ def openFile():
 @app.route(f'{api_base_route}/model/urdf', methods=['GET'])
 def getURDF():
     try:
-        
+
         # Get the right writer instance depending on the mode
         writer = get_writer()
         urdf_string = writer.urdf_string
@@ -741,7 +787,7 @@ def getModelModules():
     try:
         # Get the right writer instance depending on the mode
         writer = get_writer()
-        
+
         ids = request.args.getlist('ids[]')
 
         modules = getModulesMap()
@@ -857,7 +903,7 @@ def updateModule():
 def deployRobot():
     name = request.form.get('name', 'modularbot')
     app.logger.debug(name)
-    
+
     # Get the right writer instance depending on the mode
     writer = get_writer()
 
@@ -870,7 +916,7 @@ def deployRobot():
 def removeConnectors():
     # Get the right writer instance depending on the mode
     writer = get_writer()
-    
+
     data = writer.remove_connectors()
     return data
 
@@ -886,7 +932,7 @@ def deployROSModel():
         writer = get_writer()
 
         writer.remove_connectors() # taken from removeConnectors(), to be removed and itergrated inside .deploy_robot()
-        
+
         writeRobotURDF(builder_jm)
 
         app.logger.debug(name)
@@ -911,7 +957,7 @@ def getModelStats():
     try:
         # Get the right writer instance depending on the mode
         writer = get_writer()
-        
+
         stats = writer.compute_stats(samples=1000)
 
         response = dict()
