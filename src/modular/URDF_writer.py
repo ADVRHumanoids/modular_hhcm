@@ -3063,7 +3063,7 @@ class UrdfWriter:
         inertial_el = ET.SubElement(parent_el, "inertial")
         #  We interpret the mass as a flag to enable/disable the inertial properties
         if dynamics.mass:
-            ET.SubElement(parent_el, "origin",
+            ET.SubElement(inertial_el, "origin",
                         xyz=str(dynamics.CoM.x) + " " + str(dynamics.CoM.y) + " " + str(dynamics.CoM.z),
                         rpy=str(0) + " " + str(0) + " " + str(0))
             ET.SubElement(inertial_el, "mass",
