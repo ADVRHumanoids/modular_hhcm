@@ -1483,33 +1483,6 @@ class UrdfWriter:
 
         return 0
 
-    # TODO: remove it -> unused
-    def process_connections(self, connections_list, modules_list, name, m_type):
-        """Process connections of the module as described in the JSON as a list"""
-        self.print('enter!')
-        for child_id in connections_list[1:]:
-            self.print('child: ', child_id)
-            self.select_module_from_name(name)
-            self.print(self.parent_module.name)
-            if child_id != -1:
-                # Find child module to process searching by id
-                child = self.find_module_from_id(child_id, modules_list)
-                # If the processed module is a mastercube we need first to select the connector to which attach to
-                if m_type == 'mastercube':
-                    _connector_index = connections_list.index(child_id) + 1
-                    con_name = name + '_con' + str(_connector_index)
-                    self.select_module_from_name(con_name)
-                # Add the module
-                if child['type'] == 'master_cube':
-                    data = self.add_slave_cube(0)
-                else:
-                    data = self.add_module(child['type'] + '.yaml', 0)
-                # Update variables and process its connections
-                module_name = data['lastModule_name']
-                module_type = data['lastModule_type']
-                self.process_connections(child['connections'], modules_list, module_name, module_type)
-
-
     def read_file(self, file_str):
         """Open the URDF chosen from the front-end and import it as a ElemenTree tree"""
         # global root, urdf_tree
