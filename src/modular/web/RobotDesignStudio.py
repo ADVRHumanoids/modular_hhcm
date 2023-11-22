@@ -868,7 +868,7 @@ def removeConnectors():
     # Get the right writer instance depending on the mode
     writer = get_writer()
     
-    writer.remove_connectors()
+    writer.remove_all_connectors()
     
     urdf_string = writer.process_urdf()
 
@@ -885,7 +885,7 @@ def deployROSModel():
         # Get the right writer instance depending on the mode
         writer = get_writer()
 
-        writer.remove_connectors() # taken from removeConnectors(), to be removed and itergrated inside .deploy_robot()
+        writer.remove_all_connectors() # taken from removeConnectors(), to be removed and itergrated inside .deploy_robot()
         
         writeRobotURDF(builder_jm)
 
