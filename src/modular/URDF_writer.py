@@ -2351,8 +2351,6 @@ class UrdfWriter:
         elif selected_module.type in { 'cube', 'mobile_base' }:
             # if the module is a hub, remove it from the list of hubs
             self.listofhubs.remove(selected_module)
-            # if the module is a hub, remove its connectors elements from URDF
-            self.remove_all_connectors()
 
         # if the parent module is a hub, decrease the tag number. A chain has been removed, tag should be reset accordingly
         if father.type in {'cube', 'mobile_base', 'base_link'} and selected_module.type not in {'cube', 'mobile_base'}:
@@ -3731,6 +3729,8 @@ class UrdfWriter:
                                 roll=roll,
                                 pitch=pitch,
                                 yaw=yaw)
+                modulenode.xml_tree_elements.append(con_name)
+                modulenode.mesh_elements.append(con_name)
                 
     def compute_payload(self, samples):
         self.model_stats.update_model()
