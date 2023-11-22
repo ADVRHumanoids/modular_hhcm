@@ -2224,11 +2224,13 @@ class UrdfWriter:
         # add list of xml elements with an associated visual mesh as attribute
         setattr(new_module, 'mesh_elements', [])
 
+        # For certain types of modules, the model is considered as floating base, i.e. the base_link is not fixed to the world frame, but is connected through a floating joint.
+        # WARNING: this changes the behavior of the whole URDF not only for this module
+        if new_module.type in {'mobile_base'}:
+            self.set_floating_base(True)
+
         # Depending on the type of the parent module and the new module, call the right method to add the new module.
         # Add the module to the correct chain via the 'add_to_chain' method.
-        
-        #if self.parent_module.type == "base_link":
-
         if self.parent_module.type == 'joint':
             if new_module.type in { 'joint', 'wheel' }:
                 # joint + joint
@@ -2245,7 +2247,7 @@ class UrdfWriter:
         elif self.parent_module.type == 'wheel':
             # TODO: prevent adding modules after wheels in a better way (raise exception?)
             return {'result': 'ERROR: module cannot be added after wheel module. Select another chain or remove the wheel module.'}
-        elif self.parent_module.type == 'cube' or self.parent_module.type == "mobile_base":
+        elif self.parent_module.type in {'cube', "mobile_base"}:
             if new_module.type in { 'joint', 'wheel' }:
                 # cube + joint
                 self.print("cube + joint")
@@ -3242,17 +3244,20 @@ class UrdfWriter:
             self.add_link_element(new_Joint.distal_link_name + '_rotor_fast', new_Joint, 'body_2_fast', is_geared=True)
 
 
-    def add_cube(self, new_Cube, parent_name, transform):
+    def add_cube(self, new_Cube, parent_name, transform, cube_name=None):
         x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(transform)
 
-        setattr(new_Cube, 'name', 'L_' + str(new_Cube.i) + '_link_' + str(new_Cube.p) + new_Cube.tag)
+        if cube_name:
+            setattr(new_Cube, 'name', cube_name)
+        else:
+            setattr(new_Cube, 'name', 'L_' + str(new_Cube.i) + '_link_' + str(new_Cube.p) + new_Cube.tag)
 
         self.add_link_element(new_Cube.name, new_Cube, 'body_1')
         self.add_gazebo_element(new_Cube, new_Cube.gazebo.body_1, new_Cube.name)
         
         self.add_connectors(new_Cube)
 
-        fixed_joint_name = 'L_' + str(new_Cube.i) + '_fixed_joint_' + str(new_Cube.p) + new_Cube.tag
+        fixed_joint_name = 'fixed_' + new_Cube.name
 
         ET.SubElement(self.root,
                         "xacro:add_fixed_joint",
@@ -3266,8 +3271,15 @@ class UrdfWriter:
                         roll=roll,
                         pitch=pitch,
                         yaw=yaw)
-        # add the xacro:add_gripper_fingers element to the list of urdf elements
+        # add the xacro:add_fixed_joint element to the list of urdf elements
         new_Cube.xml_tree_elements.append(fixed_joint_name)
+
+        if new_Cube.type == 'mobile_base':
+            ET.SubElement(self.root, 
+                        "xacro:add_mobile_base_sensors", 
+                        parent_name=new_Cube.name)
+            # add the xacro:add_mobile_base_sensors element to the list of urdf elements
+            new_Cube.xml_tree_elements.append(fixed_joint_name)
 
         #  Add the cube to the list of hubs
         self.listofhubs.append(new_Cube)     
