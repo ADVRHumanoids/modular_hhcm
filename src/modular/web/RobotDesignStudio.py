@@ -389,7 +389,8 @@ def addNewModule():
     
         module_data = writer.add_module(filename, offset, reverse, addons)
 
-        return Response(response=json.dumps({'id': module_data['mesh_names']}),
+        return Response(response=json.dumps({'id': module_data['lastModule_name'],
+                                             'meshes': module_data['mesh_names']}),
                         status=200,
                         mimetype="application/json")
 
