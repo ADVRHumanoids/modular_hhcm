@@ -1171,25 +1171,10 @@ class UrdfWriter:
 
         self.inverse_branch_switcher = {y: x for x, y in iteritems(self.branch_switcher)}
 
-        self.n_cubes = 0
-        self.cube_switcher = {
-            0: 'a',
-            1: 'b',
-            2: 'c',
-            3: 'd',
-            4: 'e',
-            5: 'f',
-            6: 'g',
-            7: 'h'
-        }
-
         self.listofchains = []
         self.listofhubs = []
 
         self.origin, self.xaxis, self.yaxis, self.zaxis = (0, 0, 0.4), (1, 0, 0), (0, 1, 0), (0, 0, 1)
-
-        # add attribute corresponding to the connector transform
-        self.T_con = tf.transformations.translation_matrix((0, 0, 0.0))  # self.slavecube.geometry.connector_length))
 
         data = {'type': "base_link", 'name': "base_link", 'kinematics_convention': "urdf"}
 
@@ -2640,8 +2625,7 @@ class UrdfWriter:
         if selected_module.type == 'cube':
             data = {'lastModule_type': selected_module.type,
                     'lastModule_name': selected_module.name,
-                    'flange_size': selected_module.flange_size,
-                    'count': self.n_cubes}
+                    'flange_size': selected_module.flange_size}
         else:
             data = {'lastModule_type': selected_module.type,
                     'lastModule_name': selected_module.name,
@@ -2728,8 +2712,7 @@ class UrdfWriter:
         if selected_module.type == 'cube':
             data = {'lastModule_type': selected_module.type,
                     'lastModule_name': selected_module.name,
-                    'flange_size': selected_module.flange_size,
-                    'count': self.n_cubes}
+                    'flange_size': selected_module.flange_size}
         else:
             data = {'lastModule_type': selected_module.type,
                     'lastModule_name': selected_module.name,
