@@ -2352,7 +2352,7 @@ class UrdfWriter:
             # if the module is a hub, remove it from the list of hubs
             self.listofhubs.remove(selected_module)
             # if the module is a hub, remove its connectors elements from URDF
-            self.remove_connectors()
+            self.remove_all_connectors()
 
         # if the parent module is a hub, decrease the tag number. A chain has been removed, tag should be reset accordingly
         if father.type in {'cube', 'mobile_base', 'base_link'} and selected_module.type not in {'cube', 'mobile_base'}:
@@ -3691,7 +3691,7 @@ class UrdfWriter:
         return robot_name
 
     # Remove connectors when deploying the robot
-    def remove_connectors(self):
+    def remove_all_connectors(self):
 
         # update generator expression
         self.update_generators()
@@ -3784,7 +3784,7 @@ def write_file_to_stdout(urdf_writer: UrdfWriter, homing_map, robot_name='modula
     content = None
     with suppress_stdout():
 
-        urdf_writer.remove_connectors()
+        urdf_writer.remove_all_connectors()
 
         if args.output == 'urdf':
             content = urdf_writer.process_urdf(xacro_mappings=xacro_mappings)
