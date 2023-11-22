@@ -172,6 +172,8 @@ class Plugin:
 
         root = ET.Element('robot', name="ModularBot")
 
+        active_modules_chains = []
+
         groups = []
         chains = []
         joints = []
@@ -182,7 +184,20 @@ class Plugin:
         i = 0
 
         self.urdf_writer.print(self.urdf_writer.listofchains)
-        for joints_chain in self.urdf_writer.listofchains:
+
+        for modules_chain in self.urdf_writer.listofchains:
+            # check number of joints and active modules in the chain. 
+            joint_num = 0
+            for joint_module in modules_chain:
+                if joint_module.type in {'joint', 'dagana', 'wheel', 'tool_exchanger', 'gripper', 'drill'}:
+                    joint_num += 1
+            # If 0, skip it. The chain doesn't need to be added to the srdf in this case.
+            if joint_num == 0:
+                continue
+            else:
+                active_modules_chains.append(modules_chain)
+
+        for joints_chain in active_modules_chains:
             group_name = "chain" + self.urdf_writer.branch_switcher.get(i + 1)
             # group_name = "arm" + self.urdf_writer.branch_switcher.get(i + 1)
             groups.append(ET.SubElement(root, 'group', name=group_name))
@@ -190,12 +205,14 @@ class Plugin:
             tip_link = self.urdf_writer.find_chain_tip_link(joints_chain)
             chains.append(ET.SubElement(groups[i], 'chain', base_link=base_link, tip_link=tip_link))
             i += 1
+        
         i = 0
         arms_group = ET.SubElement(root, 'group', name="arms")
         chains_group = ET.SubElement(root, 'group', name="chains")
         wheels_group = self.add_wheel_group_to_srdf(root, "wheels")
         group_state = ET.SubElement(root, 'group_state', name="home", group="chains")
-        for joints_chain in self.urdf_writer.listofchains:
+
+        for joints_chain in active_modules_chains:
             group_name = "chain" + self.urdf_writer.branch_switcher.get(i + 1)
             groups_in_chains_group.append(ET.SubElement(chains_group, 'group', name=group_name))
             groups_in_arms_group.append(ET.SubElement(arms_group, 'group', name=group_name))
