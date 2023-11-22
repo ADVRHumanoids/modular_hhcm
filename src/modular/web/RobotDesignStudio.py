@@ -365,10 +365,18 @@ def addNewModule():
                 mimetype="application/json"
             )
 
+        # Get the right writer instance depending on the mode
+        writer = get_writer()
+
         filename = req['name']
         app.logger.debug(filename)
 
-        app.logger.debug(req['parent'] if 'parent' in req else 'no parent')
+        parent = req['parent'] if 'parent' in req else None
+        app.logger.debug(parent)
+        
+        # We update the selected module to the one selected in the GUI. If no module is selected, we don't update it, since the BE will keep track of the current parent
+        if parent:
+            writer.select_module_from_name(parent, None)
 
         offset = float(req['offset']['yaw'] if 'offset' in req and 'yaw' in req['offset'] else 0) # we user RPY notation
         app.logger.debug(offset)
@@ -377,13 +385,13 @@ def addNewModule():
         app.logger.debug(reverse)
 
         addons = req['addons'] if 'addons' in req else []
+        app.logger.debug(addons)
     
-        # Get the right writer instance depending on the mode
-        writer = get_writer()
+        module_data = writer.add_module(filename, offset, reverse, addons)
 
-        writer.add_module(filename, offset, reverse, addons)
-
-        return Response(status=204)
+        return Response(response=json.dumps({'id': module_data['mesh_names']}),
+                        status=200,
+                        mimetype="application/json")
 
     except ValueError as e:
         # validation failed
