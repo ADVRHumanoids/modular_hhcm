@@ -471,7 +471,7 @@ class Module(object):
             pass
 
     def get_hub_connections_tf(self, reverse):
-        """Computes the homogeneous transformation matrices for the 4 cube connections"""
+        """Computes the homogeneous transformation matrices for the 4 hub connections"""
         origin, xaxis, yaxis, zaxis = (0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1)
         max_num_con = 10
 
@@ -536,8 +536,8 @@ class Module(object):
             'drill': self.get_homogeneous_matrix,
             'dagana': lambda reverse: None,
             'gripper': self.get_homogeneous_matrix,
-            'cube': self.get_hub_connections_tf, #  self.get_cube_connections_tf,
-            'mobile_base': self.get_hub_connections_tf, #  self.get_mobile_base_connections_tf,
+            'cube': self.get_hub_connections_tf,
+            'mobile_base': self.get_hub_connections_tf,
             'base_link': tf.transformations.identity_matrix()
         }
         return switcher.get(x, 'Invalid type')(reverse)
