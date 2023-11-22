@@ -1190,6 +1190,9 @@ class UrdfWriter:
         # update generator expression
         self.update_generators()
 
+        # map between name of the mesh and the module
+        self.mesh_to_module_map = {}
+
         self.model_stats = ModelStats(self)
 
     def set_floating_base(self, floating_base):
@@ -2217,6 +2220,7 @@ class UrdfWriter:
             size_z=str(length),
             mass=str(mass),
             radius=str(radius))
+        self.parent_module.mesh_elements.append(drillbit_name)
 
         trasl = tf.transformations.translation_matrix((0.0, 0.0, length))
         rot = tf.transformations.euler_matrix(0.0, 0.0, 0.0, 'sxyz')
@@ -2257,6 +2261,7 @@ class UrdfWriter:
             size_z=str(abs(y_offset)),
             mass=str(mass),
             radius=str(radius))
+        self.parent_module.mesh_elements.append(handle_name)
 
         trasl = tf.transformations.translation_matrix((x_offset, y_offset, z_offset))
         if y_offset >= 0.0:
@@ -2411,6 +2416,7 @@ class UrdfWriter:
                 self.parent_module.addon_elements += self.add_handle(x_offset=new_addon['parameters']['x_offset'], y_offset=new_addon['parameters']['y_offset'], z_offset=new_addon['parameters']['z_offset'], mass=new_addon['parameters']['mass'], radius=new_addon['parameters']['radius'])
             else:
                 self.logger.info('Addon type not supported')
+
         except FileNotFoundError:
             raise FileNotFoundError(addon_filename+' was not found in the available resources')
 
@@ -2513,6 +2519,9 @@ class UrdfWriter:
         # add list of urdf elements as attribute
         setattr(new_module, 'xml_tree_elements', [])
 
+        # add list of xml elements with an associated visual mesh as attribute
+        setattr(new_module, 'mesh_elements', [])
+
         # Depending on the type of the parent module and the new module, call the right method to add the new module.
         # Add the module to the correct chain via the 'add_to_chain' method.
         
@@ -2576,6 +2585,9 @@ class UrdfWriter:
             except FileNotFoundError:
                 self.logger.error(f'Addon {addon} not found, skipping it')
 
+        # add meshed to the map
+        self.mesh_to_module_map.update({k: new_module.name for k in new_module.mesh_elements})
+
         if self.speedup:
             self.urdf_string = ""
         else:
@@ -2591,18 +2603,12 @@ class UrdfWriter:
                 self.print("%s%s" % (pre, node.name))
 
         # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
-        data = {'result': self.urdf_string,
+        data = {'mesh_names': new_module.mesh_elements,
+                'result': self.urdf_string,
                 'lastModule_type': new_module.type,
                 'lastModule_name': new_module.name,
                 'flange_size': new_module.flange_size,
                 'count': new_module.i}
-
-        # if new_module.name.endswith('_stator'):
-        #     new_module.name = selected_module[:-7]
-        # last_module = anytree.search.findall_by_attr(L_0a, selected_module)[0]
-
-
-        # self.print(self.parent_module)
 
         self.info_print("Module added to URDF: " + new_module.name + " (" + new_module.type + ")")
 
@@ -2658,6 +2664,11 @@ class UrdfWriter:
             for node in self.urdf_nodes_generator:
                 try:
                     if node.attrib['name'] in selected_module.addon_elements:
+                        # remove mesh from list of meshes and from the map
+                        if node.attrib['name'] in selected_module.mesh_elements:
+                            selected_module.mesh_elements.remove(node.attrib['name'])
+                            self.mesh_to_module_map.pop(node.attrib['name'])
+                        # remove node from tree
                         self.root.remove(node)
                 except KeyError:
                     pass
@@ -2667,6 +2678,8 @@ class UrdfWriter:
                 self.add_addon(addon_filename=addon)
             except FileNotFoundError:
                 self.logger.error(f'Addon {addon} not found, skipping it')
+
+        self.mesh_to_module_map.update({k: selected_module.name for k in selected_module.mesh_elements})
 
         if self.speedup:
             self.urdf_string = ""
@@ -2729,6 +2742,11 @@ class UrdfWriter:
         for node in self.urdf_nodes_generator:
             try:
                 if node.attrib['name'] in xml_elements_to_remove:
+                    # remove mesh from list of meshes and from the map
+                    if node.attrib['name'] in selected_module.mesh_elements:
+                        selected_module.mesh_elements.remove(node.attrib['name'])
+                        self.mesh_to_module_map.pop(node.attrib['name'])
+                    # remove node from tree
                     self.root.remove(node)
             except KeyError:
                 pass
@@ -3076,6 +3094,7 @@ class UrdfWriter:
                           yaw=yaw)
             # add the xacro:add_dagana element to the list of urdf elements
             new_Link.xml_tree_elements.append(new_Link.name)
+            new_Link.mesh_elements += [new_Link.name + '_top_link', new_Link.name + '_bottom_link']
 
             setattr(new_Link, 'dagana_joint_name', new_Link.name + '_claw_joint')
             setattr(new_Link, 'dagana_link_name', new_Link.name + '_bottom_link')
@@ -3112,7 +3131,8 @@ class UrdfWriter:
                           name=new_Link.camera_name,
                           parent_name=new_Link.name)
             # add the xacro:add_realsense_d_camera to the list of urdf elements
-            new_Link.xml_tree_elements.append(new_Link.camera_name)
+            new_Link.xml_tree_elements.append(new_Link.camera_name + '_link')
+            new_Link.mesh_elements.append(new_Link.camera_name)
 
             # <xacro:property name="velodyne_back_origin">
             #     # <origin xyz="-0.5305 -0.315 -0.1" rpy="0.0 0.0 3.141593"/>
@@ -3203,6 +3223,7 @@ class UrdfWriter:
                             filename=new_Link.filename)
             # add the xacro:add_gripper_fingers element to the list of urdf elements
             new_Link.xml_tree_elements.append(new_Link.name)
+            new_Link.mesh_elements += [new_Link.name + '_finger1', new_Link.name + '_finger2']
 
             # TO BE FIXED: ok for ros_control. How will it be for xbot2?
             self.control_plugin.add_joint(new_Link.joint_name_finger1)
@@ -3221,6 +3242,7 @@ class UrdfWriter:
             )
             # add the xacro:add_size_adapter element to the list of urdf elements
             new_Link.xml_tree_elements.append(new_Link.name)
+            new_Link.mesh_elements.append(new_Link.name)
             setattr(new_Link, 'flange_size', new_Link.size_out)
 
         self.add_gazebo_element(new_Link, new_Link.gazebo.body_1, new_Link.name)
@@ -3370,6 +3392,7 @@ class UrdfWriter:
                                     name=link_name)
         # Add the link to the list of urdf elements of the module
         module_obj.xml_tree_elements.append(link_name)
+        module_obj.mesh_elements.append(link_name)
 
         visual_bodies = getattr(module_obj.visual, body_name, None)
         collision_bodies = getattr(module_obj.collision, body_name, None)
