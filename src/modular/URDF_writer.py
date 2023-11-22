@@ -3270,7 +3270,10 @@ class UrdfWriter:
         new_Cube.xml_tree_elements.append(fixed_joint_name)
 
         #  Add the cube to the list of hubs
-        self.listofhubs.append(new_Cube)            
+        self.listofhubs.append(new_Cube)     
+
+        # Add cube and parent links pair to the list of collision elements to ignore
+        self.collision_elements.append((parent_name, new_Cube.name))       
 
     
     # noinspection PyPep8Naming
@@ -3378,7 +3381,6 @@ class UrdfWriter:
 
         if is_structural:
             self.add_cube(new_Cube, parent_name, transform)
-            self.collision_elements.append((past_Cube.name, new_Cube.name))
         else:
             # if the parent is a hub, the n_child_hubs attribute is incremented, in order to keep track of the number of hubs connected to the parent hub and therefore the number of ports occupied. This is needed to select the right connector where to connect the new module 
             self.parent_module.n_child_hubs += 1
@@ -3415,7 +3417,6 @@ class UrdfWriter:
 
         if is_structural:
             self.add_cube(new_Cube, parent_name, transform)
-            self.collision_elements.append((past_Link.name, new_Cube.name))
 
 
     def cube_after_joint(self, new_Cube, past_Joint, offset, reverse, is_structural=True):
@@ -3449,7 +3450,6 @@ class UrdfWriter:
 
         if is_structural:
             self.add_cube(new_Cube, parent_name, transform)
-            self.collision_elements.append((past_Joint.distal_link_name, new_Cube.name))
 
 
     # noinspection PyPep8Naming
