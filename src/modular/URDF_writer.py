@@ -3270,14 +3270,7 @@ class UrdfWriter:
         new_Cube.xml_tree_elements.append(fixed_joint_name)
 
         #  Add the cube to the list of hubs
-        self.listofhubs.append(new_Cube)
-
-        # Set the number of child hubs to 0 (it will be incremented when a child hub is added)
-        setattr(new_Cube, 'n_child_hubs', 0)
-        if not new_Cube.is_structural:
-            if self.parent_module.type in {'cube', 'mobile_base'}:
-                # if the parent is a hub, the n_child_hubs attribute is incremented, in order to keep track of the number of hubs connected to the parent hub and therefore the number of ports occupied. This is needed to select the right connector where to connect the new module 
-                self.parent_module.n_child_hubs += 1            
+        self.listofhubs.append(new_Cube)            
 
     
     # noinspection PyPep8Naming
@@ -3380,10 +3373,15 @@ class UrdfWriter:
         # HACK: to handle 90° offset between PINO and CONCERT flanges
         transform = self.apply_adapter_transform_rotation(transform, past_Cube.flange_size, new_Cube.flange_size)
 
+        # Set the number of child hubs to 0 (it will be incremented when a child hub is added)
+        setattr(new_Cube, 'n_child_hubs', 0)
+
         if is_structural:
             self.add_cube(new_Cube, parent_name, transform)
-
             self.collision_elements.append((past_Cube.name, new_Cube.name))
+        else:
+            # if the parent is a hub, the n_child_hubs attribute is incremented, in order to keep track of the number of hubs connected to the parent hub and therefore the number of ports occupied. This is needed to select the right connector where to connect the new module 
+            self.parent_module.n_child_hubs += 1
 
 
     def cube_after_link(self, new_Cube, past_Link, offset, reverse, is_structural=True):
@@ -3412,9 +3410,11 @@ class UrdfWriter:
 
         parent_name = past_Link.name
 
+        # Set the number of child hubs to 0 (it will be incremented when a child hub is added)
+        setattr(new_Cube, 'n_child_hubs', 0)
+
         if is_structural:
             self.add_cube(new_Cube, parent_name, transform)
-
             self.collision_elements.append((past_Link.name, new_Cube.name))
 
 
@@ -3444,9 +3444,11 @@ class UrdfWriter:
 
         parent_name = past_Joint.distal_link_name
 
+        # Set the number of child hubs to 0 (it will be incremented when a child hub is added)
+        setattr(new_Cube, 'n_child_hubs', 0)
+
         if is_structural:
             self.add_cube(new_Cube, parent_name, transform)
-
             self.collision_elements.append((past_Joint.distal_link_name, new_Cube.name))
 
 
