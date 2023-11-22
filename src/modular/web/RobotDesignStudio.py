@@ -511,7 +511,7 @@ def addMobilePlatform():
     app.logger.debug(offset)
     # Get the right writer instance depending on the mode
     writer = get_writer()
-    data = writer.add_mobile_platform(offset)
+    data = writer.add_module(filename, offset, reverse=False, addons=[])
     data = jsonify(data)
     return data
 
