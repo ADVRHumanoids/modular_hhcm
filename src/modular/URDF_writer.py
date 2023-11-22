@@ -1419,45 +1419,22 @@ class UrdfWriter:
                     if self.parent_module.is_structural == False:
                         self.add_socket()
 
-                # # HACK: for CONCERT mobile base select directly the connector for the manipulator. Discovery of the legs is skipped for now!
-                # if parent_module.type == 'mobile_base':
-                #     parent_module.selected_port = 5
-
             # get which ports in the ESC slave are active
             active_ports = int(module['active_ports'])
             self.print('active_ports:', active_ports)
 
-            #add the module
+            # set is_structural. TODO: find a better way to do this
+            is_structural = True
             if module_filename=='master_cube.yaml':
-                # HACK: set hard-code is_structural to be False, because we usually don't use it as a structural part of the robot.
-                data = self.add_module('master_cube.yaml', 0.0, reverse=False,  robot_id=robot_id, active_ports=active_ports, is_structural=False)  
+                # HACK: hard-code is_structural to be False, because we usually don't use it as a structural part of the robot.
+                is_structural = False
             elif module_filename=='concert/mobile_platform_concert.json':
-                is_structural = True
                 if self.parent_module.type == 'mobile_base':
+                    # HACK: hard-code is_structural to be False, because the second mobile base is not structural. The hub slave is added to the robot just to have more ports.
                     is_structural = False
-                data = self.add_mobile_platform(is_structural=is_structural, robot_id=robot_id, active_ports=active_ports)
-                # # leg + wheel 1
-                # data = self.select_module_from_name('mobile_base_con1')
-                # wheel_data, steering_data = self.add_wheel_module(wheel_filename='concert/module_wheel_concert.json', 
-                #                                     steering_filename='concert/module_steering_concert_fl_rr.json', 
-                #                                     angle_offset=0.0, robot_id=(21,22))
-                # # leg + wheel 2
-                # data = self.select_module_from_name('mobile_base_con2')
-                # wheel_data, steering_data = self.add_wheel_module(wheel_filename='concert/module_wheel_concert.json', 
-                #                                     steering_filename='concert/module_steering_concert_fr_rl.json', 
-                #                                     angle_offset=0.0, robot_id=(11,12))
-                # # leg + wheel 3
-                # data = self.select_module_from_name('mobile_base_con3')
-                # wheel_data, steering_data = self.add_wheel_module(wheel_filename='concert/module_wheel_concert.json', 
-                #                                     steering_filename='concert/module_steering_concert_fr_rl.json', 
-                #                                     angle_offset=0.0, robot_id=(31,32))
-                # # leg + wheel 4
-                # data = self.select_module_from_name('mobile_base_con4')
-                # wheel_data, steering_data = self.add_wheel_module(wheel_filename='concert/module_wheel_concert.json', 
-                #                                     steering_filename='concert/module_steering_concert_fl_rr.json', 
-                #                                     angle_offset=0.0, robot_id=(41,42))
-            else:
-                data = self.add_module(module_filename, 0, robot_id=robot_id, active_ports=active_ports)
+
+            #add the module
+            data = self.add_module(module_filename, 0, reverse=False, robot_id=robot_id, active_ports=active_ports, is_structural=is_structural)
                 
             if self.verbose:
                 for pre, _, node in RenderTree(self.base_link):
