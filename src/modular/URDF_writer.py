@@ -3268,6 +3268,8 @@ class UrdfWriter:
         if is_structural:
             self.add_hub(new_Hub, parent_name, transform, hub_name=module_name)
         else:
+            # HACK: we set the name of the non-structural hub to be the same as the parent. This is needed to correctly write the SRDF chains!
+            setattr(new_Hub, 'name', parent_name)
             # if the parent is a hub, the n_child_hubs attribute is incremented, in order to keep track of the number of hubs connected to the parent hub and therefore the number of ports occupied. This is needed to select the right connector where to connect the new module 
             self.parent_module.n_child_hubs += 1
         
