@@ -2951,20 +2951,18 @@ class UrdfWriter:
 
         self.print(name)
 
-        # If the selected module is the stator of a joint modify the string so to select the joint itself.
-        # This is needed because from the GUI when you select a joint by clicking, the mesh corresponding to the stator
-        # is selected, while the module we want to access is the joint (the stator is not part of the tree, only urdf).
-        if name.endswith('_stator'):
-            # Take the joint when the mesh of the joint stator is selected
-            selected_module_name = name[:-7]
-        elif '_con' in name:
+        # If the name of the mesh clicked on the GUI is not the name of the module, but the name of the mesh, we need to
+        # find the module object from the mesh name. The mesh_to_module_map dictionary is used for this. Default value
+        # is the name itself, so if the name is not in the dictionary, it is the name of the module itself.
+        selected_module_name = self.mesh_to_module_map.get(name, name)
+
+        # If the selected mesh is the one of a connector, we need to select the parent module instead, and set the right port
+        if '_con' in name:
             # Take the box as parent when a connector is selected
             selected_module_name = name[:-5]
             # Save the selected port. We take the connector index from the name and increment it b 1 to get the port
             selected_port = int(name[-1]) + 1
             self.print(selected_port)
-        else:
-            selected_module_name = name
 
         self.print(selected_module_name)
 
