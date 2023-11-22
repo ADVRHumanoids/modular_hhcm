@@ -3156,10 +3156,7 @@ class UrdfWriter:
                         "xacro:add_mobile_base_sensors", 
                         parent_name=new_Hub.name)
             # add the xacro:add_mobile_base_sensors element to the list of urdf elements
-            new_Hub.xml_tree_elements.append(fixed_joint_name)
-
-        #  Add the hub to the list of hubs
-        self.listofhubs.append(new_Hub)     
+            new_Hub.xml_tree_elements.append(fixed_joint_name)  
 
         # Add hub and parent links pair to the list of collision elements to ignore
         self.collision_elements.append((parent_name, new_Hub.name))       
@@ -3273,6 +3270,9 @@ class UrdfWriter:
         else:
             # if the parent is a hub, the n_child_hubs attribute is incremented, in order to keep track of the number of hubs connected to the parent hub and therefore the number of ports occupied. This is needed to select the right connector where to connect the new module 
             self.parent_module.n_child_hubs += 1
+        
+        #  Add the hub to the list of hubs
+        self.listofhubs.append(new_Hub)   
 
 
     def hub_after_link(self, new_Hub, past_Link, offset, reverse, is_structural=True, module_name=None):
@@ -3307,6 +3307,9 @@ class UrdfWriter:
         if is_structural:
             self.add_hub(new_Hub, parent_name, transform, hub_name=module_name)
 
+        #  Add the hub to the list of hubs
+        self.listofhubs.append(new_Hub) 
+
 
     def hub_after_joint(self, new_Hub, past_Joint, offset, reverse, is_structural=True, module_name=None):
         """Adds to the URDF tree a hub module as a child of a joint module
@@ -3339,6 +3342,9 @@ class UrdfWriter:
 
         if is_structural:
             self.add_hub(new_Hub, parent_name, transform, hub_name=module_name)
+        
+        #  Add the hub to the list of hubs
+        self.listofhubs.append(new_Hub) 
 
 
     # noinspection PyPep8Naming
