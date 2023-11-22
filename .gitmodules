@@ -1,3 +1,3 @@
 [submodule "src/modular/modular_resources"]
 	path = src/modular/modular_resources
-	url = https://github.com/ADVRHumanoids/modular_resources.git
+	url = https://fhi-git.fraunhofer.it/smart-pro/modular-robot-module/modular_resources.git
