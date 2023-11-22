@@ -1433,8 +1433,13 @@ class UrdfWriter:
                     # HACK: hard-code is_structural to be False, because the second mobile base is not structural. The hub slave is added to the robot just to have more ports.
                     is_structural = False
 
+            # HACK: manually set name of mobile platform to be 'mobile_base', instead of auto-generated name
+            module_name = None
+            if module_filename=='concert/mobile_platform_concert.json':
+                module_name = 'mobile_base'
+
             #add the module
-            data = self.add_module(module_filename, 0, reverse=False, robot_id=robot_id, active_ports=active_ports, is_structural=is_structural)
+            data = self.add_module(module_filename, 0, reverse=False, robot_id=robot_id, active_ports=active_ports, is_structural=is_structural, module_name=module_name)
                 
             if self.verbose:
                 for pre, _, node in RenderTree(self.base_link):
@@ -1993,7 +1998,7 @@ class UrdfWriter:
             raise FileNotFoundError(addon_filename+' was not found in the available resources')
 
 
-    def add_module(self, filename, angle_offset, reverse=False, addons =[], robot_id=0, active_ports=3, is_structural=True):
+    def add_module(self, filename, angle_offset, reverse=False, addons =[], robot_id=0, active_ports=3, is_structural=True, module_name=None):
         """Add a module specified by filename as child of the currently selected module.
 
         Parameters
@@ -2118,7 +2123,7 @@ class UrdfWriter:
             elif new_module.type in { 'cube', 'mobile_base' }:
                 # joint + hub
                 self.print("joint + hub")
-                self.hub_after_joint(new_module, self.parent_module, angle_offset, reverse=reverse, is_structural=is_structural)
+                self.hub_after_joint(new_module, self.parent_module, angle_offset, reverse=reverse, is_structural=is_structural, module_name=module_name)
             else:
                 # joint + link
                 self.print("joint + link")
@@ -2134,7 +2139,7 @@ class UrdfWriter:
             elif new_module.type in { 'cube', 'mobile_base' }:
                 # hub + hub
                 self.print("hub + hub")
-                self.hub_after_hub(new_module, self.parent_module, angle_offset, reverse=reverse, is_structural=is_structural)
+                self.hub_after_hub(new_module, self.parent_module, angle_offset, reverse=reverse, is_structural=is_structural, module_name=module_name)
             else:
                 # hub + link
                 self.print("hub + link")
@@ -2147,7 +2152,7 @@ class UrdfWriter:
             elif new_module.type in { 'cube', 'mobile_base' }:
                 # link + hub
                 self.print("link + hub")
-                self.hub_after_link(new_module, self.parent_module, angle_offset, reverse=reverse, is_structural=is_structural)
+                self.hub_after_link(new_module, self.parent_module, angle_offset, reverse=reverse, is_structural=is_structural, module_name=module_name)
             else:
                 # link + link
                 self.print("link + link")
@@ -3231,7 +3236,7 @@ class UrdfWriter:
         self.add_joint(new_Joint, parent_name, transform, reverse)
 
     
-    def hub_after_hub(self, new_Hub, past_Hub, offset, reverse, is_structural=True):
+    def hub_after_hub(self, new_Hub, past_Hub, offset, reverse, is_structural=True, module_name=None):
         """Adds to the URDF tree a hub module as a child of a hub module
 
         Parameters
@@ -3264,13 +3269,13 @@ class UrdfWriter:
         setattr(new_Hub, 'n_child_hubs', 0)
 
         if is_structural:
-            self.add_hub(new_Hub, parent_name, transform)
+            self.add_hub(new_Hub, parent_name, transform, hub_name=module_name)
         else:
             # if the parent is a hub, the n_child_hubs attribute is incremented, in order to keep track of the number of hubs connected to the parent hub and therefore the number of ports occupied. This is needed to select the right connector where to connect the new module 
             self.parent_module.n_child_hubs += 1
 
 
-    def hub_after_link(self, new_Hub, past_Link, offset, reverse, is_structural=True):
+    def hub_after_link(self, new_Hub, past_Link, offset, reverse, is_structural=True, module_name=None):
         """Adds to the URDF tree a hub module as a child of a link module
 
         Parameters
@@ -3300,10 +3305,10 @@ class UrdfWriter:
         setattr(new_Hub, 'n_child_hubs', 0)
 
         if is_structural:
-            self.add_hub(new_Hub, parent_name, transform)
+            self.add_hub(new_Hub, parent_name, transform, hub_name=module_name)
 
 
-    def hub_after_joint(self, new_Hub, past_Joint, offset, reverse, is_structural=True):
+    def hub_after_joint(self, new_Hub, past_Joint, offset, reverse, is_structural=True, module_name=None):
         """Adds to the URDF tree a hub module as a child of a joint module
 
         Parameters
@@ -3333,7 +3338,7 @@ class UrdfWriter:
         setattr(new_Hub, 'n_child_hubs', 0)
 
         if is_structural:
-            self.add_hub(new_Hub, parent_name, transform)
+            self.add_hub(new_Hub, parent_name, transform, hub_name=module_name)
 
 
     # noinspection PyPep8Naming
