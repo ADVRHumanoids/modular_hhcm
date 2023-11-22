@@ -281,23 +281,6 @@
         <xacro:concert_sensors.add_mobile_base_sensors parent_name="${parent_name}"/>
     </xacro:macro>
 
-    <!-- Macro for adding a master cube -->
-    <xacro:macro name="add_master_cube" params="name filename type">
-
-        <xacro:property name="module" value="${xacro.load_yaml(filename)}"/>
-
-        <joint name="fixed" type="fixed">
-            <parent link="base_link"/>
-            <child link="${name}"/>
-            <axis rpy="0 0 0" xyz="0 0 1"/>
-            <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
-        </joint>
-
-        <xacro:property name="body_name" value="body_1"/>
-        <xacro:add_link_element name="${name}" type="${type}" module="${module}" body_name="${body_name}"/>
-
-    </xacro:macro>
-
     <xacro:macro name="add_connector" params="name type parent_name x y z roll pitch yaw">
 
         <link name="${name}">
@@ -318,15 +301,6 @@
                     xyz="${x} ${y} ${z}"/>
         </joint>
 
-    </xacro:macro>
-
-    <!-- Macro for adding a slave cube -->
-    <xacro:macro name="add_slave_cube" params="name filename type">
-
-        <xacro:property name="module" value="${xacro.load_yaml(filename)}"/>
-        <xacro:property name="body_name" value="body_1"/>
-        <xacro:add_link_element name="${name}" type="${type}" module="${module}" body_name="${body_name}"/>
-        
     </xacro:macro>
 
     <!-- Macro for adding a socket -->

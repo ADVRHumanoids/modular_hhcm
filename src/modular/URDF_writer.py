@@ -1427,8 +1427,7 @@ class UrdfWriter:
 
             #add the module
             if module_filename=='master_cube.yaml':
-                # data = self.add_slave_cube(0, is_structural=False, robot_id=robot_id, active_ports=active_ports)
-                # HACK: se hard-code is_structural to be False, because we usually don't use it as a structural part of the robot.
+                # HACK: set hard-code is_structural to be False, because we usually don't use it as a structural part of the robot.
                 data = self.add_module('master_cube.yaml', 0.0, reverse=False,  robot_id=robot_id, active_ports=active_ports, is_structural=False)  
             elif module_filename=='concert/mobile_platform_concert.json':
                 is_structural = True
@@ -1557,285 +1556,6 @@ class UrdfWriter:
             if joint in chain:
                 chain.remove(joint)
         self.listofchains = list(filter(None, self.listofchains))
-
-
-    # noinspection PyPep8Naming
-    def add_slave_cube(self, angle_offset, is_structural=True, robot_id=0, active_ports=1, connection_port=2):
-        """Method adding slave/master cube to the tree.
-
-        Parameters
-        ----------
-        angle_offset: float
-            Value of the angle between the parent module output frame and the cube input frame
-
-        is_structural: float
-            Bool variable indicating if the box is a structural part of the robot or it's just used as computation unit away from the robot.
-            In the second case the different chains are placed in default locations in a xy plane
-            (the user will then be queried to specify their actual location once the robot model is recontructed)
-
-        robot_id: int
-            Value of the robot_id set in the firmware of the module.
-            This is obtained in Discovery Mode when reading the JSON from the EtherCAT master. This is not used when in Bulding Mode.
-
-        active_ports: int
-            The number of active ports of the cube (how many ports have established a connection to a module).
-            The value is the conversion to int of the 4-bit binary string where each bit represent one port (1 if port is active, 0 if port is unactive)
-
-        Returns
-        -------
-        data: dict
-            Dictionary with as entries all the relevant info on the newly added module.
-            In particular the updated and newly processed urdf string.
-
-        """
-        # global T_con, L_0a, n_cubes, parent_module
-
-        # TODO: This part below the "if" is deprecated. It still uses "connectors" separate module.
-        # It was made to handle creating robots with multiple "boxes", which will be probably never done.
-        # If important should be reviewed and modify it as the part below the "else".
-
-        if self.parent_module != self.base_link :
-            # add slave cube
-            self.print('add_slave_cube')
-            # Generate name according to the # of cubes already in the tree
-            name = 'L_0' + self.cube_switcher.get(self.n_cubes)
-            self.n_cubes += 1
-            filename = 'master_cube.yaml'
-            
-            # call the method that reads the yaml file describing the cube and instantiate a new module object
-            try:
-                module_dict = self.modular_resources_manager.get_available_modules_dict()[filename]
-                template_dict = self.modular_resources_manager.get_available_modules_dict()['template.yaml']
-                slavecube = ModuleNode.module_from_yaml_dict(module_dict, self.parent_module, template_dict)
-            except KeyError:
-                raise KeyError(filename+' was not found in the available resources')
-
-            setattr(slavecube, 'name', name)
-
-            # Set attributes of the newly added module object
-            setattr(slavecube, 'i', self.parent_module.i)
-            setattr(slavecube, 'p', self.parent_module.p)
-            # flange_size is already set from the YAML file
-            # setattr(slavecube, 'flange_size', self.parent_module.flange_size)
-
-            setattr(slavecube, 'angle_offset', angle_offset)
-            setattr(slavecube, 'robot_id', robot_id)
-
-            # add the master cube to the xml tree
-            ET.SubElement(self.root, "xacro:add_slave_cube", type='cube', name=name, filename=filename)
-            self.add_connectors(slavecube)
-
-            self.add_gazebo_element(slavecube, slavecube.gazebo.body_1, slavecube.name)
-
-            # # Get inverse of the transform of the connector
-            # T_con_inv = tf.transformations.inverse_matrix(self.T_con)
-
-            # # Generate name and dict for the 1st connector module
-            # name_con1 = name + '_con1'
-            # data1 = {'Homogeneous_tf': T_con_inv, 'type': "con", 'name': name_con1, 'i': 0, 'p': 0, 'flange_size': 3}
-            # self.print('T_con_inv:', T_con_inv)
-
-            # Generate name and dict for the 1st connector module
-            name_con1 = name + '_con1'
-            data1 = {'Homogeneous_tf': T_con_inv, 'type': "con", 'name': name_con1, 'i': 0, 'p': 0, 'flange_size': 3}
-            self.print('T_con_inv:', T_con_inv)
-
-            if self.parent_module.type in { 'joint', 'wheel' }:
-                parent_distal_tf = self.parent_module.Distal_tf
-            elif self.parent_module.type == 'cube' or self.parent_module.type == 'mobile_base':
-                if self.parent_module.selected_port == 1:
-                    parent_distal_tf = self.parent_module.Con_1_tf
-                elif self.parent_module.selected_port == 2:
-                    parent_distal_tf = self.parent_module.Con_2_tf
-                elif self.parent_module.selected_port == 3:
-                    parent_distal_tf = self.parent_module.Con_3_tf
-                elif self.parent_module.selected_port == 4:
-                    parent_distal_tf = self.parent_module.Con_4_tf
-                elif self.parent_module.selected_port == 5:
-                    parent_distal_tf = self.parent_module.Con_5_tf
-            else:
-                parent_distal_tf = self.parent_module.Homogeneous_tf
-
-            if connection_port == 1:
-                cube_proximal_tf = slavecube.Con_1_tf
-            elif connection_port == 2:
-                cube_proximal_tf = slavecube.Con_2_tf
-            elif connection_port == 3:
-                cube_proximal_tf = slavecube.Con_3_tf
-            elif connection_port == 4:
-                cube_proximal_tf = slavecube.Con_4_tf
-            elif connection_port == 5:
-                cube_proximal_tf = slavecube.Con_5_tf
-
-            # Get transform representing the output frame of the parent module after a rotation of angle_offset
-            parent_transform = ModuleNode.get_rototranslation(parent_distal_tf,
-                                                       tf.transformations.rotation_matrix(angle_offset,
-                                                                                          self.zaxis))
-            cube_transform = ModuleNode.get_rototranslation(parent_transform, cube_proximal_tf)
-
-            x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(cube_transform)
-
-            # Generate the name of the fixed joint used to connect the cube
-            if self.parent_module.type == "cube" or self.parent_module.type == "mobile_base":
-                fixed_joint_name = 'FJ_' + self.parent_module.parent.name + '_' + name
-            else:
-                fixed_joint_name = 'FJ_' + self.parent_module.name + '_' + name
-
-            # Select the name of the parent to use to generate the urdf. If the parent is a joint use the name of the
-            # dummy link attached to it
-            if self.parent_module.type == "joint":
-                parent_name = self.parent_module.distal_link_name
-            else:
-                parent_name = self.parent_module.name
-
-            # Add the fixed joint to the xml tree
-            ET.SubElement(
-                self.root,
-                "xacro:add_fixed_joint",
-                type="fixed_joint",
-                name=fixed_joint_name,
-                father=parent_name,
-                child=name,
-                x=x,
-                y=y,
-                z=z,
-                roll=roll,
-                pitch=pitch,
-                yaw=yaw
-            )
-
-            if self.verbose:
-                # Render tree
-                for pre, _, node in anytree.render.RenderTree(self.base_link):
-                    self.print("%s%s" % (pre, node.name))
-
-            if self.speedup:
-                self.urdf_string = ""
-            else:
-                # Process the urdf string by calling the process_urdf method.
-                # Parse, convert from xacro and write to string.
-                self.urdf_string = self.process_urdf()
-
-            # Update the EtherCAT port connected to the electro-mechanical interface where the new module/slave will be added
-            #    1           2           3           4
-            #    o           o           o           o
-            #    |           |           |           |
-            # com-exp   upper port  front port    nothing
-            setattr(mastercube, 'selected_port', 3)
-            self.print('mastercube.selected_port :', mastercube.selected_port)
-
-            # save the active ports as a binary string
-            setattr(mastercube, 'active_ports', "{0:04b}".format(active_ports))
-            self.print('active_ports: ', mastercube.active_ports)
-
-            # save the occupied ports as a binary string
-            setattr(mastercube, 'occupied_ports', "{0:04b}".format(active_ports))
-            self.print('occupied_ports: ', mastercube.occupied_ports)
-
-
-            # Update the parent_module attribute of the URDF_writer class
-            self.parent_module = slavecube
-
-            self.listofhubs.append(slavecube)
-
-            # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
-            data = {'result': self.urdf_string,
-                    'lastModule_type': 'mastercube',
-                    'lastModule_name': name,
-                    'flange_size': 3,
-                    'count': self.n_cubes}
-
-            return data
-
-        else:
-            # add master cube
-            self.print('add_master_cube')
-            # Generate name according to the # of cubes already in the tree
-            name = 'L_0' + self.cube_switcher.get(self.n_cubes)
-            self.n_cubes += 1
-            filename = 'master_cube.yaml'
-
-            # self.T_con = tf.transformations.translation_matrix((0, 0, 0.1))
-            # self.T_con = self.mastercube.geometry.connector_length))
-
-            # call the method that reads the yaml file describing the cube and instantiate a new module object
-            try:
-                module_dict = self.modular_resources_manager.get_available_modules_dict()[filename]
-                template_dict = self.modular_resources_manager.get_available_modules_dict()['template.yaml']
-                mastercube = ModuleNode.module_from_yaml_dict(module_dict, self.parent_module, template_dict)
-            except KeyError:
-                raise KeyError(filename+' was not found in the available resources')
-
-            # set attributes of the newly added module object
-            setattr(mastercube, 'name', name)
-            setattr(mastercube, 'i', 0)
-            setattr(mastercube, 'p', 0)
-
-            setattr(mastercube, 'robot_id', robot_id)
-
-            setattr(mastercube, 'is_structural', is_structural)
-            if is_structural:
-                # add the master cube to the xml tree
-                ET.SubElement(self.root, "xacro:add_master_cube", type='cube', name=name, filename=filename)
-                self.add_connectors(mastercube)
-            else:
-                # add the master cube to the xml tree
-                #ET.SubElement(self.root, "xacro:add_master_cube", type='cube', name=name, filename=filename)
-                #ET.SubElement(self.root, "xacro:add_connectors", type='connectors', name=name, filename=filename)
-                pass
-
-            self.add_gazebo_element(mastercube, mastercube.gazebo.body_1, mastercube.name)
-
-
-            if self.speedup:
-                self.urdf_string = ""
-            else:
-                # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string.
-                self.urdf_string = self.process_urdf()
-
-            # Update the EtherCAT port connected to the electro-mechanical interface where the new module/slave will be added
-            #    1           2           3           4
-            #    o           o           o           o
-            #    |           |           |           |
-            # com-exp   upper port  front port    nothing
-            setattr(mastercube, 'selected_port', 2)
-            self.print('mastercube.selected_port :', mastercube.selected_port)
-
-            # save the active ports as a binary string
-            setattr(mastercube, 'active_ports', "{0:04b}".format(active_ports))
-            self.print('active_ports: ', mastercube.active_ports)
-
-            # save the occupied ports as a binary string
-            setattr(mastercube, 'occupied_ports', "0001")
-            self.print('occupied_ports: ', mastercube.occupied_ports)
-
-            # # If parent topology is greater than 2 the parent is a switch/hub so we need to find the right port where the module is connected
-            # if active_ports >= 3:
-            #     for port_idx in range(2, len(mastercube.active_ports) - 1)
-            #         if mastercube.active_ports[-port_idx] == 1:
-            #             mastercube.selected_port = port_idx
-            #             break
-
-            # if parent_active_ports == 3:
-            #     self.parent_module.selected_port = 3
-            # elif parent_active_ports == 5:
-            #     self.parent_module.selected_port = 4
-            # self.print('self.parent_module.selected_port: ', self.parent_module.selected_port)
-
-            # Update the parent_module attribute of the URDF_writer class. A default connection is chosen.
-            #self.parent_module = slavecube_con3
-            self.parent_module = mastercube
-
-            self.listofhubs.append(mastercube)
-
-            # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
-            data = {'result': self.urdf_string,
-                    'lastModule_type': 'mastercube',
-                    'lastModule_name': name,
-                    'flange_size': 3,
-                    'count': self.n_cubes}
-
-            return data
 
 
     # noinspection PyPep8Naming
@@ -2471,12 +2191,21 @@ class UrdfWriter:
         self.print("parent module:", self.parent_module.name, ", type :", self.parent_module.type)
 
         # Update the EtherCAT port connected to the electro-mechanical interface where the new module/slave will be added 
+        #################################################
+        # non-hub modules:
         #      1            2           3           4
         #      o            o           o           o
         #      |            |           |           |
         # input port   output port   nothing    nothing
+        #################################################
+        # cube modules:
+        #    1           2           3           4
+        #    o           o           o           o
+        #    |           |           |           |
+        # com-exp   upper port  front port    nothing
+        #################################################
         setattr(new_module, 'selected_port', 2)
-        self.print('mastercube.selected_port :', new_module.selected_port)
+        self.print('new_module.selected_port :', new_module.selected_port)
 
         # save the active ports as a binary string
         setattr(new_module, 'active_ports', "{0:04b}".format(active_ports))

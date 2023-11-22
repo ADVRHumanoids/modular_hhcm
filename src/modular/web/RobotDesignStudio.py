@@ -496,7 +496,6 @@ def addCube():
     app.logger.debug(offset)
     # Get the right writer instance depending on the mode
     writer = get_writer()
-    #data = writer.add_slave_cube(offset)
     data = writer.add_module(filename, offset, reverse=False, addons=[])
     data = jsonify(data)
     return data
