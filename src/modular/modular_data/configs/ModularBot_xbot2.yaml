@@ -76,6 +76,12 @@ xbotcore_plugins:
       solver: {value: AlberoImpedance, type: string}
       enable_feedback: {value: true, type: bool}
       fc_map: {value: {low: 0.85, high: 0.99}, type: map<double>}
+      use_payload_estimator:
+        value: false  # note: keep false if you care to live
+        type: bool
+      # payload_estimator_link:
+      #   value: TCP_gripper_A
+      #   type: string
   
   gripper:
     thread: rt_main
@@ -87,5 +93,8 @@ xbotcore_plugins:
 
 # additional parameters that don't relate to any plugin
 xbotcore_param:
-  /jm/tx_filter_autostart: { value: true, type: bool } # autostart joint filter
-  /jm/tx_filter_cutoff: { value: 2.0, type: double } # set default filter bandwidth
+  /xbot/hal/joint_safety/filter_autostart: { value: true, type: bool } # autostart joint filter
+  /xbot/hal/joint_safety/filter_cutoff_hz: { value: 2.0, type: double } # set default filter bandwidth
+  /xbot/trigger_safety_on_shutdown:
+      value: true
+      type: bool
