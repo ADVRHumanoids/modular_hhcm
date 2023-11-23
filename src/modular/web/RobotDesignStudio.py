@@ -652,7 +652,8 @@ def getURDF():
         # urdf= urdf_string.replace('package://modular/src/modular/web/static/models/modular/,'package://')
         urdf= urdf_string\
                 .replace('package://modular_resources',f'package:/{api_base_route}/resources/meshes')\
-                .replace('package://concert_resources',f'package:/{api_base_route}/resources/meshes')
+                .replace('package://concert_resources',f'package:/{api_base_route}/resources/meshes')\
+                .replace('package://fhi_resources',f'package:/{api_base_route}/resources/meshes')
 
 
         return  Response(
