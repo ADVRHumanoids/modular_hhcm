@@ -75,7 +75,7 @@ xbotcore_plugins:
         type: file
       solver: {value: AlberoImpedance, type: string}
       enable_feedback: {value: true, type: bool}
-      fc_map: {value: {grav: 0.2, dfl: 0.9}, type: map<double>}
+      fc_map: {value: {low: 0.85, high: 0.99}, type: map<double>}
   
   gripper:
     thread: rt_main
