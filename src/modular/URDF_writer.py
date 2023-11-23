@@ -1411,7 +1411,10 @@ class UrdfWriter:
                 #If the parent is a cube to support non-structural box we add a socket
                 if self.parent_module.type == 'cube':
                     if self.parent_module.is_structural == False:
-                        self.add_socket()
+                        # HACK: add a displacement to the socket position w.r.t. the base link. This is to avoid the meshes overlapping in the GUI when running the Discovery.
+                        # The right offset could be selected later with `update_module()`
+                        offset = float(self.parent_module.selected_port) - 3.0 # SUPER HACK
+                        self.add_socket(x_offset=offset, y_offset=offset)
 
                 # # HACK: for CONCERT mobile base select directly the connector for the manipulator. Discovery of the legs is skipped for now!
                 # if parent_module.type == 'mobile_base':
