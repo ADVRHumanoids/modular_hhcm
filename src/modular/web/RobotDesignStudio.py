@@ -259,6 +259,7 @@ def resources_modules_types_allowed_get():
         if building_mode_ON:
             valid_types = writer.modular_resources_manager.get_available_module_types()
         else:
+            # TODO: this list should come from a config file
             valid_types = ['end_effector', 'interface_adapter']
 
 
@@ -405,10 +406,18 @@ def resources_families_get():
 @app.route(f'{api_base_route}/model/urdf/modules', methods=['POST'])
 def addNewModule():
     req = request.get_json()
+    writer = get_writer()
+
     try:
-        if (not building_mode_ON) and req['type'] != 'end_effector':
+        if building_mode_ON:
+            valid_types = writer.modular_resources_manager.get_available_module_types()
+        else:
+            # TODO: this list should come from a config file
+            valid_types = ['end_effector', 'interface_adapter']
+
+        if req['type'] not in valid_types:
             return Response(
-                response=json.dumps({"message": "in Discovery mode, only passive end-effectors can be added"}),
+                response=json.dumps({"message": f"In {'Build' if building_mode_ON else 'Discovery'} mode, modules of type {req['type']} cannot be added"}),
                 status=409,
                 mimetype="application/json"
             )
