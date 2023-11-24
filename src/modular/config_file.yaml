@@ -3,6 +3,7 @@ resources_path: 'modular_resources'
 external_resources:
 # the path to external resources must be absolute, even if by using variables (~, etc.)
   concert_resources_path: '$(rospack find concert_resources)'
+  fhi_resources_path: '$(rospack find fhi_resources)'
   dagana_path: '$(rospack find dagana_urdf)'
   # whatever_resources_path: None
 modularbot_path: 'modular_data/ModularBot'

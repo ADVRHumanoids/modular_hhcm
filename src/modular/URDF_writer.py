@@ -1095,7 +1095,7 @@ class UrdfWriter:
 
         self.config_file = config_file
 
-        self.resources_paths = [['resources_path'], ['external_resources', 'concert_resources_path']]
+        self.resources_paths = [['resources_path'], ['external_resources', 'concert_resources_path'], ['external_resources', 'fhi_resources_path']]
         self.resource_finder = ResourceFinder(self.config_file)
         self.modular_resources_manager = ModularResourcesManager(self.resource_finder, self.resources_paths)
 
