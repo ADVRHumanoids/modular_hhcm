@@ -543,36 +543,6 @@ def writeURDF():
     data = jsonify(data)
     return data
 
-# call URDF_writer.py to add another master cube
-@app.route('/addMasterCube/', methods=['POST'])
-def addCube():
-    filename = request.form.get('module_name', 0)
-    app.logger.debug(filename)
-    parent = request.form.get('parent', 0)
-    app.logger.debug(parent)
-    offset = float(request.form.get('angle_offset', 0))
-    app.logger.debug(offset)
-    # Get the right writer instance depending on the mode
-    writer = get_writer()
-    data = writer.add_module(filename, offset, reverse=False, addons=[])
-    data = jsonify(data)
-    return data
-
-# call URDF_writer.py to add another master cube
-@app.route('/addMobilePlatform/', methods=['POST'])
-def addMobilePlatform():
-    filename = request.form.get('module_name', 0)
-    app.logger.debug(filename)
-    parent = request.form.get('parent', 0)
-    app.logger.debug(parent)
-    offset = float(request.form.get('angle_offset', 0))
-    app.logger.debug(offset)
-    # Get the right writer instance depending on the mode
-    writer = get_writer()
-    data = writer.add_module(filename, offset, reverse=False, addons=[])
-    data = jsonify(data)
-    return data
-
 
 # call URDF_writer.py to add another socket
 @app.route('/addSocket/', methods=['POST'])
