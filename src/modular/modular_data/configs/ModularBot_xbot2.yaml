@@ -12,15 +12,15 @@ ModelInterface:
 
 # hal
 xbotcore_device_configs:
-    sim: $(rospack find PACKAGE_NAME)/config/hal/ModularBot_gz.yaml
-    dummy: $(rospack find PACKAGE_NAME)/config/hal/ModularBot_dummy.yaml
-    ec_imp: $(rospack find PACKAGE_NAME)/config/hal/ModularBot_ec_all.yaml
-    ec_idle: $(rospack find PACKAGE_NAME)/config/hal/ModularBot_ec_all.yaml
-    ec_pos: $(rospack find PACKAGE_NAME)/config/hal/ModularBot_ec_all.yaml
+  sim: $(rospack find PACKAGE_NAME)/config/hal/ModularBot_gz.yaml
+  dummy: $(rospack find PACKAGE_NAME)/config/hal/ModularBot_dummy.yaml
+  ec_imp: $(rospack find PACKAGE_NAME)/config/hal/ModularBot_ec_all.yaml
+  ec_idle: $(rospack find PACKAGE_NAME)/config/hal/ModularBot_ec_all.yaml
+  ec_pos: $(rospack find PACKAGE_NAME)/config/hal/ModularBot_ec_all.yaml
 
 # define threads to be created
 xbotcore_threads:
-  rt_main: { sched: fifo, prio: 60, period: 0.001}
+  rt_main: { sched: fifo, prio: 60, period: 0.001 }
   nrt_main: { sched: other, prio: 0, period: 0.005 }
 
 # define plugins to be loaded
@@ -44,10 +44,61 @@ xbotcore_plugins:
     thread: nrt_main
     type: ec_ros
 
+  state_broadcaster:
+    thread: rt_main
+    type: state_broadcaster_plugin
+    params:
+      publish_statistics:
+        type: bool
+        value: true
+
+  joint_impedance_controller:
+    thread: rt_main
+    type: joint_impedance_controller_plugin
+    params:
+      chain_config:
+        type: file
+        value: $(rospack find 6DOF_myeyeyef)/config/controllers/chain_config.yaml
+
+  gravity_compensation_controller:
+    thread: rt_main
+    type: gravity_compensation_controller_plugin
+    params:
+      chain_config:
+        type: file
+        value: $(rospack find 6DOF_myeyeyef)/config/controllers/chain_config.yaml
+
+  robust_controller:
+    thread: rt_main
+    type: robust_controller_plugin
+    params:
+      chain_config:
+        type: file
+        value: $(rospack find 6DOF_myeyeyef)/config/controllers/chain_config.yaml
+      controller_params:
+        type: file
+        value: $(rospack find 6DOF_myeyeyef)/config/controllers/robust_controller_config.json
+
+  cartesian_admittance_controller:
+    thread: rt_main
+    type: cartesian_admittance_controller_plugin
+    params:
+      chain_config:
+        type: file
+        value: $(rospack find 6DOF_myeyeyef)/config/controllers/chain_config.yaml
+
+  cartesian_impedance_controller:
+    thread: rt_main
+    type: cartesian_impedance_controller_plugin
+    params:
+      chain_config:
+        type: file
+        value: $(rospack find 6DOF_myeyeyef)/config/controllers/chain_config.yaml
+
 # additional parameters that don't relate to any plugin
 xbotcore_param:
-  /xbot/hal/joint_safety/filter_autostart: {value: true, type: bool}
-  /xbot/hal/joint_safety/filter_cutoff_hz: {value: 2.0, type: double}
+  /xbot/hal/joint_safety/filter_autostart: { value: true, type: bool }
+  /xbot/hal/joint_safety/filter_cutoff_hz: { value: 2.0, type: double }
   /xbot/trigger_safety_on_shutdown:
-      value: true
-      type: bool
+    value: true
+    type: bool
