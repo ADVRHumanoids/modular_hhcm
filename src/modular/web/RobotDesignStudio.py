@@ -763,21 +763,14 @@ def getModulesMap():
 @app.route(f'{api_base_route}/model/urdf/modules', methods=['GET'])
 def getModelModules():
     try:
-        # Get the right writer instance depending on the mode
-        writer = get_writer()
-
         ids = request.args.getlist('ids[]')
 
         modules = getModulesMap()
-        filtered_modules = {}
+
         if len(ids)==0:
-            filtered_modules=modules # use joint name as key
+            filtered_modules = modules  # if no ids are provided, return all modules
         else:
-            current_parent = writer.parent_module.name
-            for id in ids:
-                writer.select_module_from_name(id, None)
-                filtered_modules[id] = modules[writer.parent_module.name]
-            writer.select_module_from_name(current_parent, None)
+            filtered_modules = {key: modules[key] for key in ids}  # filter modules by ids
 
         return Response(
             response=json.dumps({'modules': filtered_modules}),
