@@ -22,6 +22,8 @@ from flask import Flask, Response, render_template, request, jsonify, send_from_
 import werkzeug
 
 from modular.URDF_writer import UrdfWriter
+import modular.ModuleNode  as ModuleNode
+
 ec_srvs_spec = util.find_spec('ec_srvs')
 if ec_srvs_spec is not None:
     from ec_srvs.srv import GetSlaveInfo
@@ -748,15 +750,13 @@ def getModulesMap():
     modules={}
     for chain in chains:
         for el in chain:
-            module={}
-            module['id']= el.name
-            module['family']= el.header.family
-            module['type']= el.type
-            module['name']= el.filename
-            module['label']= el.header.label
-            if hasattr(el.header, "addons"):
-                module['addons']= el.header.addons
-            modules[el.name]= module
+            header_dict = ModuleNode.as_dumpable_dict(el.header)
+            modules[el.name]={
+                **header_dict,
+
+                # ovverride/add some fields
+                # 'id': el.name,
+            }
     return modules
 
 # get list of modules of robot
