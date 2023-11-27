@@ -760,7 +760,7 @@ def getModulesMap():
     return modules
 
 # get list of modules of robot
-@app.route(f'{api_base_route}/model/urdf/modules', methods=['GET'])
+@app.route(f'{api_base_route}/model/urdf/modules/map', methods=['GET'])
 def getModelModules():
     try:
         ids = request.args.getlist('ids[]')
