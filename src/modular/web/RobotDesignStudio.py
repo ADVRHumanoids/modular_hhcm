@@ -750,13 +750,7 @@ def getModulesMap():
     modules={}
     for chain in chains:
         for el in chain:
-            header_dict = ModuleNode.as_dumpable_dict(el.header)
-            modules[el.name]={
-                **header_dict,
-
-                # ovverride/add some fields
-                # 'id': el.name,
-            }
+            modules[el.name] = ModuleNode.as_dumpable_dict(el.header)
     return modules
 
 # get list of modules of robot
