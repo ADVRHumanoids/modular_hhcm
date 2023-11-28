@@ -432,7 +432,7 @@ def addNewModule():
 
         parent = req['parent'] if 'parent' in req else None
         app.logger.debug(parent)
-        
+
         # We update the selected module to the one selected in the GUI. If no module is selected, we don't update it, since the BE will keep track of the current parent
         if parent:
             writer.select_module_from_name(parent, None)
@@ -445,7 +445,7 @@ def addNewModule():
 
         addons = req['addons'] if 'addons' in req else []
         app.logger.debug(addons)
-    
+
         module_data = writer.add_module(filename, offset, reverse, addons)
 
         return Response(response=json.dumps({'id': module_data['lastModule_name'],
@@ -781,6 +781,15 @@ def getModelModules():
             mimetype="application/json"
         )
 
+# Get a list of the module types that can currently be added to the model.
+@app.route(f'{api_base_route}/model/urdf/modules/meshes', methods=['GET'])
+def resources_modules_meshes_get():
+            return Response(
+                response=json.dumps({"message": 'GET /resources/modules/meshes has not been implemented yet'}),
+                status=501,
+                mimetype="application/json"
+            )
+
 # call URDF_writer.py to remove the last module
 @app.route(f'{api_base_route}/model/urdf/modules', methods=['DELETE'])
 def removeModules():
@@ -881,9 +890,9 @@ def deployRobot():
 def removeConnectors():
     # Get the right writer instance depending on the mode
     writer = get_writer()
-    
+
     writer.remove_all_connectors()
-    
+
     urdf_string = writer.process_urdf()
 
     return urdf_string
@@ -900,7 +909,7 @@ def deployROSModel():
         writer = get_writer()
 
         writer.remove_all_connectors() # taken from removeConnectors(), to be removed and itergrated inside .deploy_robot()
-        
+
         writeRobotURDF(builder_jm)
 
         app.logger.debug(name)
