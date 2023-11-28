@@ -4064,6 +4064,23 @@ class UrdfWriter:
             for hub_module in hubs:
                 self.add_connectors(hub_module)
 
+        for post_processing_script in self.resource_finder.cfg['post_processing_scripts']:
+            post_processing_script = os.path.expanduser(post_processing_script)
+            post_processing_script = os.path.expandvars(post_processing_script)
+            import re   
+            def substitute_function(match):
+                package_name = re.search(r"\$\(rospack find ([^\)]+)\)", match.group()).group(1)
+                return (
+                    subprocess.check_output(
+                        f"rospack find {package_name}".split(), stderr=subprocess.DEVNULL
+                    )
+                    .decode("utf-8")
+                    .rstrip()
+                )
+            post_processing_script = re.sub(r"\$\(rospack find [^\)]+\)", substitute_function, post_processing_script)
+            print(f"Running post processing script {post_processing_script}")
+            output = subprocess.check_output([post_processing_script, "--destination-folder", deploy_dir, "--package-name", robot_name])
+
         return robot_name
 
     # Remove connectors when deploying the robot
