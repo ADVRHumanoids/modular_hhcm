@@ -231,8 +231,8 @@ def resources_modules_get():
         )
 
 # Get a list of the module types that can currently be added to the model.
-@app.route(f'{api_base_route}/resources/modules/types/allowed', methods=['GET'])
-def resources_modules_types_allowed_get():
+@app.route(f'{api_base_route}/resources/modules/allowed', methods=['GET'])
+def resources_modules_allowed_get():
     """Get a list of the module types that can currently be added to the model.
 
     :param ids: Optionally, you can provide one or more IDs of modules. (Currently not supported)
@@ -266,7 +266,7 @@ def resources_modules_types_allowed_get():
 
 
         return Response(
-                response=json.dumps({"types": valid_types}),
+                response=json.dumps({"type": valid_types}),
                 status=200,
                 mimetype="application/json"
             )
