@@ -1434,23 +1434,13 @@ class UrdfWriter:
             active_ports = int(module['active_ports'])
             self.print('active_ports:', active_ports)
 
-            # set is_structural. TODO: find a better way to do this
-            is_structural = True
-            if module_filename=='master_cube.yaml':
-                # HACK: hard-code is_structural to be False, because we usually don't use it as a structural part of the robot.
-                is_structural = False
-            elif module_filename=='concert/mobile_platform_concert.json':
-                if self.parent_module.type == 'mobile_base':
-                    # HACK: hard-code is_structural to be False, because the second mobile base is not structural. The hub slave is added to the robot just to have more ports.
-                    is_structural = False
-
             # HACK: manually set name of mobile platform to be 'mobile_base', instead of auto-generated name
             module_name = None
             if module_filename=='concert/mobile_platform_concert.json':
                 module_name = 'mobile_base'
 
             #add the module
-            data = self.add_module(module_filename, 0, reverse=False, robot_id=robot_id, active_ports=active_ports, is_structural=is_structural, module_name=module_name)
+            data = self.add_module(module_filename, 0, reverse=False, robot_id=robot_id, active_ports=active_ports, module_name=module_name)
                 
 
         ## HACK: Manually add passive end effector for now!
@@ -2078,7 +2068,11 @@ class UrdfWriter:
         setattr(new_module, 'robot_id', robot_id)
 
         # Attribute specifying if the module is structural or not. Useful for those types of modules that are not structural (e.g. hubs), in particular if they are present in the network and discovered by EtherCAT, but they are not part of the robot structure.
-        setattr(new_module, 'is_structural', is_structural)
+        if hasattr(new_module.header, 'is_structural'):
+            setattr(new_module, 'is_structural', new_module.header.is_structural)
+        else:
+            # if the attribute is not present, set it, otherwise leave it as it is (it has been set from the YAML/JSON file)
+            setattr(new_module, 'is_structural', is_structural)
 
         self.print("parent module:", self.parent_module.name, ", type :", self.parent_module.type)
 
