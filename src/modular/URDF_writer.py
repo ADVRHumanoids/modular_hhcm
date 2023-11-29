@@ -2134,7 +2134,7 @@ class UrdfWriter:
             elif new_module.type in { 'cube', 'mobile_base' }:
                 # joint + hub
                 self.print("joint + hub")
-                self.hub_after_joint(new_module, self.parent_module, angle_offset, reverse=reverse, is_structural=is_structural, module_name=module_name)
+                self.hub_after_joint(new_module, self.parent_module, angle_offset, reverse=reverse, module_name=module_name)
             else:
                 # joint + link
                 self.print("joint + link")
@@ -2150,7 +2150,7 @@ class UrdfWriter:
             elif new_module.type in { 'cube', 'mobile_base' }:
                 # hub + hub
                 self.print("hub + hub")
-                self.hub_after_hub(new_module, self.parent_module, angle_offset, reverse=reverse, is_structural=is_structural, module_name=module_name)
+                self.hub_after_hub(new_module, self.parent_module, angle_offset, reverse=reverse, module_name=module_name)
             else:
                 # hub + link
                 self.print("hub + link")
@@ -2163,7 +2163,7 @@ class UrdfWriter:
             elif new_module.type in { 'cube', 'mobile_base' }:
                 # link + hub
                 self.print("link + hub")
-                self.hub_after_link(new_module, self.parent_module, angle_offset, reverse=reverse, is_structural=is_structural, module_name=module_name)
+                self.hub_after_link(new_module, self.parent_module, angle_offset, reverse=reverse, module_name=module_name)
             else:
                 # link + link
                 self.print("link + link")
@@ -3210,7 +3210,7 @@ class UrdfWriter:
         self.add_joint(new_Joint, parent_name, transform, reverse)
 
     
-    def hub_after_hub(self, new_Hub, past_Hub, offset, reverse, is_structural=True, module_name=None):
+    def hub_after_hub(self, new_Hub, past_Hub, offset, reverse, module_name=None):
         """Adds to the URDF tree a hub module as a child of a hub module
 
         Parameters
@@ -3242,7 +3242,7 @@ class UrdfWriter:
         # Set the number of child hubs to 0 (it will be incremented when a child hub is added)
         setattr(new_Hub, 'n_children_hubs', 0)
 
-        if is_structural:
+        if new_Hub.is_structural:
             self.add_hub(new_Hub, parent_name, transform, hub_name=module_name)
         else:
             # HACK: we set the name of the non-structural hub to be the same as the parent. This is needed to correctly write the SRDF chains!
@@ -3254,7 +3254,7 @@ class UrdfWriter:
         self.listofhubs.append(new_Hub)   
 
 
-    def hub_after_link(self, new_Hub, past_Link, offset, reverse, is_structural=True, module_name=None):
+    def hub_after_link(self, new_Hub, past_Link, offset, reverse, module_name=None):
         """Adds to the URDF tree a hub module as a child of a link module
 
         Parameters
@@ -3283,14 +3283,14 @@ class UrdfWriter:
         # Set the number of child hubs to 0 (it will be incremented when a child hub is added)
         setattr(new_Hub, 'n_children_hubs', 0)
 
-        if is_structural:
+        if new_Hub.is_structural:
             self.add_hub(new_Hub, parent_name, transform, hub_name=module_name)
 
         #  Add the hub to the list of hubs
         self.listofhubs.append(new_Hub) 
 
 
-    def hub_after_joint(self, new_Hub, past_Joint, offset, reverse, is_structural=True, module_name=None):
+    def hub_after_joint(self, new_Hub, past_Joint, offset, reverse, module_name=None):
         """Adds to the URDF tree a hub module as a child of a joint module
 
         Parameters
@@ -3319,7 +3319,7 @@ class UrdfWriter:
         # Set the number of child hubs to 0 (it will be incremented when a child hub is added)
         setattr(new_Hub, 'n_children_hubs', 0)
 
-        if is_structural:
+        if new_Hub.is_structural:
             self.add_hub(new_Hub, parent_name, transform, hub_name=module_name)
         
         #  Add the hub to the list of hubs
