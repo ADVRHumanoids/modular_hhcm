@@ -1419,12 +1419,11 @@ class UrdfWriter:
                 self.select_module_from_id(parent_id)
 
                 # set the selected_port as occupied
-                mask = 1 << self.parent_module.selected_port - 1
+                mask = 1 << self.parent_module.selected_port
                 self.print(mask)
                 self.print(self.parent_module.occupied_ports)
                 self.parent_module.occupied_ports = "{0:04b}".format(int(self.parent_module.occupied_ports, 2) | mask)
                 self.print(self.parent_module.occupied_ports)
-                #parent_module.occupied_ports[-selected_port] = 1
 
                 #If the parent is a cube to support non-structural box we add a socket
                 if self.parent_module.type == 'cube':
@@ -1700,7 +1699,7 @@ class UrdfWriter:
         setattr(new_socket, 'robot_id', 0)
 
         # Update the EtherCAT port connected to the electro-mechanical interface where the new module/slave will be added
-        setattr(new_socket, 'selected_port', 2)
+        setattr(new_socket, 'selected_port', 1)
         #self.print('selected_port :', new_socket.selected_port)
 
         # save the active ports as a binary string
@@ -2097,7 +2096,7 @@ class UrdfWriter:
         #    |           |           |           |
         # com-exp   upper port  front port    nothing
         #################################################
-        setattr(new_module, 'selected_port', 2)
+        setattr(new_module, 'selected_port', 1)
         self.print('new_module.selected_port :', new_module.selected_port)
 
         # save the active ports as a binary string
@@ -2200,7 +2199,7 @@ class UrdfWriter:
         if self.verbose:
             # Render tree
             for pre, _, node in anytree.render.RenderTree(self.base_link):
-                self.print("%s%s" % (pre, node.name, node.robot_id))
+                self.print("%s%s: %d" % (pre, node.name, node.robot_id))
 
         # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
         data = {'mesh_names': new_module.mesh_elements,
@@ -2484,21 +2483,12 @@ class UrdfWriter:
         free_ports = int(selected_module.active_ports, 2) ^ int(selected_module.occupied_ports, 2)
         self.print("{0:04b}".format(free_ports))
 
+        # By default the selected port is the first free one
         selected_module.selected_port = self.ffs(free_ports)
+        # If the selected port is not None, it means that the user has selected a port from the GUI
+        if selected_port is not None:
+            selected_module.selected_port = selected_port
         self.print('selected_module.selected_port :', selected_module.selected_port)
-        
-        # # If parent topology is greater than 2 the parent is a switch/hub so we need to find the right port where the module is connected
-        # if active_ports >= 3:
-        #     for port_idx in range(2, len(mastercube.active_ports) - 1)
-        #         if mastercube.active_ports[-port_idx] == 1:
-        #             mastercube.selected_port = port_idx
-        #             break
-        
-        # if parent_active_ports == 3:
-        #     self.parent_module.selected_port = 3
-        # elif parent_active_ports == 5:
-        #     self.parent_module.selected_port = 4
-        # self.print('self.parent_module.selected_port: ', self.parent_module.selected_port)
 
         # Create the dictionary with the relevant info on the selected module, so that the GUI can dispaly it.
         if selected_module.type == 'cube':
@@ -2554,7 +2544,7 @@ class UrdfWriter:
         selected_module.selected_port = self.ffs(free_ports)
         # If the selected mesh is the one of a connector, we need to set the right port
         if name in selected_module.connectors:
-            selected_port = selected_module.connectors.index(name) + 1
+            selected_port = selected_module.connectors.index(name)
         # If the selected port is not None, it means that the user has selected a port from the GUI
         if selected_port is not None:
             selected_module.selected_port = selected_port
@@ -2581,7 +2571,7 @@ class UrdfWriter:
             selected_port = int(name[-1])
             #self.print(selected_port)
             # Set the selected_port as active
-            mask = 1 << selected_port - 1
+            mask = 1 << selected_port 
             #self.print(mask)
             #self.print(module.active_ports)
             # binary OR
@@ -2599,16 +2589,6 @@ class UrdfWriter:
         module.selected_port = self.ffs(free_ports)
         #self.print('module.selected_port :', module.selected_port)
 
-        # # If parent topology is greater than 2 the parent is a switch/hub so we need to find the right port where
-        # the module is connected if active_ports >= 3: for port_idx in range(2, len(mastercube.active_ports) - 1) if
-        # mastercube.active_ports[-port_idx] == 1: mastercube.selected_port = port_idx break
-
-        # if parent_active_ports == 3:
-        #     self.parent_module.selected_port = 3
-        # elif parent_active_ports == 5:
-        #     self.parent_module.selected_port = 4
-        # #self.print('self.parent_module.selected_port: ', self.parent_module.selected_port)
-
         # Select the correct port where to add the module to
         # if '_con' in name:
         #     module.selected_port = selected_port
@@ -2620,7 +2600,7 @@ class UrdfWriter:
         """Returns the index, counting from 0, of the
         least significant set bit in `x`.
         """
-        return (x & -x).bit_length()
+        return (x & -x).bit_length() - 1
 
     # TODO: handle reverse also for links
     def add_link(self, new_Link, parent_name, transform, reverse):
@@ -2823,11 +2803,11 @@ class UrdfWriter:
 
     def get_hub_output_transform(self, past_Hub):
         # TODO: this works only if the hub is connected on the first available port of the parent hub. Right now this is always the case, but it could be made more general
-        # index for connector and selected port are shifted by 1
-        connector_idx = (past_Hub.selected_port -1)
-        # We take into account the other hubs connected to get the right index. We have 4 connectors per hub, but since ports and index are shifted by 1, each child hub increase the index by 3
+        # indexes for connector and selected port are the same, unless the hub is connected to another non-structural hub
+        connector_idx = (past_Hub.selected_port)
+        # We take into account the other hubs connected to get the right index. We have 4 connectors per hub, but since port 0 is occupied by the hub-hub connection, each child hub increase the index by 3
         connector_idx += (past_Hub.n_child_hubs) * (4-1)
-        # We take into account that one port is used to establish a  connection with a second hub, and that should not be taken into account when counting the index
+        # We take into account that one port on the current hub is used to establish a connection with a second hub, and that should not be taken into account when counting the index
         connector_idx -= past_Hub.n_child_hubs
 
         connector_name = 'Con_' + str(connector_idx) + '_tf'
