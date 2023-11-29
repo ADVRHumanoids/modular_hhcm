@@ -2801,21 +2801,48 @@ class UrdfWriter:
         return
 
 
-    def get_hub_output_transform(self, past_Hub):
-        # TODO: this works only if the hub is connected on the first available port of the parent hub. Right now this is always the case, but it could be made more general
+    def get_hub_output_transform(self, hub):
+        idx_offset = 0
+        # If the hub is not structural, we need to take into account the other children the parent hub might have.
+        # If the hub is not structural, by default its parent must be a hub as well. Non-structural hubs can only be
+        # connected to structural hubs (or other non-structural hubs) and be a "children hub". Their only purpose is to 
+        # "increase" the number of ports of its parent hub (and therefore its available connectors). 
+        # The connectors are shared between the parent and children hubs, so their index must be computed accordingly.
+        # MYNOTE: this part is used only in Discovery mode for now.
+        if not hub.is_structural:
+            # The current port used by the parent hub to connect to the hub we are computing the transforms of.
+            parent_current_port = 1 << hub.parent.selected_port
+            # The ports of the parent hub already occupied before adding the current hub.
+            parent_already_occupied_ports = int(hub.parent.occupied_ports, 2) & ~parent_current_port
+            # The ports 1, 2 and 3
+            non_zero_ports = int("1110", 2)
+            # The ports of the parent hub already occupied before adding the current hub, excluding the port 0.
+            parent_ports_occupied_before_hub = (parent_already_occupied_ports & non_zero_ports)
+            # The number of children the parent hub has before adding the current hub.
+            n_children_before_hub = 0
+            for i in range(4):
+                if parent_ports_occupied_before_hub & (1 << i):
+                    n_children_before_hub += 1
+            # The number of hubs children the parent hub has after adding the current hub.
+            parent_elder_hubs_children = hub.parent.n_children_hubs - 1
+            # The number of non-hubs children the parent hub has before adding the current hub.
+            parent_elder_nonhubs_children = n_children_before_hub - parent_elder_hubs_children
+            # The index offset is computed as the number of children hubs times 3 (since each hub has 4 connectors, but one is used to connect to the parent hub) plus the number of non-hubs children times 1 (since each non-hub has 2 connectors, but one is used to connect to the parent hub).
+            idx_offset = (parent_elder_hubs_children)*3 + (parent_elder_nonhubs_children)*1
+        
         # indexes for connector and selected port are the same, unless the hub is connected to another non-structural hub
-        connector_idx = (past_Hub.selected_port)
+        connector_idx = (hub.selected_port) + idx_offset
         # We take into account the other hubs connected to get the right index. We have 4 connectors per hub, but since port 0 is occupied by the hub-hub connection, each child hub increase the index by 3
-        connector_idx += (past_Hub.n_child_hubs) * (4-1)
+        connector_idx += (hub.n_children_hubs) * (4-1)
         # We take into account that one port on the current hub is used to establish a connection with a second hub, and that should not be taken into account when counting the index
-        connector_idx -= past_Hub.n_child_hubs
+        connector_idx -= hub.n_children_hubs
 
         connector_name = 'Con_' + str(connector_idx) + '_tf'
-        interface_transform = getattr(past_Hub, connector_name)
-        # if not past_Hub.is_structural:
+        interface_transform = getattr(hub, connector_name)
+        # if not hub.is_structural:
         #     interface_transform = tf.transformations.identity_matrix()
 
-        self.print('past_Hub.selected_port:', past_Hub.selected_port)
+        self.print('hub.selected_port:', hub.selected_port)
         self.print('interface_transform: ', interface_transform)
 
         return interface_transform
@@ -3213,15 +3240,15 @@ class UrdfWriter:
         transform = self.apply_adapter_transform_rotation(transform, past_Hub.flange_size, new_Hub.flange_size)
 
         # Set the number of child hubs to 0 (it will be incremented when a child hub is added)
-        setattr(new_Hub, 'n_child_hubs', 0)
+        setattr(new_Hub, 'n_children_hubs', 0)
 
         if is_structural:
             self.add_hub(new_Hub, parent_name, transform, hub_name=module_name)
         else:
             # HACK: we set the name of the non-structural hub to be the same as the parent. This is needed to correctly write the SRDF chains!
             setattr(new_Hub, 'name', parent_name)
-            # if the parent is a hub, the n_child_hubs attribute is incremented, in order to keep track of the number of hubs connected to the parent hub and therefore the number of ports occupied. This is needed to select the right connector where to connect the new module 
-            self.parent_module.n_child_hubs += 1
+            # if the parent is a hub, the n_children_hubs attribute is incremented, in order to keep track of the number of hubs connected to the parent hub and therefore the number of ports occupied. This is needed to select the right connector where to connect the new module 
+            self.parent_module.n_children_hubs += 1
         
         #  Add the hub to the list of hubs
         self.listofhubs.append(new_Hub)   
@@ -3254,7 +3281,7 @@ class UrdfWriter:
         parent_name = past_Link.name
 
         # Set the number of child hubs to 0 (it will be incremented when a child hub is added)
-        setattr(new_Hub, 'n_child_hubs', 0)
+        setattr(new_Hub, 'n_children_hubs', 0)
 
         if is_structural:
             self.add_hub(new_Hub, parent_name, transform, hub_name=module_name)
@@ -3290,7 +3317,7 @@ class UrdfWriter:
         parent_name = past_Joint.distal_link_name
 
         # Set the number of child hubs to 0 (it will be incremented when a child hub is added)
-        setattr(new_Hub, 'n_child_hubs', 0)
+        setattr(new_Hub, 'n_children_hubs', 0)
 
         if is_structural:
             self.add_hub(new_Hub, parent_name, transform, hub_name=module_name)
