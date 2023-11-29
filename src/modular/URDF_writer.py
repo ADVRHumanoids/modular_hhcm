@@ -2117,6 +2117,9 @@ class UrdfWriter:
         # add list of xml elements with an associated visual mesh as attribute
         setattr(new_module, 'mesh_elements', [])
 
+        # add list of connectors names as attribute. The 0 connector is added by default. The others will be added by the add_connectors() method
+        setattr(new_module, 'connectors', ['connector_0'])
+
         # For certain types of modules, the model is considered as floating base, i.e. the base_link is not fixed to the world frame, but is connected through a floating joint.
         # WARNING: this changes the behavior of the whole URDF not only for this module
         if new_module.type in {'mobile_base'}:
@@ -2379,18 +2382,10 @@ class UrdfWriter:
         self.parent_module = father
 
         # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
-        if father.type == 'cube':
-            data = {'result': self.urdf_string,
-                    'lastModule_type': father.type,
-                    'lastModule_name': father.name,
-                    'flange_size': father.flange_size}
-        else:
-            data = {'result': self.urdf_string,
-                    'lastModule_type': father.type,
-                    'lastModule_name': father.name,
-                    'flange_size': father.flange_size,
-                    'count': father.i}
-        # data = jsonify(data)
+        data = {'result': self.urdf_string,
+                'lastModule_type': father.type,
+                'lastModule_name': father.name,
+                'flange_size': father.flange_size}
 
         # before deleting selected_module set his parent property to None. Otherwise this will mess up the obj tree
         selected_module.parent = None
@@ -2552,41 +2547,26 @@ class UrdfWriter:
         # TODO: Replace this with select_ports
         # binary XOR
         free_ports = int(selected_module.active_ports, 2) ^ int(selected_module.occupied_ports, 2)
+        self.print(selected_module.name + " active_ports: " + selected_module.active_ports + " - " + "occupied_ports: " + selected_module.occupied_ports + " =")
         self.print("{0:04b}".format(free_ports))
 
+        # By default the selected port is the first free one
         selected_module.selected_port = self.ffs(free_ports)
-        self.print('selected_module.selected_port :', selected_module.selected_port)
-
-        # # If parent topology is greater than 2 the parent is a switch/hub so we need to find the right port where the module is connected
-        # if active_ports >= 3:
-        #     for port_idx in range(2, len(mastercube.active_ports) - 1)
-        #         if mastercube.active_ports[-port_idx] == 1:
-        #             mastercube.selected_port = port_idx
-        #             break
-
-        # if parent_active_ports == 3:
-        #     self.parent_module.selected_port = 3
-        # elif parent_active_ports == 5:
-        #     self.parent_module.selected_port = 4
-        # self.print('self.parent_module.selected_port: ', self.parent_module.selected_port)
-
-        # Select the correct port where to add the module to
-        if '_con' in name:
+        # If the selected mesh is the one of a connector, we need to set the right port
+        if name in selected_module.connectors:
+            selected_port = selected_module.connectors.index(name) + 1
+        # If the selected port is not None, it means that the user has selected a port from the GUI
+        if selected_port is not None:
             selected_module.selected_port = selected_port
+        self.print('selected_module.selected_port :', selected_module.selected_port)
 
         # # Update active and occupied port of the ESC and select the right port
         # self.select_ports(selected_module, name)
 
         # Create the dictionary with the relevant info on the selected module, so that the GUI can dispaly it.
-        if selected_module.type == 'cube':
-            data = {'lastModule_type': selected_module.type,
-                    'lastModule_name': selected_module.name,
-                    'flange_size': selected_module.flange_size}
-        else:
-            data = {'lastModule_type': selected_module.type,
-                    'lastModule_name': selected_module.name,
-                    'flange_size': selected_module.flange_size,
-                    'count': selected_module.i}
+        data = {'lastModule_type': selected_module.type,
+                'lastModule_name': selected_module.name,
+                'flange_size': selected_module.flange_size}
 
         return data
 
@@ -2842,7 +2822,8 @@ class UrdfWriter:
 
 
     def get_hub_output_transform(self, past_Hub):
-        # index for connector and selecte port are shifted by 1
+        # TODO: this works only if the hub is connected on the first available port of the parent hub. Right now this is always the case, but it could be made more general
+        # index for connector and selected port are shifted by 1
         connector_idx = (past_Hub.selected_port -1)
         # We take into account the other hubs connected to get the right index. We have 4 connectors per hub, but since ports and index are shifted by 1, each child hub increase the index by 3
         connector_idx += (past_Hub.n_child_hubs) * (4-1)
@@ -3733,6 +3714,7 @@ class UrdfWriter:
                                 yaw=yaw)
                 modulenode.xml_tree_elements.append(con_name)
                 modulenode.mesh_elements.append(con_name)
+                modulenode.connectors.append(con_name)
                 
     def compute_payload(self, samples):
         self.model_stats.update_model()
