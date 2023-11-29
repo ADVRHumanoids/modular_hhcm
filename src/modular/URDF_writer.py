@@ -1416,19 +1416,6 @@ class UrdfWriter:
                 parent_topology = int(parent['topology'])
                 self.print('parent_topology:', parent_topology)
 
-                if self.verbose:
-                    # Render tree
-                    self.print(RenderTree(self.base_link))
-                    for pre, _, node in RenderTree(self.base_link):
-                        self.print(pre, node, node.name, node.robot_id)
-                        # treestr = u"%s%s" % (pre, node.name)
-                        # self.print(treestr.ljust(8), node.name, node.robot_id)
-
-                # parent_module = anytree.search.findall_by_attr(self.base_link, parent_id, name='robot_id')[0]
-                # self.print('parent_module:', parent_module, '\nparent name:', parent_module.name)
-                # self.select_module_from_name(parent_module.name)
-                # self.print(self.parent_module.name)
-                #TODO:replace with select_module_from_id
                 self.select_module_from_id(parent_id)
 
                 # set the selected_port as occupied
@@ -1466,9 +1453,6 @@ class UrdfWriter:
             #add the module
             data = self.add_module(module_filename, 0, reverse=False, robot_id=robot_id, active_ports=active_ports, is_structural=is_structural, module_name=module_name)
                 
-            if self.verbose:
-                for pre, _, node in RenderTree(self.base_link):
-                    self.print(pre, node, node.name, node.robot_id)
 
         ## HACK: Manually add passive end effector for now!
         # self.add_simple_ee(0.0, 0.0, 0.135, mass=0.23)
@@ -2213,7 +2197,7 @@ class UrdfWriter:
         if self.verbose:
             # Render tree
             for pre, _, node in anytree.render.RenderTree(self.base_link):
-                self.print("%s%s" % (pre, node.name))
+                self.print("%s%s" % (pre, node.name, node.robot_id))
 
         # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
         data = {'mesh_names': new_module.mesh_elements,
@@ -2253,10 +2237,8 @@ class UrdfWriter:
         for key, value in vars(gazebo_child_obj).items():
             gazebo_child_el = ET.SubElement(gazebo_element, key)
             if isinstance(value, ModuleNode.Module.Attribute):
-                self.print(vars(value))
                 self.add_gazebo_element_children(value, gazebo_child_el)
             else:
-                self.print(value)
                 gazebo_child_el.text = str(value)
 
     
@@ -2563,24 +2545,9 @@ class UrdfWriter:
         # is the name itself, so if the name is not in the dictionary, it is the name of the module itself.
         selected_module_name = self.mesh_to_module_map.get(name, name)
 
-        # If the selected mesh is the one of a connector, we need to select the parent module instead, and set the right port
-        if '_con' in name:
-            # Take the box as parent when a connector is selected
-            selected_module_name = name[:-5]
-            # Save the selected port. We take the connector index from the name and increment it b 1 to get the port
-            selected_port = int(name[-1]) + 1
-            self.print(selected_port)
-
-        self.print(selected_module_name)
-
         # Call access_module_by_name to get the object with the requested name and sets it as parent.
         # The method doing the real work is actually access_module_by_name
         selected_module = self.access_module_by_name(selected_module_name)
-        self.print(selected_module.type)
-        self.print(selected_module.name)
-        self.print(selected_module.robot_id)
-        self.print(selected_module.active_ports)
-        self.print(selected_module.occupied_ports)
 
         # TODO: Replace this with select_ports
         # binary XOR
@@ -3204,9 +3171,6 @@ class UrdfWriter:
         """
         setattr(new_Link, 'p', 0) #  past_Hub.p + 1)
         setattr(new_Link, 'i', 0) #  past_Hub.i)
-
-        self.print('past_Hub: ', past_Hub)
-        self.print('past_Hub.selected_port: ', past_Hub.selected_port)
 
         if past_Hub.is_structural:
             parent_name = past_Hub.name
