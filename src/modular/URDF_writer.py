@@ -2927,7 +2927,7 @@ class UrdfWriter:
         # We take into account the other hubs connected to get the right index. We have 4 connectors per hub, but since port 0 is occupied by the hub-hub connection, each child hub increase the index by 3
         connector_idx += (hub.n_children_hubs) * (4-1)
         # We take into account that one port on the current hub is used to establish a connection with a second hub, and that should not be taken into account when counting the index
-        connector_idx -= hub.n_children_hubs
+        # connector_idx -= hub.n_children_hubs
 
         connector_name = 'Con_' + str(connector_idx) + '_tf'
         interface_transform = getattr(hub, connector_name)
