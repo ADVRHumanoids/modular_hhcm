@@ -2472,17 +2472,7 @@ class UrdfWriter:
         # Call the access_module_by_id method to find the selected module
         selected_module = self.access_module_by_id(id)
 
-        # TODO: Replace this with select_ports
-        # binary XOR
-        free_ports = int(selected_module.active_ports, 2) ^ int(selected_module.occupied_ports, 2)
-        self.print("{0:04b}".format(free_ports))
-
-        # By default the selected port is the first free one
-        selected_module.selected_port = self.ffs(free_ports)
-        # If the selected port is not None, it means that the user has selected a port from the GUI
-        if selected_port is not None:
-            selected_module.selected_port = selected_port
-        self.print('selected_module.selected_port :', selected_module.selected_port)
+        selected_connector = self.select_connector(selected_module, port_idx=selected_port)
 
         # Create the dictionary with the relevant info on the selected module, so that the GUI can dispaly it.
         if selected_module.type == 'cube':
@@ -2528,24 +2518,7 @@ class UrdfWriter:
         # The method doing the real work is actually access_module_by_name
         selected_module = self.access_module_by_name(selected_module_name)
 
-        # TODO: Replace this with select_ports
-        # binary XOR
-        free_ports = int(selected_module.active_ports, 2) ^ int(selected_module.occupied_ports, 2)
-        self.print(selected_module.name + " active_ports: " + selected_module.active_ports + " - " + "occupied_ports: " + selected_module.occupied_ports + " =")
-        self.print("{0:04b}".format(free_ports))
-
-        # By default the selected port is the first free one
-        selected_module.selected_port = self.ffs(free_ports)
-        # If the selected mesh is the one of a connector, we need to set the right port
-        if name in selected_module.connectors:
-            selected_port = selected_module.connectors.index(name)
-        # If the selected port is not None, it means that the user has selected a port from the GUI
-        if selected_port is not None:
-            selected_module.selected_port = selected_port
-        self.print('selected_module.selected_port :', selected_module.selected_port)
-
-        # # Update active and occupied port of the ESC and select the right port
-        # self.select_ports(selected_module, name)
+        selected_connector = self.select_connector(selected_module, connector_name=name, port_idx=selected_port)
 
         # Create the dictionary with the relevant info on the selected module, so that the GUI can dispaly it.
         data = {'lastModule_type': selected_module.type,
@@ -2553,6 +2526,166 @@ class UrdfWriter:
                 'flange_size': selected_module.flange_size}
 
         return data
+    
+
+    def port_to_connector_idx(self, port_idx):
+        """Convert the port index to the connector index.
+
+        Parameters
+        ----------
+        port_idx: int
+            The index of the port to convert.
+
+        Returns
+        -------
+        connector_idx: int
+            The index of the connector corresponding to the port index.
+
+        """
+        # connector index is the same as the port index for the first 4 ports
+        connector_idx = port_idx
+        return connector_idx
+    
+
+    def connector_to_port_idx(self, connector_idx):
+        """Convert the connector index to the port index.
+
+        Parameters
+        ----------
+        connector_idx: int
+            The index of the connector to convert.
+
+        Returns
+        -------
+        port_idx: int
+            The index of the port corresponding to the connector index.
+
+        """
+        # port index is the same as the connector index for the first 4 ports
+        port_idx = connector_idx
+        return port_idx
+    
+
+    def eth_to_physical_port_idx(self, eth_port_idx):
+        """Convert the EtherCAT port index to the physical port index. This is necessary because the EtherCAT master
+        scans the ports in a different order than the physical one.
+
+        Parameters
+        ----------
+
+        eth_port_idx: int
+            The index of the EtherCAT port to convert.
+
+        Returns
+        -------
+        physical_port_idx: int
+            The index of the physical port corresponding to the EtherCAT port index.
+
+        """
+        eth_to_physical_port_map = {
+            0: 0,
+            1: 3,
+            2: 1,
+            3: 2
+        }
+        return eth_to_physical_port_map[eth_port_idx]
+    
+
+    def set_current_port(self, module, port_idx=None):
+        """Set the current port of the module, i.e. the one where the new module will be added to.
+        The current port is the first free one, i.e. the first one seen from the EtherCAT master scan.
+        If the port_idx argument is passed, the current port is set to the one specified by it.
+
+        Parameters
+        ----------
+        module: ModuleNode.ModuleNode
+            The object of the module to set the current port to.
+
+        port_idx: int
+            The index of the port to select as the current one.
+
+        Returns
+        -------
+        module.selected_port: int
+            The port selected as the current one.
+
+        """
+
+        # binary XOR: the free ports are the ones that are active but not occupied
+        free_ports = int(module.active_ports, 2) ^ int(module.occupied_ports, 2)
+        self.print(module.name + " active_ports: " + module.active_ports + " - " + "occupied_ports: " + module.occupied_ports + " =")
+        self.print("{0:04b}".format(free_ports))
+
+        # remap the ports from the physical order to the EtherCAT order: 3, 2, 1, 0 -> 2, 1, 3, 0. 
+        # See EtherCAT slave documentation for more info 
+        free_ports_remapped = ((free_ports & int("0110", 2)) << 1) + ((free_ports & int("1000", 2)) >> 2)
+        self.print("{0:04b}".format(free_ports_remapped))
+
+        # By default the selected port is the first free one (the firt one seen from the EtherCAT master scan)
+        selected_eth_port = self.ffs(free_ports_remapped)
+        self.print('selected EtherCAT port :', selected_eth_port)
+
+        # remap the ports from the EtherCAT order to the physical order: 2, 1, 3, 0 -> 3, 2, 1, 0.
+        selected_physical_port = self.eth_to_physical_port_idx(selected_eth_port)
+        self.print('selected physical port :', selected_physical_port)
+
+        # Set the selected_port attribute of the module
+        module.selected_port = selected_physical_port
+
+        # If the selected connector is not None, it means that the user has selected a connector from the GUI. Value is overwritten
+        if port_idx is not None:
+            module.selected_port = port_idx
+
+        self.print('module.selected_port :', module.selected_port)
+
+        return module.selected_port 
+    
+
+    def select_connector(self, module, connector_name=None, port_idx=None):
+        """Select the connector of the module to which the new module will be added to.
+        The connector is the first free one, i.e. the first one seen from the EtherCAT master scan.
+
+        Parameters
+        ----------
+        module: ModuleNode.ModuleNode
+            The object of the module to set the current port to.
+
+        connector_name: str
+            String with the name of the connector. Could come from the name of the mesh clicked on the GUI and associated to the connector.
+
+        port_idx: int
+            The index of the port to select as the current one.
+
+        Returns
+        -------
+        selected_connector: str
+            The name of the connector currently selected.
+        """
+
+        # If the selected mesh is the one of a connector, we need to set the right port
+        if connector_name in module.connectors:
+            # The connector index is retrieved from the list of connectors of the module
+            connector_idx = module.connectors.index(connector_name)
+            # Convert the connector index to the port index
+            module.selected_port = self.connector_to_port_idx(connector_idx)
+            # Set the name of the selected connector
+            selected_connector = connector_name
+        else:
+            # Set the current port of the module
+            self.set_current_port(module, port_idx=port_idx)
+            # Convert the port index to the connector index
+            connector_idx = self.port_to_connector_idx(module.selected_port) 
+            # Set the name of the selected connector. If the index is out of range, it means that the module has only one connector, so we use as name the module name itself.
+            # TODO: add connectors also for modules with only one connector, so to avoid this and have a uniform behavior
+            if connector_idx < len(module.connectors):
+                selected_connector = module.connectors[connector_idx] # TODO: add connectors also for non-structural hubs (or use the ones from the parent)
+            else:
+                selected_connector = module.name
+
+        self.print('selected_connector :', selected_connector)
+
+        return selected_connector
+
 
     def select_ports(self, module, name):
         # In building mode the port is not set by reading the EtherCAT infos, but from the user which selects the
@@ -2825,7 +2958,7 @@ class UrdfWriter:
             idx_offset = (parent_elder_hubs_children)*3 + (parent_elder_nonhubs_children)*1
         
         # indexes for connector and selected port are the same, unless the hub is connected to another non-structural hub
-        connector_idx = (hub.selected_port) + idx_offset
+        connector_idx = (self.port_to_connector_idx(hub.selected_port)) + idx_offset
         # We take into account the other hubs connected to get the right index. We have 4 connectors per hub, but since port 0 is occupied by the hub-hub connection, each child hub increase the index by 3
         connector_idx += (hub.n_children_hubs) * (4-1)
         # We take into account that one port on the current hub is used to establish a connection with a second hub, and that should not be taken into account when counting the index
