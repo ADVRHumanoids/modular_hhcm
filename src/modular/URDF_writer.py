@@ -2687,41 +2687,6 @@ class UrdfWriter:
         return selected_connector
 
 
-    def select_ports(self, module, name):
-        # In building mode the port is not set by reading the EtherCAT infos, but from the user which selects the
-        # connector mesh with a mouse click
-        if '_con' in name:
-            # "Deactivate" ports which are not occupied. This is necessary if from the GUI the user selects a port
-            # but doesn't attach anything to it.
-            module.active_ports = module.occupied_ports  # int(module.active_ports, 2) & int(module.occupied_ports, 2)
-            # Save the selected port
-            selected_port = int(name[-1])
-            #self.print(selected_port)
-            # Set the selected_port as active
-            mask = 1 << selected_port 
-            #self.print(mask)
-            #self.print(module.active_ports)
-            # binary OR
-            module.active_ports = "{0:04b}".format(int(module.active_ports, 2) | mask)
-            #self.print(module.active_ports)
-        #self.print(module.type)
-        #self.print(module.name)
-        #self.print(module.robot_id)
-        #self.print(module.active_ports)
-        #self.print(module.occupied_ports)
-        # binary XOR
-        free_ports = int(module.active_ports, 2) ^ int(module.occupied_ports, 2)
-        #self.print("{0:04b}".format(free_ports))
-
-        module.selected_port = self.ffs(free_ports)
-        #self.print('module.selected_port :', module.selected_port)
-
-        # Select the correct port where to add the module to
-        # if '_con' in name:
-        #     module.selected_port = selected_port
-
-        return 0
-
     @staticmethod
     def ffs(x):
         """Returns the index, counting from 0, of the
