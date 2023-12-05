@@ -1238,6 +1238,12 @@ class UrdfWriter:
         else:
             print(args)
 
+    def error_print(self, *args):
+        if isinstance(self.logger, logging.Logger):
+            self.logger.error(' '.join(str(a) for a in args))
+        else:
+            print(args)
+
     @staticmethod
     def find_module_from_id(module_id, modules):
         """Given the module id find the corresponding dictionary entry and return it"""
@@ -1419,7 +1425,7 @@ class UrdfWriter:
                 self.select_module_from_id(parent_id)
 
                 # set the selected_port as occupied
-                mask = 1 << self.parent_module.selected_port
+                mask = 1 << self.eth_to_physical_port_idx(self.parent_module.selected_port)
                 self.print(mask)
                 self.print(self.parent_module.occupied_ports)
                 self.parent_module.occupied_ports = "{0:04b}".format(int(self.parent_module.occupied_ports, 2) | mask)
@@ -2528,13 +2534,16 @@ class UrdfWriter:
         return data
     
 
-    def port_to_connector_idx(self, port_idx):
-        """Convert the port index to the connector index.
+    def port_to_connector_idx(self, port_idx, module):
+        """Convert the port index to the connector index, for the given module.
 
         Parameters
         ----------
         port_idx: int
             The index of the port to convert.
+
+        module: ModuleNode.ModuleNode
+            The module to compute the connector index for.
 
         Returns
         -------
@@ -2542,12 +2551,82 @@ class UrdfWriter:
             The index of the connector corresponding to the port index.
 
         """
-        # connector index is the same as the port index for the first 4 ports
-        connector_idx = port_idx
+        # MYNOTE: this part is used only in Discovery mode for now.
+        idx_offset = 0
+        # If the hub is not structural, we need to take into account the other children the parent hub might have.
+        # If the hub is not structural, by default its parent must be a hub as well. Non-structural hubs can only be
+        # connected to structural hubs (or other non-structural hubs) and be a "children hub". Their only purpose is to 
+        # "increase" the number of ports of its parent hub (and therefore its available connectors). 
+        # The connectors are shared between the parent and children hubs, so their index must be computed accordingly.
+        if not module.is_structural:
+            # The current port used by the parent hub to connect to the hub we are computing the transforms of.
+            parent_current_port = 1 << self.eth_to_physical_port_idx(module.parent.selected_port)
+            # The ports of the parent hub already occupied before adding the current hub.
+            parent_already_occupied_ports = int(module.parent.occupied_ports, 2) & ~parent_current_port
+            # The ports 1, 2 and 3
+            non_zero_ports = int("1110", 2)
+            # The ports of the parent hub already occupied before adding the current hub, excluding the port 0.
+            parent_ports_occupied_before_hub = (parent_already_occupied_ports & non_zero_ports)
+            # The number of children the parent hub has before adding the current hub.
+            n_children_before_hub = 0
+            for i in range(4):
+                if parent_ports_occupied_before_hub & (1 << i):
+                    n_children_before_hub += 1
+            # The number of hubs children the parent hub has after adding the current hub.
+            parent_elder_hubs_children = module.parent.n_children_hubs - 1
+            # The index offset is computed by looking at the number of children hubs and non-hubs the parent hub has before adding the current hub.
+            if parent_elder_hubs_children > 0:
+                # Get the offset introduced by the other non-structural hubs connected to the parent hub. 
+                # Remove the offset given by the current hub (-2), should not be taken into account when counting the index.
+                idx_offset += self.get_connector_offset(module.parent) - 2
+                # The number of hubs children increases the index offset by 1
+                idx_offset += (1)*parent_elder_hubs_children 
+            # The number of non-hubs children the parent hub has before adding the current hub.
+            parent_elder_nonhubs_children = n_children_before_hub - parent_elder_hubs_children
+            # the number of non-hubs children increases the index offset by 1 (since each non-hub has 2 connectors, but one is used to connect to the parent hub).
+            idx_offset +=(parent_elder_nonhubs_children)*1
+        
+        # indexes for connector and selected port are the same, unless the hub is connected to another non-structural hub
+        connector_idx = port_idx + idx_offset
+        
+        # We need to add an offset to the connector index depending on the other children the current module might have
+        if module.type in {'cube', 'mobile_base'}:
+            # Add the offset given by the other non-structural hubs already connected to the current hub
+            connector_idx += self.get_connector_offset(module)
+
         return connector_idx
     
 
-    def connector_to_port_idx(self, connector_idx):
+    def get_connector_offset(self, module, count=0):
+        """Get the offset of the connector index for the given module. This is necessary because the connectors are shared
+        between the parent and children non-structural hubs, so their index must be computed accordingly.
+        Recursively adds the offset given by children and grandchildren non-structural hubs.
+
+        Parameters
+        ----------
+        module: ModuleNode.ModuleNode
+            The module to compute the offset for.
+
+        count: int
+            The current offset count. Default value is 0.
+
+        Returns
+        -------
+        count: int
+            The offset of the connector index for the given module.
+
+        """
+        for child in module.children:
+            count = self.get_connector_offset(child, count)
+            if not child.is_structural:
+                # We take into account the other hubs connected to get the right index. We have 4 connectors per hub, but since port 0 is occupied by the hub-hub connection, each child hub increase the index by 3
+                count += (4-1)
+                # We take into account that one port on the current hub (parent) is used to establish a connection with a second hub, and that should not be taken into account when counting the index
+                count -= 1
+        return count
+    
+
+    def connector_to_port_idx(self, connector_idx, module):
         """Convert the connector index to the port index.
 
         Parameters
@@ -2561,8 +2640,11 @@ class UrdfWriter:
             The index of the port corresponding to the connector index.
 
         """
-        # port index is the same as the connector index for the first 4 ports
+        # MYNOTE: this part is used only in Building mode for now. When the differences between the two modes will be removed, the implemantation of this function will be the reverse of the port_to_connector_idx function.
+
+        # connector index is the same as the port index for the first 4 ports
         port_idx = connector_idx
+
         return port_idx
     
 
@@ -2625,14 +2707,15 @@ class UrdfWriter:
         selected_eth_port = self.ffs(free_ports_remapped)
         self.print('selected EtherCAT port :', selected_eth_port)
 
-        # remap the ports from the EtherCAT order to the physical order: 2, 1, 3, 0 -> 3, 2, 1, 0.
-        selected_physical_port = self.eth_to_physical_port_idx(selected_eth_port)
-        self.print('selected physical port :', selected_physical_port)
+        # MYNOTE: this part is not needed. We are not interested in the physical port index, but in the EtherCAT port index, so that it matches the order of the ports in the EtherCAT master scan.
+        # # remap the ports from the EtherCAT order to the physical order: 2, 1, 3, 0 -> 3, 2, 1, 0.
+        # selected_physical_port = self.eth_to_physical_port_idx(selected_eth_port)
+        # self.print('selected physical port :', selected_physical_port)
 
         # Set the selected_port attribute of the module
-        module.selected_port = selected_physical_port
+        module.selected_port = selected_eth_port
 
-        # If the selected connector is not None, it means that the user has selected a connector from the GUI. Value is overwritten
+        # If the port index is not None, it means that the user has selected it from the GUI. Value is overwritten
         if port_idx is not None:
             module.selected_port = port_idx
 
@@ -2667,20 +2750,22 @@ class UrdfWriter:
             # The connector index is retrieved from the list of connectors of the module
             connector_idx = module.connectors.index(connector_name)
             # Convert the connector index to the port index
-            module.selected_port = self.connector_to_port_idx(connector_idx)
+            module.selected_port = self.connector_to_port_idx(connector_idx, module)
             # Set the name of the selected connector
             selected_connector = connector_name
         else:
             # Set the current port of the module
             self.set_current_port(module, port_idx=port_idx)
             # Convert the port index to the connector index
-            connector_idx = self.port_to_connector_idx(module.selected_port) 
+            connector_idx = self.port_to_connector_idx(module.selected_port, module) 
             # Set the name of the selected connector. If the index is out of range, it means that the module has only one connector, so we use as name the module name itself.
             # TODO: add connectors also for modules with only one connector, so to avoid this and have a uniform behavior
             if connector_idx < len(module.connectors):
-                selected_connector = module.connectors[connector_idx] # TODO: add connectors also for non-structural hubs (or use the ones from the parent)
+                selected_connector = module.connectors[connector_idx]
             else:
                 selected_connector = module.name
+
+        setattr(module, 'connector_idx', connector_idx)
 
         self.print('selected_connector :', selected_connector)
 
@@ -2894,43 +2979,13 @@ class UrdfWriter:
 
 
     def get_hub_output_transform(self, hub):
-        idx_offset = 0
-        # If the hub is not structural, we need to take into account the other children the parent hub might have.
-        # If the hub is not structural, by default its parent must be a hub as well. Non-structural hubs can only be
-        # connected to structural hubs (or other non-structural hubs) and be a "children hub". Their only purpose is to 
-        # "increase" the number of ports of its parent hub (and therefore its available connectors). 
-        # The connectors are shared between the parent and children hubs, so their index must be computed accordingly.
-        # MYNOTE: this part is used only in Discovery mode for now.
-        if not hub.is_structural:
-            # The current port used by the parent hub to connect to the hub we are computing the transforms of.
-            parent_current_port = 1 << hub.parent.selected_port
-            # The ports of the parent hub already occupied before adding the current hub.
-            parent_already_occupied_ports = int(hub.parent.occupied_ports, 2) & ~parent_current_port
-            # The ports 1, 2 and 3
-            non_zero_ports = int("1110", 2)
-            # The ports of the parent hub already occupied before adding the current hub, excluding the port 0.
-            parent_ports_occupied_before_hub = (parent_already_occupied_ports & non_zero_ports)
-            # The number of children the parent hub has before adding the current hub.
-            n_children_before_hub = 0
-            for i in range(4):
-                if parent_ports_occupied_before_hub & (1 << i):
-                    n_children_before_hub += 1
-            # The number of hubs children the parent hub has after adding the current hub.
-            parent_elder_hubs_children = hub.parent.n_children_hubs - 1
-            # The number of non-hubs children the parent hub has before adding the current hub.
-            parent_elder_nonhubs_children = n_children_before_hub - parent_elder_hubs_children
-            # The index offset is computed as the number of children hubs times 3 (since each hub has 4 connectors, but one is used to connect to the parent hub) plus the number of non-hubs children times 1 (since each non-hub has 2 connectors, but one is used to connect to the parent hub).
-            idx_offset = (parent_elder_hubs_children)*3 + (parent_elder_nonhubs_children)*1
-        
-        # indexes for connector and selected port are the same, unless the hub is connected to another non-structural hub
-        connector_idx = (self.port_to_connector_idx(hub.selected_port)) + idx_offset
-        # We take into account the other hubs connected to get the right index. We have 4 connectors per hub, but since port 0 is occupied by the hub-hub connection, each child hub increase the index by 3
-        connector_idx += (hub.n_children_hubs) * (4-1)
-        # We take into account that one port on the current hub is used to establish a connection with a second hub, and that should not be taken into account when counting the index
-        # connector_idx -= hub.n_children_hubs
 
-        connector_name = 'Con_' + str(connector_idx) + '_tf'
-        interface_transform = getattr(hub, connector_name)
+        connector_name = 'Con_' + str(hub.connector_idx) + '_tf'
+        try:
+            interface_transform = getattr(hub, connector_name)
+        except AttributeError:
+            self.error_print('AttributeError: ' + connector_name + ' not found in hub ' + hub.name + '. Either something went wrong during the discovery or the resources should be updated.')
+            raise AttributeError
         # if not hub.is_structural:
         #     interface_transform = tf.transformations.identity_matrix()
 
@@ -3339,6 +3394,8 @@ class UrdfWriter:
         else:
             # HACK: we set the name of the non-structural hub to be the same as the parent. This is needed to correctly write the SRDF chains!
             setattr(new_Hub, 'name', parent_name)
+            # HACK: we set the connectors of the non-structural hub to be the same as the parent.
+            new_Hub.connectors = past_Hub.connectors
             # if the parent is a hub, the n_children_hubs attribute is incremented, in order to keep track of the number of hubs connected to the parent hub and therefore the number of ports occupied. This is needed to select the right connector where to connect the new module 
             self.parent_module.n_children_hubs += 1
         
@@ -3794,7 +3851,7 @@ class UrdfWriter:
         return modulenodes
 
     def add_connectors(self, modulenode):
-        max_num_con = 10
+        max_num_con = 20
         for i in range(1, max_num_con):
             if hasattr(modulenode, 'Con_{}_tf'.format(i)):
                 con_tf = getattr(modulenode, 'Con_{}_tf'.format(i))

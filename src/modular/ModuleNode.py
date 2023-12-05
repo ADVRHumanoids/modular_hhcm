@@ -473,7 +473,7 @@ class Module(object):
     def get_hub_connections_tf(self, reverse):
         """Computes the homogeneous transformation matrices for the 4 hub connections"""
         origin, xaxis, yaxis, zaxis = (0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1)
-        max_num_con = 10
+        max_num_con = 20
 
         for i in range(1, max_num_con):
             if hasattr(self.kinematics, "connector_{}".format(i)):
