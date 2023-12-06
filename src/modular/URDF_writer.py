@@ -1327,18 +1327,6 @@ class UrdfWriter:
                 logger=self.logger,
                 slave_desc_mode=self.slave_desc_mode)
 
-        # # Open the base xacro file
-        # filename = path_name + '/urdf/ModularBot_new.urdf.xacro'
-        # with codecs.open(filename, 'r') as f:
-        #     string = f.read()
-        # # Instantiate an Element Tree
-        # self.root = ET.fromstring(string)
-        # self.urdf_tree = ET.ElementTree(self.root)
-        # self.print(ET.tostring(self.urdf_tree.getroot()))
-
-        # Load the robot_id dictionary from yaml file
-        # opts = repl_option()
-        # robot_id_dict = yaml.safe_load(open(opts["robot_id_yaml"], 'r'))
         robot_id_yaml = self.resource_finder.get_filename('robot_id.yaml')
         robot_id_dict = yaml.safe_load(open(robot_id_yaml, 'r'))
 
@@ -1362,6 +1350,7 @@ class UrdfWriter:
             module_position = int(module['position'])
             module['robot_id'] = int(module['robot_id']) if module['robot_id'] != -1 else module_position*(-1)
             robot_id = module['robot_id']
+            active_ports = int(module['active_ports'])
 
             mod_type = int(module['mod_type'])
             mod_id = int(module['mod_id'])
@@ -1374,7 +1363,6 @@ class UrdfWriter:
                 if module_filename is None:
                     self.info_print("Id not recognized! Skipping add_module() for id", robot_id_dict.get(robot_id))          
                     continue
-
 
             self.info_print('Discovered module with ID:', robot_id)
 
@@ -1409,9 +1397,6 @@ class UrdfWriter:
             if parent_position :
                 parent = modules_list[parent_position -1]
                 self.print('parent:', parent)
-                # # HACK: skip hub for discovery!
-                # if parent['robot_id'] == -1:
-                #     parent = modules_list[parent['position'] -2]
                 
                 parent_id = int(parent['robot_id'])
                 self.print('parent_id:', parent_id)
@@ -1422,6 +1407,7 @@ class UrdfWriter:
                 parent_topology = int(parent['topology'])
                 self.print('parent_topology:', parent_topology)
 
+                # select the correct parent module from its id and sets the correct current port
                 self.select_module_from_id(parent_id)
 
                 # set the current_port as occupied
@@ -1431,14 +1417,10 @@ class UrdfWriter:
                 self.parent_module.occupied_ports = "{0:04b}".format(int(self.parent_module.occupied_ports, 2) | mask)
                 self.print(self.parent_module.occupied_ports)
 
-                #If the parent is a cube to support non-structural box we add a socket
-                if self.parent_module.type == 'cube':
-                    if self.parent_module.is_structural == False:
-                        self.add_socket()
-
-            # get which ports in the ESC slave are active
-            active_ports = int(module['active_ports'])
-            self.print('active_ports:', active_ports)
+            #HACK: If the parent is a cube to support non-structural box we add a socket
+            if self.parent_module.type == 'cube':
+                if self.parent_module.is_structural == False:
+                    self.add_socket()
 
             # HACK: manually set name of mobile platform to be 'mobile_base', instead of auto-generated name
             module_name = None
@@ -1448,15 +1430,11 @@ class UrdfWriter:
             #add the module
             data = self.add_module(module_filename, 0, reverse=False, robot_id=robot_id, active_ports=active_ports, module_name=module_name)
                 
-
         ## HACK: Manually add passive end effector for now!
         # self.add_simple_ee(0.0, 0.0, 0.135, mass=0.23)
         # data = self.add_module('concert/passive_end_effector_panel.json', 0, False)
         # data = self.add_module('experimental/passive_end_effector_pen.json', 0, False)
 
-        # doc = xacro.parse(string)
-        # xacro.process_doc(doc, in_order=True)
-        # string = doc.toprettyxml(indent='  ')
         self.urdf_string = self.process_urdf()
 
         self.info_print("Discovery completed")
@@ -2700,7 +2678,7 @@ class UrdfWriter:
             The port selected as the current one.
 
         """
-
+        #MYNOTE: this part is used only in Discovery mode for now. occupied ports gets updated only in Discovery mode for now
         # binary XOR: the free ports are the ones that are active but not occupied
         free_ports = int(module.active_ports, 2) ^ int(module.occupied_ports, 2)
         self.print(module.name + " active_ports: " + module.active_ports + " - " + "occupied_ports: " + module.occupied_ports + " =")
@@ -2760,6 +2738,7 @@ class UrdfWriter:
             connector_idx = module.connectors.index(connector_name)
             # Convert the connector index to the port index
             current_port = self.connector_to_port_idx(connector_idx, module)
+            # TODO: the current port is not at the moment. This is currently done only in Discovery mode. In Building mode the current port is not used.
             # Set the name of the selected connector
             selected_connector = connector_name
         else:
