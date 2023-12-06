@@ -1424,8 +1424,8 @@ class UrdfWriter:
 
                 self.select_module_from_id(parent_id)
 
-                # set the selected_port as occupied
-                mask = 1 << self.eth_to_physical_port_idx(self.parent_module.selected_port)
+                # set the current_port as occupied
+                mask = 1 << self.eth_to_physical_port_idx(self.parent_module.current_port)
                 self.print(mask)
                 self.print(self.parent_module.occupied_ports)
                 self.parent_module.occupied_ports = "{0:04b}".format(int(self.parent_module.occupied_ports, 2) | mask)
@@ -1695,8 +1695,8 @@ class UrdfWriter:
         setattr(new_socket, 'robot_id', 0)
 
         # Update the EtherCAT port connected to the electro-mechanical interface where the new module/slave will be added
-        setattr(new_socket, 'selected_port', 1)
-        #self.print('selected_port :', new_socket.selected_port)
+        setattr(new_socket, 'current_port', 1)
+        #self.print('current_port :', new_socket.current_port)
 
         # save the active ports as a binary string
         setattr(new_socket, 'active_ports', "{0:04b}".format(3))  # TODO:change this
@@ -1718,15 +1718,15 @@ class UrdfWriter:
         if self.parent_module.type == 'cube' or self.parent_module.type == "mobile_base":
             if self.parent_module.is_structural:
                 parent_name = self.parent_module.name
-                if self.parent_module.selected_port == 1:
+                if self.parent_module.current_port == 1:
                     interface_transform = self.parent_module.Con_1_tf
-                elif self.parent_module.selected_port == 2:
+                elif self.parent_module.current_port == 2:
                     interface_transform = self.parent_module.Con_2_tf
-                elif self.parent_module.selected_port == 3:
+                elif self.parent_module.current_port == 3:
                     interface_transform = self.parent_module.Con_3_tf
-                elif self.parent_module.selected_port == 4:
+                elif self.parent_module.current_port == 4:
                     interface_transform = self.parent_module.Con_4_tf
-                elif self.parent_module.selected_port == 5:
+                elif self.parent_module.current_port == 5:
                     interface_transform = self.parent_module.Con_5_tf
             else:
                 parent_name = self.parent_module.parent.name
@@ -2096,8 +2096,8 @@ class UrdfWriter:
         #    |           |           |           |
         # com-exp   upper port  front port    nothing
         #################################################
-        setattr(new_module, 'selected_port', 1)
-        self.print('new_module.selected_port :', new_module.selected_port)
+        setattr(new_module, 'current_port', 1)
+        self.print('new_module.current_port :', new_module.current_port)
 
         # save the active ports as a binary string
         setattr(new_module, 'active_ports', "{0:04b}".format(active_ports))
@@ -2453,7 +2453,7 @@ class UrdfWriter:
 
         return queried_module
     
-    def select_module_from_id(self, id, selected_port=None):
+    def select_module_from_id(self, id, current_port=None):
         """Allows to select a module from the tree. An inner call to access_module_by_id sets the selected module as the
         current parent module. Returns info on the selected module, so that the GUI can display it.
 
@@ -2463,8 +2463,8 @@ class UrdfWriter:
             The id of the module to select. It will be used to call the access_module_by_id method.
             The corresponding object module data is then put in a dictionary and returned.
 
-        selected_port: int
-            Represent the port selected if the module is a hub/box
+        current_port: int
+            Represent the current port. If the module is a hub/box it is used to select tjhe connector to be used.
 
         Returns
         -------
@@ -2478,7 +2478,7 @@ class UrdfWriter:
         # Call the access_module_by_id method to find the selected module
         selected_module = self.access_module_by_id(id)
 
-        selected_connector = self.select_connector(selected_module, port_idx=selected_port)
+        selected_connector = self.select_connector(selected_module, port_idx=current_port)
 
         # Create the dictionary with the relevant info on the selected module, so that the GUI can dispaly it.
         if selected_module.type == 'cube':
@@ -2493,7 +2493,7 @@ class UrdfWriter:
 
         return data
 
-    def select_module_from_name(self, name, selected_port=None):
+    def select_module_from_name(self, name, current_port=None):
         """Allows to select a module from the tree. An inner call to access_module_by_name sets the selected module as the
         current parent module. Returns info on the selected module, so that the GUI can display it.
 
@@ -2503,8 +2503,8 @@ class UrdfWriter:
             String with the name of the module to select or the name of the mesh clicked on the GUI. It will be used to call the access_module_by_name method.
             The corresponding object module data is then put in a dictionary and returned.
 
-        selected_port: int
-            Represent the port selected if the module is a hub/box
+        current_port: int
+            Represent the current port. If the module is a hub/box it is used to select tjhe connector to be used.
 
         Returns
         -------
@@ -2524,7 +2524,7 @@ class UrdfWriter:
         # The method doing the real work is actually access_module_by_name
         selected_module = self.access_module_by_name(selected_module_name)
 
-        selected_connector = self.select_connector(selected_module, connector_name=name, port_idx=selected_port)
+        selected_connector = self.select_connector(selected_module, connector_name=name, port_idx=current_port)
 
         # Create the dictionary with the relevant info on the selected module, so that the GUI can dispaly it.
         data = {'lastModule_type': selected_module.type,
@@ -2561,7 +2561,7 @@ class UrdfWriter:
         # The connectors are shared between the parent and children hubs, so their index must be computed accordingly.
         if not module.is_structural:
             # # The current port used by the parent hub to connect to the hub we are computing the transforms of.
-            # parent_current_port = 1 << self.eth_to_physical_port_idx(module.parent.selected_port)
+            # parent_current_port = 1 << self.eth_to_physical_port_idx(module.parent.current_port)
             # # The ports of the parent hub already occupied before adding the current hub.
             # parent_already_occupied_ports = int(module.parent.occupied_ports, 2) & ~parent_current_port
             # # The ports 1, 2 and 3
@@ -2593,7 +2593,7 @@ class UrdfWriter:
             # # the number of non-hubs children increases the index offset by 1 (since each non-hub has 2 connectors, but one is used to connect to the parent hub).
             # idx_offset +=(parent_elder_nonhubs_children)*1
             #MYNOTE: this is kind of magic
-            idx_offset += module.parent.selected_port - 1
+            idx_offset += module.parent.current_port - 1
         
         # indexes for connector and selected port are the same, unless the hub is connected to another non-structural hub
         connector_idx = port_idx + idx_offset
@@ -2696,7 +2696,7 @@ class UrdfWriter:
 
         Returns
         -------
-        module.selected_port: int
+        module.current_port: int
             The port selected as the current one.
 
         """
@@ -2720,16 +2720,16 @@ class UrdfWriter:
         # selected_physical_port = self.eth_to_physical_port_idx(selected_eth_port)
         # self.print('selected physical port :', selected_physical_port)
 
-        # Set the selected_port attribute of the module
-        module.selected_port = selected_eth_port
+        # Set the current_port attribute of the module
+        module.current_port = selected_eth_port
 
         # If the port index is not None, it means that the user has selected it from the GUI. Value is overwritten
         if port_idx is not None:
-            module.selected_port = port_idx
+            module.current_port = port_idx
 
-        self.print('module.selected_port :', module.selected_port)
+        self.print('module.current_port :', module.current_port)
 
-        return module.selected_port 
+        return module.current_port 
     
 
     def select_connector(self, module, connector_name=None, port_idx=None):
@@ -2759,14 +2759,14 @@ class UrdfWriter:
             # The connector index is retrieved from the list of connectors of the module
             connector_idx = module.connectors.index(connector_name)
             # Convert the connector index to the port index
-            selected_port = self.connector_to_port_idx(connector_idx, module)
+            current_port = self.connector_to_port_idx(connector_idx, module)
             # Set the name of the selected connector
             selected_connector = connector_name
         else:
             # Set the current port of the module
             self.set_current_port(module, port_idx=port_idx)
             # Convert the port index to the connector index
-            connector_idx = self.port_to_connector_idx(module.selected_port, module) 
+            connector_idx = self.port_to_connector_idx(module.current_port, module) 
             # Set the name of the selected connector. If the index is out of range, it means that the module has only one connector, so we use as name the module name itself.
             # TODO: add connectors also for modules with only one connector, so to avoid this and have a uniform behavior
             if connector_idx < len(module.connectors):
@@ -2998,7 +2998,7 @@ class UrdfWriter:
         # if not hub.is_structural:
         #     interface_transform = tf.transformations.identity_matrix()
 
-        self.print('hub.selected_port:', hub.selected_port)
+        self.print('hub.current_port:', hub.current_port)
         self.print('interface_transform: ', interface_transform)
 
         return interface_transform
