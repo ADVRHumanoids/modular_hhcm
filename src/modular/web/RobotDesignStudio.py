@@ -698,7 +698,7 @@ def requestURDF():
 #     return send_from_directory(app.static_folder, path)
 
 
-# upload on the server the /modular_resources folder.
+# upload on the server the /modular_resources folder and the ones under cfg['esternal_resources']
 # This is needed to load the meshes of the modules (withot the need to put them in the /static folder)
 @app.route(f'{api_base_route}/resources/meshes/<path:path>', methods=['GET'])
 @app.route('/modular_resources/<path:path>')
@@ -707,16 +707,9 @@ def send_file(path):
     writer = get_writer()
 
     resources_paths = []
-    resources_paths += [writer.resource_finder.find_resource_absolute_path('', ['resources_path'])]
+    for res_path in writer.resource_finder.resources_paths:
+        resources_paths += [writer.resource_finder.find_resource_absolute_path('', res_path)]
 
-    # upload also external resources (concert_resources, etc.)
-    external_paths_dict = writer.resource_finder.nested_access(['external_resources'])
-    external_paths = [ writer.resource_finder.get_expanded_path(['external_resources', p]) for p in external_paths_dict]
-    resources_paths += external_paths
-
-    # if isinstance(resources_path, str):
-    #     return send_from_directory(resources_path, path)
-    # else:
     for res_path in resources_paths:
         try:
             return send_from_directory(res_path, path)

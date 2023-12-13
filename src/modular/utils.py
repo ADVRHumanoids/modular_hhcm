@@ -9,6 +9,17 @@ class ResourceFinder:
     def __init__(self, config_file='config_file.yaml'):
         self.cfg = self.get_yaml(config_file)
 
+        self.resources_paths = self.get_all_resources_paths()
+
+    def get_all_resources_paths(self):
+        resources_paths = []
+        # Add internal resources path. By default the path to the resources is at cfg['resources_path']
+        resources_paths.append(['resources_path'])
+        # Add external resources paths. The paths are mapped at cfg['external_resources']
+        for path in self.nested_access(['external_resources']):
+            resources_paths.append(['external_resources', path])
+        return resources_paths
+
     def nested_access(self, keylist):
         val = dict(self.cfg)
         for key in keylist:
@@ -132,9 +143,8 @@ class ResourceFinder:
         return yaml_dict
     
 class ModularResourcesManager:
-    def __init__(self, resource_finder, resources_paths):
+    def __init__(self, resource_finder):
         self.resource_finder = resource_finder
-        self.resources_paths = resources_paths
 
         self.available_modules_dict = {}
         self.available_modules_headers = []
@@ -163,7 +173,7 @@ class ModularResourcesManager:
         return listdir
     
     def init_available_modules(self):
-        for res_path in self.resources_paths:
+        for res_path in self.resource_finder.resources_paths:
             resource_names_list = ['yaml/' + el for el in self.expand_listdir('yaml', res_path)]
             resource_names_list += ['json/' + el for el in self.expand_listdir('json', res_path)]
             for res_name in resource_names_list:
@@ -178,12 +188,12 @@ class ModularResourcesManager:
                     self.available_modules_headers.append(res_dict['header'])
 
     def init_available_families(self):
-        for res_path in self.resources_paths:
+        for res_path in self.resource_finder.resources_paths:
             if self.resource_finder.resource_exists('families.yaml', res_path):
                 self.available_families += (self.resource_finder.get_yaml('families.yaml', res_path)['families'])
 
     def init_available_addons(self):
-        for res_path in self.resources_paths:
+        for res_path in self.resource_finder.resources_paths:
             resource_names_list = ['module_addons/yaml/' + el for el in self.expand_listdir('module_addons/yaml', res_path)]
             resource_names_list += ['module_addons/json/' + el for el in self.expand_listdir('module_addons/json', res_path)]
             for res_name in resource_names_list:
