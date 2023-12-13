@@ -792,14 +792,29 @@ def getModelModules():
             mimetype="application/json"
         )
 
-# Get a list of the module types that can currently be added to the model.
+# Get the id of the module associated to a mesh and the list of all meshes associated to a module
 @app.route(f'{api_base_route}/model/urdf/modules/meshes', methods=['GET'])
-def resources_modules_meshes_get():
+def module_meshes_get():
+        writer = get_writer()
+
+        mesh_ids = request.args.getlist('ids[]')
+
+        if len(mesh_ids)>1:
             return Response(
-                response=json.dumps({"message": 'GET /resources/modules/meshes has not been implemented yet'}),
+                response=json.dumps({"message": 'Only one id at a time should be provided'}),
                 status=501,
                 mimetype="application/json"
             )
+        elif len(mesh_ids)==1:
+            mesh_id = mesh_ids[0]
+            # From the name of the mesh clicked on the GUI select the module associated to it
+            # Also sets the selected_connector to the one associated to the mesh
+            associated_module_data = writer.select_module_from_name(mesh_id, None)
+
+        return Response(response=json.dumps({'id': associated_module_data['selected_connector'],
+                                            'meshes': associated_module_data['mesh_names']}),
+                        status=200,
+                        mimetype="application/json")
 
 # call URDF_writer.py to remove the last module
 @app.route(f'{api_base_route}/model/urdf/modules', methods=['DELETE'])
