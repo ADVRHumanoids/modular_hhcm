@@ -1588,18 +1588,22 @@ class UrdfWriter:
 
         self.parent_module = table
 
+        # Select the current connector of the new module
+        selected_connector = self.select_connector(table)
+
         if self.speedup:
             self.urdf_string = ""
         else:
             # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string
             self.urdf_string = self.process_urdf()
 
-        # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
-        data = {'result': self.urdf_string,
-                'lastModule_type': table.type,
-                'lastModule_name': table.name,
+        # Create the dictionary with the relevant info on the selected module, so that the GUI can dispaly it.
+        data = {'name': table.name,
+                'type': table.type,
+                'mesh_names': table.mesh_names,
                 'flange_size': table.flange_size,
-                'count': table.i}
+                'selected_connector': selected_connector,
+                'urdf_string': self.urdf_string}          
 
         return data
 
@@ -1628,17 +1632,21 @@ class UrdfWriter:
             # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string
             self.urdf_string = self.process_urdf()
 
+        # Select the current connector of the new module
+        selected_connector = self.select_connector(socket)
+
         if self.verbose:
             # Render tree
             for pre, _, node in anytree.render.RenderTree(self.base_link):
                 self.print("%s%s" % (pre, node.name))
 
-        # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
-        data = {'result': self.urdf_string,
-                'lastModule_type': socket.type,
-                'lastModule_name': socket.name,
+        # Create the dictionary with the relevant info on the selected module, so that the GUI can dispaly it.
+        data = {'name': socket.name,
+                'type': socket.type,
+                'mesh_names': socket.mesh_names,
                 'flange_size': socket.flange_size,
-                'count': socket.i}
+                'selected_connector': selected_connector,
+                'urdf_string': self.urdf_string}  
 
         # Update the parent_module attribute of the URDF_writer class
         self.parent_module = socket
@@ -1747,17 +1755,21 @@ class UrdfWriter:
         # update the urdf file, adding the new module
         # string = write_urdf(path_name + '/urdf/ModularBot_test.urdf', urdf_tree)
 
+        # Select the current connector of the new module
+        selected_connector = self.select_connector(new_socket)
+
         if self.verbose:
             # Render tree
             for pre, _, node in anytree.render.RenderTree(self.base_link):
                 self.print("%s%s" % (pre, node.name))
 
-        # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
-        data = {'result': self.urdf_string,
-                'lastModule_type': new_socket.type,
-                'lastModule_name': new_socket.name,
+        # Create the dictionary with the relevant info on the selected module, so that the GUI can dispaly it.
+        data = {'name': new_socket.name,
+                'type': new_socket.type,
+                'mesh_names': new_socket.mesh_names,
                 'flange_size': new_socket.flange_size,
-                'count': new_socket.i}
+                'selected_connector': selected_connector,
+                'urdf_string': self.urdf_string} 
 
         # if new_module.name.endswith('_stator'):
         #     new_module.name = selected_module[:-7]
@@ -1779,7 +1791,7 @@ class UrdfWriter:
             size_z=str(length),
             mass=str(mass),
             radius=str(radius))
-        self.parent_module.mesh_elements.append(drillbit_name)
+        self.parent_module.mesh_names.append(drillbit_name)
 
         trasl = tf.transformations.translation_matrix((0.0, 0.0, length))
         rot = tf.transformations.euler_matrix(0.0, 0.0, 0.0, 'sxyz')
@@ -1820,7 +1832,7 @@ class UrdfWriter:
             size_z=str(abs(y_offset)),
             mass=str(mass),
             radius=str(radius))
-        self.parent_module.mesh_elements.append(handle_name)
+        self.parent_module.mesh_names.append(handle_name)
 
         trasl = tf.transformations.translation_matrix((x_offset, y_offset, z_offset))
         if y_offset >= 0.0:
@@ -1938,8 +1950,12 @@ class UrdfWriter:
 
         self.collision_elements.append((father_name, simple_ee.name))
 
-        self.parent_module = simple_ee
         self.add_to_chain(simple_ee)
+        
+        self.parent_module = simple_ee
+
+        # Select the current connector of the new module
+        selected_connector = self.select_connector(simple_ee)
 
         if self.speedup:
             self.urdf_string = ""
@@ -1947,12 +1963,13 @@ class UrdfWriter:
             # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string
             self.urdf_string = self.process_urdf()
 
-        # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
-        data = {'result': self.urdf_string,
-                'lastModule_type': simple_ee.type,
-                'lastModule_name': simple_ee.name,
+        # Create the dictionary with the relevant info on the selected module, so that the GUI can dispaly it.
+        data = {'name': simple_ee.name,
+                'type': simple_ee.type,
+                'mesh_names': simple_ee.mesh_names,
                 'flange_size': simple_ee.flange_size,
-                'count': simple_ee.i}
+                'selected_connector': selected_connector,
+                'urdf_string': self.urdf_string} 
 
         return data
 
@@ -2092,7 +2109,7 @@ class UrdfWriter:
         setattr(new_module, 'xml_tree_elements', [])
 
         # add list of xml elements with an associated visual mesh as attribute
-        setattr(new_module, 'mesh_elements', [])
+        setattr(new_module, 'mesh_names', [])
 
         # add list of connectors names as attribute. The 0 connector is added by default. The others will be added by the add_connectors() method
         setattr(new_module, 'connectors', ['connector_0'])
@@ -2156,14 +2173,17 @@ class UrdfWriter:
         # Update the parent_module attribute of the URDF_writer class
         self.parent_module = new_module
 
+        # Select the current connector of the new module
+        selected_connector = self.select_connector(new_module, port_idx=new_module.current_port)
+
         for addon in addons:
             try:
                 self.add_addon(addon_filename=addon)
             except FileNotFoundError:
                 self.logger.error(f'Addon {addon} not found, skipping it')
 
-        # add meshed to the map
-        self.mesh_to_module_map.update({k: new_module.name for k in new_module.mesh_elements})
+        # add meshes to the map
+        self.mesh_to_module_map.update({k: new_module.name for k in new_module.mesh_names})
 
         if self.speedup:
             self.urdf_string = ""
@@ -2180,12 +2200,12 @@ class UrdfWriter:
                 self.print("%s%s: %d" % (pre, node.name, node.robot_id))
 
         # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
-        data = {'mesh_names': new_module.mesh_elements,
-                'result': self.urdf_string,
-                'lastModule_type': new_module.type,
-                'lastModule_name': new_module.name,
+        data = {'name': new_module.name,
+                'type': new_module.type,
+                'mesh_names': new_module.mesh_names,
                 'flange_size': new_module.flange_size,
-                'count': new_module.i}
+                'selected_connector': selected_connector,
+                'urdf_string': self.urdf_string}          
 
         self.info_print("Module added to URDF: " + new_module.name + " (" + new_module.type + ")")
 
@@ -2240,8 +2260,8 @@ class UrdfWriter:
                 try:
                     if node.attrib['name'] in selected_module.addon_elements:
                         # remove mesh from list of meshes and from the map
-                        if node.attrib['name'] in selected_module.mesh_elements:
-                            selected_module.mesh_elements.remove(node.attrib['name'])
+                        if node.attrib['name'] in selected_module.mesh_names:
+                            selected_module.mesh_names.remove(node.attrib['name'])
                             self.mesh_to_module_map.pop(node.attrib['name'])
                         # remove node from tree
                         self.root.remove(node)
@@ -2254,7 +2274,10 @@ class UrdfWriter:
             except FileNotFoundError:
                 self.logger.error(f'Addon {addon} not found, skipping it')
 
-        self.mesh_to_module_map.update({k: selected_module.name for k in selected_module.mesh_elements})
+        self.mesh_to_module_map.update({k: selected_module.name for k in selected_module.mesh_names})
+
+        # Select the current connector of the new module
+        selected_connector = self.select_connector(selected_module, port_idx=selected_module.current_port)
 
         if self.speedup:
             self.urdf_string = ""
@@ -2264,11 +2287,12 @@ class UrdfWriter:
             self.urdf_string = self.process_urdf()
 
         # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
-        data = {'result': self.urdf_string,
-                'lastModule_type': selected_module.type,
-                'lastModule_name': selected_module.name,
+        data = {'name': selected_module.name,
+                'type': selected_module.type,
+                'mesh_names': selected_module.mesh_names,
                 'flange_size': selected_module.flange_size,
-                'count': selected_module.i}
+                'selected_connector': selected_connector,
+                'urdf_string': self.urdf_string}          
         
         return data
 
@@ -2316,8 +2340,8 @@ class UrdfWriter:
             try:
                 if node.attrib['name'] in xml_elements_to_remove:
                     # remove mesh from list of meshes and from the map
-                    if node.attrib['name'] in selected_module.mesh_elements:
-                        selected_module.mesh_elements.remove(node.attrib['name'])
+                    if node.attrib['name'] in selected_module.mesh_names:
+                        selected_module.mesh_names.remove(node.attrib['name'])
                         self.mesh_to_module_map.pop(node.attrib['name'])
                     # remove node from tree
                     self.root.remove(node)
@@ -2358,11 +2382,16 @@ class UrdfWriter:
         # Update the parent_module attribute of the URDF_writer class
         self.parent_module = father
 
-        # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
-        data = {'result': self.urdf_string,
-                'lastModule_type': father.type,
-                'lastModule_name': father.name,
-                'flange_size': father.flange_size}
+        # Select the current connector of the new module
+        selected_connector = self.select_connector(father, port_idx=father.current_port)
+
+       # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
+        data = {'name': father.name,
+                'type': father.type,
+                'mesh_names': father.mesh_names,
+                'flange_size': father.flange_size,
+                'selected_connector': selected_connector,
+                'urdf_string': self.urdf_string}  
 
         # before deleting selected_module set his parent property to None. Otherwise this will mess up the obj tree
         selected_module.parent = None
@@ -2459,15 +2488,12 @@ class UrdfWriter:
         selected_connector = self.select_connector(selected_module, port_idx=current_port)
 
         # Create the dictionary with the relevant info on the selected module, so that the GUI can dispaly it.
-        if selected_module.type == 'cube':
-            data = {'lastModule_type': selected_module.type,
-                    'lastModule_name': selected_module.name,
-                    'flange_size': selected_module.flange_size}
-        else:
-            data = {'lastModule_type': selected_module.type,
-                    'lastModule_name': selected_module.name,
-                    'flange_size': selected_module.flange_size,
-                    'count': selected_module.i}
+        data = {'name': selected_module.name,
+                'type': selected_module.type,
+                'mesh_names': selected_module.mesh_names,
+                'flange_size': selected_module.flange_size,
+                'selected_connector': selected_connector,
+                'urdf_string': self.urdf_string}          
 
         return data
 
@@ -2505,9 +2531,12 @@ class UrdfWriter:
         selected_connector = self.select_connector(selected_module, connector_name=name, port_idx=current_port)
 
         # Create the dictionary with the relevant info on the selected module, so that the GUI can dispaly it.
-        data = {'lastModule_type': selected_module.type,
-                'lastModule_name': selected_module.name,
-                'flange_size': selected_module.flange_size}
+        data = {'name': selected_module.name,
+                'type': selected_module.type,
+                'mesh_names': selected_module.mesh_names,
+                'flange_size': selected_module.flange_size,
+                'selected_connector': selected_connector,
+                'urdf_string': self.urdf_string}          
 
         return data
     
@@ -2790,7 +2819,7 @@ class UrdfWriter:
                           yaw=yaw)
             # add the xacro:add_dagana element to the list of urdf elements
             new_Link.xml_tree_elements.append(new_Link.name)
-            new_Link.mesh_elements += [new_Link.name + '_top_link', new_Link.name + '_bottom_link']
+            new_Link.mesh_names += [new_Link.name + '_top_link', new_Link.name + '_bottom_link']
 
             setattr(new_Link, 'dagana_joint_name', new_Link.name + '_claw_joint')
             setattr(new_Link, 'dagana_link_name', new_Link.name + '_bottom_link')
@@ -2828,7 +2857,7 @@ class UrdfWriter:
                           parent_name=new_Link.name)
             # add the xacro:add_realsense_d_camera to the list of urdf elements
             new_Link.xml_tree_elements.append(new_Link.camera_name + '_link')
-            new_Link.mesh_elements.append(new_Link.camera_name)
+            new_Link.mesh_names.append(new_Link.camera_name)
 
             # <xacro:property name="velodyne_back_origin">
             #     # <origin xyz="-0.5305 -0.315 -0.1" rpy="0.0 0.0 3.141593"/>
@@ -2919,7 +2948,7 @@ class UrdfWriter:
                             filename=new_Link.filename)
             # add the xacro:add_gripper_fingers element to the list of urdf elements
             new_Link.xml_tree_elements.append(new_Link.name)
-            new_Link.mesh_elements += [new_Link.name + '_finger1', new_Link.name + '_finger2']
+            new_Link.mesh_names += [new_Link.name + '_finger1', new_Link.name + '_finger2']
 
             # TO BE FIXED: ok for ros_control. How will it be for xbot2?
             self.control_plugin.add_joint(new_Link.joint_name_finger1)
@@ -2938,7 +2967,7 @@ class UrdfWriter:
             )
             # add the xacro:add_size_adapter element to the list of urdf elements
             new_Link.xml_tree_elements.append(new_Link.name)
-            new_Link.mesh_elements.append(new_Link.name)
+            new_Link.mesh_names.append(new_Link.name)
             setattr(new_Link, 'flange_size', new_Link.size_out)
 
         self.add_gazebo_element(new_Link, new_Link.gazebo.body_1, new_Link.name)
@@ -3086,7 +3115,7 @@ class UrdfWriter:
                                     name=link_name)
         # Add the link to the list of urdf elements of the module
         module_obj.xml_tree_elements.append(link_name)
-        module_obj.mesh_elements.append(link_name)
+        module_obj.mesh_names.append(link_name)
 
         visual_bodies = getattr(module_obj.visual, body_name, None)
         collision_bodies = getattr(module_obj.collision, body_name, None)
@@ -3857,7 +3886,7 @@ class UrdfWriter:
                                 pitch=pitch,
                                 yaw=yaw)
                 modulenode.xml_tree_elements.append(con_name)
-                modulenode.mesh_elements.append(con_name)
+                modulenode.mesh_names.append(con_name)
                 modulenode.connectors.append(con_name)
                 
     def compute_payload(self, samples):
