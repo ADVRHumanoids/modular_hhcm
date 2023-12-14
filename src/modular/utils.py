@@ -4,6 +4,7 @@ import os
 import subprocess
 import io
 import json
+import re
 
 class ResourceFinder:
     def __init__(self, config_file='config_file.yaml'):
@@ -27,20 +28,24 @@ class ResourceFinder:
         return val
 
     def get_expanded_path(self, relative_path):
-        expanded_dir = os.path.expanduser(self.nested_access(relative_path))
-        expanded_dir = os.path.expandvars(expanded_dir)
-        if '$' in expanded_dir:
-            expanded_dir = expanded_dir[1:]
+        # Expand the home directory
+        expanded_path = os.path.expanduser(self.nested_access(relative_path))
+        # Expand environment variables
+        expanded_path = os.path.expandvars(expanded_path)
+        def path_substitution(match):
+            # Get the command to execute: $(cmd)
+            cmd = re.search(r"\$\(([^\)]+)\)", match.group()).group(1)
+            # Return the output of the command            
+            cmd_output = subprocess.check_output(cmd.split(), stderr=subprocess.DEVNULL).decode('utf-8').rstrip()
+            return cmd_output
+        try:
+            # The dollar sign is used to execute a command and get the output. What is inside the parenthesis is substituted with the output of the command: $(cmd) -> output of cmd
+            expanded_path = re.sub(r"\$\(([^\)]+)\)", path_substitution, expanded_path)
+        except (subprocess.CalledProcessError, TypeError):
+            msg = 'Executing ' + expanded_path + ' resulted in an error. Path substitution cannot be completed. Are the required environment variables set?'
+            raise RuntimeError(msg)
             
-            if (expanded_dir.startswith('{',) and expanded_dir.endswith('}')) or (expanded_dir.startswith('(',) and expanded_dir.endswith(')')):
-                expanded_dir = expanded_dir[1:-1]
-
-            try:
-                expanded_dir = subprocess.check_output(expanded_dir.split(), stderr=subprocess.DEVNULL).decode('utf-8').rstrip()
-            except subprocess.CalledProcessError:
-                expanded_dir = ''
-
-        return expanded_dir
+        return expanded_path
 
     def find_resource_path(self, resource_name, relative_path=None):
         if relative_path:
