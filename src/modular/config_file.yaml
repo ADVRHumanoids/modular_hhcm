@@ -9,4 +9,4 @@ external_resources:
 modularbot_path: 'modular_data/ModularBot'
 deploy_dir: '~/src/fhi_ws/src'
 post_processing_scripts: 
-  - '$(rospack find fhi_xbot_plugins)/scripts/post_generation.sh'
+  fhi_post_generation_script: '$(rospack find fhi_xbot_plugins)/scripts/post_generation.sh'
