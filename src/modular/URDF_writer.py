@@ -1231,6 +1231,12 @@ class UrdfWriter:
         else:
             print(args)
 
+    def error_print(self, *args):
+        if isinstance(self.logger, logging.Logger):
+            self.logger.error(' '.join(str(a) for a in args))
+        else:
+            print(args)
+
     @staticmethod
     def find_module_from_id(module_id, modules):
         """Given the module id find the corresponding dictionary entry and return it"""
