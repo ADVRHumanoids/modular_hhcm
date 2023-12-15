@@ -844,8 +844,11 @@ def removeModules():
             )
         elif len(ids)==1:
             writer.select_module_from_name(ids[0], None)
-        writer.remove_module()
-        return Response(status=204)
+        father_module_data = writer.remove_module()
+        return Response(response=json.dumps({'id': father_module_data['selected_connector'],
+                                            'meshes': father_module_data['selected_meshes']}),
+                        status=200,
+                        mimetype="application/json")
 
     except Exception as e:
         # validation failed
@@ -886,9 +889,12 @@ def updateModule():
 
         addons = req['addons'] if 'addons' in req else []
 
-        writer.update_module(angle_offset=offset, reverse=reverse, addons=addons)
+        updated_module_data = writer.update_module(angle_offset=offset, reverse=reverse, addons=addons)
 
-        return Response(status=204)
+        return Response(response=json.dumps({'id': updated_module_data['selected_connector'],
+                                            'meshes': updated_module_data['selected_meshes']}),
+                        status=200,
+                        mimetype="application/json")
     except Exception as e:
         # validation failed
         app.logger.error(f'{type(e).__name__}: {e}')
