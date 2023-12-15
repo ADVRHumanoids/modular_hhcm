@@ -14,6 +14,7 @@ import logging
 import sys
 from importlib import reload, util
 from configparser import ConfigParser, ExtendedInterpolation
+import re
 
 import numpy as np
 
@@ -639,14 +640,10 @@ def getURDF():
         urdf_string = writer.urdf_string
 
         # replace path for remote access of STL meshes that will be served with '/meshes/<path:path>' route
-        # urdf= urdf_string.replace('package://modular/src/modular/web/static/models/modular/,'package://')
-        urdf= urdf_string\
-                .replace('package://modular_resources',f'package:/{api_base_route}/resources/meshes')\
-                .replace('package://concert_resources',f'package:/{api_base_route}/resources/meshes')
-
+        frontend_urdf_string = re.sub(r"(package:/)(/[^/]+)(/.*)", fr"\1{api_base_route}/resources/meshes\3", urdf_string)
 
         return  Response(
-            response=urdf,
+            response=frontend_urdf_string,
             status=200,
             mimetype='application/xml'
         )
