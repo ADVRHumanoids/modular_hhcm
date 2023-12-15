@@ -460,7 +460,7 @@ def addNewModule():
         module_data = writer.add_module(filename, offset, reverse, addons)
 
         return Response(response=json.dumps({'id': module_data['selected_connector'],
-                                             'meshes': module_data['mesh_names']}),
+                                             'meshes': module_data['selected_meshes']}),
                         status=200,
                         mimetype="application/json")
 
@@ -812,7 +812,7 @@ def module_meshes_get():
             associated_module_data = writer.select_module_from_name(mesh_id, None)
 
         return Response(response=json.dumps({'id': associated_module_data['selected_connector'],
-                                            'meshes': associated_module_data['mesh_names']}),
+                                            'meshes': associated_module_data['selected_meshes']}),
                         status=200,
                         mimetype="application/json")
 

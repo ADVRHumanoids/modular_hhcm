@@ -1590,6 +1590,8 @@ class UrdfWriter:
 
         # Select the current connector of the new module
         selected_connector = self.select_connector(table)
+        # Select the meshes to highlight in the GUI
+        selected_meshes = self.select_meshes(selected_connector, table)
 
         if self.speedup:
             self.urdf_string = ""
@@ -1600,9 +1602,9 @@ class UrdfWriter:
         # Create the dictionary with the relevant info on the selected module, so that the GUI can dispaly it.
         data = {'name': table.name,
                 'type': table.type,
-                'mesh_names': table.mesh_names,
                 'flange_size': table.flange_size,
                 'selected_connector': selected_connector,
+                'selected_meshes': selected_meshes,
                 'urdf_string': self.urdf_string}          
 
         return data
@@ -1634,6 +1636,8 @@ class UrdfWriter:
 
         # Select the current connector of the new module
         selected_connector = self.select_connector(socket)
+        # Select the meshes to highlight in the GUI
+        selected_meshes = self.select_meshes(selected_connector, socket)
 
         if self.verbose:
             # Render tree
@@ -1643,9 +1647,9 @@ class UrdfWriter:
         # Create the dictionary with the relevant info on the selected module, so that the GUI can dispaly it.
         data = {'name': socket.name,
                 'type': socket.type,
-                'mesh_names': socket.mesh_names,
                 'flange_size': socket.flange_size,
                 'selected_connector': selected_connector,
+                'selected_meshes': selected_meshes,
                 'urdf_string': self.urdf_string}  
 
         # Update the parent_module attribute of the URDF_writer class
@@ -1757,6 +1761,8 @@ class UrdfWriter:
 
         # Select the current connector of the new module
         selected_connector = self.select_connector(new_socket)
+        # Select the meshes to highlight in the GUI
+        selected_meshes = self.select_meshes(selected_connector, new_socket)
 
         if self.verbose:
             # Render tree
@@ -1766,9 +1772,9 @@ class UrdfWriter:
         # Create the dictionary with the relevant info on the selected module, so that the GUI can dispaly it.
         data = {'name': new_socket.name,
                 'type': new_socket.type,
-                'mesh_names': new_socket.mesh_names,
                 'flange_size': new_socket.flange_size,
                 'selected_connector': selected_connector,
+                'selected_meshes': selected_meshes,
                 'urdf_string': self.urdf_string} 
 
         # if new_module.name.endswith('_stator'):
@@ -1956,6 +1962,8 @@ class UrdfWriter:
 
         # Select the current connector of the new module
         selected_connector = self.select_connector(simple_ee)
+        # Select the meshes to highlight in the GUI
+        selected_meshes = self.select_meshes(selected_connector, simple_ee)
 
         if self.speedup:
             self.urdf_string = ""
@@ -1966,9 +1974,9 @@ class UrdfWriter:
         # Create the dictionary with the relevant info on the selected module, so that the GUI can dispaly it.
         data = {'name': simple_ee.name,
                 'type': simple_ee.type,
-                'mesh_names': simple_ee.mesh_names,
                 'flange_size': simple_ee.flange_size,
                 'selected_connector': selected_connector,
+                'selected_meshes': selected_meshes,
                 'urdf_string': self.urdf_string} 
 
         return data
@@ -2175,6 +2183,8 @@ class UrdfWriter:
 
         # Select the current connector of the new module
         selected_connector = self.select_connector(new_module, port_idx=new_module.current_port)
+        # Select the meshes to highlight in the GUI
+        selected_meshes = self.select_meshes(selected_connector, new_module)
 
         for addon in addons:
             try:
@@ -2202,9 +2212,9 @@ class UrdfWriter:
         # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
         data = {'name': new_module.name,
                 'type': new_module.type,
-                'mesh_names': new_module.mesh_names,
                 'flange_size': new_module.flange_size,
                 'selected_connector': selected_connector,
+                'selected_meshes': selected_meshes,
                 'urdf_string': self.urdf_string}          
 
         self.info_print("Module added to URDF: " + new_module.name + " (" + new_module.type + ")")
@@ -2278,6 +2288,8 @@ class UrdfWriter:
 
         # Select the current connector of the new module
         selected_connector = self.select_connector(selected_module, port_idx=selected_module.current_port)
+        # Select the meshes to highlight in the GUI
+        selected_meshes = self.select_meshes(selected_connector, selected_module)
 
         if self.speedup:
             self.urdf_string = ""
@@ -2289,9 +2301,9 @@ class UrdfWriter:
         # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
         data = {'name': selected_module.name,
                 'type': selected_module.type,
-                'mesh_names': selected_module.mesh_names,
                 'flange_size': selected_module.flange_size,
                 'selected_connector': selected_connector,
+                'selected_meshes': selected_meshes,
                 'urdf_string': self.urdf_string}          
         
         return data
@@ -2384,13 +2396,16 @@ class UrdfWriter:
 
         # Select the current connector of the new module
         selected_connector = self.select_connector(father, port_idx=father.current_port)
+        # Select the meshes to highlight in the GUI
+        selected_meshes = self.select_meshes(selected_connector, father)
+        
 
        # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
         data = {'name': father.name,
                 'type': father.type,
-                'mesh_names': father.mesh_names,
                 'flange_size': father.flange_size,
                 'selected_connector': selected_connector,
+                'selected_meshes': selected_meshes,
                 'urdf_string': self.urdf_string}  
 
         # before deleting selected_module set his parent property to None. Otherwise this will mess up the obj tree
@@ -2485,14 +2500,17 @@ class UrdfWriter:
         # Call the access_module_by_id method to find the selected module
         selected_module = self.access_module_by_id(id)
 
+        # Select the current connector of the selected module
         selected_connector = self.select_connector(selected_module, port_idx=current_port)
+        # Select the meshes to highlight in the GUI
+        selected_meshes = self.select_meshes(selected_connector, selected_module)
 
         # Create the dictionary with the relevant info on the selected module, so that the GUI can dispaly it.
         data = {'name': selected_module.name,
                 'type': selected_module.type,
-                'mesh_names': selected_module.mesh_names,
                 'flange_size': selected_module.flange_size,
                 'selected_connector': selected_connector,
+                'selected_meshes': selected_meshes,
                 'urdf_string': self.urdf_string}          
 
         return data
@@ -2528,14 +2546,17 @@ class UrdfWriter:
         # The method doing the real work is actually access_module_by_name
         selected_module = self.access_module_by_name(selected_module_name)
 
+        # Select the current connector of the selected module
         selected_connector = self.select_connector(selected_module, connector_name=name, port_idx=current_port)
+        # Select the meshes to highlight in the GUI
+        selected_meshes = self.select_meshes(selected_connector, selected_module)
 
         # Create the dictionary with the relevant info on the selected module, so that the GUI can dispaly it.
         data = {'name': selected_module.name,
                 'type': selected_module.type,
-                'mesh_names': selected_module.mesh_names,
                 'flange_size': selected_module.flange_size,
                 'selected_connector': selected_connector,
+                'selected_meshes': selected_meshes,
                 'urdf_string': self.urdf_string}          
 
         return data
@@ -2787,6 +2808,35 @@ class UrdfWriter:
         self.print('selected_connector :', selected_connector)
 
         return selected_connector
+    
+
+    def select_meshes(self, selected_connector, module):
+        """Select the mesh of the module to be highlighted on the GUI.
+
+        Parameters
+        ----------
+        selected_connector: str
+            String with the name of the connector.
+
+        module: ModuleNode.ModuleNode
+            The object of the module to select the mesh from.
+
+        Returns
+        -------
+        selected_mesh: list
+            The names of the meshes currently selected.
+        """
+
+        if selected_connector in module.connectors:
+            # If the selected mesh is the one of a connector, we select as mesh only the one associated to the connector
+            selected_meshes = [selected_connector]
+        else:
+            # Otherwise we select all the meshes of the module
+            selected_meshes = module.mesh_names
+
+        self.print('selected_mesh :', selected_meshes)
+
+        return selected_meshes
 
 
     @staticmethod
