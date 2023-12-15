@@ -3875,14 +3875,16 @@ class UrdfWriter:
     def deploy_robot(self, robot_name='modularbot', deploy_dir=None):
         script = self.resource_finder.get_filename('deploy.sh', ['data_path'])
 
-        if deploy_dir is None:
-            deploy_dir = os.path.expanduser(self.resource_finder.cfg['deploy_dir'])
-            deploy_dir = os.path.expandvars(deploy_dir)
-
-        if self.verbose:
-            output = subprocess.check_output([script, robot_name, "--destination-folder", deploy_dir, "-v"])
-        else:
-            output = subprocess.check_output([script, robot_name, "--destination-folder", deploy_dir])
+        try:
+            if deploy_dir is None:
+                deploy_dir = self.resource_finder.get_expanded_path(['deploy_dir'])
+            if self.verbose:
+                output = subprocess.check_output([script, robot_name, "--destination-folder", deploy_dir, "-v"])
+            else:
+                output = subprocess.check_output([script, robot_name, "--destination-folder", deploy_dir])
+        except (subprocess.CalledProcessError, FileNotFoundError, RuntimeError) as e:
+            self.error_print(f"An error occurred when executing deploy script: {script}. Aborting.")
+            raise e
 
         self.info_print(str(output, 'utf-8', 'ignore'))
 
