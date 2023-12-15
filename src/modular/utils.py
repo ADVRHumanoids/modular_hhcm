@@ -5,12 +5,15 @@ import subprocess
 import io
 import json
 import re
+import logging
 
 class ResourceFinder:
     def __init__(self, config_file='config_file.yaml'):
         self.cfg = self.get_yaml(config_file)
 
         self.resources_paths = self.get_all_resources_paths()
+
+        self.logger = logging.getLogger('ResourceFinder')
 
     def get_all_resources_paths(self):
         resources_paths = []
@@ -42,8 +45,9 @@ class ResourceFinder:
             # The dollar sign is used to execute a command and get the output. What is inside the parenthesis is substituted with the output of the command: $(cmd) -> output of cmd
             expanded_path = re.sub(r"\$\(([^\)]+)\)", path_substitution, expanded_path)
         except (subprocess.CalledProcessError, TypeError):
-            msg = 'Executing ' + expanded_path + ' resulted in an error. Path substitution cannot be completed. Are the required environment variables set?'
-            raise RuntimeError(msg)
+            self.logger.warn('Executing ' + expanded_path + ' resulted in an error. Path substitution cannot be completed. Are the required environment variables set?')
+            pass
+            # raise RuntimeError(msg)
             
         return expanded_path
 
