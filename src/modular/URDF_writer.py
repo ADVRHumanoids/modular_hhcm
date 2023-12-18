@@ -4073,13 +4073,17 @@ class UrdfWriter:
 
         for post_processing_script in self.resource_finder.cfg['post_processing_scripts']:
             try:
-                script_path = self.resource_finder.get_expanded_path(['post_processing_scripts', post_processing_script])
+                script_path = self.resource_finder.get_expanded_path(['post_processing_scripts', post_processing_script, 'file'])
+                required = self.resource_finder.nested_access(['post_processing_scripts', post_processing_script, 'required'])
                 self.info_print(f"Running post processing script {post_processing_script}: {script_path}")
                 output = subprocess.check_output([script_path, "--destination-folder", deploy_dir, "--package-name", robot_name])
             except (subprocess.CalledProcessError, FileNotFoundError, RuntimeError) as e:
-                self.error_print(e)
-                self.error_print(f"Skipping post processing script {post_processing_script}")
-                pass
+                if required:
+                    raise(e)
+                else:
+                    self.error_print(e)
+                    self.error_print(f"Skipping post processing script {post_processing_script}")
+                    pass
 
         return robot_name
 
