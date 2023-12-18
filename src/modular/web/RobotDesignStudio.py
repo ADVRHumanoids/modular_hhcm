@@ -14,6 +14,7 @@ import logging
 import sys
 from importlib import reload, util
 from configparser import ConfigParser, ExtendedInterpolation
+import re
 
 import numpy as np
 
@@ -658,15 +659,10 @@ def getURDF():
         urdf_string = writer.urdf_string
 
         # replace path for remote access of STL meshes that will be served with '/meshes/<path:path>' route
-        # urdf= urdf_string.replace('package://modular/src/modular/web/static/models/modular/,'package://')
-        urdf= urdf_string\
-                .replace('package://modular_resources',f'package:/{api_base_route}/resources/meshes')\
-                .replace('package://concert_resources',f'package:/{api_base_route}/resources/meshes')\
-                .replace('package://fhi_resources',f'package:/{api_base_route}/resources/meshes')
-
+        frontend_urdf_string = re.sub(r"(package:/)(/[^/]+)(/.*)", fr"\1{api_base_route}/resources/meshes\3", urdf_string)
 
         return  Response(
-            response=urdf,
+            response=frontend_urdf_string,
             status=200,
             mimetype='application/xml'
         )
@@ -698,7 +694,7 @@ def requestURDF():
 #     return send_from_directory(app.static_folder, path)
 
 
-# upload on the server the /modular_resources folder.
+# upload on the server the /modular_resources folder and the ones under cfg['esternal_resources']
 # This is needed to load the meshes of the modules (withot the need to put them in the /static folder)
 @app.route(f'{api_base_route}/resources/meshes/<path:path>', methods=['GET'])
 @app.route('/modular_resources/<path:path>')
@@ -707,16 +703,9 @@ def send_file(path):
     writer = get_writer()
 
     resources_paths = []
-    resources_paths += [writer.resource_finder.find_resource_absolute_path('', ['resources_path'])]
+    for res_path in writer.resource_finder.resources_paths:
+        resources_paths += [writer.resource_finder.find_resource_absolute_path('', res_path)]
 
-    # upload also external resources (concert_resources, etc.)
-    external_paths_dict = writer.resource_finder.nested_access(['external_resources'])
-    external_paths = [ writer.resource_finder.get_expanded_path(['external_resources', p]) for p in external_paths_dict]
-    resources_paths += external_paths
-
-    # if isinstance(resources_path, str):
-    #     return send_from_directory(resources_path, path)
-    # else:
     for res_path in resources_paths:
         try:
             return send_from_directory(res_path, path)

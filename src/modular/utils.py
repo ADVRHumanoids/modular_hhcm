@@ -4,10 +4,25 @@ import os
 import subprocess
 import io
 import json
+import re
+import logging
 
 class ResourceFinder:
     def __init__(self, config_file='config_file.yaml'):
         self.cfg = self.get_yaml(config_file)
+
+        self.resources_paths = self.get_all_resources_paths()
+
+        self.logger = logging.getLogger('ResourceFinder')
+
+    def get_all_resources_paths(self):
+        resources_paths = []
+        # Add internal resources path. By default the path to the resources is at cfg['resources_path']
+        resources_paths.append(['resources_path'])
+        # Add external resources paths. The paths are mapped at cfg['external_resources']
+        for path in self.nested_access(['external_resources']):
+            resources_paths.append(['external_resources', path])
+        return resources_paths
 
     def nested_access(self, keylist):
         val = dict(self.cfg)
@@ -16,20 +31,25 @@ class ResourceFinder:
         return val
 
     def get_expanded_path(self, relative_path):
-        expanded_dir = os.path.expanduser(self.nested_access(relative_path))
-        expanded_dir = os.path.expandvars(expanded_dir)
-        if '$' in expanded_dir:
-            expanded_dir = expanded_dir[1:]
+        # Expand the home directory
+        expanded_path = os.path.expanduser(self.nested_access(relative_path))
+        # Expand environment variables
+        expanded_path = os.path.expandvars(expanded_path)
+        def path_substitution(match):
+            # Get the command to execute: $(cmd)
+            cmd = re.search(r"\$\(([^\)]+)\)", match.group()).group(1)
+            # Return the output of the command            
+            cmd_output = subprocess.check_output(cmd.split(), stderr=subprocess.DEVNULL).decode('utf-8').rstrip()
+            return cmd_output
+        try:
+            # The dollar sign is used to execute a command and get the output. What is inside the parenthesis is substituted with the output of the command: $(cmd) -> output of cmd
+            expanded_path = re.sub(r"\$\(([^\)]+)\)", path_substitution, expanded_path)
+        except (subprocess.CalledProcessError, TypeError):
+            self.logger.warn('Executing ' + expanded_path + ' resulted in an error. Path substitution cannot be completed. Are the required environment variables set?')
+            pass
+            # raise RuntimeError(msg)
             
-            if (expanded_dir.startswith('{',) and expanded_dir.endswith('}')) or (expanded_dir.startswith('(',) and expanded_dir.endswith(')')):
-                expanded_dir = expanded_dir[1:-1]
-
-            try:
-                expanded_dir = subprocess.check_output(expanded_dir.split(), stderr=subprocess.DEVNULL).decode('utf-8').rstrip()
-            except subprocess.CalledProcessError:
-                expanded_dir = ''
-
-        return expanded_dir
+        return expanded_path
 
     def find_resource_path(self, resource_name, relative_path=None):
         if relative_path:
@@ -132,9 +152,8 @@ class ResourceFinder:
         return yaml_dict
     
 class ModularResourcesManager:
-    def __init__(self, resource_finder, resources_paths):
+    def __init__(self, resource_finder):
         self.resource_finder = resource_finder
-        self.resources_paths = resources_paths
 
         self.available_modules_dict = {}
         self.available_modules_headers = []
@@ -163,7 +182,7 @@ class ModularResourcesManager:
         return listdir
     
     def init_available_modules(self):
-        for res_path in self.resources_paths:
+        for res_path in self.resource_finder.resources_paths:
             resource_names_list = ['yaml/' + el for el in self.expand_listdir('yaml', res_path)]
             resource_names_list += ['json/' + el for el in self.expand_listdir('json', res_path)]
             for res_name in resource_names_list:
@@ -178,12 +197,12 @@ class ModularResourcesManager:
                     self.available_modules_headers.append(res_dict['header'])
 
     def init_available_families(self):
-        for res_path in self.resources_paths:
+        for res_path in self.resource_finder.resources_paths:
             if self.resource_finder.resource_exists('families.yaml', res_path):
                 self.available_families += (self.resource_finder.get_yaml('families.yaml', res_path)['families'])
 
     def init_available_addons(self):
-        for res_path in self.resources_paths:
+        for res_path in self.resource_finder.resources_paths:
             resource_names_list = ['module_addons/yaml/' + el for el in self.expand_listdir('module_addons/yaml', res_path)]
             resource_names_list += ['module_addons/json/' + el for el in self.expand_listdir('module_addons/json', res_path)]
             for res_name in resource_names_list:
