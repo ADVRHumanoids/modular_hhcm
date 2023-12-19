@@ -276,7 +276,7 @@
 
     </xacro:macro>
 
-    <xacro:macro name="add_mobile_base_sensors" params="parent_name">
+    <xacro:macro name="add_mobile_base_sensors" params="name parent_name">
         <xacro:include filename="${MODULAR_PATH}/modular_data/urdf/concert.sensors.urdf.xacro" ns="concert_sensors"/>
         <xacro:concert_sensors.add_mobile_base_sensors parent_name="${parent_name}"/>
     </xacro:macro>

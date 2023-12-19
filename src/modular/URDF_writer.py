@@ -3346,10 +3346,11 @@ class UrdfWriter:
 
         if new_Hub.type == 'mobile_base':
             ET.SubElement(self.root, 
-                        "xacro:add_mobile_base_sensors", 
+                        "xacro:add_mobile_base_sensors",
+                        name=new_Hub.name + '_sensors',
                         parent_name=new_Hub.name)
             # add the xacro:add_mobile_base_sensors element to the list of urdf elements
-            new_Hub.xml_tree_elements.append(fixed_joint_name)  
+            new_Hub.xml_tree_elements.append(new_Hub.name + '_sensors')  
 
         # Add hub and parent links pair to the list of collision elements to ignore
         self.collision_elements.append((parent_name, new_Hub.name))       
