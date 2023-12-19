@@ -1095,9 +1095,8 @@ class UrdfWriter:
 
         self.config_file = config_file
 
-        self.resources_paths = [['resources_path'], ['external_resources', 'concert_resources_path'], ['external_resources', 'fhi_resources_path']]
         self.resource_finder = ResourceFinder(self.config_file)
-        self.modular_resources_manager = ModularResourcesManager(self.resource_finder, self.resources_paths)
+        self.modular_resources_manager = ModularResourcesManager(self.resource_finder)
 
         self.collision_elements = []
 
@@ -1229,6 +1228,12 @@ class UrdfWriter:
     def info_print(self, *args):
         if isinstance(self.logger, logging.Logger):
             self.logger.info(' '.join(str(a) for a in args))
+        else:
+            print(args)
+
+    def error_print(self, *args):
+        if isinstance(self.logger, logging.Logger):
+            self.logger.error(' '.join(str(a) for a in args))
         else:
             print(args)
 
@@ -1648,7 +1653,7 @@ class UrdfWriter:
             self.n_cubes += 1
 
             slavecube = None
-            for resource_path in self.resources_paths:
+            for resource_path in self.resource_finder.resources_paths:
                 filename = self.resource_finder.get_filename('yaml/master_cube.yaml', resource_path)
                 template_name = self.resource_finder.get_filename('yaml/template.yaml', ['resources_path'])
 
@@ -1809,7 +1814,7 @@ class UrdfWriter:
             # self.T_con = self.mastercube.geometry.connector_length))
 
             mastercube = None
-            for resource_path in self.resources_paths:
+            for resource_path in self.resource_finder.resources_paths:
                 filename = self.resource_finder.get_filename('yaml/master_cube.yaml', resource_path)
                 template_name = self.resource_finder.get_filename('yaml/template.yaml', ['resources_path'])
 
@@ -1976,7 +1981,7 @@ class UrdfWriter:
         name = 'mobile_base' #  _' + str(len(self.listofhubs))
 
         mobilebase = None
-        for resource_path in self.resources_paths:
+        for resource_path in self.resource_finder.resources_paths:
             filename = self.resource_finder.get_filename('json/concert/mobile_platform_concert.json', resource_path)
             template_name = self.resource_finder.get_filename('yaml/template.yaml', ['resources_path'])
 
@@ -2179,7 +2184,7 @@ class UrdfWriter:
 
         new_socket = None
         # Generate the path to the required YAML file
-        for resource_path in self.resources_paths:
+        for resource_path in self.resource_finder.resources_paths:
             module_name = self.resource_finder.get_filename('yaml/'+filename, resource_path)
             template_name = self.resource_finder.get_filename('yaml/template.yaml', ['resources_path'])
 
@@ -2538,7 +2543,7 @@ class UrdfWriter:
 
         new_module = None
         # Generate the path and access the required YAML file
-        for resource_path in self.resources_paths:
+        for resource_path in self.resource_finder.resources_paths:
             template_name = self.resource_finder.get_filename('yaml/template.yaml', ['resources_path'])
             try:
                 if filename.lower().endswith(('.yaml', '.yml')):
@@ -4048,14 +4053,16 @@ class UrdfWriter:
     def deploy_robot(self, robot_name='modularbot', deploy_dir=None):
         script = self.resource_finder.get_filename('deploy.sh', ['data_path'])
 
-        if deploy_dir is None:
-            deploy_dir = os.path.expanduser(self.resource_finder.cfg['deploy_dir'])
-            deploy_dir = os.path.expandvars(deploy_dir)
-
-        if self.verbose:
-            output = subprocess.check_output([script, robot_name, "--destination-folder", deploy_dir, "-v"])
-        else:
-            output = subprocess.check_output([script, robot_name, "--destination-folder", deploy_dir])
+        try:
+            if deploy_dir is None:
+                deploy_dir = self.resource_finder.get_expanded_path(['deploy_dir'])
+            if self.verbose:
+                output = subprocess.check_output([script, robot_name, "--destination-folder", deploy_dir, "-v"])
+            else:
+                output = subprocess.check_output([script, robot_name, "--destination-folder", deploy_dir])
+        except (subprocess.CalledProcessError, FileNotFoundError, RuntimeError) as e:
+            self.error_print(f"An error occurred when executing deploy script: {script}. Aborting.")
+            raise e
 
         self.info_print(str(output, 'utf-8', 'ignore'))
 
@@ -4063,6 +4070,20 @@ class UrdfWriter:
         if hubs is not None:
             for hub_module in hubs:
                 self.add_connectors(hub_module)
+
+        for post_processing_script in self.resource_finder.cfg['post_processing_scripts']:
+            try:
+                script_path = self.resource_finder.get_expanded_path(['post_processing_scripts', post_processing_script, 'file'])
+                required = self.resource_finder.nested_access(['post_processing_scripts', post_processing_script, 'required'])
+                self.info_print(f"Running post processing script {post_processing_script}: {script_path}")
+                output = subprocess.check_output([script_path, "--destination-folder", deploy_dir, "--package-name", robot_name])
+            except (subprocess.CalledProcessError, FileNotFoundError, RuntimeError) as e:
+                if required:
+                    raise(e)
+                else:
+                    self.error_print(e)
+                    self.error_print(f"Skipping post processing script {post_processing_script}")
+                    pass
 
         return robot_name
 
