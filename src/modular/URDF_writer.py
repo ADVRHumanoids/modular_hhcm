@@ -1194,6 +1194,14 @@ class UrdfWriter:
         setattr(self.base_link, 'p', 0)
         setattr(self.base_link, 'Homogeneous_tf', tf.transformations.identity_matrix())
         setattr(self.base_link, 'robot_id', 0)
+        setattr(self.base_link, 'current_port', 1)
+        #HACK: base_link does not have ports.
+        setattr(self.base_link, 'active_ports', "0011")
+        setattr(self.base_link, 'occupied_ports', "0001")
+        setattr(self.base_link, 'connectors', ['connector_0'])
+        setattr(self.base_link, 'connector_idx', 1)
+        setattr(self.base_link, 'is_structural', False)
+        setattr(self.base_link, 'mesh_names', [])
 
         self.parent_module = self.base_link
 
@@ -2394,7 +2402,7 @@ class UrdfWriter:
         self.parent_module = father
 
         # Select the current connector of the new module
-        selected_connector = self.select_connector(father, port_idx=father.current_port)
+        selected_connector = self.select_connector(father, port_idx=self.connector_to_port_idx(father.connector_idx, father))
         # Select the meshes to highlight in the GUI
         selected_meshes = self.select_meshes(selected_connector, father)
         
@@ -2727,32 +2735,32 @@ class UrdfWriter:
             The port selected as the current one.
 
         """
-        #MYNOTE: this part is used only in Discovery mode for now. occupied ports gets updated only in Discovery mode for now
-        # binary XOR: the free ports are the ones that are active but not occupied
-        free_ports = int(module.active_ports, 2) ^ int(module.occupied_ports, 2)
-        self.print(module.name + " active_ports: " + module.active_ports + " - " + "occupied_ports: " + module.occupied_ports + " =")
-        self.print("{0:04b}".format(free_ports))
-
-        # remap the ports from the physical order to the EtherCAT order: 3, 2, 1, 0 -> 2, 1, 3, 0. 
-        # See EtherCAT slave documentation for more info 
-        free_ports_remapped = ((free_ports & int("0110", 2)) << 1) + ((free_ports & int("1000", 2)) >> 2)
-        self.print("{0:04b}".format(free_ports_remapped))
-
-        # By default the selected port is the first free one (the firt one seen from the EtherCAT master scan)
-        selected_eth_port = self.ffs(free_ports_remapped)
-        self.print('selected EtherCAT port :', selected_eth_port)
-
-        # MYNOTE: this part is not needed. We are not interested in the physical port index, but in the EtherCAT port index, so that it matches the order of the ports in the EtherCAT master scan.
-        # # remap the ports from the EtherCAT order to the physical order: 2, 1, 3, 0 -> 3, 2, 1, 0.
-        # selected_physical_port = self.eth_to_physical_port_idx(selected_eth_port)
-        # self.print('selected physical port :', selected_physical_port)
-
-        # Set the current_port attribute of the module
-        module.current_port = selected_eth_port
-
         # If the port index is not None, it means that the user has selected it from the GUI. Value is overwritten
         if port_idx is not None:
             module.current_port = port_idx
+        else:
+            #MYNOTE: this part is used only in Discovery mode for now. occupied ports gets updated only in Discovery mode for now
+            # binary XOR: the free ports are the ones that are active but not occupied
+            free_ports = int(module.active_ports, 2) ^ int(module.occupied_ports, 2)
+            self.print(module.name + " active_ports: " + module.active_ports + " - " + "occupied_ports: " + module.occupied_ports + " =")
+            self.print("{0:04b}".format(free_ports))
+
+            # remap the ports from the physical order to the EtherCAT order: 3, 2, 1, 0 -> 2, 1, 3, 0. 
+            # See EtherCAT slave documentation for more info 
+            free_ports_remapped = ((free_ports & int("0110", 2)) << 1) + ((free_ports & int("1000", 2)) >> 2)
+            self.print("{0:04b}".format(free_ports_remapped))
+
+            # By default the selected port is the first free one (the firt one seen from the EtherCAT master scan)
+            selected_eth_port = self.ffs(free_ports_remapped)
+            self.print('selected EtherCAT port :', selected_eth_port)
+
+            # MYNOTE: this part is not needed. We are not interested in the physical port index, but in the EtherCAT port index, so that it matches the order of the ports in the EtherCAT master scan.
+            # # remap the ports from the EtherCAT order to the physical order: 2, 1, 3, 0 -> 3, 2, 1, 0.
+            # selected_physical_port = self.eth_to_physical_port_idx(selected_eth_port)
+            # self.print('selected physical port :', selected_physical_port)
+
+            # Set the current_port attribute of the module
+            module.current_port = selected_eth_port
 
         self.print('module.current_port :', module.current_port)
 
