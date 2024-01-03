@@ -188,7 +188,6 @@ class Plugin:
         end_effectors = []
         groups_in_chains_group = []
         groups_in_arms_group = []
-        i = 0
 
         self.urdf_writer.print(self.urdf_writer.listofchains)
 
@@ -204,63 +203,58 @@ class Plugin:
             else:
                 active_modules_chains.append(modules_chain)
 
-        for joints_chain in active_modules_chains:
-            group_name = "chain" + self.urdf_writer.branch_switcher.get(i + 1)
-            # group_name = "arm" + self.urdf_writer.branch_switcher.get(i + 1)
+        for idx, joints_chain in enumerate(active_modules_chains):
+            group_name = "chain" + self.urdf_writer.find_chain_tag(joints_chain)
             groups.append(ET.SubElement(root, 'group', name=group_name))
             base_link = self.urdf_writer.find_chain_base_link(joints_chain)
             tip_link = self.urdf_writer.find_chain_tip_link(joints_chain)
-            chains.append(ET.SubElement(groups[i], 'chain', base_link=base_link, tip_link=tip_link))
-            i += 1
+            chains.append(ET.SubElement(groups[idx], 'chain', base_link=base_link, tip_link=tip_link))
         
-        i = 0
-        arms_group = ET.SubElement(root, 'group', name="arms")
+        # Create groups for chains, arms and wheels. Also 'group_state' for homing
         chains_group = ET.SubElement(root, 'group', name="chains")
+        arms_group = ET.SubElement(root, 'group', name="arms")
         wheels_group = self.add_wheel_group_to_srdf(root, "wheels")
         group_state = ET.SubElement(root, 'group_state', name="home", group="chains")
 
         for joints_chain in active_modules_chains:
-            group_name = "chain" + self.urdf_writer.branch_switcher.get(i + 1)
+            group_name = "chain" + self.urdf_writer.find_chain_tag(joints_chain)
             groups_in_chains_group.append(ET.SubElement(chains_group, 'group', name=group_name))
-            groups_in_arms_group.append(ET.SubElement(arms_group, 'group', name=group_name))
             for joint_module in joints_chain:
-                if joint_module.type is ModuleType.JOINT:
-                    # Homing state
+                # add joints chain to srdf end-effectors group
+                if joint_module.type in ModuleClass.end_effector_modules():
+                    groups_in_arms_group.append(ET.SubElement(arms_group, 'group', name=group_name))
+                    # TODO: add end-effector module to srdf end-effectors group. To be fixed for all end-effector types.
+                # add wheel module to srdf wheels group
+                if joint_module.type is ModuleType.WHEEL:
+                    wheels += filter(lambda item: item is not None, [self.add_wheel_to_srdf(wheels_group, joint_module.name)])
+                # add homing state for each joint-like module. Also create custom groups for some end-effectors
+                if joint_module.type in ModuleClass.joint_modules():
                     if builder_joint_map is not None:
                         homing_value = float(builder_joint_map[joint_module.name])
                     else:
                         homing_value = 0.1
-                    # self.urdf_writer.print(homing_value)
-                    joints.append(ET.SubElement(group_state, 'joint', name=joint_module.name, value=str(homing_value)))
+                    joints.append(ET.SubElement(group_state, 
+                                                'joint', 
+                                                name=joint_module.name, 
+                                                value=str(homing_value)))
                 elif joint_module.type is ModuleType.DAGANA:
-                    # Homing state
                     if builder_joint_map is not None:
                         homing_value = float(builder_joint_map[joint_module.dagana_joint_name])
                     else:
                         homing_value = 0.1
-                    # self.urdf_writer.print(homing_value)
-                    joints.append(ET.SubElement(group_state, 'joint', name=joint_module.dagana_joint_name, value=str(homing_value)))
-                elif joint_module.type is ModuleType.WHEEL:
-                    # Homing state
-                    if builder_joint_map is not None:
-                        homing_value = float(builder_joint_map[joint_module.name])
-                    else:
-                        homing_value = 0.1
-                    # self.urdf_writer.print(homing_value)
-                    joints.append(ET.SubElement(group_state, 'joint', name=joint_module.name, value=str(homing_value)))
-
-                    #wheel_name = "wheel" + self.urdf_writer.branch_switcher.get(i + 1)  # BUG: this is not correct. Probably better to get the tag from the name
-                    wheels += filter(lambda item: item is not None, [self.add_wheel_to_srdf(wheels_group, joint_module.name)])
+                    joints.append(ET.SubElement(group_state, 
+                                                'joint', 
+                                                name=joint_module.dagana_joint_name, 
+                                                value=str(homing_value)))
                 elif joint_module.type is ModuleType.TOOL_EXCHANGER:
                     tool_exchanger_group = ET.SubElement(root, 'group', name="ToolExchanger")
-                    end_effectors.append(ET.SubElement(tool_exchanger_group, 'joint',
+                    end_effectors.append(ET.SubElement(tool_exchanger_group, 
+                                                       'joint',
                                                        name=joint_module.name + '_fixed_joint'))
                 elif joint_module.type is ModuleType.GRIPPER:
-                    hand_name = "hand" + self.urdf_writer.branch_switcher.get(i + 1)
+                    hand_name = "hand" + self.urdf_writer.find_chain_tag(joints_chain)
                     self.add_hand_group_to_srdf(root, joint_module.name, hand_name)
-                    # groups_in_hands_group.append(ET.SubElement(hands_group, 'group', name=hand_name))
                     end_effectors += filter(lambda item: item is not None, [self.add_gripper_to_srdf(root, joint_module.name, hand_name, group_name)])
-            i += 1
 
         xmlstr = xml.dom.minidom.parseString(ET.tostring(root)).toprettyxml(indent="   ")
 
@@ -385,7 +379,6 @@ class RosControlPlugin(Plugin):
         groups_in_chains_group = []
         groups_in_arms_group = []
         # groups_in_hands_group = []
-        i = 0
 
         # MoveIt
         controller_list = []
@@ -418,15 +411,12 @@ class RosControlPlugin(Plugin):
         ompl.update([('planner_configs', copy.deepcopy(tmp_ompl['planner_configs']))])
 
         self.urdf_writer.print(self.urdf_writer.listofchains)
-        for joints_chain in self.urdf_writer.listofchains:
-            group_name = "arm" + self.urdf_writer.branch_switcher.get(i + 1)
-            #group_name = "chain_"+str(i+1)
+        for idx, joints_chain in enumerate(self.urdf_writer.listofchains):
+            group_name = "arm" + self.urdf_writer.find_chain_tag(joints_chain)
             groups.append(ET.SubElement(root, 'group', name=group_name))
             base_link = self.urdf_writer.find_chain_base_link(joints_chain)
             tip_link = self.urdf_writer.find_chain_tip_link(joints_chain)
-            chains.append(ET.SubElement(groups[i], 'chain', base_link=base_link, tip_link=tip_link))
-            i += 1
-        i = 0
+            chains.append(ET.SubElement(groups[idx], 'chain', base_link=base_link, tip_link=tip_link))
         arms_group = ET.SubElement(root, 'group', name="arms")
         #chains_group = ET.SubElement(root, 'group', name="chains")
         group_state = ET.SubElement(root, 'group_state', name="home", group="chains")
@@ -434,11 +424,11 @@ class RosControlPlugin(Plugin):
         hands_group = ET.SubElement(root, 'group', name="hands")
         # MoveIt
         initial_poses.append(OrderedDict([('group', 'arms'), ('pose', 'home')]))
-        for joints_chain in self.urdf_writer.listofchains:
-            #group_name = "chain_"+str(i+1)
+        for idx, joints_chain in enumerate(self.urdf_writer.listofchains):
+            #group_name = "chain" + self.urdf_writer.find_chain_tag(joints_chain)
             #groups_in_chains_group.append(ET.SubElement(chains_group, 'group', name=group_name))
-            group_name = "arm" + self.urdf_writer.branch_switcher.get(i + 1)
-            hand_name = "hand" + self.urdf_writer.branch_switcher.get(i + 1)
+            group_name = "arm" + self.urdf_writer.find_chain_tag(joints_chain)
+            hand_name = "hand" + self.urdf_writer.find_chain_tag(joints_chain)
             groups_in_arms_group.append(ET.SubElement(arms_group, 'group', name=group_name))
             # MoveIt: create controller list
             controller_list.append(OrderedDict([('name', 'fake_'+group_name+'_controller'), ('joints', [])]))
@@ -456,7 +446,7 @@ class RosControlPlugin(Plugin):
                     # Disable collision
                     # disable_collision = ET.SubElement(root, 'disable_collisions', link1=joint_module.stator_name, link2=joint_module.distal_link_name, reason='Adjacent')
                     # MoveIt: add joints to controller
-                    controller_list[i]['joints'].append(joint_module.name)
+                    controller_list[idx]['joints'].append(joint_module.name)
                     hardware_interface_joints.append(joint_module.name)
                 elif joint_module.type is ModuleType.TOOL_EXCHANGER:
                     tool_exchanger_group = ET.SubElement(root, 'group', name="ToolExchanger")
@@ -467,13 +457,12 @@ class RosControlPlugin(Plugin):
                     # groups_in_hands_group.append(ET.SubElement(hands_group, 'group', name=hand_name))
                     end_effectors += filter(lambda item: item is not None, [self.add_gripper_to_srdf(root, joint_module.name, hand_name, group_name)])
                     controller_list.append(OrderedDict([('name', 'fake_' + hand_name + '_controller'), ('joints', [])]))
-                    controller_list[i+1]['joints'].append(joint_module.name+'_finger_joint1')
-                    controller_list[i+1]['joints'].append(joint_module.name + '_finger_joint2')
+                    controller_list[idx+1]['joints'].append(joint_module.name+'_finger_joint1')
+                    controller_list[idx+1]['joints'].append(joint_module.name + '_finger_joint2')
                     hardware_interface_joints.append(joint_module.name + '_finger_joint1')
                     initial_poses.append(OrderedDict([('group', hand_name), ('pose', 'open')]))
                     ompl.update([(hand_name, copy.deepcopy(tmp_ompl['group_name']))])
                     ompl.update([('arm_'+hand_name, copy.deepcopy(tmp_ompl['group_name']))])
-            i += 1
 
         # MoveIt: add virtual joint
         # ET.SubElement(root, "virtual_joint", name="virtual_joint", type="floating", parent_frame="world", child_link="base_link")
@@ -1556,7 +1545,10 @@ class UrdfWriter:
         else:
             base_link = chain[0].parent.name
         return base_link
-    
+
+    @staticmethod
+    def find_chain_tag(chain):
+        return chain[-1].tag    
 
     def update_generators(self):
         # Generator expression for list of urdf elements without the gazebo tag.
