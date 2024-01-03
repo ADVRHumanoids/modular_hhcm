@@ -30,8 +30,9 @@ import copy
 from collections import OrderedDict
 
 from modular.utils import ResourceFinder, ModularResourcesManager
+from modular.enums import ModuleType, ModuleClass
 from modular.ModelStats import ModelStats
-import modular.ModuleNode  as ModuleNode
+import modular.ModuleNode as ModuleNode
 import argparse
 
 import rospy
@@ -195,7 +196,7 @@ class Plugin:
             # check number of joints and active modules in the chain. 
             joint_num = 0
             for joint_module in modules_chain:
-                if joint_module.type in {'joint', 'dagana', 'wheel', 'tool_exchanger', 'gripper', 'drill'}:
+                if joint_module.type in ModuleClass.actuated_modules():
                     joint_num += 1
             # If 0, skip it. The chain doesn't need to be added to the srdf in this case.
             if joint_num == 0:
@@ -223,7 +224,7 @@ class Plugin:
             groups_in_chains_group.append(ET.SubElement(chains_group, 'group', name=group_name))
             groups_in_arms_group.append(ET.SubElement(arms_group, 'group', name=group_name))
             for joint_module in joints_chain:
-                if joint_module.type == 'joint':
+                if joint_module.type is ModuleType.JOINT:
                     # Homing state
                     if builder_joint_map is not None:
                         homing_value = float(builder_joint_map[joint_module.name])
@@ -231,7 +232,7 @@ class Plugin:
                         homing_value = 0.1
                     # self.urdf_writer.print(homing_value)
                     joints.append(ET.SubElement(group_state, 'joint', name=joint_module.name, value=str(homing_value)))
-                elif joint_module.type == 'dagana':
+                elif joint_module.type is ModuleType.DAGANA:
                     # Homing state
                     if builder_joint_map is not None:
                         homing_value = float(builder_joint_map[joint_module.dagana_joint_name])
@@ -239,7 +240,7 @@ class Plugin:
                         homing_value = 0.1
                     # self.urdf_writer.print(homing_value)
                     joints.append(ET.SubElement(group_state, 'joint', name=joint_module.dagana_joint_name, value=str(homing_value)))
-                elif joint_module.type == 'wheel':
+                elif joint_module.type is ModuleType.WHEEL:
                     # Homing state
                     if builder_joint_map is not None:
                         homing_value = float(builder_joint_map[joint_module.name])
@@ -250,11 +251,11 @@ class Plugin:
 
                     #wheel_name = "wheel" + self.urdf_writer.branch_switcher.get(i + 1)  # BUG: this is not correct. Probably better to get the tag from the name
                     wheels += filter(lambda item: item is not None, [self.add_wheel_to_srdf(wheels_group, joint_module.name)])
-                elif joint_module.type == 'tool_exchanger':
+                elif joint_module.type is ModuleType.TOOL_EXCHANGER:
                     tool_exchanger_group = ET.SubElement(root, 'group', name="ToolExchanger")
                     end_effectors.append(ET.SubElement(tool_exchanger_group, 'joint',
                                                        name=joint_module.name + '_fixed_joint'))
-                elif joint_module.type == 'gripper':
+                elif joint_module.type is ModuleType.GRIPPER:
                     hand_name = "hand" + self.urdf_writer.branch_switcher.get(i + 1)
                     self.add_hand_group_to_srdf(root, joint_module.name, hand_name)
                     # groups_in_hands_group.append(ET.SubElement(hands_group, 'group', name=hand_name))
@@ -285,12 +286,12 @@ class Plugin:
                 joint_map['joint_map'][i] = "HUB_" + str(i)
         for joints_chain in self.urdf_writer.listofchains:
             for joint_module in joints_chain:
-                if joint_module.type not in {'joint', 'dagana', 'wheel', 'tool_exchanger', 'gripper', 'drill'}:
+                if joint_module.type in ModuleClass.nonactuated_modules():
                     continue
                 i += 1
-                if joint_module.type == 'tool_exchanger':
+                if joint_module.type is ModuleType.TOOL_EXCHANGER:
                     name = joint_module.name + '_fixed_joint'
-                elif joint_module.type == 'gripper':
+                elif joint_module.type is ModuleType.GRIPPER:
                     name = joint_module.name + '_fixed_joint'
                 else:
                     name = joint_module.name
@@ -444,7 +445,7 @@ class RosControlPlugin(Plugin):
             kinematics.update([(group_name, copy.deepcopy(tmp_kinematics['group_name']))])
             ompl.update([(group_name, copy.deepcopy(tmp_ompl['group_name']))])
             for joint_module in joints_chain:
-                if joint_module.type in {'joint', 'dagana', 'wheel'} :
+                if joint_module.type in ModuleClass.joint_modules() | {ModuleType.DAGANA}:
                     # Homing state
                     if builder_joint_map is not None:
                         homing_value = float(builder_joint_map[joint_module.name])
@@ -457,11 +458,11 @@ class RosControlPlugin(Plugin):
                     # MoveIt: add joints to controller
                     controller_list[i]['joints'].append(joint_module.name)
                     hardware_interface_joints.append(joint_module.name)
-                elif joint_module.type == 'tool_exchanger':
+                elif joint_module.type is ModuleType.TOOL_EXCHANGER:
                     tool_exchanger_group = ET.SubElement(root, 'group', name="ToolExchanger")
                     end_effectors.append(ET.SubElement(tool_exchanger_group, 'joint',
                                                        name=joint_module.name + '_fixed_joint'))
-                elif joint_module.type == 'gripper':
+                elif joint_module.type is ModuleType.GRIPPER:
                     self.add_hand_group_to_srdf(root, joint_module.name, hand_name)
                     # groups_in_hands_group.append(ET.SubElement(hands_group, 'group', name=hand_name))
                     end_effectors += filter(lambda item: item is not None, [self.add_gripper_to_srdf(root, joint_module.name, hand_name, group_name)])
@@ -606,9 +607,9 @@ class XBotCorePlugin(Plugin):
             # HACK
             p += 1
             for joint_module in joints_chain:
-                if joint_module.type not in {'joint', 'dagana', 'wheel', 'tool_exchanger', 'gripper'}:
+                if joint_module.type in ModuleClass.nonactuated_modules():
                     continue
-                if joint_module.type in { 'joint', 'wheel' }:
+                if joint_module.type in ModuleClass.joint_modules():
                     i += 1
                     lowlevel_config['GazeboXBotPlugin']['gains'][joint_module.name] = OrderedDict(
                         [('p', 300), ('d', 20)])
@@ -624,7 +625,7 @@ class XBotCorePlugin(Plugin):
                     # TODO: fix this
                     if p > 1:
                         value.pid.impedance = [500.0, 20.0, 1.0, 0.003, 0.99]
-                elif joint_module.type == 'tool_exchanger':
+                elif joint_module.type is ModuleType.TOOL_EXCHANGER:
                     if use_robot_id:
                         key = 'AinMsp432ESC_' + str(joint_module.robot_id)
                         xbot_ecat_interface = [[int(joint_module.robot_id)], "libXBotEcat_ToolExchanger"]
@@ -634,7 +635,7 @@ class XBotCorePlugin(Plugin):
                     value = joint_module.AinMsp432ESC
                     self.urdf_writer.print(yaml.dump(joint_module.AinMsp432ESC))
                     lowlevel_config['HALInterface']['IEndEffectors'].append(xbot_ecat_interface)
-                elif joint_module.type == 'gripper':
+                elif joint_module.type is ModuleType.GRIPPER:
                     if use_robot_id:
                         key = 'LpESC_' + str(joint_module.robot_id)
                         xbot_ecat_interface = [[int(joint_module.robot_id)], "libXBotEcat_Gripper"]
@@ -728,14 +729,14 @@ class XBot2Plugin(Plugin):
                 joint_map['joint_map'][i] = "HUB_" + str(i)
         for joints_chain in self.urdf_writer.listofchains:
             for joint_module in joints_chain:
-                if joint_module.type not in {'joint', 'dagana', 'wheel', 'tool_exchanger', 'gripper', 'drill'}:
+                if joint_module.type in ModuleClass.nonactuated_modules():
                     continue
                 i += 1
-                if joint_module.type == 'tool_exchanger':
+                if joint_module.type is ModuleType.TOOL_EXCHANGER:
                     name = joint_module.name + '_fixed_joint'
-                elif joint_module.type == 'dagana':
+                elif joint_module.type is ModuleType.DAGANA:
                     name = joint_module.dagana_joint_name
-                elif joint_module.type == 'gripper':
+                elif joint_module.type is ModuleType.GRIPPER:
                     name = joint_module.name
                     fingers = [name + '_rightfinger', name + '_leftfinger']
                     if use_robot_id:
@@ -787,10 +788,10 @@ class XBot2Plugin(Plugin):
         i = 0
         for joints_chain in self.urdf_writer.listofchains:
             for joint_module in joints_chain:
-                if joint_module.type not in {'joint', 'dagana', 'wheel', 'tool_exchanger', 'gripper', 'drill'}:
+                if joint_module.type in ModuleClass.nonactuated_modules():
                     continue
                 i += 1
-                if joint_module.type in ('tool_exchanger', 'gripper'):
+                if joint_module.type in {ModuleType.TOOL_EXCHANGER, ModuleType.GRIPPER}:
                     if use_robot_id:
                         mod_id = str(joint_module.robot_id)
                     else:
@@ -803,7 +804,7 @@ class XBot2Plugin(Plugin):
         i = 0
         for joints_chain in self.urdf_writer.listofchains:
             for joint_module in joints_chain:
-                if joint_module.type =='dagana':
+                if joint_module.type is ModuleType.DAGANA:
                     
                     attrs = [a for a in dir(joint_module.joint_gripper_adapter) if not a.startswith('__') and not callable(getattr(joint_module.joint_gripper_adapter, a))]
                     attrs_with_prefix = [joint_module.name+"/" + x for x in attrs]
@@ -881,10 +882,10 @@ class XBot2Plugin(Plugin):
             # HACK
             p += 1
             for joint_module in joints_chain:
-                if joint_module.type not in {'joint', 'dagana', 'wheel', 'tool_exchanger', 'gripper', 'drill'}:
+                if joint_module.type in ModuleClass.nonactuated_modules():
                     continue
-                if joint_module.type in ['joint', 'dagana']:
-                    if joint_module.type == 'dagana':
+                if joint_module.type in {ModuleType.JOINT, ModuleType.DAGANA}:
+                    if joint_module.type is ModuleType.DAGANA:
                         key = joint_module.dagana_joint_name
                     else:    
                         key = joint_module.name
@@ -928,7 +929,7 @@ class XBot2Plugin(Plugin):
                     # if p > 1:
                     #     value.pid.impedance = [500.0, 20.0, 1.0, 0.003, 0.99]
 
-                elif joint_module.type == 'wheel':
+                elif joint_module.type is ModuleType.WHEEL:
                     key = joint_module.name
                     value = joint_module.CentAcESC
                     # Remove parameters that are now not used by XBot2 (they are handled by the EtherCat master on a different config file)
@@ -951,7 +952,7 @@ class XBot2Plugin(Plugin):
                         if hasattr(idle_joint_config[key].pid, 'velocity'):
                             del idle_joint_config[key].pid.velocity
 
-                elif joint_module.type == 'dagana':
+                elif joint_module.type is ModuleType.DAGANA:
                     key = joint_module.name
                     value = joint_module.CentAcESC
                     # Remove parameters that are now not used by XBot2 (they are handled by the EtherCat master on a different config file)
@@ -962,11 +963,11 @@ class XBot2Plugin(Plugin):
                     if hasattr(value, 'max_current_A'):
                         del value.max_current_A 
 
-                elif joint_module.type == 'tool_exchanger':
+                elif joint_module.type is ModuleType.TOOL_EXCHANGER:
                     key = joint_module.name
                     value = joint_module.AinMsp432ESC
 
-                elif joint_module.type == 'gripper':
+                elif joint_module.type is ModuleType.GRIPPER:
                     key = joint_module.name + '_motor'
                     value = joint_module.LpESC
                     # Remove parameters that are now not used by XBot2 (they are handled by the EtherCat master on a different config file)
@@ -1425,7 +1426,7 @@ class UrdfWriter:
                 self.print(self.parent_module.occupied_ports)
 
             #HACK: If the parent is a cube to support non-structural box we add a socket
-            if self.parent_module.type == 'cube':
+            if self.parent_module.type is ModuleType.CUBE:
                 if self.parent_module.is_structural == False:
                     self.add_socket()
 
@@ -1538,13 +1539,13 @@ class UrdfWriter:
     
     @staticmethod
     def find_chain_tip_link(chain):
-        if chain[-1].type in { 'joint', 'wheel' }:
+        if chain[-1].type in ModuleClass.joint_modules():
             tip_link = chain[-1].distal_link_name
-        elif chain[-1].type in { 'simple_ee', 'link', 'size_adapter', 'cube', 'mobile_base', 'base_link'}:
+        elif chain[-1].type in ModuleClass.link_modules() | ModuleClass.hub_modules():
             tip_link = chain[-1].name
-        elif chain[-1].type in { 'end_effector', 'drill', 'tool_exchanger', 'gripper'}:
+        elif chain[-1].type in ModuleClass.end_effector_modules() - {ModuleType.DAGANA}:
             tip_link = chain[-1].tcp_name
-        elif chain[-1].type == 'dagana':
+        elif chain[-1].type is ModuleType.DAGANA:
             tip_link = chain[-1].dagana_link_name
         return tip_link
     
@@ -1712,7 +1713,7 @@ class UrdfWriter:
 
         self.add_gazebo_element(new_socket, new_socket.gazebo.body_1 , new_socket.name)
 
-        if self.parent_module.type == 'cube' or self.parent_module.type == "mobile_base":
+        if self.parent_module.type in ModuleClass.hub_modules():
             if self.parent_module.is_structural:
                 parent_name = self.parent_module.name
                 if self.parent_module.current_port == 1:
@@ -1935,7 +1936,7 @@ class UrdfWriter:
         rototrasl = ModuleNode.get_rototranslation(trasl, rot)
         setattr(simple_ee, 'Homogeneous_tf', rototrasl)
 
-        if self.parent_module.type=='joint':
+        if self.parent_module.type is ModuleType.JOINT:
             transform = ModuleNode.get_rototranslation(self.parent_module.Distal_tf, rototrasl)
         else:
             transform = ModuleNode.get_rototranslation(self.parent_module.Homogeneous_tf, rototrasl)
@@ -1943,7 +1944,7 @@ class UrdfWriter:
 
         fixed_joint_name = 'L_' + str(simple_ee.i) + '_fixed_joint_' + str(simple_ee.p) + simple_ee.tag
 
-        if self.parent_module.type == 'joint':
+        if self.parent_module.type is ModuleType.JOINT:
             father_name = 'L_' + str(self.parent_module.i) + self.parent_module.tag
         else:
             father_name = self.parent_module.name
@@ -2064,7 +2065,10 @@ class UrdfWriter:
         # Then assign the correct tag (A, B, C, ...) to the new module (and therefore start a new branch)
         # by looking at the current tag_num (1, 2, 3, ...) and so at how many branches are already present in the robot.
         # If the parent is any other kind of module, assign as tag the same of his parent.
-        if self.parent_module.type in {'cube', 'mobile_base', 'base_link'} and new_module.type not in {'cube', 'mobile_base'}:
+        if (
+            self.parent_module.type in ModuleClass.hub_modules() | {ModuleType.BASE_LINK} 
+            and new_module.type not in ModuleClass.hub_modules()
+        ):
             self.tag_num += 1
             tag_letter = self.branch_switcher.get(self.tag_num)
             setattr(new_module, 'tag', tag_letter)
@@ -2375,20 +2379,23 @@ class UrdfWriter:
         self.remove_from_chain(selected_module)
 
         # switch depending on module type
-        if selected_module.type in { 'joint', 'wheel' }:
+        if selected_module.type in ModuleClass.joint_modules():
             self.control_plugin.remove_joint(selected_module.name)
 
-        elif selected_module.type == 'gripper':
+        elif selected_module.type is ModuleType.GRIPPER:
             # TO BE FIXED: ok for ros_control. How will it be for xbot2?
             self.control_plugin.remove_joint(selected_module.name+'_finger_joint1')
             self.control_plugin.remove_joint(selected_module.name+'_finger_joint2')
 
-        elif selected_module.type in { 'cube', 'mobile_base' }:
+        elif selected_module.type in ModuleClass.hub_modules():
             # if the module is a hub, remove it from the list of hubs
             self.listofhubs.remove(selected_module)
 
         # if the parent module is a hub, decrease the tag number. A chain has been removed, tag should be reset accordingly
-        if father.type in {'cube', 'mobile_base', 'base_link'} and selected_module.type not in {'cube', 'mobile_base'}:
+        if (
+            father.type in ModuleClass.hub_modules() | {ModuleType.BASE_LINK} 
+            and selected_module.type not in ModuleClass.hub_modules()
+        ):
             self.tag_num -= 1
 
         if self.speedup:
@@ -2594,7 +2601,7 @@ class UrdfWriter:
         # connected to structural hubs (or other non-structural hubs) and be a "children hub". Their only purpose is to 
         # "increase" the number of ports of its parent hub (and therefore its available connectors). 
         # The connectors are shared between the parent and children hubs, so their index must be computed accordingly.
-        if not module.is_structural:
+        if module.type in ModuleClass.hub_modules() and not module.is_structural:
             # # The current port used by the parent hub to connect to the hub we are computing the transforms of.
             # parent_current_port = 1 << self.eth_to_physical_port_idx(module.parent.current_port)
             # # The ports of the parent hub already occupied before adding the current hub.
@@ -2634,7 +2641,7 @@ class UrdfWriter:
         connector_idx = port_idx + idx_offset
         
         # We need to add an offset to the connector index introduced by the other non-structural hubs already connected to the current hub
-        if module.type in {'cube', 'mobile_base'}:
+        if module.type in ModuleClass.hub_modules():
             # Count the number of non-structural hubs children the current hub has
             nonstructural_hub_children = self.count_children_non_structural_hubs(module)
             # We take into account the other hubs connected to get the right index. We have 4 connectors per hub, but since port 0 is occupied by the hub-hub connection, each child hub increase the index by 3
@@ -2664,7 +2671,7 @@ class UrdfWriter:
         """
         for child in module.children:
             count = self.count_children_non_structural_hubs(child, count)
-            if not child.is_structural:
+            if child.type in ModuleClass.hub_modules() and not child.is_structural:
                 count += 1
         return count
     
@@ -2857,11 +2864,11 @@ class UrdfWriter:
     def add_link(self, new_Link, parent_name, transform, reverse):
         x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(transform)
 
-        if new_Link.type == 'link':
+        if new_Link.type is ModuleType.LINK:
             setattr(new_Link, 'name', 'L_' + str(new_Link.i) + '_link_' + str(new_Link.p) + new_Link.tag)
             self.add_link_element(new_Link.name, new_Link, 'body_1') #  , type='link')
         
-        elif new_Link.type == 'dagana':
+        elif new_Link.type is ModuleType.DAGANA:
             setattr(new_Link, 'name', 'dagana' + new_Link.tag)
             ET.SubElement(self.root,
                           "xacro:add_dagana",
@@ -2902,7 +2909,7 @@ class UrdfWriter:
 
             return
 
-        elif new_Link.type == 'drill':
+        elif new_Link.type is ModuleType.DRILL:
             setattr(new_Link, 'name', 'drill' + new_Link.tag)
             self.add_link_element(new_Link.name, new_Link, 'body_1') #  , type='link')
             
@@ -2941,7 +2948,7 @@ class UrdfWriter:
             # the drill gets added to the chain although it's not a joint. it's needed in the joint map and in the config!
             # self.add_to_chain(new_Link)
 
-        elif new_Link.type == 'end_effector':
+        elif new_Link.type is ModuleType.END_EFFECTOR:
             setattr(new_Link, 'name', 'end_effector' + new_Link.tag)
             self.add_link_element(new_Link.name, new_Link, 'body_1') #   , type='link')
 
@@ -2961,7 +2968,7 @@ class UrdfWriter:
             # add the xacro:add_tcp element to the list of urdf elements
             new_Link.xml_tree_elements.append(new_Link.tcp_name)
             
-        elif new_Link.type == 'tool_exchanger':
+        elif new_Link.type is ModuleType.TOOL_EXCHANGER:
             setattr(new_Link, 'name', 'tool_exchanger' + new_Link.tag)
             self.add_link_element(new_Link.name, new_Link, 'body_1') #  , type='tool_exchanger')
 
@@ -2983,7 +2990,7 @@ class UrdfWriter:
             # add the xacro:add_tcp element to the list of urdf elements
             new_Link.xml_tree_elements.append(new_Link.tcp_name)
             
-        elif new_Link.type == 'gripper':
+        elif new_Link.type is ModuleType.GRIPPER:
             setattr(new_Link, 'name', 'gripper' + new_Link.tag)
             self.add_link_element(new_Link.name, new_Link, 'body_1') #   , type='gripper_body')
             
@@ -3011,7 +3018,7 @@ class UrdfWriter:
             self.control_plugin.add_joint(new_Link.joint_name_finger1)
             self.control_plugin.add_joint(new_Link.joint_name_finger2)
 
-        elif new_Link.type == 'size_adapter':
+        elif new_Link.type is ModuleType.SIZE_ADAPTER:
             setattr(new_Link, 'name', 'L_' + str(new_Link.i) + '_size_adapter_' + str(new_Link.p) + new_Link.tag)
             ET.SubElement(self.root,
                             "xacro:add_size_adapter",
@@ -3029,7 +3036,7 @@ class UrdfWriter:
 
         self.add_gazebo_element(new_Link, new_Link.gazebo.body_1, new_Link.name)
 
-        if new_Link.type == 'tool_exchanger' or new_Link.type == 'gripper' or new_Link.type == 'end_effector' or new_Link.type == 'drill':
+        if new_Link.type in ModuleClass.end_effector_modules():
             fixed_joint_name = new_Link.name + '_fixed_joint'
         else:
             fixed_joint_name = 'L_' + str(new_Link.i) + '_fixed_joint_' + str(new_Link.p) + new_Link.tag
@@ -3202,10 +3209,10 @@ class UrdfWriter:
     def add_joint(self, new_Joint, parent_name, transform, reverse):
         x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(transform)
 
-        if new_Joint.type == 'joint':
+        if new_Joint.type is ModuleType.JOINT:
             setattr(new_Joint, 'name', 'J' + str(new_Joint.i) + new_Joint.tag)
             setattr(new_Joint, 'distal_link_name', 'L_' + str(new_Joint.i) + new_Joint.tag)
-        elif new_Joint.type == 'wheel':
+        elif new_Joint.type is ModuleType.WHEEL:
             setattr(new_Joint, 'name', 'J_wheel' + new_Joint.tag)
             setattr(new_Joint, 'distal_link_name', 'wheel' + new_Joint.tag)
         setattr(new_Joint, 'stator_name', new_Joint.name + '_stator')
@@ -3352,7 +3359,7 @@ class UrdfWriter:
         # add the xacro:add_fixed_joint element to the list of urdf elements
         new_Hub.xml_tree_elements.append(fixed_joint_name)
 
-        if new_Hub.type == 'mobile_base':
+        if new_Hub.type is ModuleType.MOBILE_BASE:
             ET.SubElement(self.root, 
                         "xacro:add_mobile_base_sensors",
                         name=new_Hub.name + '_sensors',
@@ -3897,7 +3904,7 @@ class UrdfWriter:
 
         self.info_print(str(output, 'utf-8', 'ignore'))
 
-        hubs = self.findall_by_type(types=['cube', 'mobile_base'])
+        hubs = self.findall_by_type(types=ModuleClass.hub_modules())
         if hubs is not None:
             for hub_module in hubs:
                 self.add_connectors(hub_module)

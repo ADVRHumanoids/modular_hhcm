@@ -9,36 +9,10 @@ import json
 import sys
 import os
 import tf
-from enum import Enum
+
 import anytree
 
-from modular.utils import ResourceFinder
-
-class ModuleDescriptionFormat(Enum):
-    YAML = 1  # YAML format used internally in HHCM
-    JSON = 2  # JSON format used for the CONCERT project  
-
-class KinematicsConvention(str, Enum):
-    """Kinematic convention used to define the rototranslation between two modules"""
-    DH_EXT = 'DH_ext'  # extended Denavit-Hartenberg convention. See https://mediatum.ub.tum.de/doc/1280464/file.pdf
-    URDF = 'urdf'  # URDF convention
-    AFFINE = 'affine_tf_matrix'  # Affine trasformation matrix convention
-
-class ModuleType(str, Enum):
-    """Type of module"""
-    LINK = 'link'
-    JOINT = 'joint'
-    CUBE = 'cube'
-    WHEEL = 'wheel'
-    TOOL_EXCHANGER = 'tool_exchanger'
-    GRIPPER = 'gripper'
-    MOBILE_BASE = 'mobile_base'
-    BASE_LINK = 'base_link'
-    SIZE_ADAPTER = 'size_adapter'
-    SIMPLE_EE = 'simple_ee'
-    END_EFFECTOR = 'end_effector'
-    DRILL = 'drill'
-    DAGANA = 'dagana'
+from modular.enums import ModuleDescriptionFormat, KinematicsConvention, ModuleType, ModuleClass
 
 # import collections.abc
 def update_nested_dict(d, u):
@@ -107,7 +81,7 @@ class JSONInterpreter(object):
         """Dispatch the parsing of the dictionary d according to the module type"""
         header_obj = getattr(self.owner, "header")
         update_nested_dict(header_obj.__dict__, d['header'])
-        if self.owner.type in {ModuleType.LINK, ModuleType.GRIPPER, ModuleType.TOOL_EXCHANGER, ModuleType.SIZE_ADAPTER, ModuleType.END_EFFECTOR, ModuleType.DRILL}:
+        if self.owner.type in ModuleClass.link_modules() | ModuleClass.end_effector_modules() - {ModuleType.DAGANA}:
             if len(d['joints']) != 0:
                 raise ValueError('A link must have no joints')
             if len(d['bodies']) != 1:
@@ -138,7 +112,7 @@ class JSONInterpreter(object):
                 self.owner.size_in = d['bodies'][0]['connectors'][0]['size']
             else:
                 self.owner.flange_size = output_flange_size 
-        elif self.owner.type in {ModuleType.JOINT, ModuleType.WHEEL}:
+        elif self.owner.type in ModuleClass.joint_modules():
             if len(d['joints']) != 1:
                 raise ValueError('A joint must have exactly one joint')
             if len(d['bodies']) != 2:
@@ -187,7 +161,7 @@ class JSONInterpreter(object):
             self.owner.CentAcESC = Module.Attribute(dict_joint['control_parameters']['xbot'])
             # xbot_gz
             self.owner.xbot_gz = Module.Attribute(dict_joint['control_parameters']['xbot_gz'])
-        elif self.owner.type in {ModuleType.CUBE, ModuleType.MOBILE_BASE}:
+        elif self.owner.type in ModuleClass.hub_modules():
             if len(d['joints']) != 0:
                 raise ValueError('A hub must have no joints')
             if len(d['bodies']) != 1:
