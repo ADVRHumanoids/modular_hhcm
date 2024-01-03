@@ -1051,18 +1051,19 @@ class UrdfWriter:
                 verbose=False,
                 logger=None,
                 slave_desc_mode='use_pos'):
-        self.reset(config_file,
-                control_plugin,
-                elementree,
-                speedup,
-                parent,
-                floating_base,
-                verbose,
-                logger,
-                slave_desc_mode)
+        self.config_file = config_file
+        self.resource_finder = ResourceFinder(self.config_file)
+        self.modular_resources_manager = ModularResourcesManager(self.resource_finder)
+        self.reset(control_plugin,
+                    elementree,
+                    speedup,
+                    parent,
+                    floating_base,
+                    verbose,
+                    logger,
+                    slave_desc_mode)
 
     def reset(self,
-                config_file='config_file.yaml',
                 control_plugin='xbot2',
                 elementree=None,
                 speedup=False,
@@ -1099,11 +1100,6 @@ class UrdfWriter:
             self.logger.setLevel(logging.DEBUG)
         else:
             pass
-
-        self.config_file = config_file
-
-        self.resource_finder = ResourceFinder(self.config_file)
-        self.modular_resources_manager = ModularResourcesManager(self.resource_finder)
 
         self.collision_elements = []
 
