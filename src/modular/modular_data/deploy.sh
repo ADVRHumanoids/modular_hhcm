@@ -153,8 +153,8 @@ printf "${GREEN}[3/9] Deployed cartesio configs${NC}\n"
 # Deploy launch files
 mkdir -p ./launch
 # - cartesio.launch
-cp $SCRIPT_ROOT/launch/cartesio.launch ./launch/ModularBot_cartesio.launch $VERBOSITY || end_exec
-sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./launch/ModularBot_cartesio.launch
+#cp $SCRIPT_ROOT/launch/cartesio.launch ./launch/ModularBot_cartesio.launch $VERBOSITY || end_exec
+#sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./launch/ModularBot_cartesio.launch
 # - ModularBot_ik.launch
 cp $SCRIPT_ROOT/launch/ModularBot_ik.launch ./launch/ModularBot_ik.launch $VERBOSITY || end_exec
 sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./launch/ModularBot_ik.launch
@@ -214,9 +214,10 @@ sed -i -e "s+/tmp/ModularBot+package://${package_name}+g" ./urdf/ModularBot.gaze
 # sed -i -e "s+package://modular/src/modular/modular_resources/models/modular/meshes+package://${package_name}/database/modular/meshes+g" ./urdf/ModularBot.gazebo.urdf
 printf "${GREEN}[8/9] Deployed URDF${NC}\n"
 
-# # Deploy gazebo model
-# # - modular_world.sdf
-# cp $SCRIPT_ROOT/database/ModularBot_fixed_base/ModularBot_world.sdf ./database/${package_name}_fixed_base/${package_name}_world.sdf $VERBOSITY || end_exec
+# Deploy gazebo model
+mkdir -p ./gazebo
+# - modular_world.sdf
+cp $SCRIPT_ROOT/database/ModularBot_fixed_base/ModularBot_world.sdf ./gazebo/${package_name}_world.sdf $VERBOSITY || end_exec
 # # - manifest.xml
 # cp $SCRIPT_ROOT/database/ModularBot_fixed_base/manifest.xml ./database/${package_name}_fixed_base/manifest.xml $VERBOSITY || end_exec
 # sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./database/${package_name}_fixed_base/manifest.xml
@@ -228,7 +229,7 @@ printf "${GREEN}[8/9] Deployed URDF${NC}\n"
 # #     $DESTINATION_FOLDER/${package_name}/urdf/ModularBot.urdf > \
 # #     $DESTINATION_FOLDER/${package_name}/database/${package_name}_fixed_base/${package_name}.sdf \
 # #     || end_exec
-# printf "${GREEN}[9/9] Deployed gazebo model${NC}\n"
+printf "${GREEN}[9/9] Deployed gazebo model${NC}\n"
 
 # All done
 popd > /dev/null #hide print
