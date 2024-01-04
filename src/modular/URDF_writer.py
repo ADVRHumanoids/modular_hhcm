@@ -2908,7 +2908,7 @@ class UrdfWriter:
                           name=new_Link.camera_name,
                           parent_name=new_Link.name)
             # add the xacro:add_realsense_d_camera to the list of urdf elements
-            new_Link.xml_tree_elements.append(new_Link.camera_name + '_link')
+            new_Link.xml_tree_elements.append(new_Link.camera_name)
             new_Link.mesh_names.append(new_Link.camera_name)
 
             # <xacro:property name="velodyne_back_origin">
