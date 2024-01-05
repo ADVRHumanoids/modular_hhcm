@@ -582,7 +582,6 @@ class XBotCorePlugin(Plugin):
         with open(basic_config_filename, 'r') as stream:
             try:
                 lowlevel_config = ordered_load(stream, yaml.SafeLoader)
-                # cartesio_stack['EE']['base_link'] = self.urdf_writer.listofchains[0]
                 self.urdf_writer.print(list(lowlevel_config.items())[0])
             except yaml.YAMLError as exc:
                 self.urdf_writer.print(exc)
@@ -1165,9 +1164,6 @@ class UrdfWriter:
 
         self.inverse_branch_switcher = {y: x for x, y in iteritems(self.branch_switcher)}
 
-        self.listofchains = []
-        self.listofhubs = []
-
         self.origin, self.xaxis, self.yaxis, self.zaxis = (0, 0, 0.4), (1, 0, 0), (0, 1, 0), (0, 0, 1)
 
         data = {'type': "base_link", 'name': "base_link", 'kinematics_convention': "urdf"}
@@ -1188,6 +1184,9 @@ class UrdfWriter:
         setattr(self.base_link, 'connector_idx', 1)
         setattr(self.base_link, 'is_structural', False)
         setattr(self.base_link, 'mesh_names', [])
+
+        self.listofchains = [[self.base_link]]
+        self.listofhubs = []
 
         self.parent_module = self.base_link
 
@@ -1492,11 +1491,12 @@ class UrdfWriter:
 
         # get tag_index, an integer representing on which branch of the robot the joint has been added
         tag_index = self.inverse_branch_switcher.get(new_joint.tag)
+        parent_tag_index = self.inverse_branch_switcher.get(new_joint.parent.tag)
         chain = [new_joint]
         self.print("tag_index: ", tag_index, "list of chains: ", len(self.listofchains))
         # if tag_index (offseted by one, since now we start from 0) is bigger than the length of the list of chains, it means this chain hasn't been added yet.
         # then we need to append a new list representing the new chain formed by the new joint only
-        if (tag_index + 1) > len(self.listofchains):
+        if tag_index > parent_tag_index:
             self.listofchains.append(chain)
         # if instead tag_index is not bigger it means the chain the new joint is part of has already beeen added.
         # then the new joint is appended to the list representing the chain it's part of.
@@ -1536,6 +1536,8 @@ class UrdfWriter:
     
     @staticmethod
     def find_chain_base_link(chain):
+        if not chain[0].parent:
+            base_link = chain[0].name
         if "con_" in chain[0].parent.name:
             base_link = chain[0].parent.parent.name
         else:
