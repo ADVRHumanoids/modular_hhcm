@@ -189,19 +189,8 @@ class Plugin:
         groups_in_chains_group = []
         groups_in_arms_group = []
 
-        self.urdf_writer.print(self.urdf_writer.listofchains)
-
-        for modules_chain in self.urdf_writer.listofchains:
-            # check number of joints and active modules in the chain. 
-            joint_num = 0
-            for joint_module in modules_chain:
-                if joint_module.type in ModuleClass.actuated_modules():
-                    joint_num += 1
-            # If 0, skip it. The chain doesn't need to be added to the srdf in this case.
-            if joint_num == 0:
-                continue
-            else:
-                active_modules_chains.append(modules_chain)
+        active_modules_chains = self.urdf_writer.get_actuated_modules_chains()
+        self.urdf_writer.print(active_modules_chains)
 
         for idx, joints_chain in enumerate(active_modules_chains):
             group_name = "chain" + self.urdf_writer.find_chain_tag(joints_chain)
@@ -1515,6 +1504,21 @@ class UrdfWriter:
             if joint in chain:
                 chain.remove(joint)
         self.listofchains = list(filter(None, self.listofchains))
+
+    def get_actuated_modules_chains(self):
+        active_modules_chains = []
+        for modules_chain in self.listofchains:
+            # check number of joints and active modules in the chain. 
+            joint_num = 0
+            for joint_module in modules_chain:
+                if joint_module.type in ModuleClass.actuated_modules():
+                    joint_num += 1
+            # If 0, skip it. The chain doesn't need to be added to the srdf in this case.
+            if joint_num == 0:
+                continue
+            else:
+                active_modules_chains.append(modules_chain)
+        return active_modules_chains
 
     def get_ET(self):
         return self.urdf_tree
@@ -3692,7 +3696,8 @@ class UrdfWriter:
         i = 0
         tasks = []
         stack = [tasks]
-        for joints_chain in self.listofchains:
+        active_modules_chains = self.get_actuated_modules_chains()
+        for joints_chain in active_modules_chains:
             ee_name = "EE_" + str(i + 1)
             tasks.append(ee_name)
             probdesc['stack'] = stack
@@ -3746,7 +3751,8 @@ class UrdfWriter:
                 self.print(exc)
 
         self.print(probdesc.items())
-        joints_chain = self.listofchains[0]
+        active_modules_chains = self.get_actuated_modules_chains()
+        joints_chain = active_modules_chains[0]
         tip_link = self.find_chain_tip_link(joints_chain)
         probdesc['EE']['distal_link'] = tip_link
 
