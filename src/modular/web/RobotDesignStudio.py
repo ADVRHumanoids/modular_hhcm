@@ -24,6 +24,7 @@ import werkzeug
 
 from modular.URDF_writer import UrdfWriter
 import modular.ModuleNode  as ModuleNode
+from modular.enums import ModuleClass
 
 ec_srvs_spec = util.find_spec('ec_srvs')
 if ec_srvs_spec is not None:
@@ -268,7 +269,7 @@ def resources_modules_allowed_get():
                 mimetype="application/json"
             )
         elif len(ids)==1:
-            writer.select_module_from_name(ids[0], None)
+            parent_type = writer.parent_module.type
 
         if building_mode_ON:
             valid_types = writer.modular_resources_manager.get_available_module_types()
@@ -754,7 +755,29 @@ def getModulesMap():
             modules[el.name] = ModuleNode.as_dumpable_dict(el.header)
     return modules
 
-# get list of modules of robot
+def getJointMap():
+    chains=[]
+
+    writer = get_writer()
+    chains = writer.get_actuated_modules_chains()
+
+    joint_map={}
+    for chain in chains:
+        for el in chain:
+            if el.type in ModuleClass.actuated_modules():
+                try:
+                    joint_data = {
+                        'type': el.actuator_data.type,  # revolute, continuos, prismatic, etc.
+                        'value': 0.0,  # homing position
+                        'min': el.actuator_data.lower_limit,  # lower limit
+                        'max': el.actuator_data.upper_limit  # upper limit
+                    }
+                    joint_map[el.name] = joint_data
+                except AttributeError as e:
+                    continue
+    return joint_map
+
+# get map of modules of robot: module_name -> module_data (header)
 @app.route(f'{api_base_route}/model/urdf/modules/map', methods=['GET'])
 def getModelModules():
     try:
@@ -769,6 +792,27 @@ def getModelModules():
 
         return Response(
             response=json.dumps({'modules': filtered_modules}),
+            status=200,
+            mimetype="application/json"
+        )
+
+    except Exception as e:
+        # validation failed
+        app.logger.error(f'{type(e).__name__}: {e}')
+        return Response(
+            response=json.dumps({"message": f'{type(e).__name__}: {e}'}),
+            status=500,
+            mimetype="application/json"
+        )
+
+# get map of joints of robot: joint_name -> joint_data (type, value, min, max)
+@app.route(f'{api_base_route}/model/urdf/joints/map', methods=['GET'])
+def getModelJointMap():
+    try:
+        joint_map = getJointMap()
+
+        return Response(
+            response=json.dumps({'joints': joint_map}),
             status=200,
             mimetype="application/json"
         )
