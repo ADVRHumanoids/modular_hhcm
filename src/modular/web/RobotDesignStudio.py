@@ -749,11 +749,14 @@ def getModulesMap():
     writer = get_writer()
     chains = writer.listofchains
 
-    modules={}
+    module_map={}
     for chain in chains:
         for el in chain:
-            modules[el.name] = ModuleNode.as_dumpable_dict(el.header)
-    return modules
+            try:
+                module_map[el.name] = ModuleNode.as_dumpable_dict(el.header)
+            except AttributeError as e:
+                continue
+    return module_map
 
 def getJointMap():
     chains=[]
@@ -783,15 +786,15 @@ def getModelModules():
     try:
         ids = request.args.getlist('ids[]')
 
-        modules = getModulesMap()
+        module_map = getModulesMap()
 
         if len(ids)==0:
-            filtered_modules = modules  # if no ids are provided, return all modules
+            filtered_module_map = module_map  # if no ids are provided, return all modules
         else:
-            filtered_modules = {key: modules[key] for key in ids}  # filter modules by ids
+            filtered_module_map = {key: module_map[key] for key in ids}  # filter modules by ids
 
         return Response(
-            response=json.dumps({'modules': filtered_modules}),
+            response=json.dumps(filtered_module_map),
             status=200,
             mimetype="application/json"
         )
@@ -812,7 +815,7 @@ def getModelJointMap():
         joint_map = getJointMap()
 
         return Response(
-            response=json.dumps({'joints': joint_map}),
+            response=json.dumps(joint_map),
             status=200,
             mimetype="application/json"
         )
