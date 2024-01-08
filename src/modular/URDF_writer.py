@@ -1185,6 +1185,8 @@ class UrdfWriter:
         # map between name of the mesh and the module
         self.mesh_to_module_map = {}
 
+        self.urdf_string = self.process_urdf()
+
         self.model_stats = ModelStats(self)
 
         # set the slave description mode
