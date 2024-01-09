@@ -217,23 +217,15 @@ class Plugin:
                 if joint_module.type is ModuleType.WHEEL:
                     wheels += filter(lambda item: item is not None, [self.add_wheel_to_srdf(wheels_group, joint_module.name)])
                 # add homing state for each joint-like module. Also create custom groups for some end-effectors
-                if joint_module.type in ModuleClass.joint_modules():
+                if joint_module.type in ModuleClass.joint_modules() | {ModuleType.DAGANA}:
+                    joint_name = self.urdf_writer.get_joint_name(joint_module)
                     if builder_joint_map is not None:
-                        homing_value = float(builder_joint_map[joint_module.name])
+                        homing_value = float(builder_joint_map[joint_name])
                     else:
                         homing_value = 0.1
                     joints.append(ET.SubElement(group_state, 
                                                 'joint', 
-                                                name=joint_module.name, 
-                                                value=str(homing_value)))
-                elif joint_module.type is ModuleType.DAGANA:
-                    if builder_joint_map is not None:
-                        homing_value = float(builder_joint_map[joint_module.dagana_joint_name])
-                    else:
-                        homing_value = 0.1
-                    joints.append(ET.SubElement(group_state, 
-                                                'joint', 
-                                                name=joint_module.dagana_joint_name, 
+                                                name=joint_name, 
                                                 value=str(homing_value)))
                 elif joint_module.type is ModuleType.TOOL_EXCHANGER:
                     tool_exchanger_group = ET.SubElement(root, 'group', name="ToolExchanger")
@@ -711,8 +703,6 @@ class XBot2Plugin(Plugin):
                 i += 1
                 if joint_module.type is ModuleType.TOOL_EXCHANGER:
                     name = joint_module.name + '_fixed_joint'
-                elif joint_module.type is ModuleType.DAGANA:
-                    name = joint_module.dagana_joint_name
                 elif joint_module.type is ModuleType.GRIPPER:
                     name = joint_module.name
                     fingers = [name + '_rightfinger', name + '_leftfinger']
@@ -721,7 +711,7 @@ class XBot2Plugin(Plugin):
                     else:
                         joint_map['albero_gripper_map'][i] = {'name': name, 'fingers': fingers}
                 else:
-                    name = joint_module.name
+                    name = self.urdf_writer.get_joint_name(joint_module)
                 
                 if use_robot_id:
                     joint_map['joint_map'][int(joint_module.robot_id)] = name
@@ -862,10 +852,7 @@ class XBot2Plugin(Plugin):
                 if joint_module.type in ModuleClass.nonactuated_modules():
                     continue
                 if joint_module.type in {ModuleType.JOINT, ModuleType.DAGANA}:
-                    if joint_module.type is ModuleType.DAGANA:
-                        key = joint_module.dagana_joint_name
-                    else:    
-                        key = joint_module.name
+                    key = self.urdf_writer.get_joint_name(joint_module)
                     value = joint_module.CentAcESC
                     # Remove parameters that are now not used by XBot2 (they are handled by the EtherCat master on a different config file)
                     if hasattr(value, 'sign'):
@@ -907,7 +894,7 @@ class XBot2Plugin(Plugin):
                     #     value.pid.impedance = [500.0, 20.0, 1.0, 0.003, 0.99]
 
                 elif joint_module.type is ModuleType.WHEEL:
-                    key = joint_module.name
+                    key = self.urdf_writer.get_joint_name(joint_module)
                     value = joint_module.CentAcESC
                     # Remove parameters that are now not used by XBot2 (they are handled by the EtherCat master on a different config file)
                     if hasattr(value, 'sign'):
@@ -928,17 +915,6 @@ class XBot2Plugin(Plugin):
                     if hasattr(idle_joint_config[key], 'pid'):
                         if hasattr(idle_joint_config[key].pid, 'velocity'):
                             del idle_joint_config[key].pid.velocity
-
-                elif joint_module.type is ModuleType.DAGANA:
-                    key = joint_module.name
-                    value = joint_module.CentAcESC
-                    # Remove parameters that are now not used by XBot2 (they are handled by the EtherCat master on a different config file)
-                    if hasattr(value, 'sign'):
-                        del value.sign 
-                    if hasattr(value, 'pos_offset'):
-                        del value.pos_offset 
-                    if hasattr(value, 'max_current_A'):
-                        del value.max_current_A 
 
                 elif joint_module.type is ModuleType.TOOL_EXCHANGER:
                     key = joint_module.name
@@ -1609,7 +1585,7 @@ class UrdfWriter:
                 'flange_size': table.flange_size,
                 'selected_connector': selected_connector,
                 'selected_meshes': selected_meshes,
-                'urdf_string': self.urdf_string}          
+                'urdf_string': self.urdf_string}
 
         return data
 

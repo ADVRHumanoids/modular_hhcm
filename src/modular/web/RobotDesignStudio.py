@@ -769,13 +769,14 @@ def getJointMap():
         for el in chain:
             if el.type in ModuleClass.actuated_modules():
                 try:
+                    joint_name = writer.get_joint_name(el)
                     joint_data = {
                         'type': el.actuator_data.type,  # revolute, continuos, prismatic, etc.
                         'value': 0.0,  # homing position
                         'min': el.actuator_data.lower_limit,  # lower limit
                         'max': el.actuator_data.upper_limit  # upper limit
                     }
-                    joint_map[el.name] = joint_data
+                    joint_map[joint_name] = joint_data
                 except AttributeError as e:
                     continue
     return joint_map
