@@ -3080,6 +3080,14 @@ class UrdfWriter:
         return past_Link.Homogeneous_tf
 
 
+    def get_joint_name(self, module):
+        if module.type in ModuleClass.joint_modules():
+            return module.name
+        elif module.type is ModuleType.DAGANA:
+            return module.dagana_joint_name
+        else:
+            return None
+
     def get_proximal_transform(self, interface_transform, offset, reverse):
         transform = ModuleNode.get_rototranslation(interface_transform,
                                                    tf.transformations.rotation_matrix(offset,
