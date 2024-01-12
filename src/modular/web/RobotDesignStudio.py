@@ -696,9 +696,50 @@ def send_file(path):
     abort(404)
 
 
-#TODO: to be included in the next versions (requires ROS etc.)
 # send a request to the poller thread to get ECat topology and synchronize with hardware
 @app.route(f'{api_base_route}/model/urdf', methods=['PUT'])
+def generateUrdfModelFromHardware():
+    srv_name = '/ec_client/get_slaves_description'
+
+    if building_mode_ON:
+        return Response(
+            response=json.dumps({"message": 'Cannot generate model from connected hardware in Building mode.'}),
+            status=409,
+            mimetype="application/json"
+    )
+
+    try:
+        rospy.wait_for_service(srv_name, 5)
+
+        try:
+            slave_description = rospy.ServiceProxy(srv_name, GetSlaveInfo) # pylint: disable=undefined-variable
+
+        except rospy.ServiceException as e:
+            app.logger.debug("Service call failed: %s",e)
+            raise e
+
+        reply = slave_description()
+        reply = reply.cmd_info.msg
+        app.logger.debug("Exit")
+
+        urdf_writer_fromHW.read_from_json(reply)
+        if urdf_writer_fromHW.verbose:
+            urdf_writer_fromHW.render_tree()
+
+        return Response(status=204)
+
+    except Exception as e:
+        # validation failed
+        app.logger.error(f'{type(e).__name__}: {e}')
+        return Response(
+            response=json.dumps({"message": f'{type(e).__name__}: {e}'}),
+            status=500,
+            mimetype="application/json"
+        )
+
+
+#TODO: to be included in the next versions (requires ROS etc.)
+# send a request to the poller thread to get ECat topology and synchronize with hardware
 @app.route('/syncHW/', methods=['POST'])
 def syncHW():
     srv_name = '/ec_client/get_slaves_description'
