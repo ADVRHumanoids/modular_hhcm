@@ -3057,7 +3057,7 @@ class UrdfWriter:
 
 
     def get_joint_name(self, module):
-        if module.type in ModuleClass.joint_modules():
+        if module.type in ModuleClass.joint_modules() | {ModuleType.DRILL}:
             return module.name
         elif module.type is ModuleType.DAGANA:
             return module.dagana_joint_name
