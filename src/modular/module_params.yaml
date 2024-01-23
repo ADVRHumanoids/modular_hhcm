@@ -89,6 +89,11 @@
     7: #passive link 30 cm
         4: #size CONCERT arm flange
             0: concert/module_link_straight_30_concert.json
+
+    8: #passive link elbow 45°
+        4: #size CONCERT arm flange
+            0: concert/module_link_elbow_45_concert.json
+
     # ...
 
 5: #wheel module
