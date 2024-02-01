@@ -43,12 +43,13 @@ class ModuleType(str, Enum):
 
 # import collections.abc
 def update_nested_dict(d, u):
+    dd = as_dumpable_dict(d);
     for k, v in u.items():
         if isinstance(v, dict):
-            d[k] = update_nested_dict(d.get(k, {}), v)
+            dd[k] = update_nested_dict(d.get(k, {}), v)
         else:
-            d[k] = v
-    return d
+            dd[k] = v
+    return dd
 
 def as_dumpable_dict(obj):
     """ Convert object to nested Python dictionary dumpable to YAML """
