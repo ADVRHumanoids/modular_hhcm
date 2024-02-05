@@ -55,6 +55,7 @@ gui_route = config.get('MODULAR_API','gui_route',fallback='')
 api_base_route = config.get('MODULAR_API','base_route',fallback='')
 secret_key = config.get('MODULAR_API','secret_key',fallback='secret_key')
 enable_sessions = config.getboolean('MODULAR_API','enable_sessions',fallback=False)
+download_on_deploy = config.getboolean('MODULAR_API','download_on_deploy',fallback=False)
 
 # initialize ros node
 rospy.init_node('robot_builder', disable_signals=True) # , log_level=rospy.DEBUG)
@@ -1198,7 +1199,10 @@ def deployROSModel():
         app.logger.debug(name)
         writer.deploy_robot(name)
 
-        return Response(status=204)
+        if download_on_deploy:
+            return send_file(f'/tmp/{name}.zip', as_attachment=True)
+        else:
+            return Response(status=204)
 
     except Exception as e:
         # validation failed

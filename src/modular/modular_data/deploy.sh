@@ -28,12 +28,15 @@ else
     export DESTINATION_FOLDER="$HOME/albero_xbot2_ws/robots"
 fi
 
+QUIET='-q'
+
 # read arguments
 while test $# -gt 0
 do
     case "$1" in
         -[vV] | --verbose) # add verbosity
             VERBOSITY='-v'
+            unset QUIET
             printf "Verbose mode ${GREEN}ON${NC}\n"
             ;;
         -[dD] | --destination-folder) # add destination folder
@@ -183,7 +186,7 @@ printf "${GREEN}[4/9] Deployed ModularBot launch files${NC}\n"
 #cp -TRf $SCRIPT_ROOT/moveit_launch ./launch $VERBOSITY || end_exec
 #printf "${GREEN}[4.5/9] Deployed moveit configs and launch files${NC}\n"
 
-# # Deply meshes 
+# # Deply meshes
 # #NOTE: currently meshes are not deployed and instead taken from the modular_resources or concert_resources packages
 # mkdir -p -p ./database/${package_name}_fixed_base
 # cp -TRf $SCRIPT_ROOT/../modular_resources/models ./database $VERBOSITY || end_exec
@@ -231,7 +234,13 @@ cp $SCRIPT_ROOT/database/ModularBot_fixed_base/ModularBot_world.sdf ./gazebo/${p
 # #     || end_exec
 printf "${GREEN}[9/9] Deployed gazebo model${NC}\n"
 
+# Deployment completed
+printf "\n${GREEN}[ \xE2\x9C\x94 ] Package ${YELLOW}${package_name}${GREEN} succesfully deployed into ${YELLOW}$DESTINATION_FOLDER${NC}\n"
+
+# create Zip for download
+zip -r $QUIET $VERBOSITY /tmp/${package_name}.zip ./* || end_exec
+printf "${GREEN}[ \xE2\x9C\x94 ] Generated temporary zip file ${YELLOW}/tmp/${package_name}.zip${NC}\n\n"
+
 # All done
 popd > /dev/null #hide print
-printf "\n${GREEN}[ \xE2\x9C\x94 ] Package ${YELLOW}${package_name}${GREEN} succesfully deployed into ${YELLOW}$DESTINATION_FOLDER${NC}\n\n"
-unset DESTINATION_FOLDER VERBOSITY SCRIPT_ROOT RED PURPLE GREEN ORANGE YELLOW NC package_name
+unset DESTINATION_FOLDER VERBOSITY QUIET SCRIPT_ROOT RED PURPLE GREEN ORANGE YELLOW NC package_name
