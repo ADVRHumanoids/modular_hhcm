@@ -61,7 +61,7 @@
 ## About The Project
 
 This project focuses on the development of an app for rapid model generation of modular robots, starting from a set of basic robotic modules.
-This app will genereate URDF, SRDF and a complete ROS package, which can be used to simulate and control the robot. 
+This app will genereate URDF, SRDF and a complete ROS package, which can be used to simulate and control the robot.
 
 ![reconfigurable_pino](https://alberobotics.it/templates/yootheme/cache/reconfigurable_pino-2e1209e8.png)
 
@@ -108,6 +108,29 @@ Get the `RobotBuilder` app from the latest release and make it executable (`chmo
 
 ## Usage
 
+### Configs
+
+Several configurations can be modified for each deployment by creating a config file `src/modular/web/web_config.ini`. The most important ones are:
+
+```ini
+[MODULAR_API] # Mandatory section
+
+# version of the API
+version = 1
+
+# When deploying the robot, return a zip file with the generated ROS package
+download_on_deploy = true
+
+# Use flash sessions to have multiple users on a single server
+enable_sessions = true
+
+# secret_key is used to sign the session cookie, it should be a random string
+secret_key = FOO_BAR_BAZ
+
+# base_route adds a prefix to all API routes, it is best to leave it commented
+# base_route = /linfa/api/v${MODULAR_API:version}/modular
+```
+
 ### Run the GUI
 To use modular you need to start the python server.
 
@@ -133,7 +156,7 @@ Then open <http://0.0.0.0:5000/> from a browser to acces the graphical interface
 ### Use the python API
 Examples of how to use the python API are provided in the [scripts](https://github.com/ADVRHumanoids/modular_hhcm/tree/master/scripts) folder.
 - `create_modularbot.ipynb` shows an example of how to build a 6-DOF robot using Alberobotics modules and deploy URDF, SRDF, etc. into a ROS package
-- `generate_concert_robot.ipynb` shows how to build and deploy the CONCERT modular robot 
+- `generate_concert_robot.ipynb` shows how to build and deploy the CONCERT modular robot
 
 ## Documentation
 
