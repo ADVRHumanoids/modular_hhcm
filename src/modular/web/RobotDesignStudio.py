@@ -12,14 +12,19 @@ import json
 import os
 import logging
 import sys
+import re
+import argparse
 from importlib import reload, util
 from configparser import ConfigParser, ExtendedInterpolation
-import re
+from typing import TypedDict
+from datetime import datetime, timedelta
+from uuid import uuid4
 
 import numpy as np
 
 import rospy
-from flask import Flask, Response, render_template, request, jsonify, send_from_directory, abort
+from flask import Flask, Response, render_template, request, jsonify, send_from_directory, abort, session, send_file
+from apscheduler.schedulers.background import BackgroundScheduler
 import werkzeug
 
 from modular.URDF_writer import UrdfWriter
@@ -29,11 +34,6 @@ from modular.enums import ModuleClass
 ec_srvs_spec = util.find_spec('ec_srvs')
 if ec_srvs_spec is not None:
     from ec_srvs.srv import GetSlaveInfo
-
-# Add Mock Resources lists
-import modular.web.mock_resources as mock_resources
-
-import argparse
 
 parser = argparse.ArgumentParser(prog='robot-design-studio', description='Robot Design Studio server')
 
@@ -53,6 +53,8 @@ host = config.get('MODULAR_SERVER', 'host', fallback='0.0.0.0')
 port = config.getint('MODULAR_SERVER','port',fallback=5003)
 gui_route = config.get('MODULAR_API','gui_route',fallback='')
 api_base_route = config.get('MODULAR_API','base_route',fallback='')
+secret_key = config.get('MODULAR_API','secret_key',fallback='secret_key')
+enable_sessions = config.getboolean('MODULAR_API','enable_sessions',fallback=False)
 
 # initialize ros node
 rospy.init_node('robot_builder', disable_signals=True) # , log_level=rospy.DEBUG)
@@ -95,6 +97,7 @@ else:
     is_pyinstaller_bundle=False
 
 app = Flask(__name__, static_folder=static_folder, template_folder=template_folder, static_url_path=static_url_path)
+app.secret_key = secret_key
 app.logger = logger
 
 if is_pyinstaller_bundle:
@@ -111,24 +114,65 @@ urdfwriter_kwargs_dict={
     'slave_desc_mode': args.slave_desc_mode
 }
 
-# Instance of UrdfWriter class
-urdf_writer = UrdfWriter(**urdfwriter_kwargs_dict)
 
-# 2nd instance of UrdfWriter class for the robot got from HW
-urdf_writer_fromHW = UrdfWriter(**urdfwriter_kwargs_dict)
+class SessionData(TypedDict):
+    # Instance of UrdfWriter class
+    urdf_writer: UrdfWriter
+    # 2nd instance of UrdfWriter class for the robot got from HW
+    urdf_writer_fromHW: UrdfWriter
+    # Flags defining which mode are in
+    building_mode_ON: bool
+    # Last time the session was updated
+    last_updated: datetime
 
-# Flags defining which mode are in
-building_mode_ON = True
+# dictionary of sessions data
+# sessions:dict[str, SessionData] = {}
+sessions = {}
 
-def get_writer():
-    if building_mode_ON :
-        return urdf_writer
+
+def cleanup():
+    now = datetime.now()
+    expired_sessions = [sid for sid, session_data in sessions.items() if now - session_data['last_updated'] > timedelta(minutes=30)]
+    for sid in expired_sessions:
+        del sessions[sid]
+
+scheduler = BackgroundScheduler(daemon=True)
+scheduler.add_job(cleanup, 'interval', minutes=30)
+scheduler.start()
+
+def get_writer(sid:str) -> UrdfWriter:
+    if sid not in sessions:
+        raise 'No session found, refresh the page to start a new one'
+
+    if sessions[sid]['building_mode_ON'] :
+        return sessions[sid]['urdf_writer']
     else:
-        return urdf_writer_fromHW
+        return sessions[sid]['urdf_writer_fromHW']
+
+
+def get_building_mode_ON(sid:str) -> bool:
+    if sid not in sessions:
+        raise 'No session found, refresh the page to start a new one'
+    return sessions[sid]['building_mode_ON']
 
 # load view_urdf.html
 @app.route(f'{gui_route}/', methods=['GET'])
 def index():
+    if enable_sessions :
+        if'session_id' not in session:
+            session['session_id'] = str(uuid4())
+        sid = session['session_id']
+    else:
+        sid = 'default'
+
+    if sid not in sessions:
+        sessions[sid] = SessionData(
+            urdf_writer= UrdfWriter(**urdfwriter_kwargs_dict),
+            urdf_writer_fromHW= UrdfWriter(**urdfwriter_kwargs_dict),
+            building_mode_ON= True,
+            last_updated= datetime.now(),
+            )
+
     return render_template('index.html')
 
 @app.route('/test')
@@ -138,6 +182,13 @@ def test():
 # Get workspace mode
 @app.route(f'{api_base_route}/mode', methods=['GET'])
 def getMode():
+    sid = session.get('session_id') if enable_sessions else 'default'
+    if sid not in sessions:
+        return 'No session found, refresh the page to start a new one', 404
+    sessions[sid]['last_updated'] = datetime.now()
+    session.modified = True
+
+    building_mode_ON=get_building_mode_ON(sid)
     mode = 'Build' if building_mode_ON else 'Discover'
     return jsonify({'mode': mode}), 200
 
@@ -146,19 +197,24 @@ def getMode():
 #   - mode:             [string]: "Build" or "Discover"
 @app.route(f'{api_base_route}/mode', methods=['POST'])
 def setMode():
-    global building_mode_ON
+    sid = session.get('session_id') if enable_sessions else 'default'
+    if sid not in sessions:
+        return 'No session found, refresh the page to start a new one', 404
+    sessions[sid]['last_updated'] = datetime.now()
+    session.modified = True
+
     try:
         # Get the state of the toggle switch. Convert the boolean from Javascript to Python
         mode = request.get_json()['mode']
         if mode!='Build' and mode!= 'Discover':
             raise ValueError(f"Illegal value for mode: exprected 'Build' or 'Discover' but found {mode}.")
 
-        building_mode_ON = mode == 'Build'
-        app.logger.debug(building_mode_ON)
+        sessions[sid]['building_mode_ON'] = mode == 'Build'
+        app.logger.debug(sessions[sid]['building_mode_ON'])
 
         # Re-initialize the two object instances
-        urdf_writer.reset(**urdfwriter_kwargs_dict)
-        urdf_writer_fromHW.reset(**urdfwriter_kwargs_dict)
+        sessions[sid]['urdf_writer'].reset(**urdfwriter_kwargs_dict)
+        sessions[sid]['urdf_writer_fromHW'].reset(**urdfwriter_kwargs_dict)
 
         app.logger.info("Switched workspace mode to '%s'", mode)
         return Response(status=204)
@@ -192,10 +248,16 @@ def resources_modules_get():
 
     :rtype: List[ModuleBase]
     """
+    sid = session.get('session_id') if enable_sessions else 'default'
+    if sid not in sessions:
+        return 'No session found, refresh the page to start a new one', 404
+    sessions[sid]['last_updated'] = datetime.now()
+    session.modified = True
+
     query_params = request.args
     try:
         # Get the right writer instance depending on the mode
-        writer = get_writer()
+        writer = get_writer(sid)
 
         #get complete list
         modules = writer.modular_resources_manager.get_available_modules()
@@ -253,10 +315,17 @@ def resources_modules_allowed_get():
 
     :rtype: List[str]
     """
+    sid = session.get('session_id') if enable_sessions else 'default'
+    if sid not in sessions:
+        return 'No session found, refresh the page to start a new one', 404
+    sessions[sid]['last_updated'] = datetime.now()
+    session.modified = True
+
     query_params = request.args
     try:
         # Get the right writer instance depending on the mode
-        writer = get_writer()
+        writer = get_writer(sid)
+        building_mode_ON=get_building_mode_ON(sid)
 
         # get complete list of modules
         # modules = writer.modular_resources_manager.get_available_modules()
@@ -305,10 +374,17 @@ def resources_addons_get():
 
     :rtype: List[ModuleAddonsBase]
     """
+    sid = session.get('session_id') if enable_sessions else 'default'
+    if sid not in sessions:
+        return 'No session found, refresh the page to start a new one', 404
+    sessions[sid]['last_updated'] = datetime.now()
+    session.modified = True
+
     query_params = request.args
     try:
         # Get the right writer instance depending on the mode
-        writer = get_writer()
+        writer = get_writer(sid)
+        building_mode_ON=get_building_mode_ON(sid)
 
         #get complete list
         addons = writer.modular_resources_manager.get_available_addons()
@@ -368,10 +444,17 @@ def resources_families_get():
 
     :rtype: List[ModuleFamilies]
     """
+    sid = session.get('session_id') if enable_sessions else 'default'
+    if sid not in sessions:
+        return 'No session found, refresh the page to start a new one', 404
+    sessions[sid]['last_updated'] = datetime.now()
+    session.modified = True
+
     query_params = request.args
     try:
         # Get the right writer instance depending on the mode
-        writer = get_writer()
+        writer = get_writer(sid)
+        building_mode_ON=get_building_mode_ON(sid)
 
         #get complete list
         families = writer.modular_resources_manager.get_available_families()
@@ -420,10 +503,17 @@ def resources_families_get():
 
 @app.route(f'{api_base_route}/model/urdf/modules', methods=['POST'])
 def addNewModule():
-    req = request.get_json()
-    writer = get_writer()
+    sid = session.get('session_id') if enable_sessions else 'default'
+    if sid not in sessions:
+        return 'No session found, refresh the page to start a new one', 404
+    sessions[sid]['last_updated'] = datetime.now()
+    session.modified = True
 
+    req = request.get_json()
     try:
+        writer = get_writer(sid)
+        building_mode_ON=get_building_mode_ON(sid)
+
         if building_mode_ON:
             valid_types = writer.modular_resources_manager.get_available_module_types()
         else:
@@ -437,8 +527,6 @@ def addNewModule():
                 mimetype="application/json"
             )
 
-        # Get the right writer instance depending on the mode
-        writer = get_writer()
 
         filename = req['name']
         app.logger.debug(filename)
@@ -486,6 +574,12 @@ def addNewModule():
 # call URDF_writer.py to modify the urdf
 @app.route('/changeURDF/', methods=['POST'])
 def changeURDF():
+    sid = session.get('session_id') if enable_sessions else 'default'
+    if sid not in sessions:
+        return 'No session found, refresh the page to start a new one', 404
+    sessions[sid]['last_updated'] = datetime.now()
+    session.modified = True
+
     filename = request.form.get('module_name', 0)
     app.logger.debug(filename)
     parent = request.form.get('parent', 0)
@@ -495,7 +589,7 @@ def changeURDF():
     reverse = True if request.form.get('reverse', 0) == 'true' else False
     app.logger.debug(reverse)
     # Get the right writer instance depending on the mode
-    writer = get_writer()
+    writer = get_writer(sid)
     data = writer.add_module(filename, offset, reverse)
     data = jsonify(data)
     return data
@@ -503,6 +597,12 @@ def changeURDF():
 # call URDF_writer.py to modify the urdf
 @app.route('/addWheel/', methods=['POST'])
 def addWheel():
+    sid = session.get('session_id') if enable_sessions else 'default'
+    if sid not in sessions:
+        return 'No session found, refresh the page to start a new one', 404
+    sessions[sid]['last_updated'] = datetime.now()
+    session.modified = True
+
     wheel_filename = request.form.get('wheel_module_name', 0)
     app.logger.debug(wheel_filename)
     steering_filename = request.form.get('steering_module_name', 0)
@@ -514,31 +614,26 @@ def addWheel():
     reverse = True if request.form.get('reverse', 0) == 'true' else False
     app.logger.debug(reverse)
     # Get the right writer instance depending on the mode
-    writer = get_writer()
+    writer = get_writer(sid)
     wheel_data, steering_data = writer.add_wheel_module(wheel_filename, steering_filename, offset, reverse)
     data = jsonify(wheel_data)
     return data
 
 
-def writeRobotURDF(builder_jm):
+def writeRobotURDF(building_mode_ON, writer, builder_jm):
+    data = writer.write_urdf()
+    srdf = writer.write_srdf(builder_jm)
+    app.logger.debug(srdf)
     if building_mode_ON :
-        data = urdf_writer.write_urdf()
-        srdf = urdf_writer.write_srdf(builder_jm)
-        app.logger.debug(srdf)
-        joint_map = urdf_writer.write_joint_map()
-        lowlevel_config = urdf_writer.write_lowlevel_config()
-        # probdesc = urdf_writer.write_problem_description()
-        probdesc = urdf_writer.write_problem_description_multi()
-        # cartesio_stack = urdf_writer.write_cartesio_stack()
+        joint_map = writer.write_joint_map()
+        lowlevel_config = writer.write_lowlevel_config()
     else:
-        data = urdf_writer_fromHW.write_urdf()
-        srdf = urdf_writer_fromHW.write_srdf(builder_jm)
-        app.logger.debug(srdf)
-        joint_map = urdf_writer_fromHW.write_joint_map(use_robot_id=True)
-        lowlevel_config = urdf_writer_fromHW.write_lowlevel_config(use_robot_id=True)
-        # probdesc = urdf_writer_fromHW.write_problem_description()
-        probdesc = urdf_writer_fromHW.write_problem_description_multi()
-        # cartesio_stack = urdf_writer_fromHW.write_cartesio_stack()
+        joint_map = writer.write_joint_map(use_robot_id=True)
+        lowlevel_config = writer.write_lowlevel_config(use_robot_id=True)
+    # probdesc = writer.write_problem_description()
+    probdesc = writer.write_problem_description_multi()
+    # cartesio_stack = writer.write_cartesio_stack()
+
     app.logger.debug("\nSRDF\n")
     app.logger.debug(srdf)
     app.logger.debug("\nJoint Map\n")
@@ -554,7 +649,12 @@ def writeURDF():
     app.logger.debug(json_jm)
     builder_jm = json.loads(json_jm)
 
-    data = writeRobotURDF(builder_jm)
+    if building_mode_ON :
+        writer = urdf_writer
+    else:
+        writer = urdf_writer_fromHW
+
+    data = writeRobotURDF(building_mode_ON, writer, builder_jm)
     data = jsonify(data)
     return data
 
@@ -634,10 +734,15 @@ def openFile():
 # request the urdf generated from the currently stored tree
 @app.route(f'{api_base_route}/model/urdf', methods=['GET'])
 def getURDF():
-    try:
+    sid = session.get('session_id') if enable_sessions else 'default'
+    if sid not in sessions:
+        return 'No session found, refresh the page to start a new one', 404
+    sessions[sid]['last_updated'] = datetime.now()
+    session.modified = True
 
+    try:
         # Get the right writer instance depending on the mode
-        writer = get_writer()
+        writer = get_writer(sid)
         urdf_string = writer.urdf_string
 
         # replace path for remote access of STL meshes that will be served with '/meshes/<path:path>' route
@@ -672,15 +777,38 @@ def requestURDF():
 # NOTE: this should not be needed anymore! Setting the static folder in the app constructor should be enough
 # # upload on the server the /static folder
 # @app.route('/<path:path>')
-# def send_file(path):
+# def send_mesh_file(path):
 #     return send_from_directory(app.static_folder, path)
 
 
 # upload on the server the /modular_resources folder and the ones under cfg['esternal_resources']
 # This is needed to load the meshes of the modules (withot the need to put them in the /static folder)
 @app.route(f'{api_base_route}/resources/meshes/<path:path>', methods=['GET'])
+def get_resources_meshes_file(path):
+    sid = session.get('session_id') if enable_sessions else 'default'
+    if sid not in sessions:
+        return 'No session found, refresh the page to start a new one', 404
+    sessions[sid]['last_updated'] = datetime.now()
+    session.modified = True
+
+    # Get the right writer instance depending on the mode
+    writer = get_writer(sid)
+
+    resources_paths = []
+    for res_path in writer.resource_finder.resources_paths:
+        resources_paths += [writer.resource_finder.find_resource_absolute_path('', res_path)]
+
+    for res_path in resources_paths:
+        try:
+            return send_from_directory(res_path, path)
+        except werkzeug.exceptions.NotFound:
+            continue
+    abort(404)
+
+# upload on the server the /modular_resources folder and the ones under cfg['esternal_resources']
+# This is needed to load the meshes of the modules (withot the need to put them in the /static folder)
 @app.route('/modular_resources/<path:path>')
-def send_file(path):
+def send_mesh_file(path):
     # Get the right writer instance depending on the mode
     writer = get_writer()
 
@@ -700,6 +828,13 @@ def send_file(path):
 @app.route(f'{api_base_route}/model/urdf', methods=['PUT'])
 def generateUrdfModelFromHardware():
     srv_name = '/ec_client/get_slaves_description'
+
+    sid = session.get('session_id') if enable_sessions else 'default'
+    if sid not in sessions:
+        return 'No session found, refresh the page to start a new one', 404
+    sessions[sid]['last_updated'] = datetime.now()
+    session.modified = True
+    building_mode_ON = get_building_mode_ON(sid)
 
     if building_mode_ON:
         return Response(
@@ -722,9 +857,10 @@ def generateUrdfModelFromHardware():
         reply = reply.cmd_info.msg
         app.logger.debug("Exit")
 
-        urdf_writer_fromHW.read_from_json(reply)
-        if urdf_writer_fromHW.verbose:
-            urdf_writer_fromHW.render_tree()
+        writer = get_writer(sid)
+        writer.read_from_json(reply)
+        if writer.verbose:
+            writer.render_tree()
 
         return Response(status=204)
 
@@ -767,7 +903,6 @@ def syncHW():
 # Change mode and reset
 @app.route('/changeMode/', methods=['POST'])
 def changeMode():
-    global building_mode_ON
 
     # Get the state of the toggle switch. Convert the boolean from Javascript to Python
     building_mode_ON = True if request.form.get('buildingModeON', 0) == 'true' else False
@@ -784,10 +919,10 @@ def changeMode():
     data = jsonify(data)
     return data
 
-def getModulesMap():
+def getModulesMap(sid:str):
     chains=[]
 
-    writer = get_writer()
+    writer = get_writer(sid)
     chains = writer.listofchains
 
     module_map={}
@@ -799,10 +934,10 @@ def getModulesMap():
                 continue
     return module_map
 
-def getJointMap():
+def getJointMap(sid:str):
     chains=[]
 
-    writer = get_writer()
+    writer = get_writer(sid)
     chains = writer.get_actuated_modules_chains()
 
     joint_map={}
@@ -825,10 +960,16 @@ def getJointMap():
 # get map of modules of robot: module_name -> module_data (header)
 @app.route(f'{api_base_route}/model/urdf/modules/map', methods=['GET'])
 def getModelModules():
+    sid = session.get('session_id') if enable_sessions else 'default'
+    if sid not in sessions:
+        return 'No session found, refresh the page to start a new one', 404
+    sessions[sid]['last_updated'] = datetime.now()
+    session.modified = True
+
     try:
         ids = request.args.getlist('ids[]')
 
-        module_map = getModulesMap()
+        module_map = getModulesMap(sid)
 
         if len(ids)==0:
             filtered_module_map = module_map  # if no ids are provided, return all modules
@@ -853,8 +994,14 @@ def getModelModules():
 # get map of joints of robot: joint_name -> joint_data (type, value, min, max)
 @app.route(f'{api_base_route}/model/urdf/joints/map', methods=['GET'])
 def getModelJointMap():
+    sid = session.get('session_id') if enable_sessions else 'default'
+    if sid not in sessions:
+        return 'No session found, refresh the page to start a new one', 404
+    sessions[sid]['last_updated'] = datetime.now()
+    session.modified = True
+
     try:
-        joint_map = getJointMap()
+        joint_map = getJointMap(sid)
 
         return Response(
             response=json.dumps(joint_map),
@@ -874,26 +1021,31 @@ def getModelJointMap():
 # Get the id of the module associated to a mesh and the list of all meshes associated to a module
 @app.route(f'{api_base_route}/model/urdf/modules/meshes', methods=['GET'])
 def module_meshes_get():
-        writer = get_writer()
+    sid = session.get('session_id') if enable_sessions else 'default'
+    if sid not in sessions:
+        return 'No session found, refresh the page to start a new one', 404
+    sessions[sid]['last_updated'] = datetime.now()
+    session.modified = True
 
-        mesh_ids = request.args.getlist('ids[]')
+    writer = get_writer(sid)
+    mesh_ids = request.args.getlist('ids[]')
 
-        if len(mesh_ids)>1:
-            return Response(
-                response=json.dumps({"message": 'Only one id at a time should be provided'}),
-                status=501,
-                mimetype="application/json"
-            )
-        elif len(mesh_ids)==1:
-            mesh_id = mesh_ids[0]
-            # From the name of the mesh clicked on the GUI select the module associated to it
-            # Also sets the selected_connector to the one associated to the mesh
-            associated_module_data = writer.select_module_from_name(mesh_id, None)
+    if len(mesh_ids)>1:
+        return Response(
+            response=json.dumps({"message": 'Only one id at a time should be provided'}),
+            status=501,
+            mimetype="application/json"
+        )
+    elif len(mesh_ids)==1:
+        mesh_id = mesh_ids[0]
+        # From the name of the mesh clicked on the GUI select the module associated to it
+        # Also sets the selected_connector to the one associated to the mesh
+        associated_module_data = writer.select_module_from_name(mesh_id, None)
 
-        return Response(response=json.dumps({'id': associated_module_data['selected_connector'],
-                                            'meshes': associated_module_data['selected_meshes']}),
-                        status=200,
-                        mimetype="application/json")
+    return Response(response=json.dumps({'id': associated_module_data['selected_connector'],
+                                        'meshes': associated_module_data['selected_meshes']}),
+                    status=200,
+                    mimetype="application/json")
 
 # call URDF_writer.py to remove the last module
 @app.route(f'{api_base_route}/model/urdf/modules', methods=['DELETE'])
@@ -903,6 +1055,13 @@ def removeModules():
     :param ids: Optionally, you can provide one or more IDs of modules to remove. (Currently not supported)
     :type ids: List[str]
     """
+    sid = session.get('session_id') if enable_sessions else 'default'
+    if sid not in sessions:
+        return 'No session found, refresh the page to start a new one', 404
+    sessions[sid]['last_updated'] = datetime.now()
+    session.modified = True
+    building_mode_ON=get_building_mode_ON(sid)
+
     if not building_mode_ON:
         return Response(
             response=json.dumps({"message": 'Cannot delete modules in Discovery mode.'}),
@@ -912,7 +1071,7 @@ def removeModules():
 
     try:
         # Get the right writer instance depending on the mode
-        writer = get_writer()
+        writer = get_writer(sid)
 
         ids = request.args.getlist('ids[]')
         if len(ids)>1:
@@ -942,10 +1101,16 @@ def removeModules():
 # call URDF_writer.py to update the last module
 @app.route(f'{api_base_route}/model/urdf/modules', methods=['PUT'])
 def updateModule():
+    sid = session.get('session_id') if enable_sessions else 'default'
+    if sid not in sessions:
+        return 'No session found, refresh the page to start a new one', 404
+    sessions[sid]['last_updated'] = datetime.now()
+    session.modified = True
+
     req = request.get_json()
 
     # Get the right writer instance depending on the mode
-    writer = get_writer()
+    writer = get_writer(sid)
 
     try:
         ids = request.args.getlist('ids[]')
@@ -1011,17 +1176,24 @@ def removeConnectors():
 # deploy the package of the built robot
 @app.route(f'{api_base_route}/model/urdf', methods=['POST'])
 def deployROSModel():
+    sid = session.get('session_id') if enable_sessions else 'default'
+    if sid not in sessions:
+        return 'No session found, refresh the page to start a new one', 404
+    sessions[sid]['last_updated'] = datetime.now()
+    session.modified = True
+
     try:
         req = request.get_json()
         name = req['name']
         builder_jm =  req['jointMap']
 
         # Get the right writer instance depending on the mode
-        writer = get_writer()
+        writer = get_writer(sid)
+        building_mode_ON=get_building_mode_ON(sid)
 
         writer.remove_all_connectors() # taken from removeConnectors(), to be removed and itergrated inside .deploy_robot()
 
-        writeRobotURDF(builder_jm)
+        writeRobotURDF(building_mode_ON, writer, builder_jm)
 
         app.logger.debug(name)
         writer.deploy_robot(name)
@@ -1042,9 +1214,15 @@ def deployROSModel():
 def getModelStats():
     """Returns a set of statistics for the curent robot model.
     """
+    sid = session.get('session_id') if enable_sessions else 'default'
+    if sid not in sessions:
+        return 'No session found, refresh the page to start a new one', 404
+    sessions[sid]['last_updated'] = datetime.now()
+    session.modified = True
+
     try:
         # Get the right writer instance depending on the mode
-        writer = get_writer()
+        writer = get_writer(sid)
 
         stats = writer.compute_stats(samples=1000)
 
