@@ -36,14 +36,13 @@ if ec_srvs_spec is not None:
     from ec_srvs.srv import GetSlaveInfo
 
 parser = argparse.ArgumentParser(prog='robot-design-studio', description='Robot Design Studio server')
+parser.add_argument('-d', '--debug', required=False, action='store_true', default=False)
+parser.add_argument('-v', '--verbose', required=False, action='store_true', default=False)
+parser.add_argument('--use_ros_logger', required=False, action='store_true', default=False)
+parser.add_argument('--slave_desc_mode', required=False, choices=('use_ids', 'use_pos'), default='use_pos')
 
-parser.add_argument('-d', '--debug', required=False, action='store_true')
-parser.add_argument('-v', '--verbose', required=False, action='store_true')
-parser.add_argument('--use_ros_logger', required=False, action='store_true')
-parser.add_argument('--slave_desc_mode', required=False, choices=('use_ids', 'use_pos'))
-parser.set_defaults(debug=False, verbose=False, use_ros_logger=False, slave_desc_mode='use_pos')
-
-args = parser.parse_args()
+# parse only known args, see https://stackoverflow.com/a/59067873/22225741
+args = parser.parse_known_args()[0]
 
 # import custom server config (if any)
 base_path, _ = os.path.split(__file__)
