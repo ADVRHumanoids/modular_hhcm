@@ -2784,7 +2784,7 @@ class UrdfWriter:
             connector_idx = self.port_to_connector_idx(module.current_port, module) 
             # Set the name of the selected connector. If the index is out of range, it means that the module has only one connector, so we use as name the module name itself.
             # TODO: add connectors also for modules with only one connector, so to avoid this and have a uniform behavior
-            if connector_idx < len(module.connectors):
+            if 0 <= connector_idx < len(module.connectors):
                 selected_connector = module.connectors[connector_idx]
             else:
                 selected_connector = module.name
