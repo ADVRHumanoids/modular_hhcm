@@ -2417,6 +2417,23 @@ class UrdfWriter:
 
         return [handle_name, "fixed_" + handle_name, handle_gripping_point_name, "fixed_" + handle_gripping_point_name]
 
+    def add_camera(self, xyz_offset=[0.0, 0.0, 0.0], rpy_offset=[0.0, 0.0, 0.0]):
+        camera_name = 'camera'+ self.parent_module.tag
+        ET.SubElement(self.root, 
+                      "xacro:include",
+                      filename="${MODULAR_PATH}/modular_data/urdf/concert.sensors.urdf.xacro")
+        et = ET.SubElement(self.root,
+                      "xacro:add_realsense_d_camera",
+                      name="drill_camera",
+                      parent_name=self.parent_module.name,
+                      add_gazebo_sensor="true")
+        ET.SubElement(et,
+                      "origin",
+                      xyz=" ".join([str(x) for x in xyz_offset]),
+                      rpy=" ".join([str(x) for x in rpy_offset]))
+        return [camera_name]
+
+        
     # Add a cylinder as a fake end-effector
     def add_simple_ee(self, x_offset=0.0, y_offset=0.0, z_offset=0.0, angle_offset=0.0, mass=1.0, radius=0.02):
         # TODO: treat this as a link in the link_after_* methods!
@@ -2511,6 +2528,8 @@ class UrdfWriter:
                 self.parent_module.addon_elements += self.add_drillbit(length=new_addon['parameters']['length'], radius=new_addon['parameters']['radius'], mass=new_addon['parameters']['mass'])
             elif new_addon['header']['type'] == 'handle':
                 self.parent_module.addon_elements += self.add_handle(x_offset=new_addon['parameters']['x_offset'], y_offset=new_addon['parameters']['y_offset'], z_offset=new_addon['parameters']['z_offset'], mass=new_addon['parameters']['mass'], radius=new_addon['parameters']['radius'])
+            elif new_addon['header']['type'] == 'camera':
+                self.parent_module.addon_elements += self.add_camera(xyz_offset=new_addon['parameters']['xyz_offset'], rpy_offset=new_addon['parameters']['rpy_offset'])
             else:
                 self.logger.info('Addon type not supported')
         except FileNotFoundError:
