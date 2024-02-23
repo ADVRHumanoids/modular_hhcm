@@ -23,9 +23,8 @@ RUN echo "source $FOREST_WS/setup.bash" >> ~/.bashrc
 RUN forest add-recipes https://github.com/ADVRHumanoids/multidof_recipes.git --tag $RECIPES_BRANCH
 
 # Install dependencies using forest
-RUN --mount=type=ssh,uid=${USER_ID} forest grow concert_resources -m ${MODE} -j${JOBS} --pwd ${USER_PWD} --clone-depth 1 \
+RUN --mount=type=ssh,uid=${USER_ID} forest grow concert_description -m ${MODE} -j${JOBS} --pwd ${USER_PWD} --clone-depth 1 \
     && forest grow iit-dagana-ros-pkg -m ${MODE} -j${JOBS} --pwd ${USER_PWD} --clone-depth 1 \
-    && forest grow xacro -m ${MODE} -j${JOBS} --pwd ${USER_PWD} --clone-depth 1 \
     && rm -fr $FOREST_WS/build
 
 # Build local version of modular
