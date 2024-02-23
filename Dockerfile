@@ -30,7 +30,7 @@ RUN --mount=type=ssh,uid=${USER_ID} forest grow concert_description -m ${MODE} -
 # Build local version of modular
 WORKDIR ${FOREST_WS}/src/modular
 COPY --chown=user:user . ${FOREST_WS}/src/modular
-RUN pip install .
+RUN pip install -e .
 
 # Set entrypoint
 CMD ./scripts/entrypoint.sh
