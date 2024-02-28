@@ -48,7 +48,6 @@ frontend_version = 'Unknown'
 manifest_path = os.path.join(os.path.dirname(__file__), 'modular_frontend', 'manifest.json')
 with open(manifest_path) as f:
     manifest_data = json.load(f)
-
     if 'version' in manifest_data:
         frontend_version = manifest_data['version']
     elif 'version_name' in manifest_data:
@@ -267,9 +266,6 @@ def getInfo():
         )
     except Exception as e:
         # validation failed
-        app.logger.error(f'{type(e).__name__}: {e}')
-        app.logger.error(f'"backend_version": {backend_version}')
-        app.logger.error(f'"frontend_version": {frontend_version}')
         return Response(
             response=json.dumps({"message": f'{type(e).__name__}: {e}'}),
             status=500,
