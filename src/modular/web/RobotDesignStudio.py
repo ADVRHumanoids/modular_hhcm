@@ -14,6 +14,7 @@ import logging
 import sys
 import re
 import argparse
+import subprocess
 from importlib import reload, util
 from configparser import ConfigParser, ExtendedInterpolation
 from typing import TypedDict
@@ -34,6 +35,25 @@ from modular.enums import ModuleClass
 ec_srvs_spec = util.find_spec('ec_srvs')
 if ec_srvs_spec is not None:
     from ec_srvs.srv import GetSlaveInfo
+
+
+# get backend version from git
+try:
+    backend_version = subprocess.check_output(['git', 'describe', '--abbrev=1', '--always', '--dirty']).decode().strip()
+except subprocess.CalledProcessError as e:
+    backend_version = 'Unknown'
+
+# get fronetend version from manisfest file
+frontend_version = 'Unknown'
+manifest_path = os.path.join(os.path.dirname(__file__), 'modular_frontend', 'manifest.json')
+with open(manifest_path) as f:
+    manifest_data = json.load(f)
+
+    if 'version' in manifest_data:
+        frontend_version = manifest_data['version']
+    elif 'version_name' in manifest_data:
+        frontend_version = manifest_data['version_name']
+
 
 parser = argparse.ArgumentParser(prog='robot-design-studio', description='Robot Design Studio server')
 parser.add_argument('-d', '--debug', required=False, action='store_true', default=False)
@@ -149,7 +169,6 @@ def get_writer(sid:str) -> UrdfWriter:
     else:
         return sessions[sid]['urdf_writer_fromHW']
 
-
 def get_building_mode_ON(sid:str) -> bool:
     if sid not in sessions:
         raise 'No session found, refresh the page to start a new one'
@@ -230,6 +249,27 @@ def setMode():
     except Exception as e:
         # validation failed
         app.logger.error(f'{type(e).__name__}: {e}')
+        return Response(
+            response=json.dumps({"message": f'{type(e).__name__}: {e}'}),
+            status=500,
+            mimetype="application/json"
+        )
+
+# Get details about the current version of the app
+@app.route(f'{api_base_route}/info', methods=['GET'])
+def getInfo():
+    """Get details about the current version of the app"""
+    try:
+        return Response(
+            status=200,
+            response=json.dumps({ "backend_version": backend_version,
+                                  "frontend_version": frontend_version }),
+        )
+    except Exception as e:
+        # validation failed
+        app.logger.error(f'{type(e).__name__}: {e}')
+        app.logger.error(f'"backend_version": {backend_version}')
+        app.logger.error(f'"frontend_version": {frontend_version}')
         return Response(
             response=json.dumps({"message": f'{type(e).__name__}: {e}'}),
             status=500,
