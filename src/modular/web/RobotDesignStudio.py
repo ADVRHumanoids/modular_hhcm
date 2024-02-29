@@ -73,6 +73,7 @@ gui_route = config.get('MODULAR_API','gui_route',fallback='')
 api_base_route = config.get('MODULAR_API','base_route',fallback='')
 secret_key = config.get('MODULAR_API','secret_key',fallback='secret_key')
 enable_sessions = config.getboolean('MODULAR_API','enable_sessions',fallback=False)
+enable_discovery = config.getboolean('MODULAR_API','enable_discovery',fallback=True)
 download_on_deploy = config.getboolean('MODULAR_API','download_on_deploy',fallback=False)
 
 # initialize ros node
@@ -209,6 +210,27 @@ def getMode():
     building_mode_ON=get_building_mode_ON(sid)
     mode = 'Build' if building_mode_ON else 'Discover'
     return jsonify({'mode': mode}), 200
+
+# Get info about dicovery mode status
+@app.route(f'{api_base_route}/mode/discovery', methods=['GET'])
+def getDiscoveryStatus():
+    sid = session.get('session_id') if enable_sessions else 'default'
+    if sid not in sessions:
+        return 'No session found, refresh the page to start a new one', 404
+    sessions[sid]['last_updated'] = datetime.now()
+    session.modified = True
+
+    try:
+        return Response(
+            status=200,
+            response=json.dumps({ 'available': enable_discovery}),
+        )
+    except Exception as e:
+        return Response(
+            response=json.dumps({"message": f'{type(e).__name__}: {e}'}),
+            status=500,
+            mimetype="application/json"
+        )
 
 # Change mode and reset
 # Request payload:
@@ -863,6 +885,13 @@ def send_mesh_file(path):
 # send a request to the poller thread to get ECat topology and synchronize with hardware
 @app.route(f'{api_base_route}/model/urdf', methods=['PUT'])
 def generateUrdfModelFromHardware():
+    if not enable_discovery:
+        return Response(
+            response=json.dumps({"message": 'Robot discovery is disabled.'}),
+            status=409,
+            mimetype="application/json"
+        )
+
     srv_name = '/ec_client/get_slaves_description'
 
     sid = session.get('session_id') if enable_sessions else 'default'
