@@ -194,10 +194,6 @@ def index():
 
     return render_template('index.html')
 
-@app.route('/test')
-def test():
-    return render_template('test.html')
-
 # Get workspace mode
 @app.route(f'{api_base_route}/mode', methods=['GET'])
 def getMode():
@@ -629,55 +625,6 @@ def addNewModule():
             mimetype="application/json"
         )
 
-# call URDF_writer.py to modify the urdf
-@app.route('/changeURDF/', methods=['POST'])
-def changeURDF():
-    sid = session.get('session_id') if enable_sessions else 'default'
-    if sid not in sessions:
-        return 'No session found, refresh the page to start a new one', 404
-    sessions[sid]['last_updated'] = datetime.now()
-    session.modified = True
-
-    filename = request.form.get('module_name', 0)
-    app.logger.debug(filename)
-    parent = request.form.get('parent', 0)
-    app.logger.debug(parent)
-    offset = float(request.form.get('angle_offset', 0))
-    app.logger.debug(offset)
-    reverse = True if request.form.get('reverse', 0) == 'true' else False
-    app.logger.debug(reverse)
-    # Get the right writer instance depending on the mode
-    writer = get_writer(sid)
-    data = writer.add_module(filename, offset, reverse)
-    data = jsonify(data)
-    return data
-
-# call URDF_writer.py to modify the urdf
-@app.route('/addWheel/', methods=['POST'])
-def addWheel():
-    sid = session.get('session_id') if enable_sessions else 'default'
-    if sid not in sessions:
-        return 'No session found, refresh the page to start a new one', 404
-    sessions[sid]['last_updated'] = datetime.now()
-    session.modified = True
-
-    wheel_filename = request.form.get('wheel_module_name', 0)
-    app.logger.debug(wheel_filename)
-    steering_filename = request.form.get('steering_module_name', 0)
-    app.logger.debug(steering_filename)
-    parent = request.form.get('parent', 0)
-    app.logger.debug(parent)
-    offset = float(request.form.get('angle_offset', 0))
-    app.logger.debug(offset)
-    reverse = True if request.form.get('reverse', 0) == 'true' else False
-    app.logger.debug(reverse)
-    # Get the right writer instance depending on the mode
-    writer = get_writer(sid)
-    wheel_data, steering_data = writer.add_wheel_module(wheel_filename, steering_filename, offset, reverse)
-    data = jsonify(wheel_data)
-    return data
-
-
 def writeRobotURDF(building_mode_ON, writer, builder_jm):
     data = writer.write_urdf()
     srdf = writer.write_srdf(builder_jm)
@@ -699,95 +646,6 @@ def writeRobotURDF(building_mode_ON, writer, builder_jm):
     # app.logger.debug("\nCartesIO stack\n")
     # app.logger.debug(cartesio_stack)
     return data
-
-@app.route('/writeURDF/', methods=['POST'])
-def writeURDF():
-    app.logger.debug('jointMap')
-    json_jm = request.form.get('jointMap', 0)
-    app.logger.debug(json_jm)
-    builder_jm = json.loads(json_jm)
-
-    if building_mode_ON :
-        writer = urdf_writer
-    else:
-        writer = urdf_writer_fromHW
-
-    data = writeRobotURDF(building_mode_ON, writer, builder_jm)
-    data = jsonify(data)
-    return data
-
-
-# call URDF_writer.py to add another socket
-@app.route('/addSocket/', methods=['POST'])
-def addSocket():
-    values = json.loads(request.form.get('values'))
-    offset = values['offset']
-    app.logger.debug(offset)
-    angle_offset = values['angle_offset']
-    app.logger.debug(angle_offset)
-
-    global building_mode_ON
-    #TODO: fix this hack
-    if building_mode_ON :
-        data = urdf_writer.add_socket(float(offset.get('x_offset')), float(offset.get('y_offset')),
-                                  float(offset.get('z_offset')), float(angle_offset))
-    else:
-        data = urdf_writer_fromHW.move_socket("L_0_B", float(offset.get('x_offset')), float(offset.get('y_offset')),
-                                  float(offset.get('z_offset')), float(angle_offset))
-
-    data = jsonify(data)
-    return data
-
-
-#TODO: to be included in the next versions
-# call URDF_writer.py to move socket. TODO: remove hard-code of L_0_B socket for AutomationWare demo
-@app.route('/moveSocket/', methods=['POST'])
-def moveSocket():
-    values = json.loads(request.form.get('values'))
-    app.logger.debug(values)
-    offset = values['offset']
-    app.logger.debug(offset)
-    angle_offset = values['angle_offset']
-    app.logger.debug(angle_offset)
-    # Get the right writer instance depending on the mode
-    writer = get_writer()
-    data = writer.move_socket("L_0_B", float(offset.get('x_offset')), float(offset.get('y_offset')),
-                                  float(offset.get('z_offset')), float(angle_offset))
-    data = jsonify(data)
-    return data
-
-@app.route('/removeModule/', methods=['POST'])
-def remove():
-    parent = request.form.get('parent', 0)
-    # Get the right writer instance depending on the mode
-    writer = get_writer()
-    data = writer.remove_module()
-    data = jsonify(data)
-    return data
-
-
-# update "last module" (and so shown buttons) when clicking on it
-@app.route('/updateLastModule/', methods=['POST'])
-def accessModule():
-    parent = request.form.get('parent', 0)
-    # Get the right writer instance depending on the mode
-    writer = get_writer()
-    data = writer.select_module_from_name(parent)
-    data = jsonify(data)
-    return data
-
-
-#TODO: to be included in the next versions
-# upload a URDF file and display it
-@app.route('/openFile/', methods=['POST'])
-def openFile():
-    file_str = request.form.get('file', 0)
-    app.logger.debug(file_str)
-    data = urdf_writer.read_file(file_str)
-    app.logger.debug('data: %s', data)
-    data = jsonify(data)
-    return data
-
 
 # request the urdf generated from the currently stored tree
 @app.route(f'{api_base_route}/model/urdf', methods=['GET'])
@@ -820,25 +678,6 @@ def getURDF():
             mimetype="application/json"
         )
 
-@app.route('/requestURDF/', methods=['POST'])
-def requestURDF():
-    # building_mode_on_str = request.form.get('mode', 0)
-    # app.logger.debug(building_mode_on_str)
-    # Get the right writer instance depending on the mode
-    writer = get_writer()
-    urdf_string = writer.process_urdf()
-    data = {'string': urdf_string}
-    app.logger.debug('data: %s', data)
-    data = jsonify(data)
-    return data
-
-# NOTE: this should not be needed anymore! Setting the static folder in the app constructor should be enough
-# # upload on the server the /static folder
-# @app.route('/<path:path>')
-# def send_mesh_file(path):
-#     return send_from_directory(app.static_folder, path)
-
-
 # upload on the server the /modular_resources folder and the ones under cfg['esternal_resources']
 # This is needed to load the meshes of the modules (withot the need to put them in the /static folder)
 @app.route(f'{api_base_route}/resources/meshes/<path:path>', methods=['GET'])
@@ -862,25 +701,6 @@ def get_resources_meshes_file(path):
         except werkzeug.exceptions.NotFound:
             continue
     abort(404)
-
-# upload on the server the /modular_resources folder and the ones under cfg['esternal_resources']
-# This is needed to load the meshes of the modules (withot the need to put them in the /static folder)
-@app.route('/modular_resources/<path:path>')
-def send_mesh_file(path):
-    # Get the right writer instance depending on the mode
-    writer = get_writer()
-
-    resources_paths = []
-    for res_path in writer.resource_finder.resources_paths:
-        resources_paths += [writer.resource_finder.find_resource_absolute_path('', res_path)]
-
-    for res_path in resources_paths:
-        try:
-            return send_from_directory(res_path, path)
-        except werkzeug.exceptions.NotFound:
-            continue
-    abort(404)
-
 
 # send a request to the poller thread to get ECat topology and synchronize with hardware
 @app.route(f'{api_base_route}/model/urdf', methods=['PUT'])
@@ -937,52 +757,6 @@ def generateUrdfModelFromHardware():
             status=500,
             mimetype="application/json"
         )
-
-
-#TODO: to be included in the next versions (requires ROS etc.)
-# send a request to the poller thread to get ECat topology and synchronize with hardware
-@app.route('/syncHW/', methods=['POST'])
-def syncHW():
-    srv_name = '/ec_client/get_slaves_description'
-
-    rospy.wait_for_service(srv_name)
-
-    try:
-        slave_description = rospy.ServiceProxy(srv_name, GetSlaveInfo) # pylint: disable=undefined-variable
-
-    except rospy.ServiceException as e:
-        app.logger.debug("Service call failed: %s",e)
-
-    reply = slave_description()
-    reply = reply.cmd_info.msg
-    app.logger.debug("Exit")
-
-    data = urdf_writer_fromHW.read_from_json(reply)
-    if urdf_writer_fromHW.verbose:
-        urdf_writer_fromHW.render_tree()
-    app.logger.debug('data: %s', data)
-    data = jsonify(data)
-    return data
-
-
-# Change mode and reset
-@app.route('/changeMode/', methods=['POST'])
-def changeMode():
-
-    # Get the state of the toggle switch. Convert the boolean from Javascript to Python
-    building_mode_ON = True if request.form.get('buildingModeON', 0) == 'true' else False
-
-    app.logger.debug(building_mode_ON)
-
-    # Re-initialize the two object instances
-    urdf_writer.reset(**urdfwriter_kwargs_dict)
-    urdf_writer_fromHW.reset(**urdfwriter_kwargs_dict)
-
-    #data = urdf_writer_fromHW.read_file(file_str)
-    data = {'building mode': building_mode_ON}
-
-    data = jsonify(data)
-    return data
 
 def getModulesMap(sid:str):
     chains=[]
@@ -1212,31 +986,6 @@ def updateModule():
             status=500,
             mimetype="application/json"
         )
-
-# deploy the package of the built robot
-@app.route('/deployRobot/', methods=['POST'])
-def deployRobot():
-    name = request.form.get('name', 'modularbot')
-    app.logger.debug(name)
-
-    # Get the right writer instance depending on the mode
-    writer = get_writer()
-
-    data = writer.deploy_robot(name)
-    #time.sleep(10)
-    return data
-
-
-@app.route('/removeConnectors/', methods=['POST'])
-def removeConnectors():
-    # Get the right writer instance depending on the mode
-    writer = get_writer()
-
-    writer.remove_all_connectors()
-
-    urdf_string = writer.process_urdf()
-
-    return urdf_string
 
 # deploy the package of the built robot
 @app.route(f'{api_base_route}/model/urdf', methods=['POST'])
