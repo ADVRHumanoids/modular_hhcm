@@ -4,7 +4,7 @@
 nohup roscore &
 
 # Start Modular Server
-gunicorn --bind '0.0.0.0:5003' wsgi:app
+gunicorn --workers= 1 --threads 4 --bind '0.0.0.0:5003' wsgi:app
 
 # Wait for any process to exit
 wait -n
