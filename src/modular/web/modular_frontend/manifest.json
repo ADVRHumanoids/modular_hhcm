@@ -1,7 +1,7 @@
 {
   "short_name": "Modular",
   "name": "Modular",
-  "version": "v1.0.0-alpha.9.1",
+  "version": "v1.0.0-alpha.9.2",
   "icons": [
     {
       "src": "icons/manifest-icon-192.maskable.png",
