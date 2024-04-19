@@ -1523,7 +1523,10 @@ class UrdfWriter:
         if "con_" in chain[0].parent.name:
             base_link = chain[0].parent.parent.name
         else:
-            base_link = chain[0].parent.name
+            if not chain[0].parent.is_structural and chain[0].parent.type in ModuleClass.hub_modules():
+                base_link = chain[0].parent.parent.name
+            else:
+                base_link = chain[0].parent.name
         return base_link
 
     @staticmethod
