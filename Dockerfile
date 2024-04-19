@@ -9,6 +9,11 @@ ARG USER_PWD=user
 ARG MODE=&NoNe&
 ARG JOBS=1
 
+# run apt update as root
+USER root
+SHELL ["/bin/bash", "-ic"]
+RUN sudo apt-get update
+
 USER user
 
 # Add github.com to known hosts
