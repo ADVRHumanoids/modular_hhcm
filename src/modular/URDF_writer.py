@@ -2074,6 +2074,18 @@ class UrdfWriter:
             selected_module = selected_module.parent
 
         self.info_print('Updating module: ' + str(selected_module.name))
+        
+        # Update generator expression
+        self.update_generators()
+
+        # Update offsets. MEMO: to be fixed! must apply offsets not overwrite
+        for node in self.urdf_nodes_generator:
+            try:
+                if node.attrib['name'] == selected_module.fixed_joint_name:
+                    for key in offsets.keys():
+                        node.set(key, str(offsets[key]))
+            except (KeyError, AttributeError):
+                pass
 
         # update generator expression
         self.update_generators()
@@ -2858,6 +2870,7 @@ class UrdfWriter:
                       yaw=yaw)
         # add the xacro:add_gripper_fingers element to the list of urdf elements
         new_Link.xml_tree_elements.append(fixed_joint_name)
+        setattr(new_Link, 'fixed_joint_name', fixed_joint_name)
         
         return
 
@@ -3031,10 +3044,10 @@ class UrdfWriter:
             setattr(new_Joint, 'name', 'J_wheel' + new_Joint.tag)
             setattr(new_Joint, 'distal_link_name', 'wheel' + new_Joint.tag)
         setattr(new_Joint, 'stator_name', new_Joint.name + '_stator')
-        setattr(new_Joint, 'fixed_joint_stator_name', "fixed_" + new_Joint.name)
+        setattr(new_Joint, 'fixed_joint_name', "fixed_" + new_Joint.name)
         ET.SubElement(self.root, "xacro:add_fixed_joint",
                       type="fixed_joint_stator",
-                      name=new_Joint.fixed_joint_stator_name,
+                      name=new_Joint.fixed_joint_name,
                       father=parent_name,  
                       child=new_Joint.stator_name,
                       x=x,
@@ -3044,7 +3057,7 @@ class UrdfWriter:
                       pitch=pitch,
                       yaw=yaw)
         # add the xacro:add_fixed_joint element to the list of urdf elements
-        new_Joint.xml_tree_elements.append(new_Joint.fixed_joint_stator_name)
+        new_Joint.xml_tree_elements.append(new_Joint.fixed_joint_name)
 
         self.collision_elements.append((parent_name, new_Joint.stator_name))
 
@@ -3173,6 +3186,7 @@ class UrdfWriter:
                         yaw=yaw)
         # add the xacro:add_fixed_joint element to the list of urdf elements
         new_Hub.xml_tree_elements.append(fixed_joint_name)
+        setattr(new_Hub, 'fixed_joint_name', fixed_joint_name)
 
         if new_Hub.type is ModuleType.MOBILE_BASE:
             ET.SubElement(self.root, 
