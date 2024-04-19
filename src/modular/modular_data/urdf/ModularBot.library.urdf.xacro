@@ -307,15 +307,6 @@
 
     </xacro:macro>
 
-    <!-- Macro for adding a socket -->
-    <xacro:macro name="add_socket" params="name type filename">
-
-        <xacro:property name="module" value="${xacro.load_yaml(filename)}"/>
-        <xacro:property name="body_name" value="body_1"/>
-        <xacro:add_link_element name="${name}" type="${type}" module="${module}" body_name="${body_name}"/>
-
-    </xacro:macro>
-
     <!-- Macro for adding a size adapter -->
     <xacro:macro name="add_size_adapter" params="type name filename size_z">
 

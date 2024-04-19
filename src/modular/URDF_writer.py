@@ -1378,8 +1378,8 @@ class UrdfWriter:
 
             #HACK: If the parent is a cube to support non-structural box we add a socket
             if self.parent_module.type is ModuleType.CUBE:
-                if self.parent_module.is_structural == False:
-                    self.add_socket()
+                if not self.parent_module.is_structural:
+                    self.add_module('socket.yaml', 0, reverse=False)
 
             # HACK: manually set name of mobile platform to be 'mobile_base', instead of auto-generated name
             module_name = None
@@ -2032,6 +2032,10 @@ class UrdfWriter:
                 self.print("Module loaded from JSON: " + new_module.name)
         except KeyError:
             raise KeyError(filename+' was not found in the available resources')
+
+        # Socket module is a custom type. It behaves differently from other link modules because it has no electronics onboard. Its parent should always be the base_link. On the hardware it will actually be connected to a non-structural hub, which therefore will not be part of the URDF, so we consider the base_link to be the parent in any case. This means the ports of the hub will not actually be occupied, so potentially there is no limit to how many sockets could be connected (>3).
+        if new_module.type is ModuleType.SOCKET:
+            self.parent_module = new_module.parent = self.base_link
 
         # If the parent is a hub module, it means we are starting a new branch.
         # Then assign the correct tag (A, B, C, ...) to the new module (and therefore start a new branch)
@@ -2836,7 +2840,7 @@ class UrdfWriter:
     def add_link(self, new_Link, parent_name, transform, reverse):
         x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(transform)
 
-        if new_Link.type is ModuleType.LINK:
+        if new_Link.type in ModuleClass.link_modules() - {ModuleType.SIZE_ADAPTER}:
             setattr(new_Link, 'name', 'L_' + str(new_Link.i) + '_link_' + str(new_Link.p) + new_Link.tag)
             self.add_link_element(new_Link.name, new_Link, 'body_1') #  , type='link')
         
