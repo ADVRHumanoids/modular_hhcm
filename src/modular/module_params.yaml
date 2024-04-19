@@ -35,7 +35,7 @@
         2: #size PINO flange
             0: master_cube.yaml # rev 0
     2: # non-structural base cube module / albero-box
-        2: #size PINO flange
+        0: # no size associated
             0: master_cube_non_structural.yaml # rev 0
     3: # mobile base pwrboard
         0: # no size associated

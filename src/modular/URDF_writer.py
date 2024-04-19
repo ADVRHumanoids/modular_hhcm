@@ -2580,7 +2580,7 @@ class UrdfWriter:
         # connected to structural hubs (or other non-structural hubs) and be a "children hub". Their only purpose is to 
         # "increase" the number of ports of its parent hub (and therefore its available connectors). 
         # The connectors are shared between the parent and children hubs, so their index must be computed accordingly.
-        if module.type in ModuleClass.hub_modules() and not module.is_structural:
+        if module.type in ModuleClass.hub_modules() and module.parent.type in ModuleClass.hub_modules() and not module.is_structural:
             # # The current port used by the parent hub to connect to the hub we are computing the transforms of.
             # parent_current_port = 1 << self.eth_to_physical_port_idx(module.parent.current_port)
             # # The ports of the parent hub already occupied before adding the current hub.
@@ -3895,7 +3895,7 @@ class UrdfWriter:
 
         hubs = self.findall_by_type(types=ModuleClass.hub_modules())
         if hubs is not None:
-            for hub_module in hubs:
+            for hub_module in (hub for hub in hubs if hub.is_structural):
                 self.add_connectors(hub_module)
 
         return robot_name
