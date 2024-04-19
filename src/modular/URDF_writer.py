@@ -1379,7 +1379,8 @@ class UrdfWriter:
             #HACK: If the parent is a cube to support non-structural box we add a socket
             if self.parent_module.type is ModuleType.CUBE:
                 if not self.parent_module.is_structural:
-                    self.add_module('socket.yaml', 0, reverse=False)
+                    self.add_module('socket.yaml', {}, reverse=False)
+                    socket_counter += 1
 
             # HACK: manually set name of mobile platform to be 'mobile_base', instead of auto-generated name
             module_name = None
@@ -1387,12 +1388,12 @@ class UrdfWriter:
                 module_name = 'mobile_base'
 
             #add the module
-            data = self.add_module(module_filename, 0, reverse=False, robot_id=robot_id, active_ports=active_ports, module_name=module_name)
+            data = self.add_module(module_filename, {}, reverse=False, robot_id=robot_id, active_ports=active_ports, module_name=module_name)
                 
         ## HACK: Manually add passive end effector for now!
         # self.add_simple_ee(0.0, 0.0, 0.135, mass=0.23)
-        # data = self.add_module('concert/passive_end_effector_panel.json', 0, False)
-        # data = self.add_module('experimental/passive_end_effector_pen.json', 0, False)
+        # data = self.add_module('concert/passive_end_effector_panel.json', {}, False)
+        # data = self.add_module('experimental/passive_end_effector_pen.json', {}, False)
 
         self.urdf_string = self.process_urdf()
 
@@ -1786,9 +1787,9 @@ class UrdfWriter:
         return data
 
 
-    def add_wheel_module(self, wheel_filename, steering_filename, angle_offset, reverse=False, robot_id=(0,0)):
-        steering_data = self.add_module(steering_filename, angle_offset, reverse, robot_id=robot_id[0])
-        wheel_data = self.add_module(wheel_filename, angle_offset, reverse, robot_id=robot_id[1])
+    def add_wheel_module(self, wheel_filename, steering_filename, offsets, reverse=False, robot_id=(0,0)):
+        steering_data = self.add_module(steering_filename, offsets, reverse, robot_id=robot_id[0])
+        wheel_data = self.add_module(wheel_filename, offsets, reverse, robot_id=robot_id[1])
 
         return wheel_data, steering_data
     
@@ -1809,15 +1810,15 @@ class UrdfWriter:
             raise FileNotFoundError(addon_filename+' was not found in the available resources')
 
 
-    def add_module(self, filename, angle_offset, reverse=False, addons =[], robot_id=0, active_ports=3, is_structural=True, module_name=None):
+    def add_module(self, filename, offsets={}, reverse=False, addons =[], robot_id=0, active_ports=3, is_structural=True, module_name=None):
         """Add a module specified by filename as child of the currently selected module.
 
         Parameters
         ----------
         filename: str
             String with the name of the YAML file to load, describing the module parameters
-        angle_offset: float
-            Value of the angle between the parent module output frame and the module input frame
+        offsets: dict
+            Dictionary containing the various offsets ('x','y','z','roll','pitch','yaw') between the parent module output frame and the module input frame. Es. offsets = {'x': 1.0, 'y': 2.0, 'yaw': 1.57}
         reverse: bool
             Bool value expressing if the module is mounted in reverse direction (true) or in standard one (false).
             By default it is false.
@@ -1883,7 +1884,7 @@ class UrdfWriter:
         # flange_size is already set from the YAML file
         # setattr(new_module, 'flange_size', self.parent_module.flange_size)
 
-        setattr(new_module, 'angle_offset', angle_offset)
+        setattr(new_module, 'offsets', offsets)
         setattr(new_module, 'reverse', reverse)
         setattr(new_module, 'robot_id', robot_id)
 
@@ -1944,15 +1945,15 @@ class UrdfWriter:
             if new_module.type in { 'joint', 'wheel' }:
                 # joint + joint
                 self.print("joint + joint")
-                self.joint_after_joint(new_module, self.parent_module, angle_offset, reverse=reverse)
+                self.joint_after_joint(new_module, self.parent_module, offsets=offsets, reverse=reverse)
             elif new_module.type in { 'cube', 'mobile_base' }:
                 # joint + hub
                 self.print("joint + hub")
-                self.hub_after_joint(new_module, self.parent_module, angle_offset, reverse=reverse, module_name=module_name)
+                self.hub_after_joint(new_module, self.parent_module, offsets=offsets, reverse=reverse, module_name=module_name)
             else:
                 # joint + link
                 self.print("joint + link")
-                self.link_after_joint(new_module, self.parent_module, angle_offset, reverse=reverse)
+                self.link_after_joint(new_module, self.parent_module, offsets=offsets, reverse=reverse)
         elif self.parent_module.type == 'wheel':
             # TODO: prevent adding modules after wheels in a better way (raise exception?)
             return {'result': 'ERROR: module cannot be added after wheel module. Select another chain or remove the wheel module.'}
@@ -1960,28 +1961,28 @@ class UrdfWriter:
             if new_module.type in { 'joint', 'wheel' }:
                 # hub + joint
                 self.print("hub + joint")
-                self.joint_after_hub(new_module, self.parent_module, angle_offset, reverse=reverse)
+                self.joint_after_hub(new_module, self.parent_module, offsets=offsets, reverse=reverse)
             elif new_module.type in { 'cube', 'mobile_base' }:
                 # hub + hub
                 self.print("hub + hub")
-                self.hub_after_hub(new_module, self.parent_module, angle_offset, reverse=reverse, module_name=module_name)
+                self.hub_after_hub(new_module, self.parent_module, offsets=offsets, reverse=reverse, module_name=module_name)
             else:
                 # hub + link
                 self.print("hub + link")
-                self.link_after_hub(new_module, self.parent_module, angle_offset, reverse=reverse)
+                self.link_after_hub(new_module, self.parent_module, offsets=offsets, reverse=reverse)
         else:
             if new_module.type in { 'joint', 'wheel' }:
                 # link + joint
                 self.print("link + joint")
-                self.joint_after_link(new_module, self.parent_module, angle_offset, reverse=reverse)
+                self.joint_after_link(new_module, self.parent_module, offsets=offsets, reverse=reverse)
             elif new_module.type in { 'cube', 'mobile_base' }:
                 # link + hub
                 self.print("link + hub")
-                self.hub_after_link(new_module, self.parent_module, angle_offset, reverse=reverse, module_name=module_name)
+                self.hub_after_link(new_module, self.parent_module, offsets=offsets, reverse=reverse, module_name=module_name)
             else:
                 # link + link
                 self.print("link + link")
-                self.link_after_link(new_module, self.parent_module, angle_offset, reverse=reverse)
+                self.link_after_link(new_module, self.parent_module, offsets=offsets, reverse=reverse)
 
         # # TODO: check if this is correct
         # # Add the module to the list of chains if there is at least a joint before it
@@ -2063,7 +2064,7 @@ class UrdfWriter:
                 gazebo_child_el.text = str(value)
 
     
-    def update_module(self, selected_module=0, angle_offset=0.0, reverse=False, addons=[]):
+    def update_module(self, selected_module=0, offsets={}, reverse=False, addons=[]):
         if selected_module == 0:
             selected_module = (self.parent_module)
         # If the selected module is a connector module, select his parent (the hub) instead
@@ -2892,10 +2893,14 @@ class UrdfWriter:
         else:
             return None
 
-    def get_proximal_transform(self, interface_transform, offset, reverse):
+    def get_proximal_transform(self, interface_transform, offsets, reverse):
+        # compute offset
+        T = tf.transformations.translation_matrix((offsets.get('x', 0.0), offsets.get('y', 0.0), offsets.get('z', 0.0)))
+        R = tf.transformations.euler_matrix(offsets.get('roll', 0.0), offsets.get('pitch', 0.0), offsets.get('yaw', 0.0), 'sxyz')
+        offset_transform = tf.transformations.concatenate_matrices(T, R)
+        
         transform = ModuleNode.get_rototranslation(interface_transform,
-                                                   tf.transformations.rotation_matrix(offset,
-                                                                                      self.zaxis))
+                                                   offset_transform)
         # If the module is mounted in the opposite direction rotate the final frame by 180 deg., as per convention
         if reverse:
             transform = ModuleNode.get_rototranslation(transform,
@@ -3180,7 +3185,7 @@ class UrdfWriter:
 
     
     # noinspection PyPep8Naming
-    def link_after_hub(self, new_Link, past_Hub, offset, reverse):
+    def link_after_hub(self, new_Link, past_Hub, offsets, reverse):
         """Adds to the URDF tree a link module as a child of a hub module
 
         Parameters
@@ -3191,8 +3196,8 @@ class UrdfWriter:
         past_Hub: ModuleNode.ModuleNode
             ModuleNode object of the hub module to which attach the link
 
-        offset: float
-            Value of the angle between the parent module output frame and the module input frame
+        offsets: dict
+            Dictionary containing the various offsets ('x','y','z','roll','pitch','yaw') between the parent module output frame and the module input frame. Es. offsets = {'x': 1.0, 'y': 2.0, 'yaw': 1.57}
         """
         setattr(new_Link, 'p', 0) #  past_Hub.p + 1)
         setattr(new_Link, 'i', 0) #  past_Hub.i)
@@ -3204,7 +3209,7 @@ class UrdfWriter:
 
         interface_transform = self.get_hub_output_transform(past_Hub)
 
-        transform = self.get_proximal_transform(interface_transform, offset, reverse)
+        transform = self.get_proximal_transform(interface_transform, offsets, reverse)
 
         # HACK: to handle 90° offset between PINO and CONCERT flanges
         transform = self.apply_adapter_transform_rotation(transform, past_Hub.flange_size, new_Link.flange_size)
@@ -3215,7 +3220,7 @@ class UrdfWriter:
 
 
     # noinspection PyPep8Naming
-    def joint_after_hub(self, new_Joint, past_Hub, offset, reverse):
+    def joint_after_hub(self, new_Joint, past_Hub, offsets, reverse):
         """Adds to the URDF tree a joint module as a child of a hub module
 
         Parameters
@@ -3226,8 +3231,8 @@ class UrdfWriter:
         past_Hub: ModuleNode.ModuleNode
             ModuleNode object of the hub module to which the joint will be attached
 
-        offset: float
-            Value of the angle between the parent module output frame and the module input frame
+        offsets: dict
+            Dictionary containing the various offsets ('x','y','z','roll','pitch','yaw') between the parent module output frame and the module input frame. Es. offsets = {'x': 1.0, 'y': 2.0, 'yaw': 1.57}
         """
         if past_Hub.is_structural:
             parent_name = past_Hub.name
@@ -3236,7 +3241,7 @@ class UrdfWriter:
 
         interface_transform = self.get_hub_output_transform(past_Hub)
 
-        transform = self.get_proximal_transform(interface_transform, offset, reverse)
+        transform = self.get_proximal_transform(interface_transform, offsets, reverse)
 
         # HACK: to handle 90° offset between PINO and CONCERT flanges
         transform = self.apply_adapter_transform_rotation(transform, past_Hub.flange_size, new_Joint.flange_size)
@@ -3247,7 +3252,7 @@ class UrdfWriter:
         self.add_joint(new_Joint, parent_name, transform, reverse)
 
     
-    def hub_after_hub(self, new_Hub, past_Hub, offset, reverse, module_name=None):
+    def hub_after_hub(self, new_Hub, past_Hub, offsets, reverse, module_name=None):
         """Adds to the URDF tree a hub module as a child of a hub module
 
         Parameters
@@ -3258,8 +3263,8 @@ class UrdfWriter:
         past_Hub: ModuleNode.ModuleNode
             ModuleNode object of the hub module to which the hub will be attached
 
-        offset: float
-            Value of the angle between the parent module output frame and the module input frame
+        offsets: dict
+            Dictionary containing the various offsets ('x','y','z','roll','pitch','yaw') between the parent module output frame and the module input frame. Es. offsets = {'x': 1.0, 'y': 2.0, 'yaw': 1.57}
         """
         if past_Hub.is_structural:
             parent_name = past_Hub.name
@@ -3271,7 +3276,7 @@ class UrdfWriter:
 
         interface_transform = self.get_hub_output_transform(past_Hub)
 
-        transform = self.get_proximal_transform(interface_transform, offset, reverse)
+        transform = self.get_proximal_transform(interface_transform, offsets, reverse)
 
         # HACK: to handle 90° offset between PINO and CONCERT flanges
         transform = self.apply_adapter_transform_rotation(transform, past_Hub.flange_size, new_Hub.flange_size)
@@ -3293,7 +3298,7 @@ class UrdfWriter:
         self.listofhubs.append(new_Hub)   
 
 
-    def hub_after_link(self, new_Hub, past_Link, offset, reverse, module_name=None):
+    def hub_after_link(self, new_Hub, past_Link, offsets, reverse, module_name=None):
         """Adds to the URDF tree a hub module as a child of a link module
 
         Parameters
@@ -3304,15 +3309,15 @@ class UrdfWriter:
         past_Link: ModuleNode.ModuleNode
             ModuleNode object of the link module to which the hub will be attached
 
-        offset: float
-            Value of the angle between the parent module output frame and the module input frame
+        offsets: dict
+            Dictionary containing the various offsets ('x','y','z','roll','pitch','yaw') between the parent module output frame and the module input frame. Es. offsets = {'x': 1.0, 'y': 2.0, 'yaw': 1.57}
         """
         setattr(new_Hub, 'i', past_Link.i)
         setattr(new_Hub, 'p', past_Link.p + 1)
 
         interface_transform = self.get_link_output_transform(past_Link)
 
-        transform = self.get_proximal_transform(interface_transform, offset, reverse=reverse) # TODO check reverse
+        transform = self.get_proximal_transform(interface_transform, offsets, reverse=reverse) # TODO check reverse
 
         # HACK: to handle 90° offset between PINO and CONCERT flanges
         transform = self.apply_adapter_transform_rotation(transform, past_Link.flange_size, new_Hub.flange_size)
@@ -3329,7 +3334,7 @@ class UrdfWriter:
         self.listofhubs.append(new_Hub) 
 
 
-    def hub_after_joint(self, new_Hub, past_Joint, offset, reverse, module_name=None):
+    def hub_after_joint(self, new_Hub, past_Joint, offsets, reverse, module_name=None):
         """Adds to the URDF tree a hub module as a child of a joint module
 
         Parameters
@@ -3340,15 +3345,15 @@ class UrdfWriter:
         past_Joint: ModuleNode.ModuleNode
             ModuleNode object of the joint module to which the hub will be attached
 
-        offset: float
-            Value of the angle between the parent module output frame and the module input frame
+        offsets: dict
+            Dictionary containing the various offsets ('x','y','z','roll','pitch','yaw') between the parent module output frame and the module input frame. Es. offsets = {'x': 1.0, 'y': 2.0, 'yaw': 1.57}
         """
         setattr(new_Hub, 'i', past_Joint.i)
         setattr(new_Hub, 'p', past_Joint.p + 1)
 
         interface_transform = self.get_joint_output_transform(past_Joint)
 
-        transform = self.get_proximal_transform(interface_transform, offset, reverse=reverse)  # TODO check reverse
+        transform = self.get_proximal_transform(interface_transform, offsets, reverse=reverse)  # TODO check reverse
 
         # HACK: to handle 90° offset between PINO and CONCERT flanges
         transform = self.apply_adapter_transform_rotation(transform, past_Joint.flange_size, new_Hub.flange_size)
@@ -3366,7 +3371,7 @@ class UrdfWriter:
 
 
     # noinspection PyPep8Naming
-    def link_after_joint(self, new_Link, past_Joint, offset, reverse):
+    def link_after_joint(self, new_Link, past_Joint, offsets, reverse):
         """Adds to the URDF tree a link module as a child of a joint module
 
         Parameters
@@ -3377,15 +3382,15 @@ class UrdfWriter:
         past_Joint: ModuleNode.ModuleNode
             ModuleNode object of the joint module to which attach the link
 
-        offset: float
-            Value of the angle between the parent module output frame and the module input frame
+        offsets: dict
+            Dictionary containing the various offsets ('x','y','z','roll','pitch','yaw') between the parent module output frame and the module input frame. Es. offsets = {'x': 1.0, 'y': 2.0, 'yaw': 1.57}
         """
         setattr(new_Link, 'i', past_Joint.i)
         setattr(new_Link, 'p', past_Joint.p + 1)
 
         interface_transform = self.get_joint_output_transform(past_Joint)
 
-        transform = self.get_proximal_transform(interface_transform, offset, reverse)
+        transform = self.get_proximal_transform(interface_transform, offsets, reverse)
 
         # HACK: to handle 90° offset between PINO and CONCERT flanges
         transform = self.apply_adapter_transform_rotation(transform, past_Joint.flange_size, new_Link.flange_size)
@@ -3397,7 +3402,7 @@ class UrdfWriter:
         self.collision_elements.append((past_Joint.distal_link_name, new_Link.name))
 
     # noinspection PyPep8Naming
-    def joint_after_joint(self, new_Joint, past_Joint, offset, reverse):
+    def joint_after_joint(self, new_Joint, past_Joint, offsets, reverse):
         """Adds to the URDF tree a joint module as a child of a joint module
 
         Parameters
@@ -3408,12 +3413,12 @@ class UrdfWriter:
         past_Joint: ModuleNode.ModuleNode
             ModuleNode object of the joint module to which the joint will be attached
 
-        offset: float
-            Value of the angle between the parent module output frame and the module input frame
+        offsets: dict
+            Dictionary containing the various offsets ('x','y','z','roll','pitch','yaw') between the parent module output frame and the module input frame. Es. offsets = {'x': 1.0, 'y': 2.0, 'yaw': 1.57}
         """
         interface_transform = self.get_joint_output_transform(past_Joint)
 
-        transform = self.get_proximal_transform(interface_transform, offset, reverse)
+        transform = self.get_proximal_transform(interface_transform, offsets, reverse)
 
         # HACK: to handle 90° offset between PINO and CONCERT flanges
         transform = self.apply_adapter_transform_rotation(transform, past_Joint.flange_size, new_Joint.flange_size)
@@ -3426,7 +3431,7 @@ class UrdfWriter:
         self.add_joint(new_Joint, parent_name, transform, reverse)
 
     # noinspection PyPep8Naming
-    def joint_after_link(self, new_Joint, past_Link, offset, reverse):
+    def joint_after_link(self, new_Joint, past_Link, offsets, reverse):
         """Adds to the URDF tree a joint module as a child of a link module
 
         Parameters
@@ -3437,12 +3442,12 @@ class UrdfWriter:
         past_Link: ModuleNode.ModuleNode
             ModuleNode object of the link module to which the joint will be attached
 
-        offset: float
-            Value of the angle between the parent module output frame and the module input frame
+        offsets: dict
+            Dictionary containing the various offsets ('x','y','z','roll','pitch','yaw') between the parent module output frame and the module input frame. Es. offsets = {'x': 1.0, 'y': 2.0, 'yaw': 1.57}
         """
         interface_transform = self.get_link_output_transform(past_Link)
 
-        transform = self.get_proximal_transform(interface_transform, offset, reverse)
+        transform = self.get_proximal_transform(interface_transform, offsets, reverse)
 
         # HACK: to handle 90° offset between PINO and CONCERT flanges
         transform = self.apply_adapter_transform_rotation(transform, past_Link.flange_size, new_Joint.flange_size)
@@ -3455,7 +3460,7 @@ class UrdfWriter:
         self.add_joint(new_Joint, parent_name, transform, reverse)
 
     # noinspection PyPep8Naming
-    def link_after_link(self, new_Link, past_Link, offset, reverse):
+    def link_after_link(self, new_Link, past_Link, offsets, reverse):
         """Adds to the URDF tree a joint module as a child of a link module
 
         Parameters
@@ -3466,8 +3471,8 @@ class UrdfWriter:
         past_Link: ModuleNode.ModuleNode
             ModuleNode object of the link module to which the joint will be attached
 
-        offset: float
-            Value of the angle between the parent module output frame and the module input frame
+        offsets: dict
+            Dictionary containing the various offsets ('x','y','z','roll','pitch','yaw') between the parent module output frame and the module input frame. Es. offsets = {'x': 1.0, 'y': 2.0, 'yaw': 1.57}
         """
 
         setattr(new_Link, 'i', past_Link.i)
@@ -3475,7 +3480,7 @@ class UrdfWriter:
 
         interface_transform = self.get_link_output_transform(past_Link)
 
-        transform = self.get_proximal_transform(interface_transform, offset, reverse)
+        transform = self.get_proximal_transform(interface_transform, offsets, reverse)
 
         # HACK: to handle 90° offset between PINO and CONCERT flanges
         transform = self.apply_adapter_transform_rotation(transform, past_Link.flange_size, new_Link.flange_size)

@@ -596,8 +596,8 @@ def addNewModule():
         if parent:
             writer.select_module_from_name(parent, None)
 
-        offset = float(req['offset']['yaw'] if 'offset' in req and 'yaw' in req['offset'] else 0) # we user RPY notation
-        app.logger.debug(offset)
+        offsets = req['offset'] if 'offset' in req else {} # we use RPY notation
+        app.logger.debug(offsets)
 
         reverse = True if 'reverse' in req and req['reverse'] == 'true' else False
         app.logger.debug(reverse)
@@ -605,7 +605,7 @@ def addNewModule():
         addons = req['addons'] if 'addons' in req else []
         app.logger.debug(addons)
 
-        module_data = writer.add_module(filename, offset, reverse, addons)
+        module_data = writer.add_module(filename, offsets, reverse, addons)
 
         return Response(response=json.dumps({'id': module_data['selected_connector'],
                                              'meshes': module_data['selected_meshes']}),
@@ -1190,15 +1190,15 @@ def updateModule():
 
         app.logger.debug(req['parent'] if 'parent' in req else 'no parent')
 
-        offset = float(req['offset']['yaw'] if 'offset' in req and 'yaw' in req['offset'] else 0) # we user RPY notation
-        app.logger.debug(offset)
+        offsets = req['offset'] if 'offset' in req  else {} # we user RPY notation
+        app.logger.debug(offsets)
 
         reverse = True if 'reverse' in req and req['reverse'] == 'true' else False
         app.logger.debug(reverse)
 
         addons = req['addons'] if 'addons' in req else []
 
-        updated_module_data = writer.update_module(angle_offset=offset, reverse=reverse, addons=addons)
+        updated_module_data = writer.update_module(offsets=offsets, reverse=reverse, addons=addons)
 
         return Response(response=json.dumps({'id': updated_module_data['selected_connector'],
                                             'meshes': updated_module_data['selected_meshes']}),
