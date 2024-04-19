@@ -1275,6 +1275,8 @@ class UrdfWriter:
 
     # This method will be used when branches in the robot will be supported.
     def read_from_json(self, json_data):
+        # HACK: we keep track of how many sockets we have to add to insert a default offset
+        socket_counter = 0
 
         # If a tree representing the topology was already instantiated, re-initialize and start from scratch
         if self.root != 0:
@@ -1379,7 +1381,7 @@ class UrdfWriter:
             #HACK: If the parent is a cube to support non-structural box we add a socket
             if self.parent_module.type is ModuleType.CUBE:
                 if not self.parent_module.is_structural:
-                    self.add_module('socket.yaml', {}, reverse=False)
+                    self.add_module('socket.yaml', {'x': float(socket_counter)}, reverse=False)
                     socket_counter += 1
 
             # HACK: manually set name of mobile platform to be 'mobile_base', instead of auto-generated name
