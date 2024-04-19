@@ -43,6 +43,9 @@
     4: # mobile base ecat hub
         0: #no size associated
             0: concert/mobile_platform_concert_non_structural.json
+    5: # Y module (torso)
+        4: #size CONCERT arm flange
+            0: concert/module_Y_torso_concert.json
     # ...
 
 3: #end effector module
