@@ -1520,10 +1520,13 @@ class UrdfWriter:
     def find_chain_base_link(chain):
         if not chain[0].parent:
             base_link = chain[0].name
-        if "con_" in chain[0].parent.name or not chain[0].parent.is_structural:
+        if "con_" in chain[0].parent.name:
             base_link = chain[0].parent.parent.name
         else:
-            base_link = chain[0].parent.name
+            if not chain[0].parent.is_structural and chain[0].parent.type in ModuleClass.hub_modules():
+                base_link = chain[0].parent.parent.name
+            else:
+                base_link = chain[0].parent.name
         return base_link
 
     @staticmethod
