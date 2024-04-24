@@ -1848,6 +1848,8 @@ class UrdfWriter:
 
         try:
             module_dict = self.modular_resources_manager.get_available_modules_dict()[filename]
+            default_offsets = self.modular_resources_manager.get_default_offset_values(filename)
+            allowed_offsets = self.modular_resources_manager.get_allowed_offset_values(filename)
             template_dict = self.modular_resources_manager.get_available_modules_dict()['template.yaml']
             if filename.lower().endswith(('.yaml', '.yml')):
                 # Load the module from YAML and create a ModuleNode instance
@@ -1859,6 +1861,16 @@ class UrdfWriter:
                 self.print("Module loaded from JSON: " + new_module.name)
         except KeyError:
             raise KeyError(filename+' was not found in the available resources')
+
+        # Analyze provided offsets and fill empty values
+        for key in ['x', 'y', 'z', 'roll', 'pitch', 'yaw']:
+            # if empty use default value
+            if key not in offsets:
+                offsets[key] = default_offsets[key]
+
+            #otherwise the offset value must comply with the definition (when applicable)
+            elif key in allowed_offsets and offsets[key] not in allowed_offsets[key]:
+                raise ValueError('Offset value for '+key+' is inconsiste with the definition provided in'+filename+'!')
 
         # Socket module is a custom type. It behaves differently from other link modules because it has no electronics onboard. Its parent should always be the base_link. On the hardware it will actually be connected to a non-structural hub, which therefore will not be part of the URDF, so we consider the base_link to be the parent in any case. This means the ports of the hub will not actually be occupied, so potentially there is no limit to how many sockets could be connected (>3).
         if new_module.type is ModuleType.SOCKET:
