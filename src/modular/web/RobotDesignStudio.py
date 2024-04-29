@@ -609,7 +609,7 @@ def addNewModule():
         if parent:
             writer.select_module_from_name(parent, None)
 
-        offsets_requested = req['offset'] if 'offset' in req else {} # we use RPY notation
+        offsets_requested = req['offsets_requested'] if 'offsets_requested' in req else {} # we use RPY notation
         offsets_requested = validate_offsets(writer, filename, offsets_requested)
         app.logger.debug(offsets_requested)
 
@@ -982,7 +982,7 @@ def updateModule():
 
         app.logger.debug(req['parent'] if 'parent' in req else 'no parent')
 
-        offsets_requested = req['offset'] if 'offset' in req  else {} # we use RPY notation
+        offsets_requested = req['offsets_requested'] if 'offsets_requested' in req  else {} # we use RPY notation
         app.logger.debug(offsets_requested)
 
         reverse = True if 'reverse' in req and req['reverse'] == 'true' else False
