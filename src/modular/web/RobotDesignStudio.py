@@ -554,6 +554,23 @@ def resources_families_get():
             status=500,
             mimetype="application/json"
         )
+    
+# Validate the offsets provided by the user
+def validate_offsets(writer, filename, offsets):
+    default_offsets = writer.modular_resources_manager.get_default_offset_values(filename)
+    allowed_offsets = writer.modular_resources_manager.get_allowed_offset_values(filename)
+
+    # Analyze provided offsets and fill empty values
+    for key in ['x', 'y', 'z', 'roll', 'pitch', 'yaw']:
+        # if empty use default value
+        if key not in offsets:
+            offsets[key] = default_offsets[key]
+
+        #otherwise the offset value must comply with the definition (when applicable)
+        elif key in allowed_offsets and offsets[key] not in allowed_offsets[key]:
+            raise ValueError('Offset value for '+key+' is inconsistent with the definition provided in'+filename+'!')
+        
+    return offsets
 
 @app.route(f'{api_base_route}/model/urdf/modules', methods=['POST'])
 def addNewModule():
@@ -592,8 +609,9 @@ def addNewModule():
         if parent:
             writer.select_module_from_name(parent, None)
 
-        offsets = req['offset'] if 'offset' in req else {} # we use RPY notation
-        app.logger.debug(offsets)
+        offsets_requested = req['offset'] if 'offset' in req else {} # we use RPY notation
+        offsets_requested = validate_offsets(writer, filename, offsets_requested)
+        app.logger.debug(offsets_requested)
 
         reverse = True if 'reverse' in req and req['reverse'] == 'true' else False
         app.logger.debug(reverse)
@@ -601,10 +619,10 @@ def addNewModule():
         addons = req['addons'] if 'addons' in req else []
         app.logger.debug(addons)
 
-        module_data = writer.add_module(filename, offsets, reverse, addons)
+        module_data = writer.add_module(filename, offsets_requested, reverse, addons)
 
         return Response(response=json.dumps({'id': module_data['selected_connector'],
-                                             'meshes': module_data['selected_meshes']}),
+                                                'meshes': module_data['selected_meshes']}),
                         status=200,
                         mimetype="application/json")
 
@@ -964,15 +982,15 @@ def updateModule():
 
         app.logger.debug(req['parent'] if 'parent' in req else 'no parent')
 
-        offsets = req['offset'] if 'offset' in req  else {} # we user RPY notation
-        app.logger.debug(offsets)
+        offsets_requested = req['offset'] if 'offset' in req  else {} # we use RPY notation
+        app.logger.debug(offsets_requested)
 
         reverse = True if 'reverse' in req and req['reverse'] == 'true' else False
         app.logger.debug(reverse)
 
         addons = req['addons'] if 'addons' in req else []
 
-        updated_module_data = writer.update_module(offsets=offsets, reverse=reverse, addons=addons)
+        updated_module_data = writer.update_module(offsets=offsets_requested, reverse=reverse, addons=addons)
 
         return Response(response=json.dumps({'id': updated_module_data['selected_connector'],
                                             'meshes': updated_module_data['selected_meshes']}),
