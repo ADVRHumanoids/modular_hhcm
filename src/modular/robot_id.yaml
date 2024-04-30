@@ -44,3 +44,9 @@
 # 54: concert/module_joint_elbow_B_concert.json # A0245
 # 55: concert/module_joint_yaw_B_concert.json # A0246
 # 56: concert/module_joint_yaw_B_concert.json # A0247
+
+# new manipulator joints
+# 61: concert/module_joint_yaw_A_concert.json # A0276
+62: concert/module_joint_yaw_A_concert.json # A0285
+63: concert/module_joint_elbow_A_concert.json # A0286
+64: concert/module_joint_yaw_A_concert.json # A0287
