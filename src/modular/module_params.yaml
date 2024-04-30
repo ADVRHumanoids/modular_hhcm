@@ -72,17 +72,17 @@
             0: module_link_elbow_90.yaml # rev 0
     3: #passive link 10 cm
         2: #size PINO flange
-            0: module_link_straight_10_fraunhofer.yaml
+            0: module_link_straight_100_fraunhofer.json
         4: #size CONCERT arm flange
             0: concert/module_link_straight_10_concert.json
     4: #passive link 20 cm
         2: #size PINO flange
-            0: concert/module_link_straight_20_fraunhofer.json
+            0: module_link_straight_200_fraunhofer.json
         4: #size CONCERT arm flange
             0: concert/module_link_straight_20_concert.json
     5: #passive link 50 cm
         2: #size PINO flange
-            0: concert/module_link_straight_50_fraunhofer.json
+            0: module_link_straight_500_fraunhofer.json
         4: #size CONCERT arm flange
             0: concert/module_link_straight_50_concert.json
 
