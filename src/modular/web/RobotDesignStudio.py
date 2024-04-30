@@ -39,7 +39,7 @@ if ec_srvs_spec is not None:
 
 # get backend version from git
 try:
-    backend_version = subprocess.check_output(['git', 'describe', '--abbrev=1', '--always', '--dirty']).decode().strip()
+    backend_version = subprocess.check_output(['git', 'describe', '--abbrev=1', '--always', '--dirty'], cwd=os.path.dirname(__file__)).decode().strip()
 except subprocess.CalledProcessError as e:
     backend_version = 'Unknown'
 
