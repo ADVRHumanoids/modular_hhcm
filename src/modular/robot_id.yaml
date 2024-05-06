@@ -21,7 +21,7 @@
 # Links
 500: module_link_elbow_90.yaml
 501: module_link_straight_140.yaml
--1 : master_cube.yaml  # HACK: commented to work with CONCERT platform
+-1 : master_cube_non_structural.yaml  # HACK: commented to work with CONCERT platform
 201: master_cube.yaml  # HACK: commented to work with CONCERT platform
 
 # CONCERT
