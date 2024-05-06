@@ -1789,7 +1789,7 @@ class UrdfWriter:
         return data
 
 
-    def add_wheel_module(self, wheel_filename, steering_filename, offsets, reverse=False, robot_id=(0,0)):
+    def add_wheel_module(self, wheel_filename, steering_filename, offsets={}, reverse=False, robot_id=(0,0)):
         steering_data = self.add_module(steering_filename, offsets, reverse, robot_id=robot_id[0])
         wheel_data = self.add_module(wheel_filename, offsets, reverse, robot_id=robot_id[1])
 
