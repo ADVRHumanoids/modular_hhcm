@@ -2,6 +2,7 @@ import pinocchio
 import numpy as np
 import scipy.optimize
 
+from modular.enums import ModuleClass
 class ModelStats:
     def __init__(self, urdf_writer):
         self.urdf_writer = urdf_writer
@@ -107,11 +108,28 @@ class ModelStats:
         return self.max_reach
     
     def compute_modules(self):
-        self.n_modules =  sum(len(chain) for chain in self.urdf_writer.listofchains)
+        n_modules = 0
+        for chain in self.urdf_writer.listofchains:
+            for module in chain:
+                if module.is_structural:
+                    n_modules += 1
+        self.n_modules =  n_modules
         return self.n_modules
     
     def get_modules(self):
         return self.n_modules
+    
+    def compute_joint_modules(self):
+        n_joint_modules = 0
+        for chain in self.urdf_writer.listofchains:
+            for module in chain:
+                if module in ModuleClass.joint_modules():
+                    n_joint_modules += 1
+        self.n_joint_modules = n_joint_modules
+        return self.n_joint_modules
+    
+    def get_joint_modules(self):
+        return self.n_joint_modules
     
     def compute_stats(self, n_samples):
         try:
@@ -125,15 +143,21 @@ class ModelStats:
             self.max_reach = None
 
         try:
-            self.n_modules = str(self.compute_modules())
+            self.n_modules = self.compute_modules()
         except e:
             self.n_modules = None
+
+        try:
+            self.n_joint_modules = self.compute_modules()
+        except e:
+            self.n_joint_modules = None
 
         return self.get_stats()
 
     def get_stats(self):
         stats={
                 'modules': self.n_modules,
+                'joint_modules': self.n_joint_modules,
                 'payload': self.payload,
                 'max_reach': self.max_reach
         }

@@ -28,7 +28,7 @@
 
   
   <!-- from where the simulation enviornment will be loaded -->
-  <arg name="world_name" default="$(find PACKAGE_NAME)/database/PACKAGE_NAME_fixed_base/PACKAGE_NAME_world.sdf"/>
+  <arg name="world_name" default="$(find PACKAGE_NAME)/gazebo/PACKAGE_NAME_world.sdf"/>
 
 
   <!-- Load the URDF/SRDF into the ROS Parameter Server -->

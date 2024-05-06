@@ -5,15 +5,13 @@ import subprocess
 import io
 import json
 import re
-import logging
 
 class ResourceFinder:
+    """Class to find resources in the package"""
     def __init__(self, config_file='config_file.yaml'):
         self.cfg = self.get_yaml(config_file)
 
         self.resources_paths = self.get_all_resources_paths()
-
-        self.logger = logging.getLogger('ResourceFinder')
 
     def get_all_resources_paths(self):
         resources_paths = []
@@ -25,6 +23,7 @@ class ResourceFinder:
         return resources_paths
 
     def nested_access(self, keylist):
+        """Access a nested dictionary"""
         val = dict(self.cfg)
         for key in keylist:
             val = val[key]
@@ -45,13 +44,13 @@ class ResourceFinder:
             # The dollar sign is used to execute a command and get the output. What is inside the parenthesis is substituted with the output of the command: $(cmd) -> output of cmd
             expanded_path = re.sub(r"\$\(([^\)]+)\)", path_substitution, expanded_path)
         except (subprocess.CalledProcessError, TypeError):
-            self.logger.warn('Executing ' + expanded_path + ' resulted in an error. Path substitution cannot be completed. Are the required environment variables set?')
-            pass
-            # raise RuntimeError(msg)
+            msg = 'Executing ' + expanded_path + ' resulted in an error. Path substitution cannot be completed. Are the required environment variables set?'
+            raise RuntimeError(msg)
             
         return expanded_path
 
     def find_resource_path(self, resource_name, relative_path=None):
+        """Return a relative filesystem path for specified resource"""
         if relative_path:
             if 'external_resources' in relative_path:
                 resource_path = self.find_external_resource_path(resource_name, relative_path)
@@ -62,10 +61,12 @@ class ResourceFinder:
         return resource_path
 
     def find_external_resource_path(self, resource_name, relative_path=None):
+        """Return a filesystem path for specified external resource"""
         resource_path = '/'.join((self.get_expanded_path(relative_path), resource_name))
         return resource_path
     
     def find_resource_absolute_path(self, resource_name, relative_path=None):
+        """Return an absolute filesystem path for specified resource"""
         curr_dir = os.path.dirname(os.path.abspath(__file__))
         if relative_path:
             if 'external_resources' in relative_path:
@@ -78,12 +79,14 @@ class ResourceFinder:
 
     @staticmethod
     def is_resource_external(relative_path=None):
+        """Does the relative path means this is an external resource?"""
         if relative_path:
             if 'external_resources' in relative_path:
                 return True
         return False
 
     def get_string(self, resource_name, relative_path=None):
+        """Return specified resource as a string"""
         resource_package = __name__
         resource_path = self.find_resource_path(resource_name, relative_path)
         if self.is_resource_external(relative_path):
@@ -95,6 +98,7 @@ class ResourceFinder:
         return resource_string
 
     def get_stream(self, resource_name, relative_path=None):
+        """Return a readable file-like object for specified resource"""
         resource_package = __name__
         resource_path = self.find_resource_path(resource_name, relative_path)
         if self.is_resource_external(relative_path):
@@ -104,6 +108,7 @@ class ResourceFinder:
         return resource_stream
 
     def get_filename(self, resource_name, relative_path=None):
+        """Return a true filesystem path for specified resource"""
         resource_package = __name__
         resource_path = self.find_resource_path(resource_name, relative_path)
         if self.is_resource_external(relative_path):
@@ -113,6 +118,7 @@ class ResourceFinder:
         return resource_filename
     
     def get_listdir(self, resource_name, relative_path=None):
+        """List the contents of the named resource directory"""
         resource_package = __name__
         resource_path = self.find_resource_path(resource_name, relative_path)
         if self.resource_exists(resource_name, relative_path):
@@ -125,6 +131,7 @@ class ResourceFinder:
         return resource_listdir
     
     def resource_exists(self, resource_name, relative_path=None):
+        """Does the named resource exist?"""
         resource_package = __name__
         resource_path = self.find_resource_path(resource_name, relative_path)
         if self.is_resource_external(relative_path):
@@ -134,6 +141,7 @@ class ResourceFinder:
         return resource_exists
     
     def resource_isdir(self, resource_name, relative_path=None):
+        """Is the named resource a directory?"""
         resource_package = __name__
         resource_path = self.find_resource_path(resource_name, relative_path)
         if self.is_resource_external(relative_path):
@@ -143,6 +151,7 @@ class ResourceFinder:
         return resource_isdir
 
     def get_yaml(self, resource_name, relative_path=None):
+        """Load the yaml file specified resource and return it as a dict"""
         with self.get_stream(resource_name, relative_path) as stream:
             try:
                 yaml_dict = yaml.safe_load(stream)
@@ -150,6 +159,16 @@ class ResourceFinder:
                 yaml_dict = {}
                 print(exc)
         return yaml_dict
+    
+    def get_json(self, resource_name, relative_path=None):
+        """Load the json file specified resource and return it as a dict"""
+        with self.get_stream(resource_name, relative_path) as stream:
+            try:
+                json_dict = json.load(stream)
+            except json.JSONDecodeError as exc:
+                json_dict = {}
+                print(exc)
+        return json_dict
     
 class ModularResourcesManager:
     def __init__(self, resource_finder):
@@ -167,6 +186,7 @@ class ModularResourcesManager:
         self.init_available_addons()
 
     def expand_listdir(self, starting_path, res_path):
+        """Expand listdir to include subdirectories recursively"""
         listdir = self.resource_finder.get_listdir(starting_path, res_path)
         list_to_remove = []
         list_to_add = []
@@ -187,8 +207,7 @@ class ModularResourcesManager:
             resource_names_list += ['json/' + el for el in self.expand_listdir('json', res_path)]
             for res_name in resource_names_list:
                 if res_name.endswith('.json'):
-                    res_stream = self.resource_finder.get_stream(res_name, res_path)
-                    res_dict = json.load(res_stream)
+                    res_dict = self.resource_finder.get_json(res_name, res_path)
                     self.available_modules_dict[res_dict['header']['name']] = res_dict
                     self.available_modules_headers.append(res_dict['header'])
                 elif res_name.endswith('.yaml'):
@@ -207,8 +226,7 @@ class ModularResourcesManager:
             resource_names_list += ['module_addons/json/' + el for el in self.expand_listdir('module_addons/json', res_path)]
             for res_name in resource_names_list:
                 if res_name.endswith('.json'):
-                    res_stream = self.resource_finder.get_stream(res_name, res_path)
-                    res_dict = json.load(res_stream)
+                    res_dict = self.resource_finder.get_json(res_name, res_path)
                     self.available_addons_dict[res_dict['header']['name']] = res_dict
                     self.available_addons_headers.append(res_dict['header'])
                 elif res_name.endswith('.yaml'):

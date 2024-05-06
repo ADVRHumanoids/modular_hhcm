@@ -23,6 +23,9 @@ from flask import Flask, Response, render_template, request, jsonify, send_from_
 import werkzeug
 
 from modular.URDF_writer import UrdfWriter
+import modular.ModuleNode  as ModuleNode
+from modular.enums import ModuleClass
+
 ec_srvs_spec = util.find_spec('ec_srvs')
 if ec_srvs_spec is not None:
     from ec_srvs.srv import GetSlaveInfo
@@ -241,8 +244,8 @@ def resources_modules_get():
         )
 
 # Get a list of the module types that can currently be added to the model.
-@app.route(f'{api_base_route}/resources/modules/types/allowed', methods=['GET'])
-def resources_modules_types_allowed_get():
+@app.route(f'{api_base_route}/resources/modules/allowed', methods=['GET'])
+def resources_modules_allowed_get():
     """Get a list of the module types that can currently be added to the model.
 
     :param ids: Optionally, you can provide one or more IDs of modules. (Currently not supported)
@@ -266,7 +269,7 @@ def resources_modules_types_allowed_get():
                 mimetype="application/json"
             )
         elif len(ids)==1:
-            writer.select_module_from_name(ids[0], None)
+            parent_type = writer.parent_module.type
 
         if building_mode_ON:
             valid_types = writer.modular_resources_manager.get_available_module_types()
@@ -276,7 +279,7 @@ def resources_modules_types_allowed_get():
 
 
         return Response(
-                response=json.dumps({"types": valid_types}),
+                response=json.dumps({"type": valid_types}),
                 status=200,
                 mimetype="application/json"
             )
@@ -434,25 +437,34 @@ def addNewModule():
                 mimetype="application/json"
             )
 
+        # Get the right writer instance depending on the mode
+        writer = get_writer()
+
         filename = req['name']
         app.logger.debug(filename)
 
-        app.logger.debug(req['parent'] if 'parent' in req else 'no parent')
+        parent = req['parent'] if 'parent' in req else None
+        app.logger.debug(parent)
 
-        offset = float(req['offset']['yaw'] if 'offset' in req and 'yaw' in req['offset'] else 0) # we user RPY notation
-        app.logger.debug(offset)
+        # We update the selected module to the one selected in the GUI. If no module is selected, we don't update it, since the BE will keep track of the current parent
+        if parent:
+            writer.select_module_from_name(parent, None)
+
+        offsets = req['offset'] if 'offset' in req else {} # we use RPY notation
+        app.logger.debug(offsets)
 
         reverse = True if 'reverse' in req and req['reverse'] == 'true' else False
         app.logger.debug(reverse)
 
         addons = req['addons'] if 'addons' in req else []
+        app.logger.debug(addons)
 
-        # Get the right writer instance depending on the mode
-        writer = get_writer()
+        module_data = writer.add_module(filename, offsets, reverse, addons)
 
-        writer.add_module(filename, offset, reverse, addons)
-
-        return Response(status=204)
+        return Response(response=json.dumps({'id': module_data['selected_connector'],
+                                             'meshes': module_data['selected_meshes']}),
+                        status=200,
+                        mimetype="application/json")
 
     except ValueError as e:
         # validation failed
@@ -543,36 +555,6 @@ def writeURDF():
     builder_jm = json.loads(json_jm)
 
     data = writeRobotURDF(builder_jm)
-    data = jsonify(data)
-    return data
-
-# call URDF_writer.py to add another master cube
-@app.route('/addMasterCube/', methods=['POST'])
-def addCube():
-    filename = request.form.get('module_name', 0)
-    app.logger.debug(filename)
-    parent = request.form.get('parent', 0)
-    app.logger.debug(parent)
-    offset = float(request.form.get('angle_offset', 0))
-    app.logger.debug(offset)
-    # Get the right writer instance depending on the mode
-    writer = get_writer()
-    data = writer.add_slave_cube(offset)
-    data = jsonify(data)
-    return data
-
-# call URDF_writer.py to add another master cube
-@app.route('/addMobilePlatform/', methods=['POST'])
-def addMobilePlatform():
-    filename = request.form.get('module_name', 0)
-    app.logger.debug(filename)
-    parent = request.form.get('parent', 0)
-    app.logger.debug(parent)
-    offset = float(request.form.get('angle_offset', 0))
-    app.logger.debug(offset)
-    # Get the right writer instance depending on the mode
-    writer = get_writer()
-    data = writer.add_mobile_platform(offset)
     data = jsonify(data)
     return data
 
@@ -714,9 +696,50 @@ def send_file(path):
     abort(404)
 
 
-#TODO: to be included in the next versions (requires ROS etc.)
 # send a request to the poller thread to get ECat topology and synchronize with hardware
 @app.route(f'{api_base_route}/model/urdf', methods=['PUT'])
+def generateUrdfModelFromHardware():
+    srv_name = '/ec_client/get_slaves_description'
+
+    if building_mode_ON:
+        return Response(
+            response=json.dumps({"message": 'Cannot generate model from connected hardware in Building mode.'}),
+            status=409,
+            mimetype="application/json"
+    )
+
+    try:
+        rospy.wait_for_service(srv_name, 5)
+
+        try:
+            slave_description = rospy.ServiceProxy(srv_name, GetSlaveInfo) # pylint: disable=undefined-variable
+
+        except rospy.ServiceException as e:
+            app.logger.debug("Service call failed: %s",e)
+            raise e
+
+        reply = slave_description()
+        reply = reply.cmd_info.msg
+        app.logger.debug("Exit")
+
+        urdf_writer_fromHW.read_from_json(reply)
+        if urdf_writer_fromHW.verbose:
+            urdf_writer_fromHW.render_tree()
+
+        return Response(status=204)
+
+    except Exception as e:
+        # validation failed
+        app.logger.error(f'{type(e).__name__}: {e}')
+        return Response(
+            response=json.dumps({"message": f'{type(e).__name__}: {e}'}),
+            status=500,
+            mimetype="application/json"
+        )
+
+
+#TODO: to be included in the next versions (requires ROS etc.)
+# send a request to the poller thread to get ECat topology and synchronize with hardware
 @app.route('/syncHW/', methods=['POST'])
 def syncHW():
     srv_name = '/ec_client/get_slaves_description'
@@ -768,42 +791,53 @@ def getModulesMap():
     writer = get_writer()
     chains = writer.listofchains
 
-    modules={}
+    module_map={}
     for chain in chains:
         for el in chain:
-            module={}
-            module['id']= el.name
-            module['family']= el.header.family
-            module['type']= el.type
-            module['name']= el.filename
-            module['label']= el.header.label
-            if hasattr(el.header, "addons"):
-                module['addons']= el.header.addons
-            modules[el.name]= module
-    return modules
+            try:
+                module_map[el.name] = ModuleNode.as_dumpable_dict(el.header)
+            except AttributeError as e:
+                continue
+    return module_map
 
-# get list of modules of robot
-@app.route(f'{api_base_route}/model/urdf/modules', methods=['GET'])
+def getJointMap():
+    chains=[]
+
+    writer = get_writer()
+    chains = writer.get_actuated_modules_chains()
+
+    joint_map={}
+    for chain in chains:
+        for el in chain:
+            if el.type in ModuleClass.actuated_modules():
+                try:
+                    joint_name = writer.get_joint_name(el)
+                    joint_data = {
+                        'type': el.actuator_data.type,  # revolute, continuos, prismatic, etc.
+                        'value': 0.0,  # homing position
+                        'min': el.actuator_data.lower_limit,  # lower limit
+                        'max': el.actuator_data.upper_limit  # upper limit
+                    }
+                    joint_map[joint_name] = joint_data
+                except AttributeError as e:
+                    continue
+    return joint_map
+
+# get map of modules of robot: module_name -> module_data (header)
+@app.route(f'{api_base_route}/model/urdf/modules/map', methods=['GET'])
 def getModelModules():
     try:
-        # Get the right writer instance depending on the mode
-        writer = get_writer()
-
         ids = request.args.getlist('ids[]')
 
-        modules = getModulesMap()
-        filtered_modules = {}
+        module_map = getModulesMap()
+
         if len(ids)==0:
-            filtered_modules=modules # use joint name as key
+            filtered_module_map = module_map  # if no ids are provided, return all modules
         else:
-            current_parent = writer.parent_module.name
-            for id in ids:
-                writer.select_module_from_name(id, None)
-                filtered_modules[id] = modules[writer.parent_module.name]
-            writer.select_module_from_name(current_parent, None)
+            filtered_module_map = {key: module_map[key] for key in ids}  # filter modules by ids
 
         return Response(
-            response=json.dumps({'modules': filtered_modules}),
+            response=json.dumps(filtered_module_map),
             status=200,
             mimetype="application/json"
         )
@@ -816,6 +850,51 @@ def getModelModules():
             status=500,
             mimetype="application/json"
         )
+
+# get map of joints of robot: joint_name -> joint_data (type, value, min, max)
+@app.route(f'{api_base_route}/model/urdf/joints/map', methods=['GET'])
+def getModelJointMap():
+    try:
+        joint_map = getJointMap()
+
+        return Response(
+            response=json.dumps(joint_map),
+            status=200,
+            mimetype="application/json"
+        )
+
+    except Exception as e:
+        # validation failed
+        app.logger.error(f'{type(e).__name__}: {e}')
+        return Response(
+            response=json.dumps({"message": f'{type(e).__name__}: {e}'}),
+            status=500,
+            mimetype="application/json"
+        )
+
+# Get the id of the module associated to a mesh and the list of all meshes associated to a module
+@app.route(f'{api_base_route}/model/urdf/modules/meshes', methods=['GET'])
+def module_meshes_get():
+        writer = get_writer()
+
+        mesh_ids = request.args.getlist('ids[]')
+
+        if len(mesh_ids)>1:
+            return Response(
+                response=json.dumps({"message": 'Only one id at a time should be provided'}),
+                status=501,
+                mimetype="application/json"
+            )
+        elif len(mesh_ids)==1:
+            mesh_id = mesh_ids[0]
+            # From the name of the mesh clicked on the GUI select the module associated to it
+            # Also sets the selected_connector to the one associated to the mesh
+            associated_module_data = writer.select_module_from_name(mesh_id, None)
+
+        return Response(response=json.dumps({'id': associated_module_data['selected_connector'],
+                                            'meshes': associated_module_data['selected_meshes']}),
+                        status=200,
+                        mimetype="application/json")
 
 # call URDF_writer.py to remove the last module
 @app.route(f'{api_base_route}/model/urdf/modules', methods=['DELETE'])
@@ -845,8 +924,11 @@ def removeModules():
             )
         elif len(ids)==1:
             writer.select_module_from_name(ids[0], None)
-        writer.remove_module()
-        return Response(status=204)
+        father_module_data = writer.remove_module()
+        return Response(response=json.dumps({'id': father_module_data['selected_connector'],
+                                            'meshes': father_module_data['selected_meshes']}),
+                        status=200,
+                        mimetype="application/json")
 
     except Exception as e:
         # validation failed
@@ -879,17 +961,20 @@ def updateModule():
 
         app.logger.debug(req['parent'] if 'parent' in req else 'no parent')
 
-        offset = float(req['offset']['yaw'] if 'offset' in req and 'yaw' in req['offset'] else 0) # we user RPY notation
-        app.logger.debug(offset)
+        offsets = req['offset'] if 'offset' in req  else {} # we user RPY notation
+        app.logger.debug(offsets)
 
         reverse = True if 'reverse' in req and req['reverse'] == 'true' else False
         app.logger.debug(reverse)
 
         addons = req['addons'] if 'addons' in req else []
 
-        writer.update_module(angle_offset=offset, reverse=reverse, addons=addons)
+        updated_module_data = writer.update_module(offsets=offsets, reverse=reverse, addons=addons)
 
-        return Response(status=204)
+        return Response(response=json.dumps({'id': updated_module_data['selected_connector'],
+                                            'meshes': updated_module_data['selected_meshes']}),
+                        status=200,
+                        mimetype="application/json")
     except Exception as e:
         # validation failed
         app.logger.error(f'{type(e).__name__}: {e}')
@@ -918,8 +1003,11 @@ def removeConnectors():
     # Get the right writer instance depending on the mode
     writer = get_writer()
 
-    data = writer.remove_connectors()
-    return data
+    writer.remove_all_connectors()
+
+    urdf_string = writer.process_urdf()
+
+    return urdf_string
 
 # deploy the package of the built robot
 @app.route(f'{api_base_route}/model/urdf', methods=['POST'])
@@ -932,7 +1020,7 @@ def deployROSModel():
         # Get the right writer instance depending on the mode
         writer = get_writer()
 
-        writer.remove_connectors() # taken from removeConnectors(), to be removed and itergrated inside .deploy_robot()
+        writer.remove_all_connectors() # taken from removeConnectors(), to be removed and itergrated inside .deploy_robot()
 
         writeRobotURDF(builder_jm)
 
@@ -968,6 +1056,8 @@ def getModelStats():
             response["payload"]= { "label": 'Payload', "value":"{:.2f}".format(stats['payload']), "unit": 'Kg' }
         if  stats['max_reach'] and np.isfinite(stats['max_reach']):
             response["max_reach"]= { "label": 'Reach', "value": "{:.2f}".format(stats['max_reach']), "unit": 'm' }
+        if  stats['joint_modules']:
+            response["joint_modules"]= { "label": 'Joints', "value": str(stats['modules']) }
 
         return Response(
             response=json.dumps(response),
