@@ -34,22 +34,6 @@ if ec_srvs_spec is not None:
 import modular.web.mock_resources as mock_resources
 
 import argparse
-# get backend version from git
-try:
-    backend_version = subprocess.check_output(['git', 'describe', '--abbrev=1', '--always', '--dirty'], cwd=os.path.dirname(__file__)).decode().strip()
-except subprocess.CalledProcessError as e:
-    backend_version = 'Unknown'
-
-# get fronetend version from manisfest file
-frontend_version = 'Unknown'
-manifest_path = os.path.join(os.path.dirname(__file__), 'modular_frontend', 'manifest.json')
-with open(manifest_path) as f:
-    manifest_data = json.load(f)
-    if 'version' in manifest_data:
-        frontend_version = manifest_data['version']
-    elif 'version_name' in manifest_data:
-        frontend_version = manifest_data['version_name']
-
 
 parser = argparse.ArgumentParser(prog='robot-design-studio', description='Robot Design Studio server')
 
