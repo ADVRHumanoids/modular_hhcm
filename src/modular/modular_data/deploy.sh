@@ -28,12 +28,15 @@ else
     export DESTINATION_FOLDER="$HOME/albero_xbot2_ws/robots"
 fi
 
+QUIET='-q'
+
 # read arguments
 while test $# -gt 0
 do
     case "$1" in
         -[vV] | --verbose) # add verbosity
             VERBOSITY='-v'
+            unset QUIET
             printf "Verbose mode ${GREEN}ON${NC}\n"
             ;;
         -[dD] | --destination-folder) # add destination folder
@@ -153,8 +156,8 @@ printf "${GREEN}[3/9] Deployed cartesio configs${NC}\n"
 # Deploy launch files
 mkdir -p ./launch
 # - cartesio.launch
-cp $SCRIPT_ROOT/launch/cartesio.launch ./launch/ModularBot_cartesio.launch $VERBOSITY || end_exec
-sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./launch/ModularBot_cartesio.launch
+#cp $SCRIPT_ROOT/launch/cartesio.launch ./launch/ModularBot_cartesio.launch $VERBOSITY || end_exec
+#sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./launch/ModularBot_cartesio.launch
 # - ModularBot_ik.launch
 cp $SCRIPT_ROOT/launch/ModularBot_ik.launch ./launch/ModularBot_ik.launch $VERBOSITY || end_exec
 sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./launch/ModularBot_ik.launch
@@ -183,7 +186,7 @@ printf "${GREEN}[4/9] Deployed ModularBot launch files${NC}\n"
 #cp -TRf $SCRIPT_ROOT/moveit_launch ./launch $VERBOSITY || end_exec
 #printf "${GREEN}[4.5/9] Deployed moveit configs and launch files${NC}\n"
 
-# # Deply meshes 
+# # Deply meshes
 # #NOTE: currently meshes are not deployed and instead taken from the modular_resources or concert_resources packages
 # mkdir -p -p ./database/${package_name}_fixed_base
 # cp -TRf $SCRIPT_ROOT/../modular_resources/models ./database $VERBOSITY || end_exec
@@ -214,9 +217,10 @@ sed -i -e "s+/tmp/ModularBot+package://${package_name}+g" ./urdf/ModularBot.gaze
 # sed -i -e "s+package://modular/src/modular/modular_resources/models/modular/meshes+package://${package_name}/database/modular/meshes+g" ./urdf/ModularBot.gazebo.urdf
 printf "${GREEN}[8/9] Deployed URDF${NC}\n"
 
-# # Deploy gazebo model
-# # - modular_world.sdf
-# cp $SCRIPT_ROOT/database/ModularBot_fixed_base/ModularBot_world.sdf ./database/${package_name}_fixed_base/${package_name}_world.sdf $VERBOSITY || end_exec
+# Deploy gazebo model
+mkdir -p ./gazebo
+# - modular_world.sdf
+cp $SCRIPT_ROOT/database/ModularBot_fixed_base/ModularBot_world.sdf ./gazebo/${package_name}_world.sdf $VERBOSITY || end_exec
 # # - manifest.xml
 # cp $SCRIPT_ROOT/database/ModularBot_fixed_base/manifest.xml ./database/${package_name}_fixed_base/manifest.xml $VERBOSITY || end_exec
 # sed -i -e "s+PACKAGE_NAME+${package_name}+g" ./database/${package_name}_fixed_base/manifest.xml
@@ -228,9 +232,15 @@ printf "${GREEN}[8/9] Deployed URDF${NC}\n"
 # #     $DESTINATION_FOLDER/${package_name}/urdf/ModularBot.urdf > \
 # #     $DESTINATION_FOLDER/${package_name}/database/${package_name}_fixed_base/${package_name}.sdf \
 # #     || end_exec
-# printf "${GREEN}[9/9] Deployed gazebo model${NC}\n"
+printf "${GREEN}[9/9] Deployed gazebo model${NC}\n"
+
+# Deployment completed
+printf "\n${GREEN}[ \xE2\x9C\x94 ] Package ${YELLOW}${package_name}${GREEN} succesfully deployed into ${YELLOW}$DESTINATION_FOLDER${NC}\n"
+
+# create Zip for download
+zip -r $QUIET $VERBOSITY /tmp/${package_name}.zip ./* || end_exec
+printf "${GREEN}[ \xE2\x9C\x94 ] Generated temporary zip file ${YELLOW}/tmp/${package_name}.zip${NC}\n\n"
 
 # All done
 popd > /dev/null #hide print
-printf "\n${GREEN}[ \xE2\x9C\x94 ] Package ${YELLOW}${package_name}${GREEN} succesfully deployed into ${YELLOW}$DESTINATION_FOLDER${NC}\n\n"
-unset DESTINATION_FOLDER VERBOSITY SCRIPT_ROOT RED PURPLE GREEN ORANGE YELLOW NC package_name
+unset DESTINATION_FOLDER VERBOSITY QUIET SCRIPT_ROOT RED PURPLE GREEN ORANGE YELLOW NC package_name

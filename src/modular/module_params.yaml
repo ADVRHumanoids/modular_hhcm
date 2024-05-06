@@ -34,12 +34,18 @@
     1: # base cube module
         2: #size PINO flange
             0: master_cube.yaml # rev 0
+    2: # non-structural base cube module / albero-box
+        0: # no size associated
+            0: master_cube_non_structural.yaml # rev 0
     3: # mobile base pwrboard
         0: # no size associated
             0: concert/mobile_platform_concert.json
     4: # mobile base ecat hub
         0: #no size associated
-            0: concert/mobile_platform_concert.json
+            0: concert/mobile_platform_concert_non_structural.json
+    5: # Y module (torso)
+        4: #size CONCERT arm flange
+            0: concert/module_Y_torso_concert.json
     # ...
 
 3: #end effector module
@@ -66,26 +72,31 @@
             0: module_link_elbow_90.yaml # rev 0
     3: #passive link 10 cm
         2: #size PINO flange
-            0: module_link_straight_10_fraunhofer.yaml
+            0: module_link_straight_100_fraunhofer.json
         4: #size CONCERT arm flange
-            0: concert/module_link_straight_10_concert.json
+            0: concert/module_link_straight_100_concert.json
     4: #passive link 20 cm
         2: #size PINO flange
-            0: concert/module_link_straight_20_fraunhofer.json
+            0: module_link_straight_200_fraunhofer.json
         4: #size CONCERT arm flange
-            0: concert/module_link_straight_20_concert.json
+            0: concert/module_link_straight_200_concert.json
     5: #passive link 50 cm
         2: #size PINO flange
-            0: concert/module_link_straight_50_fraunhofer.json
+            0: module_link_straight_500_fraunhofer.json
         4: #size CONCERT arm flange
-            0: concert/module_link_straight_50_concert.json
+            0: concert/module_link_straight_500_concert.json
 
     6: #passive link 40 cm
         4: #size CONCERT arm flange
-            0: concert/module_link_straight_40_concert.json
+            0: concert/module_link_straight_400_concert.json
     7: #passive link 30 cm
         4: #size CONCERT arm flange
-            0: concert/module_link_straight_30_concert.json
+            0: concert/module_link_straight_300_concert.json
+
+    8: #passive link elbow 45°
+        4: #size CONCERT arm flange
+            0: concert/module_link_elbow_45_concert.json
+
     # ...
 
 5: #wheel module

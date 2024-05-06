@@ -1,0 +1,65 @@
+name: Open PR for new modular_frontend version
+# see https://github.com/orgs/community/discussions/26286#discussioncomment-3251208
+# on:
+#   create:
+#     branches:
+#       - 'ci/deps/modular_frontend-v[0-9]+.[0-9]+.[0-9]+*'
+on: create
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    name: Create PR to update modular_frontend
+    # see https://github.com/orgs/community/discussions/26771#discussioncomment-3253330
+    if: startsWith(github.ref_name, 'ci/deps/modular_frontend-')
+    env:
+      TARGET_BRANCH: feat/linfization
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up git
+        run: |
+          git config --global user.name $USER_NAME
+          git config --global user.email $USER_EMAIL
+        env:
+          # see https://github.com/orgs/community/discussions/26560#discussioncomment-3531273
+          USER_NAME: 'github-actions[bot]'
+          USER_EMAIL: '41898282+github-actions[bot]@users.noreply.github.com'
+
+      # - name: Updated static docs
+      #   run: |
+      #     RELEASE_VERSION=$(echo $GITHUB_REF_NAME | sed -e s/.*modular_frontend-//)
+      #     sed -i '/version/c\  \"version\" : \"'RELEASE_VERSION'\",' package.json
+      #     npm ci
+      #     npm run build:swagger
+      #     git add docs
+      #     git commit -m "📝 docs(Swagger): update static swagger docs"
+
+      # - name: Commit version bump
+      #   run: |
+      #     RELEASE_VERSION=$(echo $GITHUB_REF_NAME | sed -e s/.*modular_frontend-//)
+      #     sed -i '/version/c\  \"version\" : \"'RELEASE_VERSION'\",' package.json
+      #     git add package.json
+      #     git commit -m "📦 chore: bump version to RELEASE_VERSION"
+
+      # - name: Push changes
+      #   run: |
+      #     git push -u origin HEAD
+
+      - name: Open new PR
+        run: |
+          RELEASE_VERSION=$(echo $GITHUB_REF_NAME | sed -e s/.*modular_frontend-//)
+          gh pr create \
+          --title "⬆️ chore(gui): Bump modular_frontend to $RELEASE_VERSION" \
+          --body-file ./src/modular/web/modular_frontend/frontend_release_notes/CHANGELOG.$RELEASE_VERSION.md \
+          --base ${{ env.TARGET_BRANCH }} \
+          --label refactor  \
+          --assignee "m-tartari" \
+          --reviewer "EdoardoRomiti"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cleanup ssh configs
+        run: |
+          rm -rf ~/.ssh

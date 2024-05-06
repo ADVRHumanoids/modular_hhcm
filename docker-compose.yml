@@ -1,0 +1,26 @@
+version: "3.8"
+services:
+
+  modular:
+    image: "${TARGET_IMAGE}"
+    container_name: modular
+    restart: 'unless-stopped'
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      ssh:
+        # mount the default ssh agent
+        - default
+      args:
+        - BASE_IMAGE
+        - RECIPES_BRANCH
+        - RECIPES_PROVIDER
+        - FOREST_WS
+        - USER_PWD
+        - MODE
+        - JOBS
+    ports:
+      - "5003:5003"
+    volumes:
+      # We might want to change the local path of the web_config.ini file
+      - ./src/modular/web/web_config.ini:${FOREST_WS}/src/modular/src/modular/web/web_config.ini

@@ -9,36 +9,10 @@ import json
 import sys
 import os
 import tf
-from enum import Enum
+
 import anytree
 
-from modular.utils import ResourceFinder
-
-class ModuleDescriptionFormat(Enum):
-    YAML = 1  # YAML format used internally in HHCM
-    JSON = 2  # JSON format used for the CONCERT project  
-
-class KinematicsConvention(str, Enum):
-    """Kinematic convention used to define the rototranslation between two modules"""
-    DH_EXT = 'DH_ext'  # extended Denavit-Hartenberg convention. See https://mediatum.ub.tum.de/doc/1280464/file.pdf
-    URDF = 'urdf'  # URDF convention
-    AFFINE = 'affine_tf_matrix'  # Affine trasformation matrix convention
-
-class ModuleType(str, Enum):
-    """Type of module"""
-    LINK = 'link'
-    JOINT = 'joint'
-    CUBE = 'cube'
-    WHEEL = 'wheel'
-    TOOL_EXCHANGER = 'tool_exchanger'
-    GRIPPER = 'gripper'
-    MOBILE_BASE = 'mobile_base'
-    BASE_LINK = 'base_link'
-    SIZE_ADAPTER = 'size_adapter'
-    SIMPLE_EE = 'simple_ee'
-    END_EFFECTOR = 'end_effector'
-    DRILL = 'drill'
-    DAGANA = 'dagana'
+from modular.enums import ModuleDescriptionFormat, KinematicsConvention, ModuleType, ModuleClass
 
 # import collections.abc
 def update_nested_dict(d, u):
@@ -105,7 +79,9 @@ class JSONInterpreter(object):
 
     def type_dispatcher(self, d):
         """Dispatch the parsing of the dictionary d according to the module type"""
-        if self.owner.type in {ModuleType.LINK, ModuleType.GRIPPER, ModuleType.TOOL_EXCHANGER, ModuleType.SIZE_ADAPTER, ModuleType.END_EFFECTOR, ModuleType.DRILL}:
+        header_obj = getattr(self.owner, "header")
+        update_nested_dict(header_obj.__dict__, d['header'])
+        if self.owner.type in ModuleClass.link_modules() | ModuleClass.end_effector_modules() - {ModuleType.DAGANA}:
             if len(d['joints']) != 0:
                 raise ValueError('A link must have no joints')
             if len(d['bodies']) != 1:
@@ -136,7 +112,7 @@ class JSONInterpreter(object):
                 self.owner.size_in = d['bodies'][0]['connectors'][0]['size']
             else:
                 self.owner.flange_size = output_flange_size 
-        elif self.owner.type in {ModuleType.JOINT, ModuleType.WHEEL}:
+        elif self.owner.type in ModuleClass.joint_modules():
             if len(d['joints']) != 1:
                 raise ValueError('A joint must have exactly one joint')
             if len(d['bodies']) != 2:
@@ -185,7 +161,7 @@ class JSONInterpreter(object):
             self.owner.CentAcESC = Module.Attribute(dict_joint['control_parameters']['xbot'])
             # xbot_gz
             self.owner.xbot_gz = Module.Attribute(dict_joint['control_parameters']['xbot_gz'])
-        elif self.owner.type in {ModuleType.CUBE, ModuleType.MOBILE_BASE}:
+        elif self.owner.type in ModuleClass.hub_modules():
             if len(d['joints']) != 0:
                 raise ValueError('A hub must have no joints')
             if len(d['bodies']) != 1:
@@ -469,9 +445,9 @@ class Module(object):
             pass
 
     def get_hub_connections_tf(self, reverse):
-        """Computes the homogeneous transformation matrices for the 4 cube connections"""
+        """Computes the homogeneous transformation matrices for the 4 hub connections"""
         origin, xaxis, yaxis, zaxis = (0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1)
-        max_num_con = 10
+        max_num_con = 20
 
         for i in range(1, max_num_con):
             if hasattr(self.kinematics, "connector_{}".format(i)):
@@ -528,14 +504,15 @@ class Module(object):
             'joint': self.get_proximal_distal_matrices,
             'wheel': self.get_proximal_distal_matrices,
             'link': self.get_homogeneous_matrix,
+            'socket': self.get_homogeneous_matrix,
             'size_adapter': self.get_homogeneous_matrix,
             'tool_exchanger': self.get_homogeneous_matrix,
             'end_effector': self.get_homogeneous_matrix,
             'drill': self.get_homogeneous_matrix,
             'dagana': lambda reverse: None,
             'gripper': self.get_homogeneous_matrix,
-            'cube': self.get_hub_connections_tf, #  self.get_cube_connections_tf,
-            'mobile_base': self.get_hub_connections_tf, #  self.get_mobile_base_connections_tf,
+            'cube': self.get_hub_connections_tf,
+            'mobile_base': self.get_hub_connections_tf,
             'base_link': tf.transformations.identity_matrix()
         }
         return switcher.get(x, 'Invalid type')(reverse)
@@ -606,11 +583,20 @@ def module_from_yaml(filename, father=None, yaml_template=None, reverse=False):
             print(exc)
     # Create an instance of a ModuleNode class from the dictionary obtained from YAML
     result = ModuleNode(data, filename, format=ModuleDescriptionFormat.YAML, parent=father, template_dictionary=template_data)
-    # result.set_type(filename)
     result.get_transform(reverse)
     return result 
 
-
+#
+def module_from_yaml_dict(yaml_dict, father=None, yaml_template_dict=None, reverse=False):
+    """Function parsing YAML dictionary describing a generic module and returning an instance of a Module class"""
+    if yaml_template_dict:
+        template_dict = yaml_template_dict
+    else:
+        template_dict = {}
+    # Create an instance of a ModuleNode class from the dictionary obtained from YAML
+    result = ModuleNode(yaml_dict, yaml_dict['header']['name'], format=ModuleDescriptionFormat.YAML, parent=father, template_dictionary=template_dict)
+    result.get_transform(reverse)
+    return result
 # 
 def module_from_json(filename, father=None, yaml_template=None, reverse=False):
     """Function parsing JSON file describing a generic module and returning an instance of a Module class"""
@@ -632,6 +618,17 @@ def module_from_json(filename, father=None, yaml_template=None, reverse=False):
     result.get_transform(reverse)
     return result 
 
+#
+def module_from_json_dict(json_dict, father=None, yaml_template_dict=None, reverse=False):
+    """Function parsing JSON dictionary describing a generic module and returning an instance of a Module class"""
+    if yaml_template_dict:
+        template_dict = yaml_template_dict
+    else:
+        template_dict = {}
+    # Create an instance of a ModuleNode class from the dictionary obtained from JSON
+    result = ModuleNode(json_dict, json_dict['header']['name'], format=ModuleDescriptionFormat.JSON, parent=father, template_dictionary=template_dict)
+    result.get_transform(reverse)
+    return result
 
 def main():
     # module = module_from_yaml(sys.argv[1], None, False)

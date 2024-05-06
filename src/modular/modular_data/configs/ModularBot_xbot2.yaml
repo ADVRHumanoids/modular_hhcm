@@ -39,34 +39,9 @@ xbotcore_plugins:
   # different names and possibly different parameters
   homing:
     thread: rt_main
-    type: homing_example
+    type: homing
     params:
       time: { value: 5, type: double }
-  
-  cartesio_ik:
-        thread: rt_main
-        type: cartesio_rt
-        params:
-            problem_description:
-                value: $(rospack find ModularBot)/cartesio/ModularBot_cartesio_IK_config.yaml
-                type: file
-            solver:
-                value: OpenSot
-                type: string
-            enable_feedback:
-                value: false
-                type: bool
-    
-  cartesio_imp: 
-    thread: rt_main 
-    type: albero_cartesio_rt
-    params:
-      problem_description:
-        value: $(rospack find ModularBot)/cartesio/ModularBot_cartesio_Interaction_config.yaml
-        type: file
-      solver: {value: AlberoImpedance, type: string}
-      enable_feedback: {value: true, type: bool}
-      fc_map: {value: {grav: 0.2, dfl: 0.9}, type: map<double>}
 
 # additional parameters that don't relate to any plugin
 xbotcore_param:
