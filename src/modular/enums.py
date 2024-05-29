@@ -26,14 +26,15 @@ class ModuleType(str, Enum):
     DRILL = 'drill'
     DAGANA = 'dagana'
     SOCKET = 'socket'
+    INTERFACE_ADAPTER = 'interface_adapter'
 
 class ModuleClass(set, Enum):
     """Class of module"""
-    LINKS = {ModuleType.LINK, ModuleType.SIZE_ADAPTER, ModuleType.BASE_LINK, ModuleType.SOCKET}
+    LINKS = {ModuleType.LINK, ModuleType.SIZE_ADAPTER, ModuleType.BASE_LINK, ModuleType.SOCKET, ModuleType.INTERFACE_ADAPTER}
     JOINTS = {ModuleType.JOINT, ModuleType.WHEEL}
     HUBS = {ModuleType.CUBE, ModuleType.MOBILE_BASE}
     END_EFFECTORS = {ModuleType.GRIPPER, ModuleType.TOOL_EXCHANGER, ModuleType.END_EFFECTOR, ModuleType.DRILL, ModuleType.DAGANA, ModuleType.SIMPLE_EE}
-    PASSIVE_MODULES = {ModuleType.SIZE_ADAPTER, ModuleType.BASE_LINK, ModuleType.END_EFFECTOR, ModuleType.SIMPLE_EE, ModuleType.SOCKET}
+    PASSIVE_MODULES = {ModuleType.SIZE_ADAPTER, ModuleType.BASE_LINK, ModuleType.END_EFFECTOR, ModuleType.SIMPLE_EE, ModuleType.SOCKET, ModuleType.INTERFACE_ADAPTER}
     # 
     @classmethod
     def link_modules(cls):
