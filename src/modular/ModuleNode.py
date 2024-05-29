@@ -498,24 +498,18 @@ class Module(object):
     # 
     def get_transform(self, reverse):
         """Computes the correct transformation depending on the module type"""
-        x = self.type
-        #print('module_type', x)
-        switcher = {
-            'joint': self.get_proximal_distal_matrices,
-            'wheel': self.get_proximal_distal_matrices,
-            'link': self.get_homogeneous_matrix,
-            'socket': self.get_homogeneous_matrix,
-            'size_adapter': self.get_homogeneous_matrix,
-            'tool_exchanger': self.get_homogeneous_matrix,
-            'end_effector': self.get_homogeneous_matrix,
-            'drill': self.get_homogeneous_matrix,
-            'dagana': lambda reverse: None,
-            'gripper': self.get_homogeneous_matrix,
-            'cube': self.get_hub_connections_tf,
-            'mobile_base': self.get_hub_connections_tf,
-            'base_link': tf.transformations.identity_matrix()
-        }
-        return switcher.get(x, 'Invalid type')(reverse)
+        if self.type in ModuleClass.joint_modules():
+            return self.get_proximal_distal_matrices(reverse)
+        if self.type in ModuleClass.hub_modules():
+            return self.get_hub_connections_tf(reverse)
+        if self.type in ModuleClass.link_modules() | ModuleClass.end_effector_modules() - {ModuleType.DAGANA, ModuleType.BASE_LINK}:
+            return self.get_homogeneous_matrix(reverse)
+        if self.type in {ModuleType.DAGANA}:
+            return lambda reverse: None
+        if self.type in {ModuleType.BASE_LINK}: 
+            return tf.transformations.identity_matrix()
+        else:
+            raise ValueError("Unknown module type")
 
 # 
 class ModuleNode(Module, anytree.NodeMixin):
