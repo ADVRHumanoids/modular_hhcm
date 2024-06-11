@@ -18,7 +18,7 @@ from modular.enums import ModuleDescriptionFormat, KinematicsConvention, ModuleT
 def update_nested_dict(d, u):
     for k, v in u.items():
         if isinstance(v, dict):
-            d[k] = update_nested_dict(d.get(k, {}), v)
+            d[k] = update_nested_dict(as_dumpable_dict(d.get(k, {})), v)
         else:
             d[k] = v
     return d
