@@ -2720,7 +2720,7 @@ class UrdfWriter:
 
             # the dagana gets added to the chain. it's needed in the joint map and in the config!
             # self.add_to_chain(new_Link)
-            self.control_plugin.add_joint(new_Link.dagana_joint_name)
+            self.control_plugin.add_joint(new_Link.dagana_joint_name, control_params=new_Link.xbot_gz if hasattr(new_Link, 'xbot_gz') else None)                           
 
             return
 
