@@ -1055,6 +1055,8 @@ class UrdfWriter:
         self.set_floating_base(floating_base)
 
         if logger is None:
+            FORMAT = '[%(levelname)s] [%(module)s]:  %(message)s'
+            logging.basicConfig(level=logging.INFO, format=FORMAT)
             self.logger = logging.getLogger('URDF_writer')
         else:
             self.logger = logger
