@@ -161,10 +161,6 @@ class Plugin:
         pass
 
     @abstractmethod
-    def add_hand_group_to_srdf(self):
-        pass
-
-    @abstractmethod
     def add_wheel_to_srdf(self):
         pass
 
@@ -234,7 +230,6 @@ class Plugin:
                                                        name=joint_module.name + '_fixed_joint'))
                 elif joint_module.type is ModuleType.GRIPPER:
                     hand_name = "hand" + self.urdf_writer.find_chain_tag(joints_chain)
-                    self.add_hand_group_to_srdf(root, joint_module.name, hand_name)
                     end_effectors += filter(lambda item: item is not None, [self.add_gripper_to_srdf(root, joint_module.name, hand_name, group_name)])
 
         xmlstr = xml.dom.minidom.parseString(ET.tostring(root)).toprettyxml(indent="   ")
@@ -312,14 +307,6 @@ class RosControlPlugin(Plugin):
 
     # SRDF
     def add_gripper_to_srdf(self, root, gripper_name, hand_name, parent_group_name):
-        ET.SubElement(root, "end-effector", name="TCP", parent_link="TCP_"+gripper_name,
-                      group=hand_name, parent_group=parent_group_name)
-        # add arm_hand group
-        arm_hand_group = ET.SubElement(root, "group", name="arm_" + hand_name)
-        ET.SubElement(arm_hand_group, "group", name=parent_group_name)
-        ET.SubElement(arm_hand_group, "group", name=hand_name)
-
-    def add_hand_group_to_srdf(self, root, gripper_name, hand_name):
         hand_group = ET.SubElement(root, "group", name=hand_name)
         ET.SubElement(hand_group, "link", name=gripper_name)
         ET.SubElement(hand_group, "link", name=gripper_name+"_leftfinger")
@@ -340,7 +327,14 @@ class RosControlPlugin(Plugin):
         ET.SubElement(root, "disable_collisions", link1="TCP_"+gripper_name, link2=gripper_name+"_leftfinger",reason="Default")
         ET.SubElement(root, "disable_collisions", link1=gripper_name + "_rightfinger", link2=gripper_name+"_leftfinger", reason="Default")
 
-        return hand_group
+        endeffector_group = ET.SubElement(root, "end-effector", name="TCP", parent_link="TCP_"+gripper_name,
+                      group=hand_name, parent_group=parent_group_name)
+        # add arm_hand group
+        arm_hand_group = ET.SubElement(root, "group", name="arm_" + hand_name)
+        ET.SubElement(arm_hand_group, "group", name=parent_group_name)
+        ET.SubElement(arm_hand_group, "group", name=hand_name)
+
+        return endeffector_group
 
     def add_wheel_to_srdf(self, wheel_group_name, wheel_name):
         return None
@@ -434,7 +428,6 @@ class RosControlPlugin(Plugin):
                     end_effectors.append(ET.SubElement(tool_exchanger_group, 'joint',
                                                        name=joint_module.name + '_fixed_joint'))
                 elif joint_module.type is ModuleType.GRIPPER:
-                    self.add_hand_group_to_srdf(root, joint_module.name, hand_name)
                     # groups_in_hands_group.append(ET.SubElement(hands_group, 'group', name=hand_name))
                     end_effectors += filter(lambda item: item is not None, [self.add_gripper_to_srdf(root, joint_module.name, hand_name, group_name)])
                     controller_list.append(OrderedDict([('name', 'fake_' + hand_name + '_controller'), ('joints', [])]))
@@ -539,9 +532,6 @@ class XBotCorePlugin(Plugin):
     # SRDF
     def add_gripper_to_srdf(self, root, gripper_name, hand_name, parent_group_name):
         return None
-
-    def add_hand_group_to_srdf(self, root, gripper_name, hand_name):
-        pass
 
     def add_wheel_to_srdf(self, wheel_group_name, wheel_name):
         return None
