@@ -177,7 +177,6 @@ class Plugin:
 
         active_modules_chains = []
 
-        groups = []
         chains = []
         joints = []
         wheels = []
@@ -188,30 +187,48 @@ class Plugin:
         active_modules_chains = self.urdf_writer.get_actuated_modules_chains()
         self.urdf_writer.print(active_modules_chains)
 
-        for idx, joints_chain in enumerate(active_modules_chains):
-            group_name = "chain" + self.urdf_writer.find_chain_tag(joints_chain)
-            groups.append(ET.SubElement(root, 'group', name=group_name))
-            base_link = self.urdf_writer.find_chain_base_link(joints_chain)
-            tip_link = self.urdf_writer.find_chain_tip_link(joints_chain)
-            chains.append(ET.SubElement(groups[idx], 'chain', base_link=base_link, tip_link=tip_link))
+        # # This should be added first so they appear first in the srdf file. This is important for the XBotInterface srdf parser!
+        # for idx, joints_chain in enumerate(active_modules_chains):
+        #     group_name = "chain" + self.urdf_writer.find_chain_tag(joints_chain)
+        #     groups.append(ET.Element('group', name=group_name))
+        #     base_link = self.urdf_writer.find_chain_base_link(joints_chain)
+        #     tip_link = self.urdf_writer.find_chain_tip_link(joints_chain)
+        #     chains.append(ET.SubElement(groups[idx], 'chain', base_link=base_link, tip_link=tip_link))
+        #     root.append(groups[idx])
         
-        # Create groups for chains, arms and wheels. Also 'group_state' for homing
+        # Create groups for chains, arms and wheels. Also 'home_group_state' for homing
         chains_group = ET.SubElement(root, 'group', name="chains")
         arms_group = ET.SubElement(root, 'group', name="arms")
+        hands_group = ET.SubElement(root, 'group', name="hands")
         wheels_group = self.add_wheel_group_to_srdf(root, "wheels")
-        group_state = ET.SubElement(root, 'group_state', name="home", group="chains")
+        home_group_state = ET.SubElement(root, 'group_state', name="home", group="chains")
 
         for joints_chain in active_modules_chains:
+            # create chain group and add as child the chain element (base_link, tip_link)
             group_name = "chain" + self.urdf_writer.find_chain_tag(joints_chain)
-            groups_in_chains_group.append(ET.SubElement(chains_group, 'group', name=group_name))
+            chain_group = ET.Element('group', name=group_name)
+            chains.append(chain_group)
+            base_link = self.urdf_writer.find_chain_base_link(joints_chain)
+            tip_link = self.urdf_writer.find_chain_tip_link(joints_chain)
+            ET.SubElement(chain_group, 'chain', base_link=base_link, tip_link=tip_link)
+            
             for joint_module in joints_chain:
                 # add joints chain to srdf end-effectors group
                 if joint_module.type in ModuleClass.end_effector_modules():
                     groups_in_arms_group.append(ET.SubElement(arms_group, 'group', name=group_name))
                     # TODO: add end-effector module to srdf end-effectors group. To be fixed for all end-effector types.
+                    hand_name = "hand" + self.urdf_writer.find_chain_tag(joints_chain)
+                    ET.SubElement(hands_group, 'group', name=hand_name)
+                    end_effectors += filter(lambda item: item is not None, [self.add_gripper_to_srdf(et_root=None,
+                                                                                                     module=joint_module,
+                                                                                                     gripper_name=None,
+                                                                                                     hand_name=hand_name,
+                                                                                                     parent_group_name=None)])
+                
                 # add wheel module to srdf wheels group
                 if joint_module.type is ModuleType.WHEEL:
                     wheels += filter(lambda item: item is not None, [self.add_wheel_to_srdf(wheels_group, joint_module.name)])
+                
                 # add homing state for each joint-like module. Also create custom groups for some end-effectors
                 if joint_module.type in ModuleClass.joint_modules() | {ModuleType.DAGANA}:
                     joint_name = self.urdf_writer.get_joint_name(joint_module)
@@ -219,7 +236,7 @@ class Plugin:
                         homing_value = float(builder_joint_map[joint_name])
                     else:
                         homing_value = 0.1
-                    joints.append(ET.SubElement(group_state, 
+                    joints.append(ET.SubElement(home_group_state, 
                                                 'joint', 
                                                 name=joint_name, 
                                                 value=str(homing_value)))
@@ -228,9 +245,23 @@ class Plugin:
                     end_effectors.append(ET.SubElement(tool_exchanger_group, 
                                                        'joint',
                                                        name=joint_module.name + '_fixed_joint'))
-                elif joint_module.type is ModuleType.GRIPPER:
-                    hand_name = "hand" + self.urdf_writer.find_chain_tag(joints_chain)
-                    end_effectors += filter(lambda item: item is not None, [self.add_gripper_to_srdf(root, joint_module.name, hand_name, group_name)])
+                # elif joint_module.type is ModuleType.GRIPPER:
+                #     hand_name = "hand" + self.urdf_writer.find_chain_tag(joints_chain)
+                #     end_effectors += filter(lambda item: item is not None, [self.add_gripper_to_srdf(root, joint_module.name, hand_name, group_name)])
+
+        index = 0
+        for idx, group in enumerate(chains):
+            # insert ET.Element group in root at index idx (at the top of srdf xml)
+            root.insert(idx, group)
+            # add chain group to srdf chains group
+            groups_in_chains_group.append(ET.SubElement(chains_group, 'group', name=group.attrib['name']))
+            # save last index
+            index = idx
+        for idx, group in enumerate(end_effectors):
+            # insert ET.Element group in root at index idx (at the top of srdf xml)
+            root.insert(index + idx + 1, group)
+            # add chain group to srdf chains group
+            groups_in_chains_group.append(ET.SubElement(chains_group, 'group', name=group.attrib['name']))
 
         xmlstr = xml.dom.minidom.parseString(ET.tostring(root)).toprettyxml(indent="   ")
 
@@ -306,31 +337,32 @@ class RosControlPlugin(Plugin):
                 self.urdf_writer.root.remove(transmission)
 
     # SRDF
-    def add_gripper_to_srdf(self, root, gripper_name, hand_name, parent_group_name):
-        hand_group = ET.SubElement(root, "group", name=hand_name)
-        ET.SubElement(hand_group, "link", name=gripper_name)
-        ET.SubElement(hand_group, "link", name=gripper_name+"_leftfinger")
-        ET.SubElement(hand_group, "link", name=gripper_name+"_rightfinger")
-        ET.SubElement(hand_group, "joint", name=gripper_name+"_finger_joint1")
-        ET.SubElement(hand_group, "passive_joint", name=gripper_name+"_finger_joint2")
-        open_state = ET.SubElement(root, "group_state", name="open", group=hand_name)
-        ET.SubElement(open_state, "joint", name=gripper_name+"_finger_joint1", value="0.05")
-        ET.SubElement(open_state, "joint", name=gripper_name+"_finger_joint2", value="0.05")
-        close_state = ET.SubElement(root, "group_state", name="close", group=hand_name)
-        ET.SubElement(close_state, "joint", name=gripper_name+"_finger_joint1", value="0.0")
-        ET.SubElement(close_state, "joint", name=gripper_name+"_finger_joint2", value="0.0")
-        # remove collisions
-        ET.SubElement(root, "disable_collisions", link1=gripper_name, link2="TCP_"+gripper_name, reason="Adjacent")
-        ET.SubElement(root, "disable_collisions", link1=gripper_name, link2=gripper_name+"_leftfinger", reason="Adjacent")
-        ET.SubElement(root, "disable_collisions", link1=gripper_name, link2=gripper_name+"_rightfinger", reason="Adjacent")
-        ET.SubElement(root, "disable_collisions", link1="TCP_"+gripper_name, link2=gripper_name+"_rightfinger", reason="Default")
-        ET.SubElement(root, "disable_collisions", link1="TCP_"+gripper_name, link2=gripper_name+"_leftfinger",reason="Default")
-        ET.SubElement(root, "disable_collisions", link1=gripper_name + "_rightfinger", link2=gripper_name+"_leftfinger", reason="Default")
+    def add_gripper_to_srdf(self, et_root, module, gripper_name, hand_name, parent_group_name):
+        hand_group = ET.SubElement(et_root, "group", name=hand_name)
+        if module.type is ModuleType.GRIPPER:
+            ET.SubElement(hand_group, "link", name=gripper_name)
+            ET.SubElement(hand_group, "link", name=gripper_name+"_leftfinger")
+            ET.SubElement(hand_group, "link", name=gripper_name+"_rightfinger")
+            ET.SubElement(hand_group, "joint", name=gripper_name+"_finger_joint1")
+            ET.SubElement(hand_group, "passive_joint", name=gripper_name+"_finger_joint2")
+            open_state = ET.SubElement(et_root, "group_state", name="open", group=hand_name)
+            ET.SubElement(open_state, "joint", name=gripper_name+"_finger_joint1", value="0.05")
+            ET.SubElement(open_state, "joint", name=gripper_name+"_finger_joint2", value="0.05")
+            close_state = ET.SubElement(et_root, "group_state", name="close", group=hand_name)
+            ET.SubElement(close_state, "joint", name=gripper_name+"_finger_joint1", value="0.0")
+            ET.SubElement(close_state, "joint", name=gripper_name+"_finger_joint2", value="0.0")
+            # remove collisions
+            ET.SubElement(et_root, "disable_collisions", link1=gripper_name, link2="TCP_"+gripper_name, reason="Adjacent")
+            ET.SubElement(et_root, "disable_collisions", link1=gripper_name, link2=gripper_name+"_leftfinger", reason="Adjacent")
+            ET.SubElement(et_root, "disable_collisions", link1=gripper_name, link2=gripper_name+"_rightfinger", reason="Adjacent")
+            ET.SubElement(et_root, "disable_collisions", link1="TCP_"+gripper_name, link2=gripper_name+"_rightfinger", reason="Default")
+            ET.SubElement(et_root, "disable_collisions", link1="TCP_"+gripper_name, link2=gripper_name+"_leftfinger",reason="Default")
+            ET.SubElement(et_root, "disable_collisions", link1=gripper_name + "_rightfinger", link2=gripper_name+"_leftfinger", reason="Default")
 
-        endeffector_group = ET.SubElement(root, "end-effector", name="TCP", parent_link="TCP_"+gripper_name,
+        endeffector_group = ET.SubElement(et_root, "end-effector", name="TCP", parent_link="TCP_"+gripper_name,
                       group=hand_name, parent_group=parent_group_name)
         # add arm_hand group
-        arm_hand_group = ET.SubElement(root, "group", name="arm_" + hand_name)
+        arm_hand_group = ET.SubElement(et_root, "group", name="arm_" + hand_name)
         ET.SubElement(arm_hand_group, "group", name=parent_group_name)
         ET.SubElement(arm_hand_group, "group", name=hand_name)
 
@@ -429,7 +461,11 @@ class RosControlPlugin(Plugin):
                                                        name=joint_module.name + '_fixed_joint'))
                 elif joint_module.type is ModuleType.GRIPPER:
                     # groups_in_hands_group.append(ET.SubElement(hands_group, 'group', name=hand_name))
-                    end_effectors += filter(lambda item: item is not None, [self.add_gripper_to_srdf(root, joint_module.name, hand_name, group_name)])
+                    end_effectors += filter(lambda item: item is not None, [self.add_gripper_to_srdf(et_root=root, 
+                                                                                                     module=joint_module,
+                                                                                                     gripper_name=joint_module.name, 
+                                                                                                     hand_name=hand_name, 
+                                                                                                     parent_group_name=group_name)])
                     controller_list.append(OrderedDict([('name', 'fake_' + hand_name + '_controller'), ('joints', [])]))
                     controller_list[idx+1]['joints'].append(joint_module.name+'_finger_joint1')
                     controller_list[idx+1]['joints'].append(joint_module.name + '_finger_joint2')
@@ -530,7 +566,7 @@ class XBotCorePlugin(Plugin):
         pass
 
     # SRDF
-    def add_gripper_to_srdf(self, root, gripper_name, hand_name, parent_group_name):
+    def add_gripper_to_srdf(self, et_root, module, gripper_name, hand_name, parent_group_name):
         return None
 
     def add_wheel_to_srdf(self, wheel_group_name, wheel_name):
@@ -653,11 +689,14 @@ class XBot2Plugin(Plugin):
                 self.pid_node.remove(pid)
 
     # SRDF
-    def add_gripper_to_srdf(self, root, gripper_name, hand_name, parent_group_name):
-        return None
+    def add_gripper_to_srdf(self, et_root, module, gripper_name, hand_name, parent_group_name):
 
-    def add_hand_group_to_srdf(self, root, gripper_name, hand_name):
-        pass
+        chain_group = ET.Element('group', name=hand_name)
+        for finger in module.finger_names:
+            base_link = module.base_link_name
+            tip_link = finger
+            ET.SubElement(chain_group, 'chain', base_link=base_link, tip_link=tip_link)
+        return chain_group
 
     def add_wheel_to_srdf(self, wheel_group, wheel_name):
         wheel = ET.SubElement(wheel_group, 'joint', name=wheel_name)
@@ -1043,6 +1082,7 @@ class UrdfWriter:
                                 'use_gpu_ray': 'false'}
 
         self.set_floating_base(floating_base)
+
 
         if logger is None:
             FORMAT = '[%(levelname)s] [%(module)s]:  %(message)s'
