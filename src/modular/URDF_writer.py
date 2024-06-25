@@ -1508,7 +1508,7 @@ class UrdfWriter:
         elif chain[-1].type in ModuleClass.end_effector_modules() - {ModuleType.DAGANA}:
             tip_link = chain[-1].tcp_name
         elif chain[-1].type is ModuleType.DAGANA:
-            tip_link = chain[-1].dagana_link_name
+            tip_link = chain[-1].base_link_name
         return tip_link
     
     @staticmethod
@@ -2693,9 +2693,11 @@ class UrdfWriter:
             new_Link.mesh_names += [new_Link.name + '_top_link', new_Link.name + '_bottom_link']
 
             setattr(new_Link, 'dagana_joint_name', new_Link.name + '_claw_joint')
-            setattr(new_Link, 'dagana_link_name', new_Link.name + '_bottom_link')
+            setattr(new_Link, 'base_link_name', new_Link.name + '_top_link')
             setattr(new_Link, 'dagana_tcp_name', new_Link.name + '_tcp')
             setattr(new_Link, 'tcp_name', 'ee' + new_Link.tag)
+            # this list will contain the names of the fingers or any moving extremity of the end effector
+            setattr(new_Link, 'finger_names', [new_Link.name + '_bottom_link'])
             ET.SubElement(self.root,
                           "xacro:add_tcp",
                           type="pen",
@@ -2719,6 +2721,10 @@ class UrdfWriter:
         elif new_Link.type is ModuleType.DRILL:
             setattr(new_Link, 'name', 'drill' + new_Link.tag)
             self.add_link_element(new_Link.name, new_Link, 'body_1') #  , type='link')
+
+            setattr(new_Link, 'base_link_name', new_Link.name)
+            # this list will contain the names of the fingers or any moving extremity of the end effector
+            setattr(new_Link, 'finger_names', [])
             
             setattr(new_Link, 'camera_name', 'drill_camera' + new_Link.tag)
             ET.SubElement(self.root,
@@ -2759,6 +2765,10 @@ class UrdfWriter:
             setattr(new_Link, 'name', 'end_effector' + new_Link.tag)
             self.add_link_element(new_Link.name, new_Link, 'body_1') #   , type='link')
 
+            setattr(new_Link, 'base_link_name', new_Link.name)
+            # this list will contain the names of the fingers or any moving extremity of the end effector
+            setattr(new_Link, 'finger_names_list', [])
+
             x_ee, y_ee, z_ee, roll_ee, pitch_ee, yaw_ee = ModuleNode.get_xyzrpy(tf.transformations.numpy.array(new_Link.kinematics.link.pose))
             setattr(new_Link, 'tcp_name', 'ee' + new_Link.tag)
             ET.SubElement(self.root,
@@ -2778,6 +2788,10 @@ class UrdfWriter:
         elif new_Link.type is ModuleType.TOOL_EXCHANGER:
             setattr(new_Link, 'name', 'tool_exchanger' + new_Link.tag)
             self.add_link_element(new_Link.name, new_Link, 'body_1') #  , type='tool_exchanger')
+
+            setattr(new_Link, 'base_link_name', new_Link.name)
+            # this list will contain the names of the fingers or any moving extremity of the end effector
+            setattr(new_Link, 'finger_names_list', [])
 
             # the end-effector gets added to the chain although it's not a joint. it's needed in the joint map and in the config!
             # self.add_to_chain(new_Link)
@@ -2807,6 +2821,10 @@ class UrdfWriter:
             setattr(new_Link, 'tcp_name', 'TCP_' + new_Link.name)
             setattr(new_Link, 'joint_name_finger1', new_Link.name + '_finger_joint1')
             setattr(new_Link, 'joint_name_finger2', new_Link.name + '_finger_joint2')
+
+            setattr(new_Link, 'base_link_name', new_Link.name)
+            # this list will contain the names of the fingers or any moving extremity of the end effector
+            setattr(new_Link, 'finger_names_list', [new_Link.name + '_finger1', new_Link.name + '_finger2'])
             
             #  TODO: add_gripper_fingers still use the xacro to load the yaml file and get the parameters. It should be changed to use the python function for uniformity
             ET.SubElement(self.root,
@@ -2819,7 +2837,7 @@ class UrdfWriter:
                             filename=new_Link.filename)
             # add the xacro:add_gripper_fingers element to the list of urdf elements
             new_Link.xml_tree_elements.append(new_Link.name)
-            new_Link.mesh_names += [new_Link.name + '_finger1', new_Link.name + '_finger2']
+            new_Link.mesh_names += new_Link.finger_names_list
 
             # TO BE FIXED: ok for ros_control. How will it be for xbot2?
             self.control_plugin.add_joint(new_Link.joint_name_finger1)
