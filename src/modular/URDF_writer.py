@@ -2798,8 +2798,29 @@ class UrdfWriter:
             # add the xacro:add_tcp element to the list of urdf elements
             new_Link.xml_tree_elements.append(new_Link.tcp_name)
 
-            # the drill gets added to the chain although it's not a joint. it's needed in the joint map and in the config!
-            # self.add_to_chain(new_Link)
+        elif new_Link.type is ModuleType.SPRAYING_TOOL:
+            setattr(new_Link, 'name', 'spraying_tool' + new_Link.tag)
+            self.add_link_element(new_Link.name, new_Link, 'body_1') #  , type='link')
+
+            setattr(new_Link, 'base_link_name', new_Link.name)
+            # this list will contain the names of the fingers or any moving extremity of the end effector
+            setattr(new_Link, 'finger_names', [])
+
+            x_ee, y_ee, z_ee, roll_ee, pitch_ee, yaw_ee = ModuleNode.get_xyzrpy(tf.transformations.numpy.array(new_Link.kinematics.link.pose))
+            setattr(new_Link, 'tcp_name', 'ee' + new_Link.tag)
+            ET.SubElement(self.root,
+                          "xacro:add_tcp",
+                          type="pen",
+                          name=new_Link.tcp_name,
+                          father=new_Link.name,
+                          x=x_ee,
+                          y=y_ee,
+                          z=z_ee,
+                          roll=roll_ee,
+                          pitch=pitch_ee,
+                          yaw=yaw_ee)
+            # add the xacro:add_tcp element to the list of urdf elements
+            new_Link.xml_tree_elements.append(new_Link.tcp_name)
 
         elif new_Link.type is ModuleType.END_EFFECTOR:
             setattr(new_Link, 'name', 'end_effector' + new_Link.tag)
@@ -2951,7 +2972,7 @@ class UrdfWriter:
 
 
     def get_joint_name(self, module):
-        if module.type in ModuleClass.joint_modules() | {ModuleType.DRILL}:
+        if module.type in ModuleClass.joint_modules() | {ModuleType.DRILL, ModuleType.SPRAYING_TOOL}:
             return module.name
         elif module.type is ModuleType.DAGANA:
             return module.dagana_joint_name
