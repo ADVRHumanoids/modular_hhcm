@@ -691,6 +691,8 @@ class XBot2Plugin(Plugin):
     # SRDF
     def add_gripper_to_srdf(self, et_root, module, gripper_name, hand_name, parent_group_name):
 
+        if len(module.finger_names) == 0:
+            return None
         chain_group = ET.Element('group', name=hand_name)
         for finger in module.finger_names:
             base_link = module.base_link_name
