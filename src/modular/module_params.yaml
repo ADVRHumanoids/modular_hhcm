@@ -61,6 +61,9 @@
     4: # dagana
         2: #size PINO flange
             0: module_dagana.json
+    5: # spraying tool
+        4: #size concert arm flange
+            0: concert/module_spraying_tool_concert.json
     # ...
 
 4: #passive link module

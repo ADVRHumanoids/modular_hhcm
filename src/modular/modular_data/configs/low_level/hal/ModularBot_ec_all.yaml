@@ -49,4 +49,9 @@ xbotcore_devices:
         thread: rt_main
         params: {}
 
-
+    spray_valve_ec:
+        names: []
+        thread: nrt_main
+        params:
+            robot_name: *rn
+            joint_id_map: *jim
