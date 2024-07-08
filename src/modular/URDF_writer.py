@@ -1630,7 +1630,7 @@ class UrdfWriter:
         return data
     
     def add_drillbit(self, length=0.27, radius=0.012, mass=0.1):
-        drillbit_name = 'drillbit'+ self.parent_module.tag
+        drillbit_name = 'ee'+ self.parent_module.tag
         ET.SubElement(self.root,
             "xacro:add_cylinder",
             type="drillbit",
@@ -2785,7 +2785,7 @@ class UrdfWriter:
             # <xacro:insert_block name="velodyne_back_origin" />
 
             x_ee, y_ee, z_ee, roll_ee, pitch_ee, yaw_ee = ModuleNode.get_xyzrpy(tf.transformations.numpy.array(new_Link.kinematics.link.pose))
-            setattr(new_Link, 'tcp_name', 'ee' + new_Link.tag)
+            setattr(new_Link, 'tcp_name', 'drillnose' + new_Link.tag)
             ET.SubElement(self.root,
                           "xacro:add_tcp",
                           type="pen",
