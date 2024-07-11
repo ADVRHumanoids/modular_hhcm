@@ -1082,6 +1082,9 @@ class UrdfWriter:
                                 'realsense': 'false',
                                 'ultrasound': 'false',
                                 'use_gpu_ray': 'false'}
+        
+        # additional xacro mappings for addons, external xacro files, etc.
+        self.additional_xacro_mappings = {}
 
         self.set_floating_base(floating_base)
 
@@ -1476,6 +1479,8 @@ class UrdfWriter:
         # mappings = self.default_xacro_mappings if xacro_mappings else xacro_mappings
         mappings = copy.deepcopy(self.default_xacro_mappings)
         mappings.update(xacro_mappings)
+        # we pass the additioonal mappings to the process_doc function as well
+        mappings.update(self.additional_xacro_mappings)
 
         # perform macro replacement
         xacro.process_doc(doc, mappings=mappings)
