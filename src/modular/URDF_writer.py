@@ -1743,6 +1743,17 @@ class UrdfWriter:
 
         return [handle_name, "fixed_" + handle_name, handle_gripping_point_name, "fixed_" + handle_gripping_point_name]
 
+    def add_dagana_claws(self, type='centauro_claws'):
+        if type == 'centauro_claws':
+            pass
+        elif type == 'concert_formwork_claws':
+            self.additional_xacro_mappings['dagana_claws_type'] = 'concert_formwork_claws'
+        elif type == 'concert_tube_claws':
+            self.additional_xacro_mappings['dagana_claws_type'] = 'concert_tube_claws'
+        
+        # return empty list since all xml elemnts are added from xacro
+        return []
+        
     # Add a cylinder as a fake end-effector
     def add_simple_ee(self, x_offset=0.0, y_offset=0.0, z_offset=0.0, angle_offset=0.0, mass=1.0, radius=0.02):
         # TODO: treat this as a link in the link_after_* methods!
@@ -1844,6 +1855,8 @@ class UrdfWriter:
                 self.parent_module.addon_elements += self.add_drillbit(length=new_addon['parameters']['length'], radius=new_addon['parameters']['radius'], mass=new_addon['parameters']['mass'])
             elif new_addon['header']['type'] == 'handle':
                 self.parent_module.addon_elements += self.add_handle(x_offset=new_addon['parameters']['x_offset'], y_offset=new_addon['parameters']['y_offset'], z_offset=new_addon['parameters']['z_offset'], mass=new_addon['parameters']['mass'], radius=new_addon['parameters']['radius'])
+            elif new_addon['header']['type'] == 'dagana_claws':
+                self.parent_module.addon_elements += self.add_dagana_claws(type=new_addon['parameters']['type'])
             else:
                 self.logger.info('Addon type not supported')
 
