@@ -2764,7 +2764,7 @@ class UrdfWriter:
                           name=new_Link.tcp_name,
                           father=new_Link.dagana_tcp_name,
                           x="0.0",
-                          y="0.0",
+                          y="0.05",
                           z="0.0",
                           roll="0.0",
                           pitch="0.0",
