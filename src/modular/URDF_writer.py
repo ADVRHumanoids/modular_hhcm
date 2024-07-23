@@ -2848,7 +2848,7 @@ class UrdfWriter:
 
             setattr(new_Link, 'base_link_name', new_Link.name)
             # this list will contain the names of the fingers or any moving extremity of the end effector
-            setattr(new_Link, 'finger_names_list', [])
+            setattr(new_Link, 'finger_names', [])
 
             x_ee, y_ee, z_ee, roll_ee, pitch_ee, yaw_ee = ModuleNode.get_xyzrpy(tf.transformations.numpy.array(new_Link.kinematics.link.pose))
             setattr(new_Link, 'tcp_name', 'ee' + new_Link.tag)
@@ -2872,7 +2872,7 @@ class UrdfWriter:
 
             setattr(new_Link, 'base_link_name', new_Link.name)
             # this list will contain the names of the fingers or any moving extremity of the end effector
-            setattr(new_Link, 'finger_names_list', [])
+            setattr(new_Link, 'finger_names', [])
 
             # the end-effector gets added to the chain although it's not a joint. it's needed in the joint map and in the config!
             # self.add_to_chain(new_Link)
@@ -2905,7 +2905,7 @@ class UrdfWriter:
 
             setattr(new_Link, 'base_link_name', new_Link.name)
             # this list will contain the names of the fingers or any moving extremity of the end effector
-            setattr(new_Link, 'finger_names_list', [new_Link.name + '_finger1', new_Link.name + '_finger2'])
+            setattr(new_Link, 'finger_names', [new_Link.name + '_finger1', new_Link.name + '_finger2'])
             
             #  TODO: add_gripper_fingers still use the xacro to load the yaml file and get the parameters. It should be changed to use the python function for uniformity
             ET.SubElement(self.root,
@@ -2918,7 +2918,7 @@ class UrdfWriter:
                             filename=new_Link.filename)
             # add the xacro:add_gripper_fingers element to the list of urdf elements
             new_Link.xml_tree_elements.append(new_Link.name)
-            new_Link.mesh_names += new_Link.finger_names_list
+            new_Link.mesh_names += new_Link.finger_names
 
             # TO BE FIXED: ok for ros_control. How will it be for xbot2?
             self.control_plugin.add_joint(new_Link.joint_name_finger1)
