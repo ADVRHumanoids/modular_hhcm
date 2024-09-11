@@ -35,10 +35,11 @@ from modular.ModelStats import ModelStats
 import modular.ModuleNode as ModuleNode
 import argparse
 
-import rospy
-import roslaunch
-import rospkg
-import tf
+# import rospy
+# import roslaunch
+# import rospkg
+# import tf
+
 
 # from anytree import NodeMixin, RenderTree, Node, AsciiStyle
 import anytree
@@ -49,6 +50,14 @@ from shutil import copyfile
 import os
 import errno
 import sys
+
+if os.getenv('ROS_VERSION') == 1:
+    import tf
+    tf_transformations = tf.transformations
+else:
+    # requires sudo apt install ros-$ROS_DISTRO-tf-transformations
+    import tf_transformations
+
 currDir = os.path.dirname(os.path.realpath(__file__))
 # print(currDir)
 rootDir = os.path.abspath(os.path.join(currDir, '../..'))
@@ -1176,7 +1185,7 @@ class UrdfWriter:
         setattr(self.base_link, 'flange_size', '3')
         setattr(self.base_link, 'i', 0)
         setattr(self.base_link, 'p', 0)
-        setattr(self.base_link, 'Homogeneous_tf', tf.transformations.identity_matrix())
+        setattr(self.base_link, 'Homogeneous_tf', tf_transformations.identity_matrix())
         setattr(self.base_link, 'robot_id', 0)
         setattr(self.base_link, 'current_port', 1)
         #HACK: base_link does not have ports.
@@ -1600,7 +1609,7 @@ class UrdfWriter:
         setattr(table, 'flange_size', 3)
         setattr(table, 'i', 0)
         setattr(table, 'p', 0)
-        setattr(table, 'Homogeneous_tf', tf.transformations.identity_matrix())
+        setattr(table, 'Homogeneous_tf', tf_transformations.identity_matrix())
         setattr(table, 'robot_id', 0)
 
         ET.SubElement(self.root,
@@ -1645,8 +1654,8 @@ class UrdfWriter:
             radius=str(radius))
         self.parent_module.mesh_names.append(drillbit_name)
 
-        trasl = tf.transformations.translation_matrix((0.0, 0.0, length))
-        rot = tf.transformations.euler_matrix(0.0, 0.0, 0.0, 'sxyz')
+        trasl = tf_transformations.translation_matrix((0.0, 0.0, length))
+        rot = tf_transformations.euler_matrix(0.0, 0.0, 0.0, 'sxyz')
         transform = ModuleNode.get_rototranslation(trasl, rot)
         x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(transform)
 
@@ -1686,11 +1695,11 @@ class UrdfWriter:
             radius=str(radius))
         self.parent_module.mesh_names.append(handle_name)
 
-        trasl = tf.transformations.translation_matrix((x_offset, y_offset, z_offset))
+        trasl = tf_transformations.translation_matrix((x_offset, y_offset, z_offset))
         if y_offset >= 0.0:
-            rot = tf.transformations.euler_matrix(-1.57, 0.0, 0.0, 'sxyz')
+            rot = tf_transformations.euler_matrix(-1.57, 0.0, 0.0, 'sxyz')
         else:
-            rot = tf.transformations.euler_matrix(1.57, 0.0, 0.0, 'sxyz')
+            rot = tf_transformations.euler_matrix(1.57, 0.0, 0.0, 'sxyz')
         transform = ModuleNode.get_rototranslation(trasl, rot)
         x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(transform)
 
@@ -1712,8 +1721,8 @@ class UrdfWriter:
         self.collision_elements.append((father_name, handle_name))
 
         # Add also a frame on the handle gripping point
-        trasl = tf.transformations.translation_matrix((0.0, y_offset/2, z_offset))
-        rot = tf.transformations.euler_matrix(0.0, 0.0, 0.0, 'sxyz')
+        trasl = tf_transformations.translation_matrix((0.0, y_offset/2, z_offset))
+        rot = tf_transformations.euler_matrix(0.0, 0.0, 0.0, 'sxyz')
         transform = ModuleNode.get_rototranslation(trasl, rot)
         x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(transform)
 
@@ -1780,8 +1789,8 @@ class UrdfWriter:
         except AttributeError:
             pass
 
-        trasl = tf.transformations.translation_matrix((x_offset, y_offset, z_offset))
-        rot = tf.transformations.euler_matrix(0.0, 0.0, angle_offset, 'sxyz')
+        trasl = tf_transformations.translation_matrix((x_offset, y_offset, z_offset))
+        rot = tf_transformations.euler_matrix(0.0, 0.0, angle_offset, 'sxyz')
         rototrasl = ModuleNode.get_rototranslation(trasl, rot)
         setattr(simple_ee, 'Homogeneous_tf', rototrasl)
 
@@ -2802,7 +2811,7 @@ class UrdfWriter:
             # 
             # <xacro:insert_block name="velodyne_back_origin" />
 
-            x_ee, y_ee, z_ee, roll_ee, pitch_ee, yaw_ee = ModuleNode.get_xyzrpy(tf.transformations.numpy.array(new_Link.kinematics.link.pose))
+            x_ee, y_ee, z_ee, roll_ee, pitch_ee, yaw_ee = ModuleNode.get_xyzrpy(tf_transformations.numpy.array(new_Link.kinematics.link.pose))
             setattr(new_Link, 'tcp_name', 'drillnose' + new_Link.tag)
             ET.SubElement(self.root,
                           "xacro:add_tcp",
@@ -2826,7 +2835,7 @@ class UrdfWriter:
             # this list will contain the names of the fingers or any moving extremity of the end effector
             setattr(new_Link, 'finger_names', [])
 
-            x_ee, y_ee, z_ee, roll_ee, pitch_ee, yaw_ee = ModuleNode.get_xyzrpy(tf.transformations.numpy.array(new_Link.kinematics.link.pose))
+            x_ee, y_ee, z_ee, roll_ee, pitch_ee, yaw_ee = ModuleNode.get_xyzrpy(tf_transformations.numpy.array(new_Link.kinematics.link.pose))
             setattr(new_Link, 'tcp_name', 'ee' + new_Link.tag)
             ET.SubElement(self.root,
                           "xacro:add_tcp",
@@ -2850,7 +2859,7 @@ class UrdfWriter:
             # this list will contain the names of the fingers or any moving extremity of the end effector
             setattr(new_Link, 'finger_names', [])
 
-            x_ee, y_ee, z_ee, roll_ee, pitch_ee, yaw_ee = ModuleNode.get_xyzrpy(tf.transformations.numpy.array(new_Link.kinematics.link.pose))
+            x_ee, y_ee, z_ee, roll_ee, pitch_ee, yaw_ee = ModuleNode.get_xyzrpy(tf_transformations.numpy.array(new_Link.kinematics.link.pose))
             setattr(new_Link, 'tcp_name', 'ee' + new_Link.tag)
             ET.SubElement(self.root,
                           "xacro:add_tcp",
@@ -2975,7 +2984,7 @@ class UrdfWriter:
             self.error_print('AttributeError: ' + connector_name + ' not found in hub ' + hub.name + '. Either something went wrong during the discovery or the resources should be updated.')
             raise AttributeError
         # if not hub.is_structural:
-        #     interface_transform = tf.transformations.identity_matrix()
+        #     interface_transform = tf_transformations.identity_matrix()
 
         self.print('hub.current_port:', hub.current_port)
         self.print('interface_transform: ', interface_transform)
@@ -3001,16 +3010,16 @@ class UrdfWriter:
 
     def get_proximal_transform(self, interface_transform, offsets, reverse):
         # compute offset
-        T = tf.transformations.translation_matrix((offsets.get('x', 0.0), offsets.get('y', 0.0), offsets.get('z', 0.0)))
-        R = tf.transformations.euler_matrix(offsets.get('roll', 0.0), offsets.get('pitch', 0.0), offsets.get('yaw', 0.0), 'sxyz')
-        offset_transform = tf.transformations.concatenate_matrices(T, R)
+        T = tf_transformations.translation_matrix((offsets.get('x', 0.0), offsets.get('y', 0.0), offsets.get('z', 0.0)))
+        R = tf_transformations.euler_matrix(offsets.get('roll', 0.0), offsets.get('pitch', 0.0), offsets.get('yaw', 0.0), 'sxyz')
+        offset_transform = tf_transformations.concatenate_matrices(T, R)
         
         transform = ModuleNode.get_rototranslation(interface_transform,
                                                    offset_transform)
         # If the module is mounted in the opposite direction rotate the final frame by 180 deg., as per convention
         if reverse:
             transform = ModuleNode.get_rototranslation(transform,
-                                                       tf.transformations.rotation_matrix(3.14, self.yaxis))
+                                                       tf_transformations.rotation_matrix(3.14, self.yaxis))
 
         return transform
     
@@ -3019,7 +3028,7 @@ class UrdfWriter:
         if size2 < size1:
             self.info_print("Size mismatch: " + size1 + " vs " + size2 + " ---> Rotating input connector of 90°")
             transform = ModuleNode.get_rototranslation(interface_transform,
-                                                        tf.transformations.rotation_matrix(1.57,
+                                                        tf_transformations.rotation_matrix(1.57,
                                                         self.zaxis))
         else:
             transform = interface_transform
@@ -3152,18 +3161,18 @@ class UrdfWriter:
 
         self.collision_elements.append((parent_name, new_Joint.stator_name))
 
-        # mesh_transform = ModuleNode.get_rototranslation(tf.transformations.rotation_matrix(-1.57, self.zaxis),
-        #                                            tf.transformations.rotation_matrix(3.14, self.xaxis))
-        mesh_transform = tf.transformations.identity_matrix()
+        # mesh_transform = ModuleNode.get_rototranslation(tf_transformations.rotation_matrix(-1.57, self.zaxis),
+        #                                            tf_transformations.rotation_matrix(3.14, self.xaxis))
+        mesh_transform = tf_transformations.identity_matrix()
 
         # If the module is mounted in the opposite direction rotate the final frame by 180 deg., as per convention
         if reverse:
-            prox_mesh_transform = ModuleNode.get_rototranslation(mesh_transform, tf.transformations.rotation_matrix(-3.14, self.yaxis))
-            prox_mesh_transform = ModuleNode.get_rototranslation(prox_mesh_transform, tf.transformations.inverse_matrix(new_Joint.Proximal_tf))
-            # prox_mesh_transform = ModuleNode.get_rototranslation(mesh_transform, tf.transformations.translation_matrix((-0.0591857,0,-0.095508)))#tf.transformations.inverse_matrix(new_Joint.Proximal_tf))
-            # prox_mesh_transform = ModuleNode.get_rototranslation(prox_mesh_transform, tf.transformations.rotation_matrix(3.14, self.xaxis))
+            prox_mesh_transform = ModuleNode.get_rototranslation(mesh_transform, tf_transformations.rotation_matrix(-3.14, self.yaxis))
+            prox_mesh_transform = ModuleNode.get_rototranslation(prox_mesh_transform, tf_transformations.inverse_matrix(new_Joint.Proximal_tf))
+            # prox_mesh_transform = ModuleNode.get_rototranslation(mesh_transform, tf_transformations.translation_matrix((-0.0591857,0,-0.095508)))#tf_transformations.inverse_matrix(new_Joint.Proximal_tf))
+            # prox_mesh_transform = ModuleNode.get_rototranslation(prox_mesh_transform, tf_transformations.rotation_matrix(3.14, self.xaxis))
             # prox_mesh_transform = ModuleNode.get_rototranslation(prox_mesh_transform,
-            #                                                      tf.transformations.rotation_matrix(1.57, self.zaxis))
+            #                                                      tf_transformations.rotation_matrix(1.57, self.zaxis))
         else:
             prox_mesh_transform = mesh_transform
         x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(prox_mesh_transform)
@@ -3172,7 +3181,7 @@ class UrdfWriter:
         self.add_link_element(new_Joint.stator_name, new_Joint, 'body_1')
         self.add_gazebo_element(new_Joint, new_Joint.gazebo.body_1, new_Joint.stator_name)
 
-        joint_transform = ModuleNode.get_rototranslation(tf.transformations.identity_matrix(),
+        joint_transform = ModuleNode.get_rototranslation(tf_transformations.identity_matrix(),
                                                          new_Joint.Proximal_tf)
         x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(joint_transform)
 
@@ -3223,7 +3232,7 @@ class UrdfWriter:
 
         if reverse:
             new_Joint.Distal_tf = ModuleNode.get_rototranslation(new_Joint.Distal_tf,
-                                                                 tf.transformations.rotation_matrix(3.14, self.yaxis))
+                                                                 tf_transformations.rotation_matrix(3.14, self.yaxis))
 
         # add the fast rotor part to the inertia of the link/rotor part as a new link. NOTE: right now this is
         # attached at the rotating part not to the fixed one (change it so to follow Pholus robot approach)

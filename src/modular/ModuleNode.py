@@ -8,8 +8,14 @@ import yaml
 import json
 import sys
 import os
-import tf
 
+if os.getenv('ROS_VERSION') == 1:
+    import tf
+    tf_transformations = tf.transformations
+else:
+    # requires sudo apt install ros-$ROS_DISTRO-tf-transformations
+    import tf_transformations
+    
 import anytree
 
 from modular.enums import ModuleDescriptionFormat, KinematicsConvention, ModuleType, ModuleClass
@@ -125,12 +131,12 @@ class JSONInterpreter(object):
 
             # kinematics
             proximal_pose = Module.Attribute({'pose': dict_joint['pose_parent']}) 
-            # x, y, z, roll, pitch, yaw = get_xyzrpy(tf.transformations.numpy.array(dict_joint['pose_parent']))
+            # x, y, z, roll, pitch, yaw = get_xyzrpy(tf_transformations.numpy.array(dict_joint['pose_parent']))
             # proximal_pose = Module.Attribute({'x': x, 'y': y, 'z': z, 'roll': roll, 'pitch': pitch, 'yaw': yaw})
             update_nested_dict(self.owner.kinematics.joint.proximal.__dict__, proximal_pose.__dict__)
             
             distal_pose = Module.Attribute({'pose': dict_joint['pose_child']}) 
-            # x, y, z, roll, pitch, yaw = get_xyzrpy(tf.transformations.numpy.array(dict_joint['pose_child']))
+            # x, y, z, roll, pitch, yaw = get_xyzrpy(tf_transformations.numpy.array(dict_joint['pose_child']))
             # distal_pose = Module.Attribute({'x': x, 'y': y, 'z': z, 'roll': roll, 'pitch': pitch, 'yaw': yaw})
             update_nested_dict(self.owner.kinematics.joint.distal.__dict__, distal_pose.__dict__)
             
@@ -229,7 +235,7 @@ class JSONInterpreter(object):
                 attr = Module.Attribute(visual)
                 if visual:
                     # NOTE: pose of visual properties should be expressed in urdf format at the moment
-                    x, y, z, roll, pitch, yaw = get_xyzrpy(tf.transformations.numpy.array(visual['pose']))
+                    x, y, z, roll, pitch, yaw = get_xyzrpy(tf_transformations.numpy.array(visual['pose']))
                     attr.pose = Module.Attribute({'x': x, 'y': y, 'z': z, 'roll': roll, 'pitch': pitch, 'yaw': yaw})
                 visual_properties.append(attr)
             visual_attr = Module.Attribute({body_name: visual_properties})
@@ -246,7 +252,7 @@ class JSONInterpreter(object):
                 attr = Module.Attribute(collision) 
                 if collision:
                     # NOTE: pose of collision properties should be expressed in urdf format at the moment
-                    x, y, z, roll, pitch, yaw = get_xyzrpy(tf.transformations.numpy.array(collision['pose']))
+                    x, y, z, roll, pitch, yaw = get_xyzrpy(tf_transformations.numpy.array(collision['pose']))
                     attr.pose = Module.Attribute({'x': x, 'y': y, 'z': z, 'roll': roll, 'pitch': pitch, 'yaw': yaw})
                 collision_properties.append(attr)
             collision_attr = Module.Attribute({body_name: collision_properties})
@@ -345,44 +351,44 @@ class Module(object):
         distal = self.kinematics.joint.distal
 
         if self.kinematics_convention is KinematicsConvention.URDF:
-            T = tf.transformations.translation_matrix((proximal.x, proximal.y, proximal.z))
-            R = tf.transformations.euler_matrix(proximal.roll, proximal.pitch, proximal.yaw, 'sxyz')
-            P = tf.transformations.concatenate_matrices(T, R)
+            T = tf_transformations.translation_matrix((proximal.x, proximal.y, proximal.z))
+            R = tf_transformations.euler_matrix(proximal.roll, proximal.pitch, proximal.yaw, 'sxyz')
+            P = tf_transformations.concatenate_matrices(T, R)
 
-            T = tf.transformations.translation_matrix((distal.x, distal.y, distal.z))
-            R = tf.transformations.euler_matrix(distal.roll, distal.pitch, distal.yaw, 'sxyz')
-            D = tf.transformations.concatenate_matrices(T, R)
+            T = tf_transformations.translation_matrix((distal.x, distal.y, distal.z))
+            R = tf_transformations.euler_matrix(distal.roll, distal.pitch, distal.yaw, 'sxyz')
+            D = tf_transformations.concatenate_matrices(T, R)
 
             if reverse:
-                P = tf.transformations.inverse_matrix(D)
-                D = tf.transformations.inverse_matrix(P)
+                P = tf_transformations.inverse_matrix(D)
+                D = tf_transformations.inverse_matrix(P)
 
         elif self.kinematics_convention is KinematicsConvention.DH_EXT:
-            H1 = tf.transformations.rotation_matrix(proximal.delta_pl, zaxis)
-            H2 = tf.transformations.translation_matrix((0, 0, proximal.p_pl))
-            H3 = tf.transformations.translation_matrix((proximal.a_pl, 0, 0))
-            H4 = tf.transformations.rotation_matrix(proximal.alpha_pl, xaxis)
-            H5 = tf.transformations.translation_matrix((0, 0, proximal.n_pl))
-            P = tf.transformations.concatenate_matrices(H1, H2, H3, H4, H5)
+            H1 = tf_transformations.rotation_matrix(proximal.delta_pl, zaxis)
+            H2 = tf_transformations.translation_matrix((0, 0, proximal.p_pl))
+            H3 = tf_transformations.translation_matrix((proximal.a_pl, 0, 0))
+            H4 = tf_transformations.rotation_matrix(proximal.alpha_pl, xaxis)
+            H5 = tf_transformations.translation_matrix((0, 0, proximal.n_pl))
+            P = tf_transformations.concatenate_matrices(H1, H2, H3, H4, H5)
 
-            H1 = tf.transformations.translation_matrix((0, 0, distal.p_dl))
-            H2 = tf.transformations.translation_matrix((distal.a_dl, 0, 0))
-            H3 = tf.transformations.rotation_matrix(distal.alpha_dl, xaxis)
-            H4 = tf.transformations.translation_matrix((0, 0, distal.n_dl))
-            H5 = tf.transformations.rotation_matrix(distal.delta_dl, zaxis)
-            D = tf.transformations.concatenate_matrices(H1, H2, H3, H4, H5)
+            H1 = tf_transformations.translation_matrix((0, 0, distal.p_dl))
+            H2 = tf_transformations.translation_matrix((distal.a_dl, 0, 0))
+            H3 = tf_transformations.rotation_matrix(distal.alpha_dl, xaxis)
+            H4 = tf_transformations.translation_matrix((0, 0, distal.n_dl))
+            H5 = tf_transformations.rotation_matrix(distal.delta_dl, zaxis)
+            D = tf_transformations.concatenate_matrices(H1, H2, H3, H4, H5)
 
             if reverse:
-                P = tf.transformations.inverse_matrix(D)
-                D = tf.transformations.inverse_matrix(P)
+                P = tf_transformations.inverse_matrix(D)
+                D = tf_transformations.inverse_matrix(P)
 
         elif self.kinematics_convention is KinematicsConvention.AFFINE:
-            P = tf.transformations.numpy.array(proximal.pose)
-            D = tf.transformations.numpy.array(distal.pose)
+            P = tf_transformations.numpy.array(proximal.pose)
+            D = tf_transformations.numpy.array(distal.pose)
             
             if reverse:
-                P = tf.transformations.inverse_matrix(D)
-                D = tf.transformations.inverse_matrix(P)
+                P = tf_transformations.inverse_matrix(D)
+                D = tf_transformations.inverse_matrix(P)
 
         else:
             raise ValueError("Unknown kinematic convention")
@@ -401,35 +407,35 @@ class Module(object):
         link = self.kinematics.link
 
         if self.kinematics_convention is KinematicsConvention.URDF:
-            T = tf.transformations.translation_matrix((link.x, link.y, link.z))
-            R = tf.transformations.euler_matrix(link.roll, link.pitch, link.yaw, 'sxyz')    
-            H = tf.transformations.concatenate_matrices(T, R)
+            T = tf_transformations.translation_matrix((link.x, link.y, link.z))
+            R = tf_transformations.euler_matrix(link.roll, link.pitch, link.yaw, 'sxyz')    
+            H = tf_transformations.concatenate_matrices(T, R)
             if reverse:
-                H = tf.transformations.inverse_matrix(H)
+                H = tf_transformations.inverse_matrix(H)
 
         elif self.kinematics_convention is KinematicsConvention.DH_EXT:
-            H1 = tf.transformations.rotation_matrix(link.delta_l_in, zaxis)
-            H2 = tf.transformations.translation_matrix((0, 0, link.p_l))
-            H3 = tf.transformations.translation_matrix((link.a_l, 0, 0))
-            H4 = tf.transformations.rotation_matrix(link.alpha_l, xaxis)
-            H5 = tf.transformations.translation_matrix((0, 0, link.n_l))
-            H6 = tf.transformations.rotation_matrix(link.delta_l_out, zaxis)
-            H = tf.transformations.concatenate_matrices(H1, H2, H3, H4, H5, H6)
+            H1 = tf_transformations.rotation_matrix(link.delta_l_in, zaxis)
+            H2 = tf_transformations.translation_matrix((0, 0, link.p_l))
+            H3 = tf_transformations.translation_matrix((link.a_l, 0, 0))
+            H4 = tf_transformations.rotation_matrix(link.alpha_l, xaxis)
+            H5 = tf_transformations.translation_matrix((0, 0, link.n_l))
+            H6 = tf_transformations.rotation_matrix(link.delta_l_out, zaxis)
+            H = tf_transformations.concatenate_matrices(H1, H2, H3, H4, H5, H6)
             if reverse:
                 # TO BE CHECKED!!!
-                H1 = tf.transformations.rotation_matrix(-link.delta_l_out, zaxis)
-                H2 = tf.transformations.translation_matrix((0, 0, -link.n_l))
-                H3 = tf.transformations.rotation_matrix(-link.alpha_l, xaxis)
-                H4 = tf.transformations.translation_matrix((-link.a_l, 0, 0))
-                H5 = tf.transformations.translation_matrix((0, 0, -link.p_l))
-                H6 = tf.transformations.rotation_matrix(-link.delta_l_in, zaxis)
+                H1 = tf_transformations.rotation_matrix(-link.delta_l_out, zaxis)
+                H2 = tf_transformations.translation_matrix((0, 0, -link.n_l))
+                H3 = tf_transformations.rotation_matrix(-link.alpha_l, xaxis)
+                H4 = tf_transformations.translation_matrix((-link.a_l, 0, 0))
+                H5 = tf_transformations.translation_matrix((0, 0, -link.p_l))
+                H6 = tf_transformations.rotation_matrix(-link.delta_l_in, zaxis)
 
-                # H = tf.transformations.inverse_matrix(H)
+                # H = tf_transformations.inverse_matrix(H)
 
         elif self.kinematics_convention is KinematicsConvention.AFFINE:
-            H = tf.transformations.numpy.array(link.pose)
+            H = tf_transformations.numpy.array(link.pose)
             if reverse:
-                H = tf.transformations.inverse_matrix(H)
+                H = tf_transformations.inverse_matrix(H)
 
         else:
             raise ValueError("Unknown kinematic convention")
@@ -453,35 +459,35 @@ class Module(object):
             if hasattr(self.kinematics, "connector_{}".format(i)):
                 con = getattr(self.kinematics, "connector_{}".format(i))
                 if self.kinematics_convention is KinematicsConvention.URDF:
-                    trasl = tf.transformations.translation_matrix((con.x, con.y, con.z))
-                    rot = tf.transformations.euler_matrix(con.roll, con.pitch, con.yaw, 'sxyz')
-                    tf_con = tf.transformations.concatenate_matrices(trasl, rot)
+                    trasl = tf_transformations.translation_matrix((con.x, con.y, con.z))
+                    rot = tf_transformations.euler_matrix(con.roll, con.pitch, con.yaw, 'sxyz')
+                    tf_con = tf_transformations.concatenate_matrices(trasl, rot)
 
                 elif self.kinematics_convention is KinematicsConvention.DH_EXT:
-                    H1 = tf.transformations.rotation_matrix(con.delta_l_in, zaxis)
-                    H2 = tf.transformations.translation_matrix((0, 0, con.p_l))
-                    H3 = tf.transformations.translation_matrix((con.a_l, 0, 0))
-                    H4 = tf.transformations.rotation_matrix(con.alpha_l, xaxis)
-                    H5 = tf.transformations.translation_matrix((0, 0, con.n_l))
-                    H6 = tf.transformations.rotation_matrix(con.delta_l_out, zaxis)
+                    H1 = tf_transformations.rotation_matrix(con.delta_l_in, zaxis)
+                    H2 = tf_transformations.translation_matrix((0, 0, con.p_l))
+                    H3 = tf_transformations.translation_matrix((con.a_l, 0, 0))
+                    H4 = tf_transformations.rotation_matrix(con.alpha_l, xaxis)
+                    H5 = tf_transformations.translation_matrix((0, 0, con.n_l))
+                    H6 = tf_transformations.rotation_matrix(con.delta_l_out, zaxis)
                     
-                    tf_con = tf.transformations.concatenate_matrices(H1, H2, H3, H4, H5, H6)
+                    tf_con = tf_transformations.concatenate_matrices(H1, H2, H3, H4, H5, H6)
                     if reverse:
                         # TO BE CHECKED!!!
-                        H1 = tf.transformations.rotation_matrix(-con.delta_l_out, zaxis)
-                        H2 = tf.transformations.translation_matrix((0, 0, -con.n_l))
-                        H3 = tf.transformations.rotation_matrix(-con.alpha_l, xaxis)
-                        H4 = tf.transformations.translation_matrix((-con.a_l, 0, 0))
-                        H5 = tf.transformations.translation_matrix((0, 0, -con.p_l))
-                        H6 = tf.transformations.rotation_matrix(-con.delta_l_in, zaxis)
+                        H1 = tf_transformations.rotation_matrix(-con.delta_l_out, zaxis)
+                        H2 = tf_transformations.translation_matrix((0, 0, -con.n_l))
+                        H3 = tf_transformations.rotation_matrix(-con.alpha_l, xaxis)
+                        H4 = tf_transformations.translation_matrix((-con.a_l, 0, 0))
+                        H5 = tf_transformations.translation_matrix((0, 0, -con.p_l))
+                        H6 = tf_transformations.rotation_matrix(-con.delta_l_in, zaxis)
 
-                        tf_con = tf.transformations.concatenate_matrices(H1, H2, H3, H4, H5, H6)
-                        # tf_con = tf.transformations.inverse_matrix(tf_con)
+                        tf_con = tf_transformations.concatenate_matrices(H1, H2, H3, H4, H5, H6)
+                        # tf_con = tf_transformations.inverse_matrix(tf_con)
                 
                 elif self.kinematics_convention is KinematicsConvention.AFFINE:
-                    tf_con = tf.transformations.numpy.array(con.pose)
+                    tf_con = tf_transformations.numpy.array(con.pose)
                     if reverse:
-                        tf_con = tf.transformations.inverse_matrix(tf_con)
+                        tf_con = tf_transformations.inverse_matrix(tf_con)
 
                 else:
                     raise ValueError("Unknown kinematic convention")
@@ -507,7 +513,7 @@ class Module(object):
         if self.type in {ModuleType.DAGANA}:
             return lambda reverse: None
         if self.type in {ModuleType.BASE_LINK}: 
-            return tf.transformations.identity_matrix()
+            return tf_transformations.identity_matrix()
         else:
             raise ValueError("Unknown module type")
 
@@ -533,7 +539,7 @@ def get_rototranslation(distal_previous, proximal):
     proximal: transform relative to the proximal part of the current module
 
     """
-    F = tf.transformations.concatenate_matrices(distal_previous, proximal)
+    F = tf_transformations.concatenate_matrices(distal_previous, proximal)
 
     return F
 
@@ -542,7 +548,7 @@ def get_xyzrpy(transform):
     #print(transform)
     t = transform[:3, -1].transpose()
     r = transform[:3, :3]
-    roll, pitch, yaw = tf.transformations.euler_from_matrix(r, 'sxyz')
+    roll, pitch, yaw = tf_transformations.euler_from_matrix(r, 'sxyz')
 
     x = str(t[0])
     y = str(t[1])
@@ -555,7 +561,7 @@ def get_xyzrpy(transform):
 
 
 def inverse(transform_matrix):
-    inv = tf.transformations.inverse_matrix(transform_matrix)
+    inv = tf_transformations.inverse_matrix(transform_matrix)
 
     return inv
 
