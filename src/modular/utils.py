@@ -30,8 +30,16 @@ class ResourceFinder:
         for key in keylist:
             val = val[key]
         return val
+    
+    _expanded_path_cache = {}
 
     def get_expanded_path(self, relative_path):
+        # try use cache to speedup (ros2 pkg prefix takes forever !!!)
+        try:
+            return ResourceFinder._expanded_path_cache[self.nested_access(relative_path)]
+        except:
+            pass
+
         # Expand the home directory
         expanded_path = os.path.expanduser(self.nested_access(relative_path))
         # Expand environment variables
@@ -48,6 +56,8 @@ class ResourceFinder:
         except (subprocess.CalledProcessError, TypeError):
             msg = 'Executing ' + expanded_path + ' resulted in an error. Path substitution cannot be completed. Are the required environment variables set?'
             raise RuntimeError(msg)
+        
+        ResourceFinder._expanded_path_cache[self.nested_access(relative_path)] = expanded_path
             
         return expanded_path
 
