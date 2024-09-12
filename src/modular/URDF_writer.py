@@ -673,23 +673,22 @@ class XBot2Plugin(Plugin):
         #self.urdf_writer.plugin_element = ET.SubElement(self.urdf_writer.root, "xacro:plugin_xbot2")
         self.gazebo_node = ET.SubElement(self.urdf_writer.root, "gazebo")
         self.plugin_node = ET.SubElement(self.gazebo_node, "plugin",
-                                         name="xbot2_gz_joint_server",
+                                         name="gz::sim::systems::GzJointServer",
                                          filename="libxbot2_gz_joint_server.so")
-        self.pid_node = ET.SubElement(self.plugin_node, "pid")
-        self.gain_node = ET.SubElement(self.pid_node, "gain", name='small_mot', p='100', d='10')
-        self.gain_node = ET.SubElement(self.pid_node, "gain", name='medium_mot', p='500', d='50')
-        self.gain_node = ET.SubElement(self.pid_node, "gain", name='big_mot', p='1000', d='100')
-        return self.pid_node
+        self.gain_node = ET.SubElement(self.plugin_node, "profile", name='small_mot', p='100', d='10')
+        self.gain_node = ET.SubElement(self.plugin_node, "profile", name='medium_mot', p='500', d='50')
+        self.gain_node = ET.SubElement(self.plugin_node, "profile", name='big_mot', p='1000', d='100')
+        return self.gain_node
 
     def add_joint(self, joint_name, control_params=None):
         #return ET.SubElement(self.pid_node, "xacro:add_xbot2_pid", name=joint_name, profile="small_mot")
         if control_params is not None:
             if hasattr(control_params, 'pid'):
-                pid_node = ET.SubElement(self.pid_node, "gain", name=joint_name, p=str(control_params.pid.p), d=str(control_params.pid.d))
+                pid_node = ET.SubElement(self.plugin_node, "pid", name=joint_name, p=str(control_params.pid.p), d=str(control_params.pid.d))
             if hasattr(control_params, 'profile'):
-                pid_node = ET.SubElement(self.pid_node, "gain", name=joint_name, profile=str(control_params.profile))
+                pid_node = ET.SubElement(self.plugin_node, "pid", name=joint_name, profile=str(control_params.profile))
         else:
-            pid_node = ET.SubElement(self.pid_node, "gain", name=joint_name, profile="medium_mot")
+            pid_node = ET.SubElement(self.plugin_node, "pid", name=joint_name, profile="medium_mot")
         return pid_node
 
     def remove_joint(self, joint_name):
