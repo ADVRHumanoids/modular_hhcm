@@ -1069,7 +1069,7 @@ def getModelStats():
         if  stats['max_reach'] and np.isfinite(stats['max_reach']):
             response["max_reach"]= { "label": 'Reach', "value": "{:.2f}".format(stats['max_reach']), "unit": 'm' }
         if  stats['joint_modules']:
-            response["joint_modules"]= { "label": 'Joints', "value": str(stats['modules']) }
+            response["joint_modules"]= { "label": 'Joints', "value": str(stats['joint_modules']) }
 
         return Response(
             response=json.dumps(response),
