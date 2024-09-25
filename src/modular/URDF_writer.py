@@ -3883,7 +3883,7 @@ class UrdfWriter:
         return self.model_stats.compute_payload(n_samples=samples)
     
 
-    def compute_stats(self, samples):
+    def compute_stats(self, samples=1000):
         self.model_stats.update_model()
         return self.model_stats.compute_stats(n_samples=samples)
 
