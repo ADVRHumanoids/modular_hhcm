@@ -24,7 +24,7 @@ from uuid import uuid4
 import numpy as np
 
 import rospy
-from flask import Flask, Response, render_template, request, jsonify, send_from_directory, abort, session, send_file
+from flask import Flask, Response, make_response, render_template, request, jsonify, send_from_directory, abort, session, send_file
 from apscheduler.schedulers.background import BackgroundScheduler
 import werkzeug
 
@@ -192,7 +192,14 @@ def index():
             last_updated= datetime.now(),
             )
 
-    return render_template('index.html')
+    # for the index page we want to disable caching
+    index_page = make_response(render_template('index.html'))
+    # exparies in the past (date of the first commit of the project)
+    index_page.headers['Expires'] = 'Fri, May 11 2018 10:48:51 GMT'
+    index_page.headers['Cache-Control'] = 'max-age=0, no-cache, no-store'
+    index_page.headers['Pragma'] = 'no-cache'
+    return index_page
+
 
 # Get workspace mode
 @app.route(f'{api_base_route}/mode', methods=['GET'])
