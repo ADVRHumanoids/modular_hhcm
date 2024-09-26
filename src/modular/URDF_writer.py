@@ -3246,6 +3246,12 @@ class UrdfWriter:
             new_Joint.xml_tree_elements.append(new_Joint.fixed_joint_rotor_fast_name)
             
             self.add_link_element(new_Joint.distal_link_name + '_rotor_fast', new_Joint, 'body_2_fast', is_geared=True)
+        
+        import types
+        x = types.SimpleNamespace()
+        x.provideFeedback = "true"
+        self.add_gazebo_element(new_Joint, x, new_Joint.name)
+        
 
 
     def add_hub(self, new_Hub, parent_name, transform, hub_name=None):
