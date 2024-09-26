@@ -8,6 +8,9 @@ changelog:
     - title: Bug Fixes
       labels:
         - bug
+    - title: Maintenance
+      labels:
+        - refactor
     - title: Docs
       labels:
         - documentation
