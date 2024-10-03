@@ -6,6 +6,7 @@ ARG RECIPES_PROVIDER=https://github.com/ADVRHumanoids/multidof_recipes.git
 
 ARG FOREST_WS=$HOME/modular_ws
 ARG USER_PWD=user
+ARG USER_ID=1021444822
 ARG MODE=&NoNe&
 ARG JOBS=1
 
