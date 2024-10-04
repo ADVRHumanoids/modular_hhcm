@@ -1745,7 +1745,7 @@ class UrdfWriter:
 
     def add_dagana_claws(self, type='centauro_claws'):
         if type == 'centauro_claws':
-            pass
+            self.additional_xacro_mappings['dagana_claws_type'] = 'centauro_claws'
         elif type == 'concert_formwork_claws':
             self.additional_xacro_mappings['dagana_claws_type'] = 'concert_formwork_claws'
         elif type == 'concert_tube_claws':
