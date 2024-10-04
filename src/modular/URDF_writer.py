@@ -2750,14 +2750,16 @@ class UrdfWriter:
                           yaw=yaw)
             # add the xacro:add_dagana element to the list of urdf elements
             new_Link.xml_tree_elements.append(new_Link.name)
-            new_Link.mesh_names += [new_Link.name + '_top_link', new_Link.name + '_bottom_link']
+            new_Link.mesh_names += [new_Link.name + '_top_link', new_Link.name + '_bottom_link', new_Link.name + '_top_link_jaw']
 
             setattr(new_Link, 'dagana_joint_name', new_Link.name + '_claw_joint')
             setattr(new_Link, 'base_link_name', new_Link.name + '_top_link')
             setattr(new_Link, 'dagana_tcp_name', new_Link.name + '_tcp')
             setattr(new_Link, 'tcp_name', 'ee' + new_Link.tag)
             # this list will contain the names of the fingers or any moving extremity of the end effector
-            setattr(new_Link, 'finger_names', [new_Link.name + '_bottom_link'])
+            setattr(new_Link, 'finger_names', [new_Link.name + '_bottom_link_jaw'])
+            new_Link.mesh_names += new_Link.finger_names
+
             ET.SubElement(self.root,
                           "xacro:add_tcp",
                           type="pen",
