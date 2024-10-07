@@ -670,6 +670,8 @@ class XBot2Plugin(Plugin):
         self.gain_node = ET.SubElement(self.pid_node, "gain", name='small_mot', p='100', d='10')
         self.gain_node = ET.SubElement(self.pid_node, "gain", name='medium_mot', p='500', d='50')
         self.gain_node = ET.SubElement(self.pid_node, "gain", name='big_mot', p='1000', d='100')
+        self.motor_params_node = ET.SubElement(self.plugin_node, "motor_params")
+        
         return self.pid_node
 
     def add_joint(self, joint_name, control_params=None):
@@ -679,6 +681,13 @@ class XBot2Plugin(Plugin):
                 pid_node = ET.SubElement(self.pid_node, "gain", name=joint_name, p=str(control_params.pid.p), d=str(control_params.pid.d))
             if hasattr(control_params, 'profile'):
                 pid_node = ET.SubElement(self.pid_node, "gain", name=joint_name, profile=str(control_params.profile))
+            if hasattr(control_params, 'motor_params'):
+                d = {}
+                if hasattr(control_params.motor_params, 'inertia'):
+                    d['inertia'] = str(control_params.motor_params.inertia)
+                if hasattr(control_params.motor_params, 'stiffness'):
+                    d['stiffness'] = str(control_params.motor_params.stiffness)
+                ET.SubElement(self.motor_params_node, "flexible_joint", name=joint_name, **d)
         else:
             pid_node = ET.SubElement(self.pid_node, "gain", name=joint_name, profile="medium_mot")
         return pid_node
