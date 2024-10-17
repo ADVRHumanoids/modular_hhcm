@@ -93,9 +93,12 @@
     <xacro:if value="${ADD_VELODYNE_FRONT}">
         <xacro:include filename="$(find velodyne_description)/urdf/VLP-16.urdf.xacro"/>
         
-        <xacro:VLP-16 parent="${velodyne_front_parent_name}" name="${velodyne_front_name}" topic="/${velodyne_front_name}/velodyne_points" hz="10" samples="440" gpu="${USE_GPU_RAY}">
+        <xacro:VLP-16 parent="${velodyne_front_parent_name}" name="${velodyne_front_name}">
             <xacro:insert_block name="velodyne_front_origin" />
         </xacro:VLP-16>
+
+        <xacro:VLP-16-gz-sensor name="${velodyne_front_name}" topic="/${velodyne_front_name}" hz="10" samples="440" gpu="${USE_GPU_RAY}">
+        </xacro:VLP-16-gz-sensor>
     </xacro:if>
     <xacro:unless value="${ADD_VELODYNE_FRONT}">
         <!-- camera body, with origin at bottom screw mount -->
@@ -117,9 +120,12 @@
     <xacro:if value="${ADD_VELODYNE_BACK}">
         <xacro:include filename="$(find velodyne_description)/urdf/VLP-16.urdf.xacro"/>
         
-        <xacro:VLP-16 parent="${velodyne_back_parent_name}" name="${velodyne_back_name}" topic="/${velodyne_back_name}/velodyne_points" hz="10" samples="440" gpu="${USE_GPU_RAY}">
+        <xacro:VLP-16 parent="${velodyne_back_parent_name}" name="${velodyne_back_name}">
             <xacro:insert_block name="velodyne_back_origin" />
         </xacro:VLP-16>
+
+        <xacro:VLP-16-gz-sensor name="${velodyne_back_name}" topic="/${velodyne_back_name}" hz="10" samples="440" gpu="${USE_GPU_RAY}">
+        </xacro:VLP-16-gz-sensor>
     </xacro:if>
     <xacro:unless value="${ADD_VELODYNE_BACK}">
         <joint name="${velodyne_back_name}_base_mount_joint" type="fixed">
