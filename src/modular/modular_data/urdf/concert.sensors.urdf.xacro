@@ -31,7 +31,6 @@
     </joint>
 
     <link name="base_link_projected"/>
-    
     <!-- Add front D435i camera -->
     <xacro:property name="d435i_front_name" value="D435i_camera_front" />
     <xacro:property name="d435i_front_parent_name" value="${parent_name}" />
@@ -83,6 +82,20 @@
         <xacro:insert_block name="t265_right_origin" />
     </xacro:add_realsense_t_camera>
 
+    
+    <!-- Add IMU sensor -->
+    <xacro:include filename="$(find imu_simulator)/urdf/imu.urdf.xacro" />
+    <xacro:property name="imu_name" value="imu" />
+    <xacro:property name="imu_parent_name" value="${parent_name}" />
+    <xacro:property name="imu_origin">
+        <origin xyz="0 0 0.1" rpy="0 0 0"/>
+    </xacro:property>
+
+    <xacro:add_imu_sensor name="${imu_name}" 
+                        parent="${imu_parent_name}">
+        <xacro:insert_block name="imu_origin" />
+    </xacro:add_imu_sensor>
+
     <!-- Add Velodyne front -->
     <xacro:property name="velodyne_front_name" value="VLP16_lidar_front" />
     <xacro:property name="velodyne_front_parent_name" value="${parent_name}" />
@@ -97,7 +110,7 @@
             <xacro:insert_block name="velodyne_front_origin" />
         </xacro:VLP-16>
 
-        <xacro:VLP-16-gz-sensor name="${velodyne_front_name}" topic="/${velodyne_front_name}" hz="10" samples="440" gpu="${USE_GPU_RAY}">
+        <xacro:VLP-16-gz-sensor name="${velodyne_front_name}" topic="/${velodyne_front_name}" hz="10" samples="440" gpu="${USE_GPU_RAY}" min_angle="-1.04" max_angle="3.66">
         </xacro:VLP-16-gz-sensor>
     </xacro:if>
     <xacro:unless value="${ADD_VELODYNE_FRONT}">
@@ -124,7 +137,7 @@
             <xacro:insert_block name="velodyne_back_origin" />
         </xacro:VLP-16>
 
-        <xacro:VLP-16-gz-sensor name="${velodyne_back_name}" topic="/${velodyne_back_name}" hz="10" samples="440" gpu="${USE_GPU_RAY}">
+        <xacro:VLP-16-gz-sensor name="${velodyne_back_name}" topic="/${velodyne_back_name}" hz="10" samples="440" gpu="${USE_GPU_RAY}" min_angle="-1.04" max_angle="3.66">
         </xacro:VLP-16-gz-sensor>
     </xacro:if>
     <xacro:unless value="${ADD_VELODYNE_BACK}">
