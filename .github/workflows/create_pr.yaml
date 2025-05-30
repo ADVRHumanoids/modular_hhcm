@@ -10,6 +10,9 @@ jobs:
   create-pr:
     runs-on: ubuntu-latest
     name: Create PR to update modular_frontend
+    permissions:
+      contents: write
+      pull-requests: write
     # see https://github.com/orgs/community/discussions/26771#discussioncomment-3253330
     if: startsWith(github.ref_name, 'ci/deps/modular_frontend-')
     env:
@@ -24,8 +27,8 @@ jobs:
           git config --global user.email $USER_EMAIL
         env:
           # see https://github.com/orgs/community/discussions/26560#discussioncomment-3531273
-          USER_NAME: 'github-actions[bot]'
-          USER_EMAIL: '41898282+github-actions[bot]@users.noreply.github.com'
+          USER_NAME: "github-actions[bot]"
+          USER_EMAIL: "41898282+github-actions[bot]@users.noreply.github.com"
 
       # - name: Updated static docs
       #   run: |
