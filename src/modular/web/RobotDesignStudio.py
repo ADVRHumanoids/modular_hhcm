@@ -156,9 +156,12 @@ def cleanup():
     for sid in expired_sessions:
         del sessions[sid]
 
+
 scheduler = BackgroundScheduler(daemon=True)
-scheduler.add_job(cleanup, 'interval', minutes=30)
+if enable_sessions:
+    scheduler.add_job(cleanup, 'interval', minutes=30)
 scheduler.start()
+
 
 def get_writer(sid:str) -> UrdfWriter:
     if sid not in sessions:
