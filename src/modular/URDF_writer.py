@@ -3186,7 +3186,7 @@ class UrdfWriter:
 
         ET.SubElement(self.root,
                       "xacro:add_joint",
-                      type="joint",
+                      type=new_Joint.actuator_data.type,
                       name=new_Joint.name,
                       father=new_Joint.stator_name,
                       child=new_Joint.distal_link_name,

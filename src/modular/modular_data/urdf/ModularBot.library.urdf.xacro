@@ -67,7 +67,7 @@
                 <cylinder radius="${body['parameters']['radius']}" length="${body['parameters']['length']}"/>
             </xacro:if>
             <xacro:if value="${body['type'] == 'box'}">
-                <box size="${body['parameters']['size']}"/>
+                <box size="${' '.join(str(x) for x in body['parameters']['size'])}"/>
             </xacro:if>
             <xacro:if value="${body['type'] == 'sphere'}">
                 <sphere radius="${body['parameters']['radius']}"/>
@@ -218,7 +218,7 @@
 
     <!-- Macro for adding the joint. A dummy link is also added with no visual tag, but with inertial parameters corresponding to the rotating part -->
     <xacro:macro name="add_joint" params="type name father child x y z roll pitch yaw upper_lim lower_lim effort velocity">
-        <joint name="${name}" type="revolute">
+        <joint name="${name}" type="${type}">
             <axis xyz="0 0 1" rpy="0 0 0" />
             <parent link="${father}"/>
             <child link="${child}"/>
