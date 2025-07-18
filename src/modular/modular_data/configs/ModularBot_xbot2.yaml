@@ -79,6 +79,9 @@ xbotcore_plugins:
       use_payload_estimator:
         value: false  # note: keep false if you care to live
         type: bool
+      apply_contraction_mapping:
+        value: false
+        type: bool
       # payload_estimator_link:
       #   value: TCP_gripper_A
       #   type: string
