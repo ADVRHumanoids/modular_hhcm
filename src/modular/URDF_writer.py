@@ -3850,6 +3850,10 @@ class UrdfWriter:
             probdesc[ee_name]['type'] = "Interaction"
             # probdesc[ee_name]['type'] = "Cartesian"
             probdesc[ee_name]['lambda'] = 0.1
+            
+            #HACK: this is for Pino first chain. This is to avoid remembering to set the yaw stiffness each time you start Pino.
+            if i==0:
+                probdesc[ee_name]['stiffness'][-1] = 0
 
             i += 1
 
