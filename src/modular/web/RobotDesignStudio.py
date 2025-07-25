@@ -160,6 +160,13 @@ def cleanup():
 scheduler = BackgroundScheduler(daemon=True)
 if enable_sessions:
     scheduler.add_job(cleanup, 'interval', minutes=30)
+else:
+    sessions['default'] = SessionData(
+        urdf_writer=UrdfWriter(**urdfwriter_kwargs_dict),
+        urdf_writer_fromHW=UrdfWriter(**urdfwriter_kwargs_dict),
+        building_mode_ON=True,
+        last_updated=datetime.now(),
+    )
 scheduler.start()
 
 
