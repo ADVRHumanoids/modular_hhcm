@@ -62,7 +62,7 @@ class ModelStats:
         q = np.zeros((self.nq))
         A = np.zeros((self.nq, 6))
         b = np.zeros((self.nq))
-        tau_rated = 162.0
+        tau_rated = 147.0
         tau_max = np.ones((self.nq))*tau_rated
         tau_min = - tau_max
 
