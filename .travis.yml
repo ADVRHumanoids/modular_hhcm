@@ -18,6 +18,11 @@ notifications:
 
 install:
   - echo "Travis tag is $TRAVIS_TAG"
+  - sudo sh -c 'echo "deb https://apt-archive.postgresql.org/pub/repos/apt focal-pgdg main" > /etc/apt/sources.list.d/postgresql.list'
+  - sudo sh -c 'echo "deb [arch=amd64 signed-by=/usr/share/keyrings/com.rabbitmq.team.gpg] https://deb1.rabbitmq.com/rabbitmq-erlang/ubuntu/focal focal main" > /etc/apt/sources.list.d/rabbitmq.list'
+  - sudo sh -c 'echo "deb [arch=amd64 signed-by=/usr/share/keyrings/com.rabbitmq.team.gpg] https://deb2.rabbitmq.com/rabbitmq-erlang/ubuntu/focal focal main" >> /etc/apt/sources.list.d/rabbitmq.list'
+  - sudo sh -c 'echo "deb [arch=amd64 signed-by=/usr/share/keyrings/com.rabbitmq.team.gpg] https://deb1.rabbitmq.com/rabbitmq-server/ubuntu/focal focal main" >> /etc/apt/sources.list.d/rabbitmq.list'
+  - sudo sh -c 'echo "deb [arch=amd64 signed-by=/usr/share/keyrings/com.rabbitmq.team.gpg] https://deb2.rabbitmq.com/rabbitmq-server/ubuntu/focal focal main" >> /etc/apt/sources.list.d/rabbitmq.list'
   - sudo apt update
   - sudo apt install lsb-release
   - sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
@@ -36,7 +41,7 @@ script:
 
 deploy:
   provider: releases
-  api_key: $GH_TOKEN
+  api_key: $GITHUB_TOKEN
   file: dist/RobotBuilder
   skip_cleanup: true
   on:

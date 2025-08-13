@@ -10,9 +10,18 @@ ARG USER_ID=1021444822
 ARG MODE=&NoNe&
 ARG JOBS=1
 
+
 # run apt update as root
 USER root
 SHELL ["/bin/bash", "-ic"]
+
+# Remove old ROS 1 sources
+RUN sudo rm /etc/apt/sources.list.d/ros1-latest.list
+
+# Update ROS sources
+RUN sudo apt install lsb-release
+RUN sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list' 
+RUN wget -qO - https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add -
 RUN sudo apt-get update
 
 USER user
