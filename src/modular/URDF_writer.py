@@ -2986,6 +2986,10 @@ class UrdfWriter:
 
 
     def get_joint_output_transform(self, past_Joint):
+        # if the joint is reversed, rotate the distal link frame by 180 deg. around y (as per convention)
+        if past_Joint.reverse:
+            past_Joint.Distal_tf = ModuleNode.get_rototranslation(past_Joint.Distal_tf,
+                                                                 tf.transformations.rotation_matrix(3.14, self.yaxis))
         return past_Joint.Distal_tf
 
 
@@ -3141,10 +3145,7 @@ class UrdfWriter:
         ET.SubElement(joint_el, "parent", link=parent_name)
         ET.SubElement(joint_el, "child", link=child_name)
 
-        #TODO: check if the identity matrix is correct or just a placeholder here
-        joint_transform = ModuleNode.get_rototranslation(tf.transformations.identity_matrix(),
-                                                         module_obj.Proximal_tf)
-        x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(joint_transform)
+        x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(module_obj.Proximal_tf)
 
         # add origin
         joint_pose = ModuleNode.Module.Attribute({'x': x, 'y': y, 'z': z, 'roll': roll, 'pitch': pitch, 'yaw': yaw})
@@ -3212,34 +3213,11 @@ class UrdfWriter:
 
         self.collision_elements.append((parent_name, new_Joint.stator_name))
 
-        # mesh_transform = ModuleNode.get_rototranslation(tf.transformations.rotation_matrix(-1.57, self.zaxis),
-        #                                            tf.transformations.rotation_matrix(3.14, self.xaxis))
-        mesh_transform = tf.transformations.identity_matrix()
-
-        # If the module is mounted in the opposite direction rotate the final frame by 180 deg., as per convention
-        if reverse:
-            prox_mesh_transform = ModuleNode.get_rototranslation(mesh_transform, tf.transformations.rotation_matrix(-3.14, self.yaxis))
-            prox_mesh_transform = ModuleNode.get_rototranslation(prox_mesh_transform, tf.transformations.inverse_matrix(new_Joint.Proximal_tf))
-            # prox_mesh_transform = ModuleNode.get_rototranslation(mesh_transform, tf.transformations.translation_matrix((-0.0591857,0,-0.095508)))#tf.transformations.inverse_matrix(new_Joint.Proximal_tf))
-            # prox_mesh_transform = ModuleNode.get_rototranslation(prox_mesh_transform, tf.transformations.rotation_matrix(3.14, self.xaxis))
-            # prox_mesh_transform = ModuleNode.get_rototranslation(prox_mesh_transform,
-            #                                                      tf.transformations.rotation_matrix(1.57, self.zaxis))
-        else:
-            prox_mesh_transform = mesh_transform
-        x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(prox_mesh_transform)
-
         # Add proximal link
         self.add_link_element(new_Joint.stator_name, new_Joint, 'body_1')
         self.add_gazebo_element(new_Joint, new_Joint.gazebo.body_1, new_Joint.stator_name)
 
         self.add_joint_element(new_Joint.name, new_Joint, new_Joint.stator_name, new_Joint.distal_link_name)
-
-        if reverse:
-            dist_mesh_transform = ModuleNode.get_rototranslation(new_Joint.Distal_tf, mesh_transform)
-        else:
-            dist_mesh_transform = mesh_transform
-
-        x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(dist_mesh_transform)
 
         # Add distal link
         self.add_link_element(new_Joint.distal_link_name, new_Joint, 'body_2')
@@ -3247,10 +3225,6 @@ class UrdfWriter:
        
         # Add proximal/distal links pair to the list of collision elements to ignore
         self.collision_elements.append((new_Joint.stator_name, new_Joint.distal_link_name))
-
-        if reverse:
-            new_Joint.Distal_tf = ModuleNode.get_rototranslation(new_Joint.Distal_tf,
-                                                                 tf.transformations.rotation_matrix(3.14, self.yaxis))
 
         # add the fast rotor part to the inertia of the link/rotor part as a new link. NOTE: right now this is
         # attached at the rotating part not to the fixed one (change it so to follow Pholus robot approach)
@@ -3451,7 +3425,7 @@ class UrdfWriter:
 
         interface_transform = self.get_link_output_transform(past_Link)
 
-        transform = self.get_proximal_transform(interface_transform, offsets, reverse=reverse) # TODO check reverse
+        transform = self.get_proximal_transform(interface_transform, offsets, reverse=reverse)
 
         # HACK: to handle 90° offset between PINO and CONCERT flanges
         transform = self.apply_adapter_transform_rotation(transform, past_Link.flange_size, new_Hub.flange_size)
@@ -3487,7 +3461,7 @@ class UrdfWriter:
 
         interface_transform = self.get_joint_output_transform(past_Joint)
 
-        transform = self.get_proximal_transform(interface_transform, offsets, reverse=reverse)  # TODO check reverse
+        transform = self.get_proximal_transform(interface_transform, offsets, reverse=reverse)
 
         # HACK: to handle 90° offset between PINO and CONCERT flanges
         transform = self.apply_adapter_transform_rotation(transform, past_Joint.flange_size, new_Hub.flange_size)

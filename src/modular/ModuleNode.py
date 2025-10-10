@@ -126,12 +126,12 @@ class JSONInterpreter(object):
             # kinematics
             proximal_pose = Module.Attribute({'pose': dict_joint['pose_parent']}) 
             # x, y, z, roll, pitch, yaw = get_xyzrpy(tf.transformations.numpy.array(dict_joint['pose_parent']))
-            # proximal_pose = Module.Attribute({'x': x, 'y': y, 'z': z, 'roll': roll, 'pitch': pitch, 'yaw': yaw})
+            # proximal_pose = Module.Attribute({'x': float(x), 'y': float(y), 'z': float(z), 'roll': float(roll), 'pitch': float(pitch), 'yaw': float(yaw)})
             update_nested_dict(self.owner.kinematics.joint.proximal.__dict__, proximal_pose.__dict__)
             
             distal_pose = Module.Attribute({'pose': dict_joint['pose_child']}) 
             # x, y, z, roll, pitch, yaw = get_xyzrpy(tf.transformations.numpy.array(dict_joint['pose_child']))
-            # distal_pose = Module.Attribute({'x': x, 'y': y, 'z': z, 'roll': roll, 'pitch': pitch, 'yaw': yaw})
+            # distal_pose = Module.Attribute({'x': float(x), 'y': float(y), 'z': float(z), 'roll': float(roll), 'pitch': float(pitch), 'yaw': float(yaw)})
             update_nested_dict(self.owner.kinematics.joint.distal.__dict__, distal_pose.__dict__)
             
             # joint data
@@ -238,7 +238,7 @@ class JSONInterpreter(object):
                 if visual:
                     # NOTE: pose of visual properties should be expressed in urdf format at the moment
                     x, y, z, roll, pitch, yaw = get_xyzrpy(tf.transformations.numpy.array(visual['pose']))
-                    attr.pose = Module.Attribute({'x': x, 'y': y, 'z': z, 'roll': roll, 'pitch': pitch, 'yaw': yaw})
+                    attr.pose = Module.Attribute({'x': float(x), 'y': float(y), 'z': float(z), 'roll': float(roll), 'pitch': float(pitch), 'yaw': float(yaw)})
                 visual_properties.append(attr)
             visual_attr = Module.Attribute({body_name: visual_properties})
             update_nested_dict(visual_obj.__dict__, visual_attr.__dict__)
@@ -255,7 +255,7 @@ class JSONInterpreter(object):
                 if collision:
                     # NOTE: pose of collision properties should be expressed in urdf format at the moment
                     x, y, z, roll, pitch, yaw = get_xyzrpy(tf.transformations.numpy.array(collision['pose']))
-                    attr.pose = Module.Attribute({'x': x, 'y': y, 'z': z, 'roll': roll, 'pitch': pitch, 'yaw': yaw})
+                    attr.pose = Module.Attribute({'x': float(x), 'y': float(y), 'z': float(z), 'roll': float(roll), 'pitch': float(pitch), 'yaw': float(yaw)})
                 collision_properties.append(attr)
             collision_attr = Module.Attribute({body_name: collision_properties})
             update_nested_dict(collision_obj.__dict__, collision_attr.__dict__)
@@ -362,8 +362,10 @@ class Module(object):
             D = tf.transformations.concatenate_matrices(T, R)
 
             if reverse:
-                P = tf.transformations.inverse_matrix(D)
-                D = tf.transformations.inverse_matrix(P)
+                P_inv = tf.transformations.inverse_matrix(P)
+                D_inv = tf.transformations.inverse_matrix(D)
+                P = D_inv
+                D = P_inv
 
         elif self.kinematics_convention is KinematicsConvention.DH_EXT:
             H1 = tf.transformations.rotation_matrix(proximal.delta_pl, zaxis)
@@ -381,16 +383,20 @@ class Module(object):
             D = tf.transformations.concatenate_matrices(H1, H2, H3, H4, H5)
 
             if reverse:
-                P = tf.transformations.inverse_matrix(D)
-                D = tf.transformations.inverse_matrix(P)
+                P_inv = tf.transformations.inverse_matrix(P)
+                D_inv = tf.transformations.inverse_matrix(D)
+                P = D_inv
+                D = P_inv
 
         elif self.kinematics_convention is KinematicsConvention.AFFINE:
             P = tf.transformations.numpy.array(proximal.pose)
             D = tf.transformations.numpy.array(distal.pose)
             
             if reverse:
-                P = tf.transformations.inverse_matrix(D)
-                D = tf.transformations.inverse_matrix(P)
+                P_inv = tf.transformations.inverse_matrix(P)
+                D_inv = tf.transformations.inverse_matrix(D)
+                P = D_inv
+                D = P_inv
 
         else:
             raise ValueError("Unknown kinematic convention")
@@ -518,6 +524,52 @@ class Module(object):
             return tf.transformations.identity_matrix()
         else:
             raise ValueError("Unknown module type")
+        
+    def swap_bodies(self):
+        """Swap body_1 and body_2 of a joint module"""
+        if self.type in ModuleClass.joint_modules():
+            # swap dynamics
+            body_1 = getattr(self.dynamics, 'body_1', None)
+            body_2 = getattr(self.dynamics, 'body_2', None)
+            self.dynamics.body_1 = body_2
+            self.dynamics.body_2 = body_1
+            
+            # swap visual
+            body_1 = getattr(self.visual, 'body_1', None)
+            body_2 = getattr(self.visual, 'body_2', None)
+            self.visual.body_1 = body_2
+            self.visual.body_2 = body_1
+            
+            # swap collision
+            body_1 = getattr(self.collision, 'body_1', None)
+            body_2 = getattr(self.collision, 'body_2', None)
+            self.collision.body_1 = body_2
+            self.collision.body_2 = body_1
+            
+            # swap gazebo
+            body_1 = getattr(self.gazebo, 'body_1', None)
+            body_2 = getattr(self.gazebo, 'body_2', None)
+            self.gazebo.body_1 = body_2
+            self.gazebo.body_2 = body_1
+            
+            # apply transformation to the visual and collision bodies (when swapped they are expressed in the wrong frame)
+            for bodies in [getattr(self.visual, 'body_1', []), getattr(self.collision, 'body_1', [])]:
+                for body in bodies or []:
+                    pose = body.pose
+                    body_1_visual_T = tf.transformations.translation_matrix((pose.x, pose.y, pose.z))
+                    body_1_visual_R = tf.transformations.euler_matrix(pose.roll, pose.pitch, pose.yaw, 'sxyz')
+                    body_1_visual_tf = tf.transformations.concatenate_matrices(body_1_visual_T, body_1_visual_R)
+                    pose.x, pose.y, pose.z, pose.roll, pose.pitch, pose.yaw = get_xyzrpy(tf.transformations.concatenate_matrices(self.Proximal_tf, body_1_visual_tf))
+
+            for bodies in [getattr(self.visual, 'body_2', []), getattr(self.collision, 'body_2', [])]:
+                for body in bodies or []:
+                    pose = body.pose
+                    body_2_visual_T = tf.transformations.translation_matrix((pose.x, pose.y, pose.z))
+                    body_2_visual_R = tf.transformations.euler_matrix(pose.roll, pose.pitch, pose.yaw, 'sxyz')
+                    body_2_visual_tf = tf.transformations.concatenate_matrices(body_2_visual_T, body_2_visual_R)
+                    pose.x, pose.y, pose.z, pose.roll, pose.pitch, pose.yaw = get_xyzrpy(tf.transformations.concatenate_matrices(self.Distal_tf, body_2_visual_tf))
+        else:
+            raise ValueError("swap_bodies can be called only on joint modules")
 
 # 
 class ModuleNode(Module, anytree.NodeMixin):
@@ -586,6 +638,8 @@ def module_from_yaml(filename, father=None, yaml_template=None, reverse=False):
     # Create an instance of a ModuleNode class from the dictionary obtained from YAML
     result = ModuleNode(data, filename, format=ModuleDescriptionFormat.YAML, parent=father, template_dictionary=template_data)
     result.get_transform(reverse)
+    if reverse and result.type in ModuleClass.joint_modules():
+        result.swap_bodies()
     return result 
 
 #
@@ -598,6 +652,8 @@ def module_from_yaml_dict(yaml_dict, father=None, yaml_template_dict=None, rever
     # Create an instance of a ModuleNode class from the dictionary obtained from YAML
     result = ModuleNode(yaml_dict, yaml_dict['header']['name'], format=ModuleDescriptionFormat.YAML, parent=father, template_dictionary=template_dict)
     result.get_transform(reverse)
+    if reverse and result.type in ModuleClass.joint_modules():
+        result.swap_bodies()
     return result
 # 
 def module_from_json(filename, father=None, yaml_template=None, reverse=False):
@@ -618,6 +674,8 @@ def module_from_json(filename, father=None, yaml_template=None, reverse=False):
     # Create an instance of a ModuleNode class from the dictionary obtained from JSON
     result = ModuleNode(data, filename, format=ModuleDescriptionFormat.JSON, parent=father, template_dictionary=template_data)
     result.get_transform(reverse)
+    if reverse and result.type in ModuleClass.joint_modules():
+        result.swap_bodies()
     return result 
 
 #
@@ -630,6 +688,8 @@ def module_from_json_dict(json_dict, father=None, yaml_template_dict=None, rever
     # Create an instance of a ModuleNode class from the dictionary obtained from JSON
     result = ModuleNode(json_dict, json_dict['header']['name'], format=ModuleDescriptionFormat.JSON, parent=father, template_dictionary=template_dict)
     result.get_transform(reverse)
+    if reverse and result.type in ModuleClass.joint_modules():
+        result.swap_bodies()
     return result
 
 def main():
