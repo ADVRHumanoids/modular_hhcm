@@ -4,6 +4,7 @@
 # pylint: disable=line-too-long, missing-function-docstring, missing-module-docstring
 
 from __future__ import print_function
+import math
 from future.utils import iteritems
 from abc import ABCMeta, abstractmethod
 import os
@@ -164,10 +165,6 @@ class Plugin:
     def add_wheel_to_srdf(self):
         pass
 
-    @abstractmethod
-    def add_wheel_group_to_srdf(self):
-        pass
-
 
     # TODO: This should be fixed. Should not be here, probably a SRDFwriter class could be implemented
     def write_srdf(self, builder_joint_map=None):
@@ -186,44 +183,37 @@ class Plugin:
 
         active_modules_chains = self.urdf_writer.get_actuated_modules_chains()
         self.urdf_writer.print(active_modules_chains)
-
-        # # This should be added first so they appear first in the srdf file. This is important for the XBotInterface srdf parser!
-        # for idx, joints_chain in enumerate(active_modules_chains):
-        #     group_name = "chain" + self.urdf_writer.find_chain_tag(joints_chain)
-        #     groups.append(ET.Element('group', name=group_name))
-        #     base_link = self.urdf_writer.find_chain_base_link(joints_chain)
-        #     tip_link = self.urdf_writer.find_chain_tip_link(joints_chain)
-        #     chains.append(ET.SubElement(groups[idx], 'chain', base_link=base_link, tip_link=tip_link))
-        #     root.append(groups[idx])
         
         # Create groups for chains, arms and wheels. Also 'home_group_state' for homing
         chains_group = ET.SubElement(root, 'group', name="chains")
         arms_group = ET.SubElement(root, 'group', name="arms")
         hands_group = ET.SubElement(root, 'group', name="hands")
-        wheels_group = self.add_wheel_group_to_srdf(root, "wheels")
+        wheels_group = ET.SubElement(root, 'group', name="wheels")
         home_group_state = ET.SubElement(root, 'group_state', name="home", group="chains")
 
         for joints_chain in active_modules_chains:
             # create chain group and add as child the chain element (base_link, tip_link)
             group_name = "chain" + self.urdf_writer.find_chain_tag(joints_chain)
             chain_group = ET.Element('group', name=group_name)
-            chains.append(chain_group)
             base_link = self.urdf_writer.find_chain_base_link(joints_chain)
             tip_link = self.urdf_writer.find_chain_tip_link(joints_chain)
             ET.SubElement(chain_group, 'chain', base_link=base_link, tip_link=tip_link)
+            # add chain group to srdf chains group. (Will be added to srdf root at the end, so it will appear first in the srdf file) 
+            chains.append(chain_group)
             
             for joint_module in joints_chain:
                 # add joints chain to srdf end-effectors group
-                if joint_module.type in ModuleClass.end_effector_modules():
-                    groups_in_arms_group.append(ET.SubElement(arms_group, 'group', name=group_name))
-                    # TODO: add end-effector module to srdf end-effectors group. To be fixed for all end-effector types.
-                    hand_name = "hand" + self.urdf_writer.find_chain_tag(joints_chain)
-                    ET.SubElement(hands_group, 'group', name=hand_name)
-                    end_effectors += filter(lambda item: item is not None, [self.add_gripper_to_srdf(et_root=None,
-                                                                                                     module=joint_module,
-                                                                                                     gripper_name=None,
-                                                                                                     hand_name=hand_name,
-                                                                                                     parent_group_name=None)])
+                # NOTE: This comment is temporary, should be uncommented
+                # if joint_module.type in ModuleClass.end_effector_modules():
+                #     groups_in_arms_group.append(ET.SubElement(arms_group, 'group', name=group_name))
+                #     # TODO: add end-effector module to srdf end-effectors group. To be fixed for all end-effector types.
+                #     hand_name = "hand" + self.urdf_writer.find_chain_tag(joints_chain)
+                #     ET.SubElement(hands_group, 'group', name=hand_name)
+                    
+                #     end_effectors += filter(lambda item: item is not None, [self.add_gripper_to_srdf(et_root=root,
+                #                                                                                      module=joint_module,
+                #                                                                                      hand_name=hand_name,
+                #                                                                                      parent_group_name=None)])
                 
                 # add wheel module to srdf wheels group
                 if joint_module.type is ModuleType.WHEEL:
@@ -240,15 +230,7 @@ class Plugin:
                                                 'joint', 
                                                 name=joint_name, 
                                                 value=str(homing_value)))
-                elif joint_module.type is ModuleType.TOOL_EXCHANGER:
-                    tool_exchanger_group = ET.SubElement(root, 'group', name="ToolExchanger")
-                    end_effectors.append(ET.SubElement(tool_exchanger_group, 
-                                                       'joint',
-                                                       name=joint_module.name + '_fixed_joint'))
-                # elif joint_module.type is ModuleType.GRIPPER:
-                #     hand_name = "hand" + self.urdf_writer.find_chain_tag(joints_chain)
-                #     end_effectors += filter(lambda item: item is not None, [self.add_gripper_to_srdf(root, joint_module.name, hand_name, group_name)])
-
+                    
         index = 0
         for idx, group in enumerate(chains):
             # insert ET.Element group in root at index idx (at the top of srdf xml)
@@ -337,29 +319,33 @@ class RosControlPlugin(Plugin):
                 self.urdf_writer.root.remove(transmission)
 
     # SRDF
-    def add_gripper_to_srdf(self, et_root, module, gripper_name, hand_name, parent_group_name):
+    def add_gripper_to_srdf(self, et_root, module, hand_name, parent_group_name):
         hand_group = ET.SubElement(et_root, "group", name=hand_name)
         if module.type is ModuleType.GRIPPER:
-            ET.SubElement(hand_group, "link", name=gripper_name)
-            ET.SubElement(hand_group, "link", name=gripper_name+"_leftfinger")
-            ET.SubElement(hand_group, "link", name=gripper_name+"_rightfinger")
-            ET.SubElement(hand_group, "joint", name=gripper_name+"_finger_joint1")
-            ET.SubElement(hand_group, "passive_joint", name=gripper_name+"_finger_joint2")
+            ET.SubElement(hand_group, "link", name=module.name)
+            ET.SubElement(hand_group, "link", name=module.name+"_leftfinger")
+            ET.SubElement(hand_group, "link", name=module.name+"_rightfinger")
+            ET.SubElement(hand_group, "joint", name=module.name+"_finger_joint1")
+            ET.SubElement(hand_group, "passive_joint", name=module.name+"_finger_joint2")
             open_state = ET.SubElement(et_root, "group_state", name="open", group=hand_name)
-            ET.SubElement(open_state, "joint", name=gripper_name+"_finger_joint1", value="0.05")
-            ET.SubElement(open_state, "joint", name=gripper_name+"_finger_joint2", value="0.05")
+            ET.SubElement(open_state, "joint", name=module.name+"_finger_joint1", value="0.05")
+            ET.SubElement(open_state, "joint", name=module.name+"_finger_joint2", value="0.05")
             close_state = ET.SubElement(et_root, "group_state", name="close", group=hand_name)
-            ET.SubElement(close_state, "joint", name=gripper_name+"_finger_joint1", value="0.0")
-            ET.SubElement(close_state, "joint", name=gripper_name+"_finger_joint2", value="0.0")
+            ET.SubElement(close_state, "joint", name=module.name+"_finger_joint1", value="0.0")
+            ET.SubElement(close_state, "joint", name=module.name+"_finger_joint2", value="0.0")
             # remove collisions
-            ET.SubElement(et_root, "disable_collisions", link1=gripper_name, link2="TCP_"+gripper_name, reason="Adjacent")
-            ET.SubElement(et_root, "disable_collisions", link1=gripper_name, link2=gripper_name+"_leftfinger", reason="Adjacent")
-            ET.SubElement(et_root, "disable_collisions", link1=gripper_name, link2=gripper_name+"_rightfinger", reason="Adjacent")
-            ET.SubElement(et_root, "disable_collisions", link1="TCP_"+gripper_name, link2=gripper_name+"_rightfinger", reason="Default")
-            ET.SubElement(et_root, "disable_collisions", link1="TCP_"+gripper_name, link2=gripper_name+"_leftfinger",reason="Default")
-            ET.SubElement(et_root, "disable_collisions", link1=gripper_name + "_rightfinger", link2=gripper_name+"_leftfinger", reason="Default")
+            ET.SubElement(et_root, "disable_collisions", link1=module.name, link2="TCP_"+module.name, reason="Adjacent")
+            ET.SubElement(et_root, "disable_collisions", link1=module.name, link2=module.name+"_leftfinger", reason="Adjacent")
+            ET.SubElement(et_root, "disable_collisions", link1=module.name, link2=module.name+"_rightfinger", reason="Adjacent")
+            ET.SubElement(et_root, "disable_collisions", link1="TCP_"+module.name, link2=module.name+"_rightfinger", reason="Default")
+            ET.SubElement(et_root, "disable_collisions", link1="TCP_"+module.name, link2=module.name+"_leftfinger",reason="Default")
+            ET.SubElement(et_root, "disable_collisions", link1=module.name + "_rightfinger", link2=module.name+"_leftfinger", reason="Default")
+        elif module.type is ModuleType.TOOL_EXCHANGER:
+            tool_exchanger_group = ET.SubElement(et_root, 'group', name="ToolExchanger")
+            ET.SubElement(tool_exchanger_group, 'joint', name=module.name + '_fixed_joint')
 
-        endeffector_group = ET.SubElement(et_root, "end-effector", name="TCP", parent_link="TCP_"+gripper_name,
+
+        endeffector_group = ET.SubElement(et_root, "end-effector", name="TCP", parent_link="TCP_"+module.name,
                       group=hand_name, parent_group=parent_group_name)
         # add arm_hand group
         arm_hand_group = ET.SubElement(et_root, "group", name="arm_" + hand_name)
@@ -370,9 +356,6 @@ class RosControlPlugin(Plugin):
 
     def add_wheel_to_srdf(self, wheel_group_name, wheel_name):
         return None
-
-    def add_wheel_group_to_srdf(self, root, wheel_group_name):
-        pass
 
     def write_srdf(self, builder_joint_map=None):
         """Generates a basic srdf so that the model can be used right away with XBotCore"""
@@ -463,7 +446,6 @@ class RosControlPlugin(Plugin):
                     # groups_in_hands_group.append(ET.SubElement(hands_group, 'group', name=hand_name))
                     end_effectors += filter(lambda item: item is not None, [self.add_gripper_to_srdf(et_root=root, 
                                                                                                      module=joint_module,
-                                                                                                     gripper_name=joint_module.name, 
                                                                                                      hand_name=hand_name, 
                                                                                                      parent_group_name=group_name)])
                     controller_list.append(OrderedDict([('name', 'fake_' + hand_name + '_controller'), ('joints', [])]))
@@ -566,14 +548,11 @@ class XBotCorePlugin(Plugin):
         pass
 
     # SRDF
-    def add_gripper_to_srdf(self, et_root, module, gripper_name, hand_name, parent_group_name):
+    def add_gripper_to_srdf(self, et_root, module, hand_name, parent_group_name):
         return None
 
     def add_wheel_to_srdf(self, wheel_group_name, wheel_name):
         return None
-
-    def add_wheel_group_to_srdf(self, root, wheel_group_name):
-        pass
 
     # CONFIG
     def write_lowlevel_config(self, use_robot_id=False):
@@ -689,10 +668,18 @@ class XBot2Plugin(Plugin):
                 self.pid_node.remove(pid)
 
     # SRDF
-    def add_gripper_to_srdf(self, et_root, module, gripper_name, hand_name, parent_group_name):
+    def add_gripper_to_srdf(self, et_root, module, hand_name, parent_group_name):
 
+        # Create custom group for the tool exchanger
+        if module.type is ModuleType.TOOL_EXCHANGER:
+            tool_exchanger_group = ET.SubElement(et_root, 'group', name="ToolExchanger")
+            ET.SubElement(tool_exchanger_group, 'joint', name=module.name + '_fixed_joint')
+
+        # If the module has no fingers, return
         if len(module.finger_names) == 0:
             return None
+
+        # Create chain group for the gripper
         chain_group = ET.Element('group', name=hand_name)
         for finger in module.finger_names:
             base_link = module.base_link_name
@@ -703,10 +690,6 @@ class XBot2Plugin(Plugin):
     def add_wheel_to_srdf(self, wheel_group, wheel_name):
         wheel = ET.SubElement(wheel_group, 'joint', name=wheel_name)
         return wheel
-
-    def add_wheel_group_to_srdf(self, root, wheel_group_name):
-        wheel_group = ET.SubElement(root, 'group', name=wheel_group_name)
-        return wheel_group
 
     # JOINT MAP
     def write_joint_map(self, use_robot_id=False):
@@ -1428,11 +1411,6 @@ class UrdfWriter:
 
             #add the module
             data = self.add_module(module_filename, {}, reverse=False, robot_id=robot_id, active_ports=active_ports, module_name=module_name)
-                
-        ## HACK: Manually add passive end effector for now!
-        # self.add_simple_ee(0.0, 0.0, 0.135, mass=0.23)
-        # data = self.add_module('concert/passive_end_effector_panel.json', {}, False)
-        # data = self.add_module('experimental/passive_end_effector_pen.json', {}, False)
 
         self.urdf_string = self.process_urdf()
 
@@ -2904,27 +2882,49 @@ class UrdfWriter:
             setattr(new_Link, 'tcp_name', 'TCP_' + new_Link.name)
             setattr(new_Link, 'joint_name_finger1', new_Link.name + '_finger_joint1')
             setattr(new_Link, 'joint_name_finger2', new_Link.name + '_finger_joint2')
+            setattr(new_Link, 'name_finger1', new_Link.name + '_finger1')
+            setattr(new_Link, 'name_finger2', new_Link.name + '_finger2')
 
             setattr(new_Link, 'base_link_name', new_Link.name)
             # this list will contain the names of the fingers or any moving extremity of the end effector
-            setattr(new_Link, 'finger_names', [new_Link.name + '_finger1', new_Link.name + '_finger2'])
+            setattr(new_Link, 'finger_names', [new_Link.name_finger1, new_Link.name_finger2])
             
-            #  TODO: add_gripper_fingers still use the xacro to load the yaml file and get the parameters. It should be changed to use the python function for uniformity
-            ET.SubElement(self.root,
-                            "xacro:add_gripper_fingers",
-                            type="gripper_fingers",
-                            name=new_Link.name,
-                            joint_name_finger1=new_Link.joint_name_finger1,
-                            joint_name_finger2=new_Link.joint_name_finger2,
-                            TCP_name=new_Link.tcp_name,
-                            filename=new_Link.filename)
-            # add the xacro:add_gripper_fingers element to the list of urdf elements
-            new_Link.xml_tree_elements.append(new_Link.name)
-            new_Link.mesh_names += new_Link.finger_names
+            finger1 = self.add_link_element(new_Link.name_finger1, new_Link, 'body_2')
+            finger2 = self.add_link_element(new_Link.name_finger2, new_Link, 'body_3')
+            self.add_gazebo_element(new_Link, new_Link.gazebo.body_2, new_Link.name_finger1)
+            self.add_gazebo_element(new_Link, new_Link.gazebo.body_3, new_Link.name_finger2)
 
-            # TO BE FIXED: ok for ros_control. How will it be for xbot2?
-            self.control_plugin.add_joint(new_Link.joint_name_finger1)
-            self.control_plugin.add_joint(new_Link.joint_name_finger2)
+            self.add_joint_element(new_Link.joint_name_finger1, new_Link, new_Link.base_link_name, new_Link.name_finger1)
+
+            tmp_new_Link = copy.deepcopy(new_Link)
+
+            # rotate the finger transform by 180 deg. around z
+            tmp_new_Link.Proximal_tf = tf.transformations.concatenate_matrices(
+                new_Link.Proximal_tf,
+                tf.transformations.rotation_matrix(math.pi, [0, 0, 1], point=[0, 0, 0])
+            )
+            # mirror the mesh on the xy directions
+            tmp_new_Link.Proximal_tf[0,3] = -1*new_Link.Proximal_tf[0,3]
+            tmp_new_Link.Proximal_tf[1,3] = -1*new_Link.Proximal_tf[1,3]
+
+            self.add_joint_element(tmp_new_Link.joint_name_finger2, tmp_new_Link, tmp_new_Link.base_link_name, tmp_new_Link.name_finger2, mimic_joint=new_Link.joint_name_finger1)
+            del tmp_new_Link
+
+            x_ee, y_ee, z_ee, roll_ee, pitch_ee, yaw_ee = ModuleNode.get_xyzrpy(tf.transformations.numpy.array(new_Link.kinematics.link.pose))
+            setattr(new_Link, 'tcp_name', 'ee' + new_Link.tag)
+            ET.SubElement(self.root,
+                          "xacro:add_tcp",
+                          type="pen",
+                          name=new_Link.tcp_name,
+                          father=new_Link.name,
+                          x=x_ee,
+                          y=y_ee,
+                          z=z_ee,
+                          roll=roll_ee,
+                          pitch=pitch_ee,
+                          yaw=yaw_ee)
+            # add the xacro:add_tcp element to the list of urdf elements
+            new_Link.xml_tree_elements.append(new_Link.tcp_name)
 
         elif new_Link.type is ModuleType.SIZE_ADAPTER:
             setattr(new_Link, 'name', 'L_' + str(new_Link.i) + '_size_adapter_' + str(new_Link.p) + new_Link.tag)

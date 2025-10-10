@@ -81,7 +81,7 @@ class JSONInterpreter(object):
         """Dispatch the parsing of the dictionary d according to the module type"""
         header_obj = getattr(self.owner, "header")
         update_nested_dict(header_obj.__dict__, d['header'])
-        if self.owner.type in ModuleClass.link_modules() | ModuleClass.end_effector_modules() - {ModuleType.DAGANA}:
+        if self.owner.type in ModuleClass.link_modules() | ModuleClass.end_effector_modules() - {ModuleType.DAGANA, ModuleType.GRIPPER}:
             if len(d['joints']) != 0:
                 raise ValueError('A link must have no joints')
             if len(d['bodies']) != 1:
@@ -506,11 +506,11 @@ class Module(object):
     # 
     def get_transform(self, reverse):
         """Computes the correct transformation depending on the module type"""
-        if self.type in ModuleClass.joint_modules():
+        if self.type in ModuleClass.joint_modules() | {ModuleType.GRIPPER}:
             return self.get_proximal_distal_matrices(reverse)
         if self.type in ModuleClass.hub_modules():
             return self.get_hub_connections_tf(reverse)
-        if self.type in ModuleClass.link_modules() | ModuleClass.end_effector_modules() - {ModuleType.DAGANA, ModuleType.BASE_LINK}:
+        if self.type in ModuleClass.link_modules() | ModuleClass.end_effector_modules() - {ModuleType.DAGANA, ModuleType.BASE_LINK, ModuleType.GRIPPER}:
             return self.get_homogeneous_matrix(reverse)
         if self.type in {ModuleType.DAGANA}:
             return lambda reverse: None
