@@ -142,6 +142,10 @@ class JSONInterpreter(object):
             self.owner.actuator_data.effort = dict_joint['limits']['peak_torque']
             self.owner.actuator_data.gear_ratio = dict_joint['gear_ratio']
             self.owner.actuator_data.zero_offset = 0.0
+            try:
+                self.owner.actuator_data.axis = dict_joint['axis']
+            except KeyError:
+                self.owner.actuator_data.axis = [0, 0, 1]  # default axis
             # dynamics
             self.set_dynamic_properties(self.owner.dynamics.body_1, dict_body_1)
             self.set_dynamic_properties(self.owner.dynamics.body_2, dict_body_2)
@@ -198,6 +202,10 @@ class JSONInterpreter(object):
             self.owner.actuator_data.effort = dict_joint['limits']['peak_torque']
             self.owner.actuator_data.gear_ratio = dict_joint['gear_ratio']
             self.owner.actuator_data.zero_offset = 0.0
+            try:
+                self.owner.actuator_data.axis = dict_joint['axis']
+            except KeyError:
+                self.owner.actuator_data.axis = [0, 0, 1]  # default axis
             # CentAcESC
             self.owner.CentAcESC = Module.Attribute(dict_joint['control_parameters']['xbot'])
             # xbot_gz

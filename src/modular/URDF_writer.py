@@ -3126,6 +3126,64 @@ class UrdfWriter:
             else:
                 self.add_inertial(link_el, dynamics_body)
 
+        return link_el
+
+
+    def add_joint_element(self, joint_name, module_obj, parent_name, child_name, mimic_joint=None):
+        joint_el = ET.SubElement(self.root,
+                                    'joint',
+                                    name=joint_name,
+                                    type=module_obj.actuator_data.type)
+        # Add the joint to the list of urdf elements of the module
+        module_obj.xml_tree_elements.append(joint_name)
+
+        # add parent and child
+        ET.SubElement(joint_el, "parent", link=parent_name)
+        ET.SubElement(joint_el, "child", link=child_name)
+
+        #TODO: check if the identity matrix is correct or just a placeholder here
+        joint_transform = ModuleNode.get_rototranslation(tf.transformations.identity_matrix(),
+                                                         module_obj.Proximal_tf)
+        x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(joint_transform)
+
+        # add origin
+        joint_pose = ModuleNode.Module.Attribute({'x': x, 'y': y, 'z': z, 'roll': roll, 'pitch': pitch, 'yaw': yaw})
+        self.add_origin(joint_el, joint_pose)
+
+        actuator_data = module_obj.actuator_data
+        if actuator_data.type != 'fixed':
+
+            # add limits if not fixed joint
+            ET.SubElement(joint_el, "limit",
+                        effort=str(actuator_data.effort),
+                        velocity=str(actuator_data.velocity),
+                        lower=str(actuator_data.lower_limit),
+                        upper=str(actuator_data.upper_limit))
+            
+            # add axis
+            if hasattr(actuator_data, 'axis'):
+                axis = actuator_data.axis
+                ET.SubElement(joint_el, "axis",
+                            xyz=str(axis[0]) + " " + str(axis[1]) + " " + str(axis[2]))
+            else:
+                ET.SubElement(joint_el, "axis",
+                            xyz="0 0 1")  # default axis if not specified  
+                
+            if mimic_joint is not None:
+                ET.SubElement(joint_el, "mimic",
+                            joint=mimic_joint,
+                            multiplier="1",
+                            offset="0") 
+    
+            ####
+            # add xbot/control plugin
+            #ET.SubElement(self.xbot2_pid, "xacro:add_xbot2_pid", name=new_Joint.name, profile="small_mot")
+            self.control_plugin.add_joint(joint_name,
+                                        control_params=module_obj.xbot_gz if hasattr(module_obj, 'xbot_gz') else None)
+            ####
+
+        return joint_el
+
 
     def add_joint(self, new_Joint, parent_name, transform, reverse):
         x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(transform)
@@ -3174,40 +3232,7 @@ class UrdfWriter:
         self.add_link_element(new_Joint.stator_name, new_Joint, 'body_1')
         self.add_gazebo_element(new_Joint, new_Joint.gazebo.body_1, new_Joint.stator_name)
 
-        joint_transform = ModuleNode.get_rototranslation(tf.transformations.identity_matrix(),
-                                                         new_Joint.Proximal_tf)
-        x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(joint_transform)
-
-        actuator_data = new_Joint.actuator_data
-        upper_lim = str(actuator_data.upper_limit)
-        lower_lim = str(actuator_data.lower_limit)
-        effort = str(actuator_data.effort)
-        velocity = str(actuator_data.velocity)
-
-        ET.SubElement(self.root,
-                      "xacro:add_joint",
-                      type=new_Joint.actuator_data.type,
-                      name=new_Joint.name,
-                      father=new_Joint.stator_name,
-                      child=new_Joint.distal_link_name,
-                      x=x,
-                      y=y,
-                      z=z,
-                      roll=roll,
-                      pitch=pitch,
-                      yaw=yaw,
-                      upper_lim=upper_lim,
-                      lower_lim=lower_lim,
-                      effort=effort,
-                      velocity=velocity)
-        # add the xacro:add_joint element to the list of urdf elements
-        new_Joint.xml_tree_elements.append(new_Joint.name)
-
-        ####
-        #ET.SubElement(self.xbot2_pid, "xacro:add_xbot2_pid", name=new_Joint.name, profile="small_mot")
-        self.control_plugin.add_joint(new_Joint.name,
-                                    control_params=new_Joint.xbot_gz if hasattr(new_Joint, 'xbot_gz') else None)
-        ####
+        self.add_joint_element(new_Joint.name, new_Joint, new_Joint.stator_name, new_Joint.distal_link_name)
 
         if reverse:
             dist_mesh_transform = ModuleNode.get_rototranslation(new_Joint.Distal_tf, mesh_transform)
