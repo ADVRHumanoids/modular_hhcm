@@ -27,6 +27,9 @@
     <xacro:arg name="drill_camera" default="false"/>
     <xacro:property name="ADD_DRILL_CAMERA" value="$(arg drill_camera)" />
 
+    <xacro:arg name="reflect_rotor_inertia" default="false"/>
+    <xacro:property name="REFLECT_ROTOR_INERTIA" value="$(arg reflect_rotor_inertia)" />
+
     <!-- adding (or not) world link for Gazebo simulation -->
     <xacro:if value="${ADD_FLOATING_BASE}">
 

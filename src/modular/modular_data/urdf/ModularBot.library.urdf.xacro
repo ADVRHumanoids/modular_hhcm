@@ -237,25 +237,32 @@
         </joint>
     </xacro:macro>
 
-    <xacro:macro name="add_rotor_fast" params="type name filename">
+    <!-- Deprecated -->
+    <xacro:macro name="add_rotor" params="type name fixed_joint_rotor_name stator_name distal_link_name x y z roll pitch yaw module">
 
-        <xacro:property name="module" value="${xacro.load_yaml(filename)}"/>
         <xacro:property name="gear_ratio" value="${module['actuator_data']['gear_ratio']}"/>
 
+        <xacro:if value="${REFLECT_ROTOR_INERTIA}">
+            <xacro:add_fixed_joint type="fixed_joint" name="${fixed_joint_name}" father="${distal_link_name}" child="${name}" x="0.0" y="0.0" z="0.0" roll="0.0" pitch="0.0" yaw="0.0"/>
+            <xacro:property name="izz" value="${ gear_ratio * gear_ratio * module['dynamics']['body_2_fast']['inertia_tensor']['I_zz'] }"/>
+        </xacro:if>
+        <xacro:unless value="${REFLECT_ROTOR_INERTIA}">
+            <xacro:add_fixed_joint type="fixed_joint" name="${fixed_joint_name}" father="${stator_name}" child="${name}" x="${x}" y="${y}" z="${z}" roll="${roll}" pitch="${pitch}" yaw="${yaw}"/>
+            <xacro:property name="izz" value="${ module['dynamics']['body_2_fast']['inertia_tensor']['I_zz'] }"/>
+        </xacro:unless>
         <link name="${name}">
             <inertial>
                 <origin
-                        xyz="${module['dynamics']['body_2_fast']['CoM']['x']} ${module['dynamics']['body_2_fast']['CoM']['y']} ${module['dynamics']['body_2_fast']['CoM']['z']}"
-                        rpy="0 0 0"/>
-                    <mass value="${module['dynamics']['body_2_fast']['mass']}"/>
-                    <inertia
-                        ixx="${module['dynamics']['body_2_fast']['inertia_tensor']['I_xx']}"
-                        ixy="${module['dynamics']['body_2_fast']['inertia_tensor']['I_xy']}"
-                        iyy="${module['dynamics']['body_2_fast']['inertia_tensor']['I_yy']}"
-                        ixz="${module['dynamics']['body_2_fast']['inertia_tensor']['I_xz'] }"
-                        iyz="${module['dynamics']['body_2_fast']['inertia_tensor']['I_yz'] }"
-                        izz="${ gear_ratio * gear_ratio * module['dynamics']['body_2_fast']['inertia_tensor']['I_zz'] }"/>
-
+                    xyz="${module['dynamics']['body_2_fast']['CoM']['x']} ${module['dynamics']['body_2_fast']['CoM']['y']} ${module['dynamics']['body_2_fast']['CoM']['z']}"
+                    rpy="0 0 0"/>
+                <mass value="${module['dynamics']['body_2_fast']['mass']}"/>
+                <inertia
+                    ixx="${module['dynamics']['body_2_fast']['inertia_tensor']['I_xx']}"
+                    ixy="${module['dynamics']['body_2_fast']['inertia_tensor']['I_xy']}"
+                    iyy="${module['dynamics']['body_2_fast']['inertia_tensor']['I_yy']}"
+                    ixz="${module['dynamics']['body_2_fast']['inertia_tensor']['I_xz'] }"
+                    iyz="${module['dynamics']['body_2_fast']['inertia_tensor']['I_yz'] }"
+                    izz="${izz}"/>
             </inertial>
         </link>
     </xacro:macro>

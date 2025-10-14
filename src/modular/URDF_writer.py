@@ -1064,8 +1064,9 @@ class UrdfWriter:
                                 'velodyne': 'false',
                                 'realsense': 'false',
                                 'ultrasound': 'false',
-                                'use_gpu_ray': 'false'}
-        
+                                'use_gpu_ray': 'false',
+                                'reflect_rotor_inertia': 'false',}
+
         # additional xacro mappings for addons, external xacro files, etc.
         self.additional_xacro_mappings = {}
 
@@ -3095,8 +3096,10 @@ class UrdfWriter:
                         izz=str(1e-09))
 
 
-    def add_link_element(self, link_name, module_obj, body_name, is_geared=False):
-        link_el = ET.SubElement(self.root,
+    def add_link_element(self, link_name, module_obj, body_name, root=None, is_geared=False):
+        if root is None:
+            root = self.root
+        link_el = ET.SubElement(root,
                                     'link',
                                     name=link_name)
         # Add the link to the list of urdf elements of the module
@@ -3123,7 +3126,7 @@ class UrdfWriter:
 
         if dynamics_body:
             if is_geared:
-                self.add_inertial(link_el, dynamics_body, module_obj.actuator_data.gear_ratio)
+                self.add_inertial(link_el, dynamics_body, gear_ratio=module_obj.actuator_data.gear_ratio)
             else:
                 self.add_inertial(link_el, dynamics_body)
 
@@ -3183,6 +3186,78 @@ class UrdfWriter:
         return joint_el
 
 
+    def add_rotor_element(self, new_Joint):
+        # Add the rotor part as a new link. Either to the inertia of the rotor part (after scaling it with the gear ratio),
+        # or to the stator part (without scaling). This is selected with the REFLECT_ROTOR_INERTIA xacro mapping.
+        # While the first could be used for certain simulation environments where the effect of the rotor inertia might be desirable to be simulated, the second is the usual way we represent a motor when using XBot2 and a low-level controller that takes care of the rotor inertia.
+        setattr(new_Joint, 'fixed_joint_rotor_name', "fixed_" + new_Joint.distal_link_name + '_rotor')
+        setattr(new_Joint, 'rotor_name', new_Joint.distal_link_name + '_rotor')
+        
+        # if REFLECT_ROTOR_INERTIA=True condition for the joint element
+        reflect_if_joint_el = ET.SubElement(self.root,
+                                'xacro:xacro_if_guard',
+                                value="${REFLECT_ROTOR_INERTIA}",
+                                name = new_Joint.fixed_joint_rotor_name + '_if')
+        new_Joint.xml_tree_elements.append(new_Joint.fixed_joint_rotor_name + '_if')
+
+        # Add the fixed joint for the rotor (distal_link -> rotor)
+        x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(tf.transformations.identity_matrix())
+        ET.SubElement(reflect_if_joint_el,
+                    "xacro:add_fixed_joint",
+                    type="fixed_joint",
+                    name=new_Joint.fixed_joint_rotor_name,
+                    father=new_Joint.distal_link_name,
+                    child=new_Joint.rotor_name,
+                    x=x,
+                    y=y,
+                    z=z,
+                    roll=roll,
+                    pitch=pitch,
+                    yaw=yaw)
+
+        # if REFLECT_ROTOR_INERTIA=True condition for the link element
+        reflect_if_link_el = ET.SubElement(self.root,
+                                'xacro:xacro_if_guard',
+                                value="${REFLECT_ROTOR_INERTIA}",
+                                name = new_Joint.rotor_name + '_if')
+        new_Joint.xml_tree_elements.append(new_Joint.rotor_name + '_if')
+
+        # Add the link element for the rotor (reflecting the rotor inertia)
+        self.add_link_element(new_Joint.rotor_name, new_Joint, 'body_2_fast', root=reflect_if_link_el, is_geared=True)
+
+        # if REFLECT_ROTOR_INERTIA=False condition for the joint element
+        reflect_if_not_joint_el = ET.SubElement(self.root,
+                                'xacro:xacro_if_guard',
+                                value="${not REFLECT_ROTOR_INERTIA}",
+                                name = new_Joint.fixed_joint_rotor_name + '_if_not')
+        new_Joint.xml_tree_elements.append(new_Joint.fixed_joint_rotor_name + '_if_not')
+
+        # Add the fixed joint for the rotor (stator -> rotor)
+        x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(new_Joint.Proximal_tf)
+        ET.SubElement(reflect_if_not_joint_el,
+                    "xacro:add_fixed_joint",
+                    type="fixed_joint",
+                    name=new_Joint.fixed_joint_rotor_name,
+                    father=new_Joint.stator_name,
+                    child=new_Joint.rotor_name,
+                    x=x,
+                    y=y,
+                    z=z,
+                    roll=roll,
+                    pitch=pitch,
+                    yaw=yaw)
+        
+        # if REFLECT_ROTOR_INERTIA=False condition for the link element
+        reflect_if_not_link_el = ET.SubElement(self.root,
+                                'xacro:xacro_if_guard',
+                                value="${not REFLECT_ROTOR_INERTIA}",
+                                name = new_Joint.rotor_name + '_if_not')
+        new_Joint.xml_tree_elements.append(new_Joint.rotor_name + '_if_not')
+
+        # Add the link element for the rotor (not reflecting the rotor inertia)
+        self.add_link_element(new_Joint.rotor_name, new_Joint, 'body_2_fast', root=reflect_if_not_link_el, is_geared=False)
+
+
     def add_joint(self, new_Joint, parent_name, transform, reverse):
         x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(transform)
 
@@ -3223,27 +3298,9 @@ class UrdfWriter:
         # Add proximal/distal links pair to the list of collision elements to ignore
         self.collision_elements.append((new_Joint.stator_name, new_Joint.distal_link_name))
 
-        # add the fast rotor part to the inertia of the link/rotor part as a new link. NOTE: right now this is
-        # attached at the rotating part not to the fixed one (change it so to follow Pholus robot approach)
-        # TODO: create a switch between the different methods to consider the fast rotor part
+        # Add rotor part if present in the module_description. The REFLECT_ROTOR_INERTIA xacro mapping will determine if the rotor inertia is reflected or not
         if hasattr(new_Joint.dynamics, 'body_2_fast'):
-            setattr(new_Joint, 'fixed_joint_rotor_fast_name', "fixed_" + new_Joint.distal_link_name + '_rotor_fast')
-            ET.SubElement(self.root,
-                        "xacro:add_fixed_joint",
-                        type="fixed_joint",
-                        name=new_Joint.fixed_joint_rotor_fast_name,
-                        father=new_Joint.distal_link_name,  # stator_name, #
-                        child=new_Joint.distal_link_name + '_rotor_fast',
-                        x=x,
-                        y=y,
-                        z=z,
-                        roll=roll,
-                        pitch=pitch,
-                        yaw=yaw)
-            # add the xacro:add_fixed_joint element to the list of urdf elements
-            new_Joint.xml_tree_elements.append(new_Joint.fixed_joint_rotor_fast_name)
-            
-            self.add_link_element(new_Joint.distal_link_name + '_rotor_fast', new_Joint, 'body_2_fast', is_geared=True)
+            self.add_rotor_element(new_Joint)
 
 
     def add_hub(self, new_Hub, parent_name, transform, hub_name=None):
