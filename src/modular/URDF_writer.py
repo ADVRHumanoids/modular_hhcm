@@ -2896,19 +2896,16 @@ class UrdfWriter:
 
             self.add_joint_element(new_Link.joint_name_finger1, new_Link, new_Link.base_link_name, new_Link.name_finger1)
 
-            tmp_new_Link = copy.deepcopy(new_Link)
-
             # rotate the finger transform by 180 deg. around z
-            tmp_new_Link.Proximal_tf = tf.transformations.concatenate_matrices(
+            new_Link.Proximal_tf = tf.transformations.concatenate_matrices(
                 new_Link.Proximal_tf,
                 tf.transformations.rotation_matrix(math.pi, [0, 0, 1], point=[0, 0, 0])
             )
             # mirror the mesh on the xy directions
-            tmp_new_Link.Proximal_tf[0,3] = -1*new_Link.Proximal_tf[0,3]
-            tmp_new_Link.Proximal_tf[1,3] = -1*new_Link.Proximal_tf[1,3]
+            new_Link.Proximal_tf[0,3] = -1*new_Link.Proximal_tf[0,3]
+            new_Link.Proximal_tf[1,3] = -1*new_Link.Proximal_tf[1,3]
 
-            self.add_joint_element(tmp_new_Link.joint_name_finger2, tmp_new_Link, tmp_new_Link.base_link_name, tmp_new_Link.name_finger2, mimic_joint=new_Link.joint_name_finger1)
-            del tmp_new_Link
+            self.add_joint_element(new_Link.joint_name_finger2, new_Link, new_Link.base_link_name, new_Link.name_finger2, mimic_joint=new_Link.joint_name_finger1)
 
             x_ee, y_ee, z_ee, roll_ee, pitch_ee, yaw_ee = ModuleNode.get_xyzrpy(tf.transformations.numpy.array(new_Link.kinematics.link.pose))
             setattr(new_Link, 'tcp_name', 'ee' + new_Link.tag)
