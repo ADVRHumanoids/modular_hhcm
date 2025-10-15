@@ -3187,9 +3187,23 @@ class UrdfWriter:
 
 
     def add_rotor_element(self, new_Joint):
-        # Add the rotor part as a new link. Either to the inertia of the rotor part (after scaling it with the gear ratio),
-        # or to the stator part (without scaling). This is selected with the REFLECT_ROTOR_INERTIA xacro mapping.
-        # While the first could be used for certain simulation environments where the effect of the rotor inertia might be desirable to be simulated, the second is the usual way we represent a motor when using XBot2 and a low-level controller that takes care of the rotor inertia.
+        ''' 
+        Add the rotor part as a new link to a joint element.
+        
+        The rotor inertia can be handled in two ways, selected by the REFLECT_ROTOR_INERTIA xacro mapping:
+        1. Added to the rotor part inertia (after scaling with the gear ratio) - useful for simulation 
+        environments where rotor inertia effects are desired to be simulated.
+        2. Added to the stator part (without scaling) - the usual representation when using XBot2 
+        with a low-level controller that handles rotor inertia.
+        REFLECT_ROTOR_INERTIA is set to False by default.
+        
+        Args:
+            new_Joint: Joint module object containing joint specifications, actuator data,
+                    and geometric properties. Must have 'distal_link_name' attribute.
+        
+        Returns:
+            None: Modifies the URDF tree in place by adding rotor link and joint elements.
+        '''
         setattr(new_Joint, 'fixed_joint_rotor_name', "fixed_" + new_Joint.distal_link_name + '_rotor')
         setattr(new_Joint, 'rotor_name', new_Joint.distal_link_name + '_rotor')
         

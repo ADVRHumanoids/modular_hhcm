@@ -7,11 +7,12 @@
     1: # straight
         2: #size PINO flange
             0: module_joint_yaw_ORANGE.yaml # rev 0
-            1: module_joint_yaw_v2.json # rev 1
+            1: module_joint_yaw_pino_v2.json # rev 1
     2: # elbow
         2: #size PINO flange
             0: module_joint_double_elbow_ORANGE.yaml # rev 0
-            1: module_joint_elbow_v2.json # rev 1
+            1: module_joint_elbow_pino_v2.json # rev 1
+            2: module_joint_elbow_pino_v2_reverse.json # rev 2
     3: # straight CONCERT size B
         4: #size concert arm flange
             0: concert/module_joint_yaw_B_concert.json # rev 0
