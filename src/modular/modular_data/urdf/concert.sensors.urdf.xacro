@@ -9,8 +9,8 @@
 <xacro:if value="${ADD_CAMERAS}">
     <xacro:property name="ADD_D435I_FRONT" value="true" />
     <xacro:property name="ADD_D435I_BACK" value="true" />
-    <xacro:property name="ADD_T265_LEFT" value="true" />
-    <xacro:property name="ADD_T265_RIGHT" value="true" />
+    <!-- <xacro:property name="ADD_T265_LEFT" value="true" />
+    <xacro:property name="ADD_T265_RIGHT" value="true" /> -->
     <xacro:property name="ADD_DRILL_CAMERA" value="true" />
 </xacro:if>
 
@@ -24,13 +24,14 @@
 
 <xacro:macro name="add_mobile_base_sensors" params="parent_name">
     
-	<joint name="base_link_projected_joint" type="fixed">
+    <joint name="base_link_projected_joint" type="fixed">
         <parent link="base_link"/>
         <child link="base_link_projected"/>
         <origin xyz="0 0 -0.747" rpy="0 0 0"/>
     </joint>
 
     <link name="base_link_projected"/>
+    
     <!-- Add front D435i camera -->
     <xacro:property name="d435i_front_name" value="D435i_camera_front" />
     <xacro:property name="d435i_front_parent_name" value="${parent_name}" />
@@ -114,7 +115,6 @@
         </xacro:VLP-16-gz-sensor>
     </xacro:if>
     <xacro:unless value="${ADD_VELODYNE_FRONT}">
-        <!-- camera body, with origin at bottom screw mount -->
         <joint name="${velodyne_front_name}_base_mount_joint" type="fixed">
             <xacro:insert_block name="velodyne_front_origin"/>
             <parent link="${velodyne_front_parent_name}"/>
@@ -163,7 +163,6 @@
         </joint>
         <link name="${name}_base_link"/>
 
-        <!-- Rotate sensor frame (readings are on x axis instead of z) -->
         <joint name="${name}_joint" type="fixed">
             <origin xyz="0 0 0" rpy="0.0 -1.57 0.0"/>
             <parent link="${name}_base_link"/>
@@ -176,8 +175,6 @@
         </xacro:if>
 
     </xacro:macro>
-
-    
 
     <!-- Add front-left Bosch USS5 ultrasound sensor -->
     <xacro:property name="ultrasound_front_left_sagittal_name" value="ultrasound_fl_sag" />
@@ -295,124 +292,206 @@
 </xacro:macro>
 
 <!-- Macro for adding gazebo plugin for ultrasound sensors -->
-    <xacro:macro name="add_ultrasound_gazebo" params="name topic">
-        <gazebo reference="${name}">
-            <sensor type="ray" name="sonar">
-                <update_rate>5</update_rate>
-                <ray>
-                    <scan>
-                        <horizontal>
-                            <samples>5</samples>
-                            <resolution>1.0</resolution>
-                            <min_angle>-1.0</min_angle>
-                            <max_angle>1.0</max_angle>
-                        </horizontal>
-                        <vertical>
-                            <samples>5</samples>
-                            <resolution>1</resolution>
-                            <min_angle>-0.5</min_angle>
-                            <max_angle>0.5</max_angle>
-                        </vertical>
-                    </scan>
-                    <range>
-                        <min>0.2</min>
-                        <max>3.0</max>
-                        <resolution>0.01</resolution>
-                    </range>
-                </ray>
-                <plugin filename="libgazebo_ros_range.so" name="gazebo_ros_range">
-                    <gaussianNoise>0.005</gaussianNoise>
-                    <alwaysOn>true</alwaysOn>
-                    <updateRate>5</updateRate>
-                    <topicName>${topic}</topicName>
-                    <frameName>${name}</frameName>
-                    <fov>2.3</fov>
-                    <radiation>ultrasound</radiation>
-                </plugin>
-            </sensor>
-        </gazebo>
-    </xacro:macro>
+<xacro:macro name="add_ultrasound_gazebo" params="name topic">
+    <gazebo reference="${name}">
+        <sensor type="ray" name="sonar">
+            <update_rate>5</update_rate>
+            <ray>
+                <scan>
+                    <horizontal>
+                        <samples>5</samples>
+                        <resolution>1.0</resolution>
+                        <min_angle>-1.0</min_angle>
+                        <max_angle>1.0</max_angle>
+                    </horizontal>
+                    <vertical>
+                        <samples>5</samples>
+                        <resolution>1</resolution>
+                        <min_angle>-0.5</min_angle>
+                        <max_angle>0.5</max_angle>
+                    </vertical>
+                </scan>
+                <range>
+                    <min>0.2</min>
+                    <max>3.0</max>
+                    <resolution>0.01</resolution>
+                </range>
+            </ray>
+            <plugin filename="libgazebo_ros_range.so" name="gazebo_ros_range">
+                <gaussianNoise>0.005</gaussianNoise>
+                <alwaysOn>true</alwaysOn>
+                <updateRate>5</updateRate>
+                <topicName>${topic}</topicName>
+                <frameName>${name}</frameName>
+                <fov>2.3</fov>
+                <radiation>ultrasound</radiation>
+            </plugin>
+        </sensor>
+    </gazebo>
+</xacro:macro>
 
-<!-- Macro for adding realsense D camera -->
+<!-- ============================================================ -->
+<!-- Macro for RealSense D435i - NATIVE GAZEBO RENDERING          -->
+<!-- This uses Gazebo's built-in camera rendering, NOT test data  -->
+<!-- ============================================================ -->
 <xacro:macro name="add_realsense_d_camera" params="name parent_name *origin add_gazebo_sensor">
 
+    <!-- Camera body link -->
+    <link name="${name}_bottom_screw_frame">
+        <visual>
+            <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}"/>
+            <geometry>
+                <box size="0.025 0.090 0.025"/>
+            </geometry>
+            <material name="gray">
+                <color rgba="0.5 0.5 0.5 1"/>
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}"/>
+            <geometry>
+                <box size="0.02505 0.090 0.025"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="0.072"/>
+            <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
+        </inertial>
+    </link>
+
+    <!-- Joint to parent -->
+    <joint name="${name}_joint" type="fixed">
+        <xacro:insert_block name="origin"/>
+        <parent link="${parent_name}"/>
+        <child link="${name}_bottom_screw_frame"/>
+    </joint>
+
+    <!-- Camera link (sensor reference frame) -->
+    <link name="${name}_link"/>
+    <joint name="${name}_link_joint" type="fixed">
+        <origin xyz="0 0.0175 0.0125" rpy="0 0 0"/>
+        <parent link="${name}_bottom_screw_frame"/>
+        <child link="${name}_link"/>
+    </joint>
+
+    <!-- Depth frame -->
+    <link name="${name}_depth_frame"/>
+    <joint name="${name}_depth_joint" type="fixed">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <parent link="${name}_link"/>
+        <child link="${name}_depth_frame"/>
+    </joint>
+
+    <!-- Depth optical frame -->
+    <link name="${name}_depth_optical_frame"/>
+    <joint name="${name}_depth_optical_joint" type="fixed">
+        <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}"/>
+        <parent link="${name}_depth_frame"/>
+        <child link="${name}_depth_optical_frame"/>
+    </joint>
+
+    <!-- Color frame -->
+    <link name="${name}_color_frame"/>
+    <joint name="${name}_color_joint" type="fixed">
+        <origin xyz="0 0.015 0" rpy="0 0 0"/>
+        <parent link="${name}_depth_frame"/>
+        <child link="${name}_color_frame"/>
+    </joint>
+
+    <!-- Color optical frame -->
+    <link name="${name}_color_optical_frame"/>
+    <joint name="${name}_color_optical_joint" type="fixed">
+        <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}"/>
+        <parent link="${name}_color_frame"/>
+        <child link="${name}_color_optical_frame"/>
+    </joint>
+
+    <!-- Left IR frame -->
+    <link name="${name}_left_ir_frame"/>
+    <joint name="${name}_left_ir_joint" type="fixed">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <parent link="${name}_depth_frame"/>
+        <child link="${name}_left_ir_frame"/>
+    </joint>
+
+    <!-- Left IR optical frame -->
+    <link name="${name}_left_ir_optical_frame"/>
+    <joint name="${name}_left_ir_optical_joint" type="fixed">
+        <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}"/>
+        <parent link="${name}_left_ir_frame"/>
+        <child link="${name}_left_ir_optical_frame"/>
+    </joint>
+
+    <!-- Right IR frame -->
+    <link name="${name}_right_ir_frame"/>
+    <joint name="${name}_right_ir_joint" type="fixed">
+        <origin xyz="0 -0.050 0" rpy="0 0 0"/>
+        <parent link="${name}_depth_frame"/>
+        <child link="${name}_right_ir_frame"/>
+    </joint>
+
+    <!-- Right IR optical frame -->
+    <link name="${name}_right_ir_optical_frame"/>
+    <joint name="${name}_right_ir_optical_joint" type="fixed">
+        <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}"/>
+        <parent link="${name}_right_ir_frame"/>
+        <child link="${name}_right_ir_optical_frame"/>
+    </joint>
+
+    <!-- ========================================== -->
+    <!-- NATIVE GAZEBO RGBD CAMERA - REAL RENDERING -->
+    <!-- Uses rgbd_camera type for combined RGB+Depth -->
+    <!-- Topics: /{name}/image, /{name}/depth_image, /{name}/points -->
+    <!-- ========================================== -->
     <xacro:if value="${add_gazebo_sensor}">
-        <xacro:include filename="$(find realsense_gazebo_description)/urdf/_d435i.urdf.xacro" />
-        
-        <xacro:sensor_d435i parent="${parent_name}"
-                            name="${name}" 
-                            topics_ns="${name}" 
+        <gazebo reference="${name}_link">
+            
+            <!-- RGBD Camera (combined RGB + Depth + PointCloud) -->
+            <sensor name="${name}_rgbd" type="rgbd_camera">
+                <always_on>1</always_on>
+                <update_rate>30</update_rate>
+                <visualize>true</visualize>
+                <topic>${name}</topic>
+                <gz_frame_id>${name}_depth_optical_frame</gz_frame_id>
+                <camera name="${name}">
+                    <horizontal_fov>1.211259</horizontal_fov>
+                    <image>
+                        <width>640</width>
+                        <height>480</height>
+                        <format>R8G8B8</format>
+                    </image>
+                    <clip>
+                        <near>0.1</near>
+                        <far>100</far>
+                    </clip>
+                    <depth_camera>
+                        <clip>
+                            <near>0.1</near>
+                            <far>10</far>
+                        </clip>
+                    </depth_camera>
+                    <noise>
+                        <type>gaussian</type>
+                        <mean>0.0</mean>
+                        <stddev>0.007</stddev>
+                    </noise>
+                    <optical_frame_id>${name}_depth_optical_frame</optical_frame_id>
+                </camera>
+            </sensor>
 
-                            enable_pointCloud="true" 
-                            align_depth="true"
-                            unite_imu_method="false"
-                            
-                            visualize="true"
-                                    
-                            accel_fps="300"
-                            gyro_fps="300"
-
-                            depth_width="1280"
-                            depth_height="720"
-                            depth_fps="90"
-
-                            infra_width="1280"
-                            infra_height="720"
-                            infra_fps="90"
-
-                            color_width="1280"
-                            color_height="720"
-                            color_fps="30">
-            <xacro:insert_block name="origin" />
-        </xacro:sensor_d435i>
+        </gazebo>
     </xacro:if>
-    <xacro:unless value="${add_gazebo_sensor}">
-        <!-- camera body, with origin at bottom screw mount -->
-        <joint name="${name}_joint" type="fixed">
-            <xacro:insert_block name="origin"/>
-            <parent link="${parent_name}"/>
-            <child link="${name}_bottom_screw_frame"/>
-        </joint>
-        <link name="${name}_bottom_screw_frame"/>
-    </xacro:unless>
 
 </xacro:macro>
 
-<!-- Macro for adding realsense T camera -->
+<!-- Macro for T265 camera - Dummy frames only (discontinued) -->
 <xacro:macro name="add_realsense_t_camera" params="name parent_name *origin add_gazebo_sensor">
-    
-    <xacro:if value="${add_gazebo_sensor}">
-        <xacro:include filename="$(find realsense_gazebo_description)/urdf/_t265.urdf.xacro" />
-
-        <xacro:sensor_t265  parent="${parent_name}" 
-                            name="${name}" 
-                            topics_ns="${name}"                  
-                                
-                            odom_xyz="0.0 0.0 0.25"
-                            odom_rpy="0.0 0.0 0.0"
-                            odom_fps="262"
-
-                            fisheye_width="848"
-                            fisheye_height="800"
-                            fisheye_fps="30"
-
-                            unite_imu_method="false"
-                            accel_fps="62.5"
-                            gyro_fps="200">
-            
-            <xacro:insert_block name="origin" />
-        </xacro:sensor_t265>
-    </xacro:if>
-    <xacro:unless value="${add_gazebo_sensor}">
-        <!-- camera body, with origin at bottom screw mount -->
-        <joint name="${name}_joint" type="fixed">
-            <xacro:insert_block name="origin"/>
-            <parent link="${parent_name}"/>
-            <child link="${name}_pose_frame"/>
-        </joint>
-        <link name="${name}_pose_frame"/>
-    </xacro:unless>
-
+    <joint name="${name}_joint" type="fixed">
+        <xacro:insert_block name="origin"/>
+        <parent link="${parent_name}"/>
+        <child link="${name}_pose_frame"/>
+    </joint>
+    <link name="${name}_pose_frame"/>
 </xacro:macro>
 
 </robot>
