@@ -15,15 +15,14 @@ import sys
 import re
 import argparse
 import subprocess
+import threading
+import atexit
 from configparser import ConfigParser, ExtendedInterpolation
 from typing import TypedDict
 from datetime import datetime, timedelta
 from uuid import uuid4
 
 import numpy as np
-
-import threading
-import atexit
 from flask import Flask, Response, make_response, render_template, request, jsonify, send_from_directory, abort, session, send_file
 from apscheduler.schedulers.background import BackgroundScheduler
 import werkzeug
@@ -73,6 +72,8 @@ def get_ros_node():
 
 def _shutdown_ros_node():
     global _ros_node, _ros_executor, _ros_thread
+    if not rclpy_available:
+        return
     if _ros_executor is not None:
         _ros_executor.shutdown(timeout_sec=2)
     if _ros_node is not None:
@@ -818,7 +819,10 @@ def generateUrdfModelFromHardware():
             raise Exception(f"Service '{srv_name}' not available after 5 s")
 
         future = client.call_async(GetSlaveInfo.Request()) # pylint: disable=undefined-variable
-        rclpy.spin_until_future_complete(node, future, timeout_sec=10.0)
+        done_event = threading.Event()
+        future.add_done_callback(lambda _: done_event.set())
+        if not done_event.wait(timeout=10.0):
+            raise Exception("Service call timed out after 10 s")
 
         if future.result() is None:
             raise Exception("Service call returned no result")
