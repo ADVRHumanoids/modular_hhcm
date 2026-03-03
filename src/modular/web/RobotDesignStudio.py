@@ -15,7 +15,7 @@ import sys
 import re
 import argparse
 import subprocess
-from importlib import reload, util
+from importlib import reload
 from configparser import ConfigParser, ExtendedInterpolation
 from typing import TypedDict
 from datetime import datetime, timedelta
@@ -23,7 +23,8 @@ from uuid import uuid4
 
 import numpy as np
 
-import rospy
+import threading
+import atexit
 from flask import Flask, Response, make_response, render_template, request, jsonify, send_from_directory, abort, session, send_file
 from apscheduler.schedulers.background import BackgroundScheduler
 import werkzeug
@@ -32,9 +33,57 @@ from modular.URDF_writer import UrdfWriter
 import modular.ModuleNode  as ModuleNode
 from modular.enums import ModuleClass
 
-ec_srvs_spec = util.find_spec('ec_srvs')
-if ec_srvs_spec is not None:
+try:
+    import rclpy
+    from rclpy.executors import MultiThreadedExecutor
+    from rclpy.signals import SignalHandlerOptions
+    rclpy_available = True
+except ImportError:
+    rclpy_available = False
+
+try:
     from ec_srvs.srv import GetSlaveInfo
+    ec_srvs_available = True
+except ImportError:
+    ec_srvs_available = False
+
+ros_available = rclpy_available and ec_srvs_available
+
+# Global ROS 2 node state — created lazily, only if discovery is actually used
+_ros_node = None
+_ros_executor = None
+_ros_thread = None
+_ros_lock = threading.Lock()
+
+def get_ros_node():
+    """Return the ROS 2 node, initializing it on the first call.
+    Returns None if ec_srvs / rclpy are not available."""
+    global _ros_node, _ros_executor, _ros_thread
+    if not ros_available:
+        return None
+    with _ros_lock:
+        if _ros_node is None:
+            if not rclpy.ok():
+                rclpy.init(signal_handler_options=SignalHandlerOptions.NO)
+            _ros_node = rclpy.create_node('robot_design_studio')
+            _ros_executor = MultiThreadedExecutor()
+            _ros_executor.add_node(_ros_node)
+            _ros_thread = threading.Thread(target=_ros_executor.spin, daemon=True)
+            _ros_thread.start()
+    return _ros_node
+
+def _shutdown_ros_node():
+    global _ros_node, _ros_executor, _ros_thread
+    if _ros_executor is not None:
+        _ros_executor.shutdown(timeout_sec=2)
+    if _ros_node is not None:
+        _ros_node.destroy_node()
+    if rclpy.ok():
+        rclpy.shutdown()
+    if _ros_thread is not None:
+        _ros_thread.join(timeout=5)
+
+atexit.register(_shutdown_ros_node)
 
 
 # get backend version from git
@@ -76,16 +125,12 @@ enable_sessions = config.getboolean('MODULAR_API','enable_sessions',fallback=Fal
 enable_discovery = config.getboolean('MODULAR_API','enable_discovery',fallback=True)
 download_on_deploy = config.getboolean('MODULAR_API','download_on_deploy',fallback=False)
 
-# initialize ros node
-rospy.init_node('robot_builder', disable_signals=True) # , log_level=rospy.DEBUG)
-
 # set if ROS logger should be used
-if args.use_ros_logger:
+if args.use_ros_logger and ros_available:
     # roslogger = logging.getLogger('rosout')
     roslogger = logging.getLogger(f'rosout.{__name__}')
     logger = roslogger
 else:
-    # Since initializing a ros node overrides the logging module behavior, we reload it here.
     reload(logging)
     FORMAT = '[%(levelname)s] [%(module)s]:  %(message)s'
     logging.basicConfig(format=FORMAT)
@@ -103,6 +148,11 @@ if args.verbose:
 else:
     logger.setLevel(logging.INFO)
     werkzeug_logger.setLevel(logging.ERROR)
+
+if not rclpy_available:
+    logger.warning('rclpy not found: ROS 2 is not installed. Discovery mode will be unavailable.')
+elif not ec_srvs_available:
+    logger.warning('ec_srvs not found: EtherCAT services package is missing. Discovery mode will be unavailable.')
 
 
 template_folder='modular_frontend'
@@ -763,18 +813,27 @@ def generateUrdfModelFromHardware():
             mimetype="application/json"
     )
 
+    if not ros_available:
+        return Response(
+            response=json.dumps({"message": 'ec_srvs package not available, cannot contact hardware.'}),
+            status=503,
+            mimetype="application/json"
+        )
+
     try:
-        rospy.wait_for_service(srv_name, 5)
+        node = get_ros_node()
+        client = node.create_client(GetSlaveInfo, srv_name) # pylint: disable=undefined-variable
 
-        try:
-            slave_description = rospy.ServiceProxy(srv_name, GetSlaveInfo) # pylint: disable=undefined-variable
+        if not client.wait_for_service(timeout_sec=5.0):
+            raise Exception(f"Service '{srv_name}' not available after 5 s")
 
-        except rospy.ServiceException as e:
-            app.logger.debug("Service call failed: %s",e)
-            raise e
+        future = client.call_async(GetSlaveInfo.Request()) # pylint: disable=undefined-variable
+        rclpy.spin_until_future_complete(node, future, timeout_sec=10.0)
 
-        reply = slave_description()
-        reply = reply.cmd_info.msg
+        if future.result() is None:
+            raise Exception("Service call returned no result")
+
+        reply = future.result().cmd_info.msg
         app.logger.debug("Exit")
 
         writer = get_writer(sid)
