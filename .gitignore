@@ -161,5 +161,8 @@ venv.bak/
 # VS Code folder
 .vscode/*
 
+# VS Code workspace
+*.code-workspace
+
 # Custom setting for API
 src/modular/web/web_config.ini

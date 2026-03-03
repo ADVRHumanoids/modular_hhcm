@@ -11,6 +11,8 @@ class ModelStats:
         if getattr(self.urdf_writer, 'urdf_string', None) is None:
             self.urdf_writer.write_urdf()
 
+        self.identity_tf = np.array([0, 0, 0, 0, 0, 0, 1])
+
         self.update_model()
 
     def update_model(self):
@@ -30,15 +32,46 @@ class ModelStats:
         # Get the frame index for the end-effector
         self.frame_idx = self.model.getFrameId(self.tip_link_name)  # 'TCP_gripper_A'
 
+        if self.urdf_writer.floating_base:
+            self.model.lowerPositionLimit[0:7] = self.identity_tf
+            self.model.upperPositionLimit[0:7] = self.identity_tf
+
+            # # Create a list of joints to lock
+            # jointsToLock = ['reference']
+            
+            # # Get the ID of all existing joints
+            # jointsToLockIDs = []
+            # for jn in jointsToLock:
+            #     if self.model.existJointName(jn):
+            #         jointsToLockIDs.append(self.model.getJointId(jn))
+            #     else:
+            #         print('Warning: joint ' + str(jn) + ' does not belong to the model!')
+            
+            # initialJointConfig = np.array([0, 0, 0, 0, 0, 0, 1])
+
+            # model_reduced = pinocchio.buildReducedModel(self.model, jointsToLockIDs, initialJointConfig)
+
+            # # Check dimensions of the reduced model
+            # # options 1-3 only take joint ids
+            # print('joints to lock (only ids):', jointsToLockIDs)
+            # print('reduced model: dim=' + str(len(model_reduced.joints)))
+            # print('-' * 30)
+            
+
         self.lower_limits = self.model.lowerPositionLimit
         self.upper_limits = self.model.upperPositionLimit
 
         self.nq = self.model.nq
+        self.nv = self.model.nv
 
     def compute_payload(self, n_samples=10000):
         ## Random Sampling
         samples = n_samples
         q_configurations = [pinocchio.randomConfiguration(self.model) for i in range(samples)]
+
+        if self.urdf_writer.floating_base:
+            for q in q_configurations:
+                q[0:7] = self.identity_tf
 
         # Solve a linear programming problem to get the worst case force and therefore the worst case payload
         #    minimize:
@@ -61,11 +94,17 @@ class ModelStats:
 
         zeros = np.zeros((self.nq))
         q = np.zeros((self.nq))
+        v = np.zeros((self.nv))
         A = np.zeros((self.nq, 6))
         b = np.zeros((self.nq))
         tau_rated = 162.0
-        tau_max = np.ones((self.nq))*tau_rated
+        # tau_max = np.ones((self.nq))*tau_rated
+        tau_max = np.ones((self.nv))*tau_rated
         tau_min = - tau_max
+
+        if self.urdf_writer.floating_base:
+            tau_max = tau_max[6:]
+            tau_min = tau_min[6:]
 
         # Compute the jacobian and gravity torques for all the samples. Then, compute the worst case force -> overall payload
         for idx, q in enumerate(q_configurations):
@@ -73,7 +112,12 @@ class ModelStats:
             pinocchio.computeJointJacobians(self.model, self.data, q)
             # pinocchio.framesForwardKinematics(model, data, q)
             A = pinocchio.getFrameJacobian(self.model, self.data, self.frame_idx, pinocchio.ReferenceFrame.LOCAL_WORLD_ALIGNED)[:6].T * 1  # 9.81
-            tau = pinocchio.nonLinearEffects(self.model, self.data, q, zeros)
+            tau = pinocchio.nonLinearEffects(self.model, self.data, q, v)
+
+            if self.urdf_writer.floating_base:
+                A = A[6:, :]
+                tau = tau[6:]
+            
 
             b1 = tau_max - tau
             b2 = - tau_min + tau
@@ -123,7 +167,7 @@ class ModelStats:
         n_joint_modules = 0
         for chain in self.urdf_writer.listofchains:
             for module in chain:
-                if module in ModuleClass.joint_modules():
+                if module.type in ModuleClass.joint_modules():
                     n_joint_modules += 1
         self.n_joint_modules = n_joint_modules
         return self.n_joint_modules
@@ -148,7 +192,7 @@ class ModelStats:
             self.n_modules = None
 
         try:
-            self.n_joint_modules = self.compute_modules()
+            self.n_joint_modules = self.compute_joint_modules()
         except e:
             self.n_joint_modules = None
 

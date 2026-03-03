@@ -7,9 +7,12 @@
     1: # straight
         2: #size PINO flange
             0: module_joint_yaw_ORANGE.yaml # rev 0
+            1: module_joint_yaw_pino_v2.json # rev 1
     2: # elbow
         2: #size PINO flange
             0: module_joint_double_elbow_ORANGE.yaml # rev 0
+            1: module_joint_elbow_pino_v2.json # rev 1
+            2: module_joint_elbow_pino_v2_reverse.json # rev 2
     3: # straight CONCERT size B
         4: #size concert arm flange
             0: concert/module_joint_yaw_B_concert.json # rev 0
@@ -64,6 +67,9 @@
     5: # spraying tool
         4: #size concert arm flange
             0: concert/module_spraying_tool_concert.json
+    6: # schunk gripper
+        2: #size PINO flange
+            0: module_gripper_schunk.yaml # rev 0
     # ...
 
 4: #passive link module
@@ -90,9 +96,13 @@
             0: concert/module_link_straight_500_concert.json
 
     6: #passive link 40 cm
+        2: #size PINO flange
+            0: module_link_straight_400_pino_v2.json
         4: #size CONCERT arm flange
             0: concert/module_link_straight_400_concert.json
     7: #passive link 30 cm
+        2: #size PINO flange
+            0: module_link_straight_300_pino_v2.json
         4: #size CONCERT arm flange
             0: concert/module_link_straight_300_concert.json
 

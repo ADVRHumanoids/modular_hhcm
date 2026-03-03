@@ -4,6 +4,7 @@
 # pylint: disable=line-too-long, missing-function-docstring, missing-module-docstring
 
 from __future__ import print_function
+import math
 from future.utils import iteritems
 from abc import ABCMeta, abstractmethod
 import os
@@ -173,10 +174,6 @@ class Plugin:
     def add_wheel_to_srdf(self):
         pass
 
-    @abstractmethod
-    def add_wheel_group_to_srdf(self):
-        pass
-
 
     # TODO: This should be fixed. Should not be here, probably a SRDFwriter class could be implemented
     def write_srdf(self, builder_joint_map=None):
@@ -195,44 +192,37 @@ class Plugin:
 
         active_modules_chains = self.urdf_writer.get_actuated_modules_chains()
         self.urdf_writer.print(active_modules_chains)
-
-        # # This should be added first so they appear first in the srdf file. This is important for the XBotInterface srdf parser!
-        # for idx, joints_chain in enumerate(active_modules_chains):
-        #     group_name = "chain" + self.urdf_writer.find_chain_tag(joints_chain)
-        #     groups.append(ET.Element('group', name=group_name))
-        #     base_link = self.urdf_writer.find_chain_base_link(joints_chain)
-        #     tip_link = self.urdf_writer.find_chain_tip_link(joints_chain)
-        #     chains.append(ET.SubElement(groups[idx], 'chain', base_link=base_link, tip_link=tip_link))
-        #     root.append(groups[idx])
         
         # Create groups for chains, arms and wheels. Also 'home_group_state' for homing
         chains_group = ET.SubElement(root, 'group', name="chains")
         arms_group = ET.SubElement(root, 'group', name="arms")
         hands_group = ET.SubElement(root, 'group', name="hands")
-        wheels_group = self.add_wheel_group_to_srdf(root, "wheels")
+        wheels_group = ET.SubElement(root, 'group', name="wheels")
         home_group_state = ET.SubElement(root, 'group_state', name="home", group="chains")
 
         for joints_chain in active_modules_chains:
             # create chain group and add as child the chain element (base_link, tip_link)
             group_name = "chain" + self.urdf_writer.find_chain_tag(joints_chain)
             chain_group = ET.Element('group', name=group_name)
-            chains.append(chain_group)
             base_link = self.urdf_writer.find_chain_base_link(joints_chain)
             tip_link = self.urdf_writer.find_chain_tip_link(joints_chain)
             ET.SubElement(chain_group, 'chain', base_link=base_link, tip_link=tip_link)
+            # add chain group to srdf chains group. (Will be added to srdf root at the end, so it will appear first in the srdf file) 
+            chains.append(chain_group)
             
             for joint_module in joints_chain:
                 # add joints chain to srdf end-effectors group
-                if joint_module.type in ModuleClass.end_effector_modules():
-                    groups_in_arms_group.append(ET.SubElement(arms_group, 'group', name=group_name))
-                    # TODO: add end-effector module to srdf end-effectors group. To be fixed for all end-effector types.
-                    hand_name = "hand" + self.urdf_writer.find_chain_tag(joints_chain)
-                    ET.SubElement(hands_group, 'group', name=hand_name)
-                    end_effectors += filter(lambda item: item is not None, [self.add_gripper_to_srdf(et_root=None,
-                                                                                                     module=joint_module,
-                                                                                                     gripper_name=None,
-                                                                                                     hand_name=hand_name,
-                                                                                                     parent_group_name=None)])
+                # NOTE: This comment is temporary, should be uncommented
+                # if joint_module.type in ModuleClass.end_effector_modules():
+                #     groups_in_arms_group.append(ET.SubElement(arms_group, 'group', name=group_name))
+                #     # TODO: add end-effector module to srdf end-effectors group. To be fixed for all end-effector types.
+                #     hand_name = "hand" + self.urdf_writer.find_chain_tag(joints_chain)
+                #     ET.SubElement(hands_group, 'group', name=hand_name)
+                    
+                #     end_effectors += filter(lambda item: item is not None, [self.add_gripper_to_srdf(et_root=root,
+                #                                                                                      module=joint_module,
+                #                                                                                      hand_name=hand_name,
+                #                                                                                      parent_group_name=None)])
                 
                 # add wheel module to srdf wheels group
                 if joint_module.type is ModuleType.WHEEL:
@@ -249,15 +239,7 @@ class Plugin:
                                                 'joint', 
                                                 name=joint_name, 
                                                 value=str(homing_value)))
-                elif joint_module.type is ModuleType.TOOL_EXCHANGER:
-                    tool_exchanger_group = ET.SubElement(root, 'group', name="ToolExchanger")
-                    end_effectors.append(ET.SubElement(tool_exchanger_group, 
-                                                       'joint',
-                                                       name=joint_module.name + '_fixed_joint'))
-                # elif joint_module.type is ModuleType.GRIPPER:
-                #     hand_name = "hand" + self.urdf_writer.find_chain_tag(joints_chain)
-                #     end_effectors += filter(lambda item: item is not None, [self.add_gripper_to_srdf(root, joint_module.name, hand_name, group_name)])
-
+                    
         index = 0
         for idx, group in enumerate(chains):
             # insert ET.Element group in root at index idx (at the top of srdf xml)
@@ -346,29 +328,33 @@ class RosControlPlugin(Plugin):
                 self.urdf_writer.root.remove(transmission)
 
     # SRDF
-    def add_gripper_to_srdf(self, et_root, module, gripper_name, hand_name, parent_group_name):
+    def add_gripper_to_srdf(self, et_root, module, hand_name, parent_group_name):
         hand_group = ET.SubElement(et_root, "group", name=hand_name)
         if module.type is ModuleType.GRIPPER:
-            ET.SubElement(hand_group, "link", name=gripper_name)
-            ET.SubElement(hand_group, "link", name=gripper_name+"_leftfinger")
-            ET.SubElement(hand_group, "link", name=gripper_name+"_rightfinger")
-            ET.SubElement(hand_group, "joint", name=gripper_name+"_finger_joint1")
-            ET.SubElement(hand_group, "passive_joint", name=gripper_name+"_finger_joint2")
+            ET.SubElement(hand_group, "link", name=module.name)
+            ET.SubElement(hand_group, "link", name=module.name+"_leftfinger")
+            ET.SubElement(hand_group, "link", name=module.name+"_rightfinger")
+            ET.SubElement(hand_group, "joint", name=module.name+"_finger_joint1")
+            ET.SubElement(hand_group, "passive_joint", name=module.name+"_finger_joint2")
             open_state = ET.SubElement(et_root, "group_state", name="open", group=hand_name)
-            ET.SubElement(open_state, "joint", name=gripper_name+"_finger_joint1", value="0.05")
-            ET.SubElement(open_state, "joint", name=gripper_name+"_finger_joint2", value="0.05")
+            ET.SubElement(open_state, "joint", name=module.name+"_finger_joint1", value="0.05")
+            ET.SubElement(open_state, "joint", name=module.name+"_finger_joint2", value="0.05")
             close_state = ET.SubElement(et_root, "group_state", name="close", group=hand_name)
-            ET.SubElement(close_state, "joint", name=gripper_name+"_finger_joint1", value="0.0")
-            ET.SubElement(close_state, "joint", name=gripper_name+"_finger_joint2", value="0.0")
+            ET.SubElement(close_state, "joint", name=module.name+"_finger_joint1", value="0.0")
+            ET.SubElement(close_state, "joint", name=module.name+"_finger_joint2", value="0.0")
             # remove collisions
-            ET.SubElement(et_root, "disable_collisions", link1=gripper_name, link2="TCP_"+gripper_name, reason="Adjacent")
-            ET.SubElement(et_root, "disable_collisions", link1=gripper_name, link2=gripper_name+"_leftfinger", reason="Adjacent")
-            ET.SubElement(et_root, "disable_collisions", link1=gripper_name, link2=gripper_name+"_rightfinger", reason="Adjacent")
-            ET.SubElement(et_root, "disable_collisions", link1="TCP_"+gripper_name, link2=gripper_name+"_rightfinger", reason="Default")
-            ET.SubElement(et_root, "disable_collisions", link1="TCP_"+gripper_name, link2=gripper_name+"_leftfinger",reason="Default")
-            ET.SubElement(et_root, "disable_collisions", link1=gripper_name + "_rightfinger", link2=gripper_name+"_leftfinger", reason="Default")
+            ET.SubElement(et_root, "disable_collisions", link1=module.name, link2="TCP_"+module.name, reason="Adjacent")
+            ET.SubElement(et_root, "disable_collisions", link1=module.name, link2=module.name+"_leftfinger", reason="Adjacent")
+            ET.SubElement(et_root, "disable_collisions", link1=module.name, link2=module.name+"_rightfinger", reason="Adjacent")
+            ET.SubElement(et_root, "disable_collisions", link1="TCP_"+module.name, link2=module.name+"_rightfinger", reason="Default")
+            ET.SubElement(et_root, "disable_collisions", link1="TCP_"+module.name, link2=module.name+"_leftfinger",reason="Default")
+            ET.SubElement(et_root, "disable_collisions", link1=module.name + "_rightfinger", link2=module.name+"_leftfinger", reason="Default")
+        elif module.type is ModuleType.TOOL_EXCHANGER:
+            tool_exchanger_group = ET.SubElement(et_root, 'group', name="ToolExchanger")
+            ET.SubElement(tool_exchanger_group, 'joint', name=module.name + '_fixed_joint')
 
-        endeffector_group = ET.SubElement(et_root, "end-effector", name="TCP", parent_link="TCP_"+gripper_name,
+
+        endeffector_group = ET.SubElement(et_root, "end-effector", name="TCP", parent_link="TCP_"+module.name,
                       group=hand_name, parent_group=parent_group_name)
         # add arm_hand group
         arm_hand_group = ET.SubElement(et_root, "group", name="arm_" + hand_name)
@@ -379,9 +365,6 @@ class RosControlPlugin(Plugin):
 
     def add_wheel_to_srdf(self, wheel_group_name, wheel_name):
         return None
-
-    def add_wheel_group_to_srdf(self, root, wheel_group_name):
-        pass
 
     def write_srdf(self, builder_joint_map=None):
         """Generates a basic srdf so that the model can be used right away with XBotCore"""
@@ -472,7 +455,6 @@ class RosControlPlugin(Plugin):
                     # groups_in_hands_group.append(ET.SubElement(hands_group, 'group', name=hand_name))
                     end_effectors += filter(lambda item: item is not None, [self.add_gripper_to_srdf(et_root=root, 
                                                                                                      module=joint_module,
-                                                                                                     gripper_name=joint_module.name, 
                                                                                                      hand_name=hand_name, 
                                                                                                      parent_group_name=group_name)])
                     controller_list.append(OrderedDict([('name', 'fake_' + hand_name + '_controller'), ('joints', [])]))
@@ -575,14 +557,11 @@ class XBotCorePlugin(Plugin):
         pass
 
     # SRDF
-    def add_gripper_to_srdf(self, et_root, module, gripper_name, hand_name, parent_group_name):
+    def add_gripper_to_srdf(self, et_root, module, hand_name, parent_group_name):
         return None
 
     def add_wheel_to_srdf(self, wheel_group_name, wheel_name):
         return None
-
-    def add_wheel_group_to_srdf(self, root, wheel_group_name):
-        pass
 
     # CONFIG
     def write_lowlevel_config(self, use_robot_id=False):
@@ -697,10 +676,18 @@ class XBot2Plugin(Plugin):
                 self.pid_node.remove(pid)
 
     # SRDF
-    def add_gripper_to_srdf(self, et_root, module, gripper_name, hand_name, parent_group_name):
+    def add_gripper_to_srdf(self, et_root, module, hand_name, parent_group_name):
 
+        # Create custom group for the tool exchanger
+        if module.type is ModuleType.TOOL_EXCHANGER:
+            tool_exchanger_group = ET.SubElement(et_root, 'group', name="ToolExchanger")
+            ET.SubElement(tool_exchanger_group, 'joint', name=module.name + '_fixed_joint')
+
+        # If the module has no fingers, return
         if len(module.finger_names) == 0:
             return None
+
+        # Create chain group for the gripper
         chain_group = ET.Element('group', name=hand_name)
         for finger in module.finger_names:
             base_link = module.base_link_name
@@ -711,10 +698,6 @@ class XBot2Plugin(Plugin):
     def add_wheel_to_srdf(self, wheel_group, wheel_name):
         wheel = ET.SubElement(wheel_group, 'joint', name=wheel_name)
         return wheel
-
-    def add_wheel_group_to_srdf(self, root, wheel_group_name):
-        wheel_group = ET.SubElement(root, 'group', name=wheel_group_name)
-        return wheel_group
 
     # JOINT MAP
     def write_joint_map(self, use_robot_id=False):
@@ -1089,8 +1072,9 @@ class UrdfWriter:
                                 'velodyne': 'false',
                                 'realsense': 'false',
                                 'ultrasound': 'false',
-                                'use_gpu_ray': 'false'}
-        
+                                'use_gpu_ray': 'false',
+                                'reflect_rotor_inertia': 'false',}
+
         # additional xacro mappings for addons, external xacro files, etc.
         self.additional_xacro_mappings = {}
 
@@ -1436,11 +1420,6 @@ class UrdfWriter:
 
             #add the module
             data = self.add_module(module_filename, {}, reverse=False, robot_id=robot_id, active_ports=active_ports, module_name=module_name)
-                
-        ## HACK: Manually add passive end effector for now!
-        # self.add_simple_ee(0.0, 0.0, 0.135, mass=0.23)
-        # data = self.add_module('concert/passive_end_effector_panel.json', {}, False)
-        # data = self.add_module('experimental/passive_end_effector_pen.json', {}, False)
 
         self.urdf_string = self.process_urdf()
 
@@ -1753,7 +1732,7 @@ class UrdfWriter:
 
     def add_dagana_claws(self, type='centauro_claws'):
         if type == 'centauro_claws':
-            pass
+            self.additional_xacro_mappings['dagana_claws_type'] = 'centauro_claws'
         elif type == 'concert_formwork_claws':
             self.additional_xacro_mappings['dagana_claws_type'] = 'concert_formwork_claws'
         elif type == 'concert_tube_claws':
@@ -2758,14 +2737,16 @@ class UrdfWriter:
                           yaw=yaw)
             # add the xacro:add_dagana element to the list of urdf elements
             new_Link.xml_tree_elements.append(new_Link.name)
-            new_Link.mesh_names += [new_Link.name + '_top_link', new_Link.name + '_bottom_link']
+            new_Link.mesh_names += [new_Link.name + '_top_link', new_Link.name + '_bottom_link', new_Link.name + '_top_link_jaw']
 
             setattr(new_Link, 'dagana_joint_name', new_Link.name + '_claw_joint')
             setattr(new_Link, 'base_link_name', new_Link.name + '_top_link')
             setattr(new_Link, 'dagana_tcp_name', new_Link.name + '_tcp')
             setattr(new_Link, 'tcp_name', 'ee' + new_Link.tag)
             # this list will contain the names of the fingers or any moving extremity of the end effector
-            setattr(new_Link, 'finger_names', [new_Link.name + '_bottom_link'])
+            setattr(new_Link, 'finger_names', [new_Link.name + '_bottom_link_jaw'])
+            new_Link.mesh_names += new_Link.finger_names
+
             ET.SubElement(self.root,
                           "xacro:add_tcp",
                           type="pen",
@@ -2910,27 +2891,46 @@ class UrdfWriter:
             setattr(new_Link, 'tcp_name', 'TCP_' + new_Link.name)
             setattr(new_Link, 'joint_name_finger1', new_Link.name + '_finger_joint1')
             setattr(new_Link, 'joint_name_finger2', new_Link.name + '_finger_joint2')
+            setattr(new_Link, 'name_finger1', new_Link.name + '_finger1')
+            setattr(new_Link, 'name_finger2', new_Link.name + '_finger2')
 
             setattr(new_Link, 'base_link_name', new_Link.name)
             # this list will contain the names of the fingers or any moving extremity of the end effector
-            setattr(new_Link, 'finger_names', [new_Link.name + '_finger1', new_Link.name + '_finger2'])
+            setattr(new_Link, 'finger_names', [new_Link.name_finger1, new_Link.name_finger2])
             
-            #  TODO: add_gripper_fingers still use the xacro to load the yaml file and get the parameters. It should be changed to use the python function for uniformity
-            ET.SubElement(self.root,
-                            "xacro:add_gripper_fingers",
-                            type="gripper_fingers",
-                            name=new_Link.name,
-                            joint_name_finger1=new_Link.joint_name_finger1,
-                            joint_name_finger2=new_Link.joint_name_finger2,
-                            TCP_name=new_Link.tcp_name,
-                            filename=new_Link.filename)
-            # add the xacro:add_gripper_fingers element to the list of urdf elements
-            new_Link.xml_tree_elements.append(new_Link.name)
-            new_Link.mesh_names += new_Link.finger_names
+            finger1 = self.add_link_element(new_Link.name_finger1, new_Link, 'body_2')
+            finger2 = self.add_link_element(new_Link.name_finger2, new_Link, 'body_3')
+            self.add_gazebo_element(new_Link, new_Link.gazebo.body_2, new_Link.name_finger1)
+            self.add_gazebo_element(new_Link, new_Link.gazebo.body_3, new_Link.name_finger2)
 
-            # TO BE FIXED: ok for ros_control. How will it be for xbot2?
-            self.control_plugin.add_joint(new_Link.joint_name_finger1)
-            self.control_plugin.add_joint(new_Link.joint_name_finger2)
+            self.add_joint_element(new_Link.joint_name_finger1, new_Link, new_Link.base_link_name, new_Link.name_finger1)
+
+            # rotate the finger transform by 180 deg. around z
+            new_Link.Proximal_tf = tf.transformations.concatenate_matrices(
+                new_Link.Proximal_tf,
+                tf.transformations.rotation_matrix(math.pi, [0, 0, 1], point=[0, 0, 0])
+            )
+            # mirror the mesh on the xy directions
+            new_Link.Proximal_tf[0,3] = -1*new_Link.Proximal_tf[0,3]
+            new_Link.Proximal_tf[1,3] = -1*new_Link.Proximal_tf[1,3]
+
+            self.add_joint_element(new_Link.joint_name_finger2, new_Link, new_Link.base_link_name, new_Link.name_finger2, mimic_joint=new_Link.joint_name_finger1)
+
+            x_ee, y_ee, z_ee, roll_ee, pitch_ee, yaw_ee = ModuleNode.get_xyzrpy(tf.transformations.numpy.array(new_Link.kinematics.link.pose))
+            setattr(new_Link, 'tcp_name', 'ee' + new_Link.tag)
+            ET.SubElement(self.root,
+                          "xacro:add_tcp",
+                          type="pen",
+                          name=new_Link.tcp_name,
+                          father=new_Link.name,
+                          x=x_ee,
+                          y=y_ee,
+                          z=z_ee,
+                          roll=roll_ee,
+                          pitch=pitch_ee,
+                          yaw=yaw_ee)
+            # add the xacro:add_tcp element to the list of urdf elements
+            new_Link.xml_tree_elements.append(new_Link.tcp_name)
 
         elif new_Link.type is ModuleType.SIZE_ADAPTER:
             setattr(new_Link, 'name', 'L_' + str(new_Link.i) + '_size_adapter_' + str(new_Link.p) + new_Link.tag)
@@ -2992,6 +2992,10 @@ class UrdfWriter:
 
 
     def get_joint_output_transform(self, past_Joint):
+        # if the joint is reversed, rotate the distal link frame by 180 deg. around y (as per convention)
+        if past_Joint.reverse:
+            past_Joint.Distal_tf = ModuleNode.get_rototranslation(past_Joint.Distal_tf,
+                                                                 tf.transformations.rotation_matrix(3.14, self.yaxis))
         return past_Joint.Distal_tf
 
 
@@ -3100,8 +3104,10 @@ class UrdfWriter:
                         izz=str(1e-09))
 
 
-    def add_link_element(self, link_name, module_obj, body_name, is_geared=False):
-        link_el = ET.SubElement(self.root,
+    def add_link_element(self, link_name, module_obj, body_name, root=None, is_geared=False):
+        if root is None:
+            root = self.root
+        link_el = ET.SubElement(root,
                                     'link',
                                     name=link_name)
         # Add the link to the list of urdf elements of the module
@@ -3128,9 +3134,150 @@ class UrdfWriter:
 
         if dynamics_body:
             if is_geared:
-                self.add_inertial(link_el, dynamics_body, module_obj.actuator_data.gear_ratio)
+                self.add_inertial(link_el, dynamics_body, gear_ratio=module_obj.actuator_data.gear_ratio)
             else:
                 self.add_inertial(link_el, dynamics_body)
+
+        return link_el
+
+
+    def add_joint_element(self, joint_name, module_obj, parent_name, child_name, mimic_joint=None):
+        joint_el = ET.SubElement(self.root,
+                                    'joint',
+                                    name=joint_name,
+                                    type=module_obj.actuator_data.type)
+        # Add the joint to the list of urdf elements of the module
+        module_obj.xml_tree_elements.append(joint_name)
+
+        # add parent and child
+        ET.SubElement(joint_el, "parent", link=parent_name)
+        ET.SubElement(joint_el, "child", link=child_name)
+
+        x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(module_obj.Proximal_tf)
+
+        # add origin
+        joint_pose = ModuleNode.Module.Attribute({'x': x, 'y': y, 'z': z, 'roll': roll, 'pitch': pitch, 'yaw': yaw})
+        self.add_origin(joint_el, joint_pose)
+
+        actuator_data = module_obj.actuator_data
+        if actuator_data.type != 'fixed':
+
+            # add limits if not fixed joint
+            ET.SubElement(joint_el, "limit",
+                        effort=str(actuator_data.effort),
+                        velocity=str(actuator_data.velocity),
+                        lower=str(actuator_data.lower_limit),
+                        upper=str(actuator_data.upper_limit))
+            
+            # add axis
+            if hasattr(actuator_data, 'axis'):
+                axis = actuator_data.axis
+                ET.SubElement(joint_el, "axis",
+                            xyz=str(axis[0]) + " " + str(axis[1]) + " " + str(axis[2]))
+            else:
+                ET.SubElement(joint_el, "axis",
+                            xyz="0 0 1")  # default axis if not specified  
+                
+            if mimic_joint is not None:
+                ET.SubElement(joint_el, "mimic",
+                            joint=mimic_joint,
+                            multiplier="1",
+                            offset="0") 
+    
+            ####
+            # add xbot/control plugin
+            #ET.SubElement(self.xbot2_pid, "xacro:add_xbot2_pid", name=new_Joint.name, profile="small_mot")
+            self.control_plugin.add_joint(joint_name,
+                                        control_params=module_obj.xbot_gz if hasattr(module_obj, 'xbot_gz') else None)
+            ####
+
+        return joint_el
+
+
+    def add_rotor_element(self, new_Joint):
+        ''' 
+        Add the rotor part as a new link to a joint element.
+        
+        The rotor inertia can be handled in two ways, selected by the REFLECT_ROTOR_INERTIA xacro mapping:
+        1. Added to the rotor part inertia (after scaling with the gear ratio) - useful for simulation 
+        environments where rotor inertia effects are desired to be simulated.
+        2. Added to the stator part (without scaling) - the usual representation when using XBot2 
+        with a low-level controller that handles rotor inertia.
+        REFLECT_ROTOR_INERTIA is set to False by default.
+        
+        Args:
+            new_Joint: Joint module object containing joint specifications, actuator data,
+                    and geometric properties. Must have 'distal_link_name' attribute.
+        
+        Returns:
+            None: Modifies the URDF tree in place by adding rotor link and joint elements.
+        '''
+        setattr(new_Joint, 'fixed_joint_rotor_name', "fixed_" + new_Joint.distal_link_name + '_rotor')
+        setattr(new_Joint, 'rotor_name', new_Joint.distal_link_name + '_rotor')
+        
+        # if REFLECT_ROTOR_INERTIA=True condition for the joint element
+        reflect_if_joint_el = ET.SubElement(self.root,
+                                'xacro:xacro_if_guard',
+                                value="${REFLECT_ROTOR_INERTIA}",
+                                name = new_Joint.fixed_joint_rotor_name + '_if')
+        new_Joint.xml_tree_elements.append(new_Joint.fixed_joint_rotor_name + '_if')
+
+        # Add the fixed joint for the rotor (distal_link -> rotor)
+        x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(tf.transformations.identity_matrix())
+        ET.SubElement(reflect_if_joint_el,
+                    "xacro:add_fixed_joint",
+                    type="fixed_joint",
+                    name=new_Joint.fixed_joint_rotor_name,
+                    father=new_Joint.distal_link_name,
+                    child=new_Joint.rotor_name,
+                    x=x,
+                    y=y,
+                    z=z,
+                    roll=roll,
+                    pitch=pitch,
+                    yaw=yaw)
+
+        # if REFLECT_ROTOR_INERTIA=True condition for the link element
+        reflect_if_link_el = ET.SubElement(self.root,
+                                'xacro:xacro_if_guard',
+                                value="${REFLECT_ROTOR_INERTIA}",
+                                name = new_Joint.rotor_name + '_if')
+        new_Joint.xml_tree_elements.append(new_Joint.rotor_name + '_if')
+
+        # Add the link element for the rotor (reflecting the rotor inertia)
+        self.add_link_element(new_Joint.rotor_name, new_Joint, 'body_2_fast', root=reflect_if_link_el, is_geared=True)
+
+        # if REFLECT_ROTOR_INERTIA=False condition for the joint element
+        reflect_if_not_joint_el = ET.SubElement(self.root,
+                                'xacro:xacro_if_guard',
+                                value="${not REFLECT_ROTOR_INERTIA}",
+                                name = new_Joint.fixed_joint_rotor_name + '_if_not')
+        new_Joint.xml_tree_elements.append(new_Joint.fixed_joint_rotor_name + '_if_not')
+
+        # Add the fixed joint for the rotor (stator -> rotor)
+        x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(new_Joint.Proximal_tf)
+        ET.SubElement(reflect_if_not_joint_el,
+                    "xacro:add_fixed_joint",
+                    type="fixed_joint",
+                    name=new_Joint.fixed_joint_rotor_name,
+                    father=new_Joint.stator_name,
+                    child=new_Joint.rotor_name,
+                    x=x,
+                    y=y,
+                    z=z,
+                    roll=roll,
+                    pitch=pitch,
+                    yaw=yaw)
+        
+        # if REFLECT_ROTOR_INERTIA=False condition for the link element
+        reflect_if_not_link_el = ET.SubElement(self.root,
+                                'xacro:xacro_if_guard',
+                                value="${not REFLECT_ROTOR_INERTIA}",
+                                name = new_Joint.rotor_name + '_if_not')
+        new_Joint.xml_tree_elements.append(new_Joint.rotor_name + '_if_not')
+
+        # Add the link element for the rotor (not reflecting the rotor inertia)
+        self.add_link_element(new_Joint.rotor_name, new_Joint, 'body_2_fast', root=reflect_if_not_link_el, is_geared=False)
 
 
     def add_joint(self, new_Joint, parent_name, transform, reverse):
@@ -3160,67 +3307,11 @@ class UrdfWriter:
 
         self.collision_elements.append((parent_name, new_Joint.stator_name))
 
-        # mesh_transform = ModuleNode.get_rototranslation(tf_transformations.rotation_matrix(-1.57, self.zaxis),
-        #                                            tf_transformations.rotation_matrix(3.14, self.xaxis))
-        mesh_transform = tf_transformations.identity_matrix()
-
-        # If the module is mounted in the opposite direction rotate the final frame by 180 deg., as per convention
-        if reverse:
-            prox_mesh_transform = ModuleNode.get_rototranslation(mesh_transform, tf_transformations.rotation_matrix(-3.14, self.yaxis))
-            prox_mesh_transform = ModuleNode.get_rototranslation(prox_mesh_transform, tf_transformations.inverse_matrix(new_Joint.Proximal_tf))
-            # prox_mesh_transform = ModuleNode.get_rototranslation(mesh_transform, tf_transformations.translation_matrix((-0.0591857,0,-0.095508)))#tf_transformations.inverse_matrix(new_Joint.Proximal_tf))
-            # prox_mesh_transform = ModuleNode.get_rototranslation(prox_mesh_transform, tf_transformations.rotation_matrix(3.14, self.xaxis))
-            # prox_mesh_transform = ModuleNode.get_rototranslation(prox_mesh_transform,
-            #                                                      tf_transformations.rotation_matrix(1.57, self.zaxis))
-        else:
-            prox_mesh_transform = mesh_transform
-        x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(prox_mesh_transform)
-
         # Add proximal link
         self.add_link_element(new_Joint.stator_name, new_Joint, 'body_1')
         self.add_gazebo_element(new_Joint, new_Joint.gazebo.body_1, new_Joint.stator_name)
 
-        joint_transform = ModuleNode.get_rototranslation(tf_transformations.identity_matrix(),
-                                                         new_Joint.Proximal_tf)
-        x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(joint_transform)
-
-        actuator_data = new_Joint.actuator_data
-        upper_lim = str(actuator_data.upper_limit)
-        lower_lim = str(actuator_data.lower_limit)
-        effort = str(actuator_data.effort)
-        velocity = str(actuator_data.velocity)
-
-        ET.SubElement(self.root,
-                      "xacro:add_joint",
-                      type="joint",
-                      name=new_Joint.name,
-                      father=new_Joint.stator_name,
-                      child=new_Joint.distal_link_name,
-                      x=x,
-                      y=y,
-                      z=z,
-                      roll=roll,
-                      pitch=pitch,
-                      yaw=yaw,
-                      upper_lim=upper_lim,
-                      lower_lim=lower_lim,
-                      effort=effort,
-                      velocity=velocity)
-        # add the xacro:add_joint element to the list of urdf elements
-        new_Joint.xml_tree_elements.append(new_Joint.name)
-
-        ####
-        #ET.SubElement(self.xbot2_pid, "xacro:add_xbot2_pid", name=new_Joint.name, profile="small_mot")
-        self.control_plugin.add_joint(new_Joint.name,
-                                    control_params=new_Joint.xbot_gz if hasattr(new_Joint, 'xbot_gz') else None)
-        ####
-
-        if reverse:
-            dist_mesh_transform = ModuleNode.get_rototranslation(new_Joint.Distal_tf, mesh_transform)
-        else:
-            dist_mesh_transform = mesh_transform
-
-        x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(dist_mesh_transform)
+        self.add_joint_element(new_Joint.name, new_Joint, new_Joint.stator_name, new_Joint.distal_link_name)
 
         # Add distal link
         self.add_link_element(new_Joint.distal_link_name, new_Joint, 'body_2')
@@ -3229,31 +3320,9 @@ class UrdfWriter:
         # Add proximal/distal links pair to the list of collision elements to ignore
         self.collision_elements.append((new_Joint.stator_name, new_Joint.distal_link_name))
 
-        if reverse:
-            new_Joint.Distal_tf = ModuleNode.get_rototranslation(new_Joint.Distal_tf,
-                                                                 tf_transformations.rotation_matrix(3.14, self.yaxis))
-
-        # add the fast rotor part to the inertia of the link/rotor part as a new link. NOTE: right now this is
-        # attached at the rotating part not to the fixed one (change it so to follow Pholus robot approach)
-        # TODO: create a switch between the different methods to consider the fast rotor part
+        # Add rotor part if present in the module_description. The REFLECT_ROTOR_INERTIA xacro mapping will determine if the rotor inertia is reflected or not
         if hasattr(new_Joint.dynamics, 'body_2_fast'):
-            setattr(new_Joint, 'fixed_joint_rotor_fast_name', "fixed_" + new_Joint.distal_link_name + '_rotor_fast')
-            ET.SubElement(self.root,
-                        "xacro:add_fixed_joint",
-                        type="fixed_joint",
-                        name=new_Joint.fixed_joint_rotor_fast_name,
-                        father=new_Joint.distal_link_name,  # stator_name, #
-                        child=new_Joint.distal_link_name + '_rotor_fast',
-                        x=x,
-                        y=y,
-                        z=z,
-                        roll=roll,
-                        pitch=pitch,
-                        yaw=yaw)
-            # add the xacro:add_fixed_joint element to the list of urdf elements
-            new_Joint.xml_tree_elements.append(new_Joint.fixed_joint_rotor_fast_name)
-            
-            self.add_link_element(new_Joint.distal_link_name + '_rotor_fast', new_Joint, 'body_2_fast', is_geared=True)
+            self.add_rotor_element(new_Joint)
 
 
     def add_hub(self, new_Hub, parent_name, transform, hub_name=None):
@@ -3432,7 +3501,7 @@ class UrdfWriter:
 
         interface_transform = self.get_link_output_transform(past_Link)
 
-        transform = self.get_proximal_transform(interface_transform, offsets, reverse=reverse) # TODO check reverse
+        transform = self.get_proximal_transform(interface_transform, offsets, reverse=reverse)
 
         # HACK: to handle 90° offset between PINO and CONCERT flanges
         transform = self.apply_adapter_transform_rotation(transform, past_Link.flange_size, new_Hub.flange_size)
@@ -3468,7 +3537,7 @@ class UrdfWriter:
 
         interface_transform = self.get_joint_output_transform(past_Joint)
 
-        transform = self.get_proximal_transform(interface_transform, offsets, reverse=reverse)  # TODO check reverse
+        transform = self.get_proximal_transform(interface_transform, offsets, reverse=reverse)
 
         # HACK: to handle 90° offset between PINO and CONCERT flanges
         transform = self.apply_adapter_transform_rotation(transform, past_Joint.flange_size, new_Hub.flange_size)
@@ -3891,7 +3960,7 @@ class UrdfWriter:
         return self.model_stats.compute_payload(n_samples=samples)
     
 
-    def compute_stats(self, samples):
+    def compute_stats(self, samples=1000):
         self.model_stats.update_model()
         return self.model_stats.compute_stats(n_samples=samples)
 

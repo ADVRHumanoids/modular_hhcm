@@ -7,7 +7,7 @@ on:
 
 jobs:
   merge-master-into-alberobotics:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout
@@ -44,7 +44,7 @@ jobs:
           git fetch --unshallow
           git checkout alberobotics
 
-          git merge --no-ff --no-commit master
+          git merge --no-ff --no-commit master || true
           for file in "${to_keep[@]}"; do
             git reset HEAD $file
             git checkout -- $file

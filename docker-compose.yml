@@ -17,6 +17,7 @@ services:
         - RECIPES_PROVIDER
         - FOREST_WS
         - USER_PWD
+        - USER_ID
         - MODE
         - JOBS
     ports:
@@ -24,3 +25,4 @@ services:
     volumes:
       # We might want to change the local path of the web_config.ini file
       - ./src/modular/web/web_config.ini:${FOREST_WS}/src/modular/src/modular/web/web_config.ini
+      # - ../modular_frontend/build/:${FOREST_WS}/src/modular/src/modular/web/modular_frontend

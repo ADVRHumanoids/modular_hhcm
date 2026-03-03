@@ -63,7 +63,7 @@
 This project focuses on the development of an app for rapid model generation of modular robots, starting from a set of basic robotic modules.
 This app will genereate URDF, SRDF and a complete ROS package, which can be used to simulate and control the robot.
 
-![reconfigurable_pino](https://alberobotics.it/templates/yootheme/cache/reconfigurable_pino-2e1209e8.png)
+![reconfigurable_pino](./src/modular/web/modular_frontend/reconfigurable_pino-7af6fda5.webp)
 
 This is handled in 2 different scenarios: online or offline.
 

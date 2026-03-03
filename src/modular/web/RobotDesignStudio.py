@@ -24,7 +24,7 @@ from uuid import uuid4
 import numpy as np
 
 import rospy
-from flask import Flask, Response, render_template, request, jsonify, send_from_directory, abort, session, send_file
+from flask import Flask, Response, make_response, render_template, request, jsonify, send_from_directory, abort, session, send_file
 from apscheduler.schedulers.background import BackgroundScheduler
 import werkzeug
 
@@ -156,9 +156,19 @@ def cleanup():
     for sid in expired_sessions:
         del sessions[sid]
 
+
 scheduler = BackgroundScheduler(daemon=True)
-scheduler.add_job(cleanup, 'interval', minutes=30)
+if enable_sessions:
+    scheduler.add_job(cleanup, 'interval', minutes=30)
+else:
+    sessions['default'] = SessionData(
+        urdf_writer=UrdfWriter(**urdfwriter_kwargs_dict),
+        urdf_writer_fromHW=UrdfWriter(**urdfwriter_kwargs_dict),
+        building_mode_ON=True,
+        last_updated=datetime.now(),
+    )
 scheduler.start()
+
 
 def get_writer(sid:str) -> UrdfWriter:
     if sid not in sessions:
@@ -192,7 +202,14 @@ def index():
             last_updated= datetime.now(),
             )
 
-    return render_template('index.html')
+    # for the index page we want to disable caching
+    index_page = make_response(render_template('index.html'))
+    # exparies in the past (date of the first commit of the project)
+    index_page.headers['Expires'] = 'Fri, May 11 2018 10:48:51 GMT'
+    index_page.headers['Cache-Control'] = 'max-age=0, no-cache, no-store'
+    index_page.headers['Pragma'] = 'no-cache'
+    return index_page
+
 
 # Get workspace mode
 @app.route(f'{api_base_route}/mode', methods=['GET'])
@@ -1069,7 +1086,7 @@ def getModelStats():
         if  stats['max_reach'] and np.isfinite(stats['max_reach']):
             response["max_reach"]= { "label": 'Reach', "value": "{:.2f}".format(stats['max_reach']), "unit": 'm' }
         if  stats['joint_modules']:
-            response["joint_modules"]= { "label": 'Joints', "value": str(stats['modules']) }
+            response["joint_modules"]= { "label": 'Joints', "value": str(stats['joint_modules']) }
 
         return Response(
             response=json.dumps(response),
