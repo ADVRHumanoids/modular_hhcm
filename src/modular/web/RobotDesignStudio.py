@@ -15,7 +15,6 @@ import sys
 import re
 import argparse
 import subprocess
-from importlib import reload
 from configparser import ConfigParser, ExtendedInterpolation
 from typing import TypedDict
 from datetime import datetime, timedelta
@@ -106,7 +105,6 @@ with open(manifest_path) as f:
 parser = argparse.ArgumentParser(prog='robot-design-studio', description='Robot Design Studio server')
 parser.add_argument('-d', '--debug', required=False, action='store_true', default=False)
 parser.add_argument('-v', '--verbose', required=False, action='store_true', default=False)
-parser.add_argument('--use_ros_logger', required=False, action='store_true', default=False)
 parser.add_argument('--slave_desc_mode', required=False, choices=('use_ids', 'use_pos'), default='use_pos')
 
 # parse only known args, see https://stackoverflow.com/a/59067873/22225741
@@ -125,17 +123,9 @@ enable_sessions = config.getboolean('MODULAR_API','enable_sessions',fallback=Fal
 enable_discovery = config.getboolean('MODULAR_API','enable_discovery',fallback=True)
 download_on_deploy = config.getboolean('MODULAR_API','download_on_deploy',fallback=False)
 
-# set if ROS logger should be used
-if args.use_ros_logger and ros_available:
-    # roslogger = logging.getLogger('rosout')
-    roslogger = logging.getLogger(f'rosout.{__name__}')
-    logger = roslogger
-else:
-    reload(logging)
-    FORMAT = '[%(levelname)s] [%(module)s]:  %(message)s'
-    logging.basicConfig(format=FORMAT)
-    applogger = logging.getLogger("RobotDesignStudio")
-    logger = applogger
+FORMAT = '[%(levelname)s] [%(module)s]:  %(message)s'
+logging.basicConfig(format=FORMAT)
+logger = logging.getLogger('robot_design_studio')
 
 # get werkzeug logger
 werkzeug_logger = logging.getLogger('werkzeug')
