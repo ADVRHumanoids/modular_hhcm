@@ -8,13 +8,24 @@ import yaml
 import json
 import sys
 import os
+import logging
+import numpy as np
 
-if os.getenv('ROS_VERSION') == 1:
+_logger = logging.getLogger(__name__)
+
+# Use internal pure-Python/scipy implementation (no ROS dependency required).
+# Falls back to ROS packages if available.
+try:
     import tf
-    tf_transformations = tf.transformations
-else:
-    # requires sudo apt install ros-$ROS_DISTRO-tf-transformations
-    import tf_transformations
+    tf_transformations = tf.transformations  # ROS 1
+    _logger.debug("tf_transformations: using tf.transformations (ROS 1)")
+except ImportError:
+    try:
+        import tf_transformations  # ROS 2
+        _logger.debug("tf_transformations: using tf_transformations (ROS 2)")
+    except ImportError:
+        from modular import _transformations as tf_transformations  # pure scipy/numpy
+        _logger.debug("tf_transformations: using internal scipy/numpy implementation")
     
 import anytree
 
@@ -131,12 +142,12 @@ class JSONInterpreter(object):
 
             # kinematics
             proximal_pose = Module.Attribute({'pose': dict_joint['pose_parent']}) 
-            # x, y, z, roll, pitch, yaw = get_xyzrpy(tf.transformations.numpy.array(dict_joint['pose_parent']))
+            # x, y, z, roll, pitch, yaw = get_xyzrpy(np.array(dict_joint['pose_parent']))
             # proximal_pose = Module.Attribute({'x': float(x), 'y': float(y), 'z': float(z), 'roll': float(roll), 'pitch': float(pitch), 'yaw': float(yaw)})
             update_nested_dict(self.owner.kinematics.joint.proximal.__dict__, proximal_pose.__dict__)
             
             distal_pose = Module.Attribute({'pose': dict_joint['pose_child']}) 
-            # x, y, z, roll, pitch, yaw = get_xyzrpy(tf.transformations.numpy.array(dict_joint['pose_child']))
+            # x, y, z, roll, pitch, yaw = get_xyzrpy(np.array(dict_joint['pose_child']))
             # distal_pose = Module.Attribute({'x': float(x), 'y': float(y), 'z': float(z), 'roll': float(roll), 'pitch': float(pitch), 'yaw': float(yaw)})
             update_nested_dict(self.owner.kinematics.joint.distal.__dict__, distal_pose.__dict__)
             
@@ -243,7 +254,7 @@ class JSONInterpreter(object):
                 attr = Module.Attribute(visual)
                 if visual:
                     # NOTE: pose of visual properties should be expressed in urdf format at the moment
-                    x, y, z, roll, pitch, yaw = get_xyzrpy(tf.transformations.numpy.array(visual['pose']))
+                    x, y, z, roll, pitch, yaw = get_xyzrpy(np.array(visual['pose']))
                     attr.pose = Module.Attribute({'x': float(x), 'y': float(y), 'z': float(z), 'roll': float(roll), 'pitch': float(pitch), 'yaw': float(yaw)})
                 visual_properties.append(attr)
             visual_attr = Module.Attribute({body_name: visual_properties})
@@ -260,7 +271,7 @@ class JSONInterpreter(object):
                 attr = Module.Attribute(collision) 
                 if collision:
                     # NOTE: pose of collision properties should be expressed in urdf format at the moment
-                    x, y, z, roll, pitch, yaw = get_xyzrpy(tf.transformations.numpy.array(collision['pose']))
+                    x, y, z, roll, pitch, yaw = get_xyzrpy(np.array(collision['pose']))
                     attr.pose = Module.Attribute({'x': float(x), 'y': float(y), 'z': float(z), 'roll': float(roll), 'pitch': float(pitch), 'yaw': float(yaw)})
                 collision_properties.append(attr)
             collision_attr = Module.Attribute({body_name: collision_properties})
@@ -368,8 +379,8 @@ class Module(object):
             D = tf_transformations.concatenate_matrices(T, R)
 
             if reverse:
-                P_inv = tf.transformations.inverse_matrix(P)
-                D_inv = tf.transformations.inverse_matrix(D)
+                P_inv = tf_transformations.inverse_matrix(P)
+                D_inv = tf_transformations.inverse_matrix(D)
                 P = D_inv
                 D = P_inv
 
@@ -389,18 +400,18 @@ class Module(object):
             D = tf_transformations.concatenate_matrices(H1, H2, H3, H4, H5)
 
             if reverse:
-                P_inv = tf.transformations.inverse_matrix(P)
-                D_inv = tf.transformations.inverse_matrix(D)
+                P_inv = tf_transformations.inverse_matrix(P)
+                D_inv = tf_transformations.inverse_matrix(D)
                 P = D_inv
                 D = P_inv
 
         elif self.kinematics_convention is KinematicsConvention.AFFINE:
-            P = tf_transformations.numpy.array(proximal.pose)
-            D = tf_transformations.numpy.array(distal.pose)
+            P = np.array(proximal.pose)
+            D = np.array(distal.pose)
             
             if reverse:
-                P_inv = tf.transformations.inverse_matrix(P)
-                D_inv = tf.transformations.inverse_matrix(D)
+                P_inv = tf_transformations.inverse_matrix(P)
+                D_inv = tf_transformations.inverse_matrix(D)
                 P = D_inv
                 D = P_inv
 
@@ -447,7 +458,7 @@ class Module(object):
                 # H = tf_transformations.inverse_matrix(H)
 
         elif self.kinematics_convention is KinematicsConvention.AFFINE:
-            H = tf_transformations.numpy.array(link.pose)
+            H = np.array(link.pose)
             if reverse:
                 H = tf_transformations.inverse_matrix(H)
 
@@ -499,7 +510,7 @@ class Module(object):
                         # tf_con = tf_transformations.inverse_matrix(tf_con)
                 
                 elif self.kinematics_convention is KinematicsConvention.AFFINE:
-                    tf_con = tf_transformations.numpy.array(con.pose)
+                    tf_con = np.array(con.pose)
                     if reverse:
                         tf_con = tf_transformations.inverse_matrix(tf_con)
 
@@ -562,18 +573,18 @@ class Module(object):
             for bodies in [getattr(self.visual, 'body_1', []), getattr(self.collision, 'body_1', [])]:
                 for body in bodies or []:
                     pose = body.pose
-                    body_1_visual_T = tf.transformations.translation_matrix((pose.x, pose.y, pose.z))
-                    body_1_visual_R = tf.transformations.euler_matrix(pose.roll, pose.pitch, pose.yaw, 'sxyz')
-                    body_1_visual_tf = tf.transformations.concatenate_matrices(body_1_visual_T, body_1_visual_R)
-                    pose.x, pose.y, pose.z, pose.roll, pose.pitch, pose.yaw = get_xyzrpy(tf.transformations.concatenate_matrices(self.Proximal_tf, body_1_visual_tf))
+                    body_1_visual_T = tf_transformations.translation_matrix((pose.x, pose.y, pose.z))
+                    body_1_visual_R = tf_transformations.euler_matrix(pose.roll, pose.pitch, pose.yaw, 'sxyz')
+                    body_1_visual_tf = tf_transformations.concatenate_matrices(body_1_visual_T, body_1_visual_R)
+                    pose.x, pose.y, pose.z, pose.roll, pose.pitch, pose.yaw = get_xyzrpy(tf_transformations.concatenate_matrices(self.Proximal_tf, body_1_visual_tf))
 
             for bodies in [getattr(self.visual, 'body_2', []), getattr(self.collision, 'body_2', [])]:
                 for body in bodies or []:
                     pose = body.pose
-                    body_2_visual_T = tf.transformations.translation_matrix((pose.x, pose.y, pose.z))
-                    body_2_visual_R = tf.transformations.euler_matrix(pose.roll, pose.pitch, pose.yaw, 'sxyz')
-                    body_2_visual_tf = tf.transformations.concatenate_matrices(body_2_visual_T, body_2_visual_R)
-                    pose.x, pose.y, pose.z, pose.roll, pose.pitch, pose.yaw = get_xyzrpy(tf.transformations.concatenate_matrices(self.Distal_tf, body_2_visual_tf))
+                    body_2_visual_T = tf_transformations.translation_matrix((pose.x, pose.y, pose.z))
+                    body_2_visual_R = tf_transformations.euler_matrix(pose.roll, pose.pitch, pose.yaw, 'sxyz')
+                    body_2_visual_tf = tf_transformations.concatenate_matrices(body_2_visual_T, body_2_visual_R)
+                    pose.x, pose.y, pose.z, pose.roll, pose.pitch, pose.yaw = get_xyzrpy(tf_transformations.concatenate_matrices(self.Distal_tf, body_2_visual_tf))
         else:
             raise ValueError("swap_bodies can be called only on joint modules")
 

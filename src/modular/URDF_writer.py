@@ -5,6 +5,7 @@
 
 from __future__ import print_function
 import math
+import numpy as np
 from future.utils import iteritems
 from abc import ABCMeta, abstractmethod
 import os
@@ -52,12 +53,8 @@ import os
 import errno
 import sys
 
-if os.getenv('ROS_VERSION') == 1:
-    import tf
-    tf_transformations = tf.transformations
-else:
-    # requires sudo apt install ros-$ROS_DISTRO-tf-transformations
-    import tf_transformations
+# tf_transformations is imported transitively via ModuleNode (single source of truth)
+tf_transformations = ModuleNode.tf_transformations
 
 currDir = os.path.dirname(os.path.realpath(__file__))
 # print(currDir)
@@ -1082,9 +1079,8 @@ class UrdfWriter:
 
 
         if logger is None:
-            FORMAT = '[%(levelname)s] [%(module)s]:  %(message)s'
-            logging.basicConfig(level=logging.INFO, format=FORMAT)
-            self.logger = logging.getLogger('URDF_writer')
+            # Use the module's named logger so it fits into the 'modular.*' hierarchy.
+            self.logger = logging.getLogger(__name__)
         else:
             self.logger = logger
 
@@ -2791,7 +2787,7 @@ class UrdfWriter:
             # 
             # <xacro:insert_block name="velodyne_back_origin" />
 
-            x_ee, y_ee, z_ee, roll_ee, pitch_ee, yaw_ee = ModuleNode.get_xyzrpy(tf_transformations.numpy.array(new_Link.kinematics.link.pose))
+            x_ee, y_ee, z_ee, roll_ee, pitch_ee, yaw_ee = ModuleNode.get_xyzrpy(np.array(new_Link.kinematics.link.pose))
             setattr(new_Link, 'tcp_name', 'drillnose' + new_Link.tag)
             ET.SubElement(self.root,
                           "xacro:add_tcp",
@@ -2815,7 +2811,7 @@ class UrdfWriter:
             # this list will contain the names of the fingers or any moving extremity of the end effector
             setattr(new_Link, 'finger_names', [])
 
-            x_ee, y_ee, z_ee, roll_ee, pitch_ee, yaw_ee = ModuleNode.get_xyzrpy(tf_transformations.numpy.array(new_Link.kinematics.link.pose))
+            x_ee, y_ee, z_ee, roll_ee, pitch_ee, yaw_ee = ModuleNode.get_xyzrpy(np.array(new_Link.kinematics.link.pose))
             setattr(new_Link, 'tcp_name', 'ee' + new_Link.tag)
             ET.SubElement(self.root,
                           "xacro:add_tcp",
@@ -2839,7 +2835,7 @@ class UrdfWriter:
             # this list will contain the names of the fingers or any moving extremity of the end effector
             setattr(new_Link, 'finger_names', [])
 
-            x_ee, y_ee, z_ee, roll_ee, pitch_ee, yaw_ee = ModuleNode.get_xyzrpy(tf_transformations.numpy.array(new_Link.kinematics.link.pose))
+            x_ee, y_ee, z_ee, roll_ee, pitch_ee, yaw_ee = ModuleNode.get_xyzrpy(np.array(new_Link.kinematics.link.pose))
             setattr(new_Link, 'tcp_name', 'ee' + new_Link.tag)
             ET.SubElement(self.root,
                           "xacro:add_tcp",
@@ -2906,9 +2902,9 @@ class UrdfWriter:
             self.add_joint_element(new_Link.joint_name_finger1, new_Link, new_Link.base_link_name, new_Link.name_finger1)
 
             # rotate the finger transform by 180 deg. around z
-            new_Link.Proximal_tf = tf.transformations.concatenate_matrices(
+            new_Link.Proximal_tf = tf_transformations.concatenate_matrices(
                 new_Link.Proximal_tf,
-                tf.transformations.rotation_matrix(math.pi, [0, 0, 1], point=[0, 0, 0])
+                tf_transformations.rotation_matrix(math.pi, [0, 0, 1], point=[0, 0, 0])
             )
             # mirror the mesh on the xy directions
             new_Link.Proximal_tf[0,3] = -1*new_Link.Proximal_tf[0,3]
@@ -2916,7 +2912,7 @@ class UrdfWriter:
 
             self.add_joint_element(new_Link.joint_name_finger2, new_Link, new_Link.base_link_name, new_Link.name_finger2, mimic_joint=new_Link.joint_name_finger1)
 
-            x_ee, y_ee, z_ee, roll_ee, pitch_ee, yaw_ee = ModuleNode.get_xyzrpy(tf.transformations.numpy.array(new_Link.kinematics.link.pose))
+            x_ee, y_ee, z_ee, roll_ee, pitch_ee, yaw_ee = ModuleNode.get_xyzrpy(np.array(new_Link.kinematics.link.pose))
             setattr(new_Link, 'tcp_name', 'ee' + new_Link.tag)
             ET.SubElement(self.root,
                           "xacro:add_tcp",
@@ -2995,7 +2991,7 @@ class UrdfWriter:
         # if the joint is reversed, rotate the distal link frame by 180 deg. around y (as per convention)
         if past_Joint.reverse:
             past_Joint.Distal_tf = ModuleNode.get_rototranslation(past_Joint.Distal_tf,
-                                                                 tf.transformations.rotation_matrix(3.14, self.yaxis))
+                                                                 tf_transformations.rotation_matrix(3.14, self.yaxis))
         return past_Joint.Distal_tf
 
 
@@ -3223,7 +3219,7 @@ class UrdfWriter:
         new_Joint.xml_tree_elements.append(new_Joint.fixed_joint_rotor_name + '_if')
 
         # Add the fixed joint for the rotor (distal_link -> rotor)
-        x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(tf.transformations.identity_matrix())
+        x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(tf_transformations.identity_matrix())
         ET.SubElement(reflect_if_joint_el,
                     "xacro:add_fixed_joint",
                     type="fixed_joint",
