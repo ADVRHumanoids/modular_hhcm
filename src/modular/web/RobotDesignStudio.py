@@ -124,21 +124,16 @@ enable_sessions = config.getboolean('MODULAR_API','enable_sessions',fallback=Fal
 enable_discovery = config.getboolean('MODULAR_API','enable_discovery',fallback=True)
 download_on_deploy = config.getboolean('MODULAR_API','download_on_deploy',fallback=False)
 
-FORMAT = '[%(levelname)s] [%(module)s]:  %(message)s'
-logging.basicConfig(format=FORMAT)
+import modular
+modular.setup_logging(level=logging.DEBUG if args.verbose else logging.INFO)
 logger = logging.getLogger('robot_design_studio')
 
-# get werkzeug logger
+# get werkzeug logger — controlled separately so its verbosity doesn't follow --verbose
 werkzeug_logger = logging.getLogger('werkzeug')
+werkzeug_logger.setLevel(logging.INFO if args.verbose else logging.ERROR)
 
-# set verbosity levels
 if args.verbose:
-    logger.setLevel(logging.DEBUG)
     logger.debug('Starting server')
-    werkzeug_logger.setLevel(logging.INFO)
-else:
-    logger.setLevel(logging.INFO)
-    werkzeug_logger.setLevel(logging.ERROR)
 
 if not rclpy_available:
     logger.warning('rclpy not found: ROS 2 is not installed. Discovery mode will be unavailable.')

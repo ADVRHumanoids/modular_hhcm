@@ -1,8 +1,8 @@
 from modular.URDF_writer import *
 
 import logging
-FORMAT = '[%(levelname)s] [%(module)s]:  %(message)s'
-logging.basicConfig(format=FORMAT)
+import modular
+modular.setup_logging()
 applogger = logging.getLogger("sim_discovery")
 
 urdfwriter_kwargs_dict={

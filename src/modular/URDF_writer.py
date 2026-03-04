@@ -1085,10 +1085,8 @@ class UrdfWriter:
             self.logger = logger
 
         self.verbose = verbose
-        if self.verbose and self.logger is not None:
+        if self.verbose:
             self.logger.setLevel(logging.DEBUG)
-        else:
-            pass
 
         self.collision_elements = []
 

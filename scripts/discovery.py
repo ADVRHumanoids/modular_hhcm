@@ -1,8 +1,8 @@
 from modular.URDF_writer import *
 
 import logging
-FORMAT = '[%(levelname)s] [%(module)s]:  %(message)s'
-logging.basicConfig(format=FORMAT)
+import modular
+modular.setup_logging()
 applogger = logging.getLogger("discovery")
 
 urdfwriter_kwargs_dict={
@@ -13,10 +13,12 @@ urdfwriter_kwargs_dict={
 
 urdf_writer_fromHW = UrdfWriter(**urdfwriter_kwargs_dict)
 
-from importlib import util
-ec_srvs_spec = util.find_spec('ec_srvs')
-if ec_srvs_spec is not None:
+try:
     from ec_srvs.srv import GetSlaveInfo
+    ec_srvs_available = True
+except ImportError:
+    applogger.warning('ec_srvs not found: EtherCAT services package is missing. Discovery mode will be unavailable.')
+    ec_srvs_available = False
     
 srv_name = '/ec_client/get_slaves_description'
 rospy.wait_for_service(srv_name, 5)
