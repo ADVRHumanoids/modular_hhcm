@@ -21,6 +21,9 @@
     <xacro:arg name="ultrasound" default="false"/>
     <xacro:property name="ADD_ULTRASOUND" value="$(arg ultrasound)" />
 
+    <xacro:arg name="imu" default="false"/>
+    <xacro:property name="ADD_IMU" value="$(arg imu)" />
+
     <xacro:arg name="use_gpu_ray" default="false"/>
     <xacro:property name="USE_GPU_RAY" value="$(arg use_gpu_ray)" />
 

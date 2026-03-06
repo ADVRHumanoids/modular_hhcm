@@ -85,17 +85,18 @@
 
     
     <!-- Add IMU sensor -->
-    <xacro:include filename="$(find imu_simulator)/urdf/imu.urdf.xacro" />
-    <xacro:property name="imu_name" value="imu" />
-    <xacro:property name="imu_parent_name" value="${parent_name}" />
-    <xacro:property name="imu_origin">
-        <origin xyz="0 0 0.1" rpy="0 0 0"/>
-    </xacro:property>
-
-    <xacro:add_imu_sensor name="${imu_name}" 
-                        parent="${imu_parent_name}">
-        <xacro:insert_block name="imu_origin" />
-    </xacro:add_imu_sensor>
+    <xacro:if value="${ADD_IMU}">
+        <xacro:include filename="$(find imu_simulator)/urdf/imu.urdf.xacro" />
+        <xacro:property name="imu_name" value="imu" />
+        <xacro:property name="imu_parent_name" value="${parent_name}" />
+        <xacro:property name="imu_origin">
+            <origin xyz="0 0 0.1" rpy="0 0 0"/>
+        </xacro:property>
+        <xacro:add_imu_sensor name="${imu_name}" 
+                            parent="${imu_parent_name}">
+            <xacro:insert_block name="imu_origin" />
+        </xacro:add_imu_sensor>
+    </xacro:if>
 
     <!-- Add Velodyne front -->
     <xacro:property name="velodyne_front_name" value="VLP16_lidar_front" />
