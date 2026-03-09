@@ -172,7 +172,7 @@
         <link name="${name}"/>
         
         <xacro:if value="${ADD_ULTRASOUND}">
-            <xacro:add_ultrasound_gazebo name="${name}" topic="${topic}" />
+            <xacro:add_ultrasound_gazebo name="${name}" topic="${topic}/scan" />
         </xacro:if>
 
     </xacro:macro>
@@ -292,18 +292,21 @@
 
 </xacro:macro>
 
-<!-- Macro for adding gazebo plugin for ultrasound sensors -->
+<!-- Macro for adding ultrasound sensor in Gazebo Sim (ROS2) -->
 <xacro:macro name="add_ultrasound_gazebo" params="name topic">
     <gazebo reference="${name}">
-        <sensor type="ray" name="sonar">
+        <sensor name="${name}_sonar" type="gpu_ray">
+            <always_on>true</always_on>
             <update_rate>5</update_rate>
+            <visualize>false</visualize>
+            <topic>${topic}</topic>
             <ray>
                 <scan>
                     <horizontal>
                         <samples>5</samples>
                         <resolution>1.0</resolution>
-                        <min_angle>-1.0</min_angle>
-                        <max_angle>1.0</max_angle>
+                        <min_angle>-1.15</min_angle>
+                        <max_angle>1.15</max_angle>
                     </horizontal>
                     <vertical>
                         <samples>5</samples>
@@ -317,16 +320,12 @@
                     <max>3.0</max>
                     <resolution>0.01</resolution>
                 </range>
+                <noise>
+                    <type>gaussian</type>
+                    <mean>0.0</mean>
+                    <stddev>0.005</stddev>
+                </noise>
             </ray>
-            <plugin filename="libgazebo_ros_range.so" name="gazebo_ros_range">
-                <gaussianNoise>0.005</gaussianNoise>
-                <alwaysOn>true</alwaysOn>
-                <updateRate>5</updateRate>
-                <topicName>${topic}</topicName>
-                <frameName>${name}</frameName>
-                <fov>2.3</fov>
-                <radiation>ultrasound</radiation>
-            </plugin>
         </sensor>
     </gazebo>
 </xacro:macro>
