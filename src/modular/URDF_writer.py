@@ -1074,6 +1074,8 @@ class UrdfWriter:
 
         # additional xacro mappings for addons, external xacro files, etc.
         self.additional_xacro_mappings = {}
+        # Keep track of discovered sensor names by type (e.g. camera, lidar).
+        self.sensor_names = {}
 
         self.set_floating_base(floating_base)
 
@@ -1742,14 +1744,34 @@ class UrdfWriter:
                       filename="${MODULAR_PATH}/modular_data/urdf/concert.sensors.urdf.xacro")
         et = ET.SubElement(self.root,
                       "xacro:add_realsense_d_camera",
-                      name="drill_camera",
+                      name=camera_name,
                       parent_name=self.parent_module.name,
                       add_gazebo_sensor="true")
         ET.SubElement(et,
                       "origin",
                       xyz=" ".join([str(x) for x in xyz_offset]),
                       rpy=" ".join([str(x) for x in rpy_offset]))
+        self.add_sensor_name('camera', camera_name)
         return [camera_name]
+
+    def add_sensor_name(self, sensor_type, sensor_name):
+        if sensor_name is None:
+            return
+
+        if isinstance(sensor_name, (list, tuple, set)):
+            for name in sensor_name:
+                self.add_sensor_name(sensor_type, name)
+            return
+
+        sensor_list = self.sensor_names.setdefault(sensor_type, [])
+        if sensor_name not in sensor_list:
+            sensor_list.append(sensor_name)
+
+    def get_sensor_configuration(self, xacro_mappings=None):
+        _ = xacro_mappings  # reserved for future extensions
+        return {
+            'sensor_names': copy.deepcopy(self.sensor_names),
+        }
 
     # Add a cylinder as a fake end-effector
     def add_simple_ee(self, x_offset=0.0, y_offset=0.0, z_offset=0.0, angle_offset=0.0, mass=1.0, radius=0.02):
@@ -3375,6 +3397,19 @@ class UrdfWriter:
                         parent_name=new_Hub.name)
             # add the xacro:add_mobile_base_sensors element to the list of urdf elements
             new_Hub.xml_tree_elements.append(new_Hub.name + '_sensors')  
+            self.add_sensor_name('camera', ['D435i_camera_front', 'D435i_camera_back'])
+            self.add_sensor_name('velodyne', ['VLP16_lidar_front', 'VLP16_lidar_back'])
+            self.add_sensor_name('imu', 'imu')
+            self.add_sensor_name('ultrasound', [
+                'ultrasound_fl_sag',
+                'ultrasound_fr_sag',
+                'ultrasound_rl_sag',
+                'ultrasound_rr_sag',
+                'ultrasound_fl_lat',
+                'ultrasound_fr_lat',
+                'ultrasound_rl_lat',
+                'ultrasound_rr_lat',
+            ])
 
         # Add hub and parent links pair to the list of collision elements to ignore
         self.collision_elements.append((parent_name, new_Hub.name))       
@@ -3898,6 +3933,22 @@ class UrdfWriter:
 
         return string_urdf_xbot
 
+    def write_sensor_config(self, output_path=None, xacro_mappings=None):
+        global path_name
+        if output_path is None:
+            output_path = path_name + '/ModularBot/sensors/ModularBot.sensors.yaml'
+        sensor_config = self.get_sensor_configuration(xacro_mappings=xacro_mappings)
+        content = yaml.safe_dump(sensor_config, default_flow_style=False, sort_keys=False)
+
+        output_dir = os.path.dirname(output_path)
+        if output_dir and not os.path.exists(output_dir):
+            os.makedirs(output_dir, exist_ok=True)
+
+        with open(output_path, 'w') as f:
+            f.write(content)
+
+        return content
+
     # Save URDF/SRDF etc. in a directory with the specified robot_name
     def deploy_robot(self, robot_name='modularbot', deploy_dir=None):
         script = self.resource_finder.get_filename('deploy.sh', ['data_path'])
@@ -4015,7 +4066,7 @@ def write_file_to_stdout(urdf_writer: UrdfWriter, homing_map, robot_name='modula
     parser = argparse.ArgumentParser(prog='Modular URDF/SRDF generator and deployer',
                 usage='./script_name.py --output urdf writes URDF to stdout \n./script_name.py --deploy deploy_dir generates a ros package at deploy_dir')
 
-    parser.add_argument('--output', '-o', required=False, choices=('urdf', 'srdf'),      help='write requested file to stdout and exit')
+    parser.add_argument('--output', '-o', required=False, choices=('urdf', 'srdf', 'sensors'),      help='write requested file to stdout and exit')
     parser.add_argument('--xacro-args', '-a', required=False, nargs='*', help='xacro arguments in key:=value format')
     parser.add_argument('--deploy', '-d', required=False, help='directory where to deploy the package')
     parser.add_argument('--robot-name', '-r', required=False, help='name of the robot')
@@ -4044,6 +4095,10 @@ def write_file_to_stdout(urdf_writer: UrdfWriter, homing_map, robot_name='modula
             content = urdf_writer.write_srdf(homing_map)
             open(f'/tmp/{robot_name}.srdf', 'w').write(content)
 
+        elif args.output == 'sensors':
+            urdf_writer.process_urdf(xacro_mappings=xacro_mappings)
+            content = urdf_writer.write_sensor_config(f'/tmp/{robot_name}.sensors.yaml', xacro_mappings)
+
     if content is not None:
         print(content)
 
@@ -4053,5 +4108,6 @@ def write_file_to_stdout(urdf_writer: UrdfWriter, homing_map, robot_name='modula
         urdf_writer.write_problem_description_multi()
         urdf_writer.write_srdf(homing_map)
         urdf_writer.write_joint_map()
+        urdf_writer.write_sensor_config()
 
         urdf_writer.deploy_robot(robot_name, args.deploy)
