@@ -37,6 +37,8 @@ from modular.ModelStats import ModelStats
 import modular.ModuleNode as ModuleNode
 import argparse
 
+from ament_index_python.packages import get_package_share_directory
+
 # import rospy
 # import roslaunch
 # import rospkg
@@ -1753,8 +1755,95 @@ class UrdfWriter:
                       rpy=" ".join([str(x) for x in rpy_offset]))
         self.add_sensor_name('camera', camera_name)
         return [camera_name]
+    
+    def add_realsense(self, camera: str = "d435", align_depth: bool = True,
+                        add_plug: bool = False, use_mesh: bool = True,
+                        gazebo_urdf: bool = True, enable_infrared: bool = False,
+                        color_image: dict = {"width": 640, "height": 480, "fps": 30},
+                        depth_image: dict = {"width": 640, "height": 480, "fps": 30},
+                        xyz_offset=[0.0, 0.0, 0.0], rpy_offset=[0.0, 0.0, 0.0]):
+        """
+                        Add a Realsense camera to the URDF.
+                        Supported camera types are: 'd435', 'd435i'.
+                        Args:
+                            camera (str): Camera model type. Supported types are 'd435' or 'd435i'. Defaults to "d435".
+                            align_depth (bool): Whether to align depth image to color image. Defaults to True.
+                            add_plug (bool): Whether to add camera connector plug to the model. Defaults to False.
+                            use_mesh (bool): Whether to use mesh geometry for the camera model. Defaults to True.
+                            gazebo_urdf (bool): Whether to include Gazebo sensors. Defaults to True.
+                            enable_infrared (bool): Whether to enable infrared sensors. Defaults to False.
+                            color_image (dict): Color camera configuration with keys 'width', 'height', and 'fps'.
+                                Defaults to {"width": 640, "height": 480, "fps": 30}.
+                            depth_image (dict): Depth camera configuration with keys 'width', 'height', and 'fps'.
+                                Defaults to {"width": 640, "height": 480, "fps": 30}.
+                            xyz_offset (list): XYZ positional offset from parent module in meters [x, y, z].
+                                Defaults to [0.0, 0.0, 0.0].
+                            rpy_offset (list): Roll, pitch, yaw rotational offset from parent module in radians [r, p, y].
+                                Defaults to [0.0, 0.0, 0.0].
+                        Returns:
+                            list: List containing the camera name identifier.
+                        Raises:
+                            ValueError: If camera type is not one fo the supported types.
+                        Examples:
+                            Add a d435 camera with custom resolution:
+                                add_realsense(camera="d435", color_image={"width": 1280, "height": 720, "fps": 30})
+                            Add a d435i camera with offset positioning:
+                                add_realsense(camera="d435i", xyz_offset=[0.05, 0.0, 0.1], rpy_offset=[0.0, 0.785, 0.0])
+                        """
 
-    def add_sensor_name(self, sensor_type, sensor_name):
+        # Filter supported camera types 
+        supported_cameras = ["d435", "d435i"]
+        if camera not in supported_cameras:
+            raise ValueError(f"Camera type '{camera}' not supported. Supported types are: {', '.join(supported_cameras)}.")
+
+        camera_name = 'camera'+ self.parent_module.tag
+        macro_name = 'sensor_' + camera
+        xacro_filename = f"_{camera}.urdf.xacro"
+        ET.SubElement(self.root, 
+                      "xacro:include",
+                      filename= os.path.join(get_package_share_directory('realsense_gazebo_description'), 'urdf', xacro_filename))
+        et = ET.SubElement(self.root,
+                      f"xacro:{macro_name}",
+                      parent=self.parent_module.name,
+                      name=camera_name,
+                      use_nominal_extrinsics="true",
+                      add_plug=str(add_plug).lower(),
+                      use_mesh=str(use_mesh).lower(),
+                      gazebo_urdf=str(gazebo_urdf).lower(),
+                      align_depth=str(align_depth).lower(),
+                      enable_infrared=str(enable_infrared).lower(),
+                      visualize="true",
+                      color_width=str(color_image.get("width", 640)),
+                      color_height=str(color_image.get("height", 480)),
+                      color_fps=str(color_image.get("fps", 30)),
+                      depth_width=str(depth_image.get("width", 640)),
+                      depth_height=str(depth_image.get("height", 480)),
+                      depth_fps=str(depth_image.get("fps", 30)))
+        ET.SubElement(et,
+                      "origin",
+                      xyz=" ".join([str(x) for x in xyz_offset]),
+                      rpy=" ".join([str(x) for x in rpy_offset]))
+        if not align_depth:
+            self.add_sensor_name('camera/realsense', camera_name)
+        else:
+            self.add_sensor_name('camera/realsense_depth_aligned', camera_name)
+        return [camera_name]
+
+    def add_sensor_name(self, sensor_type: str, sensor_name: list[str] | str):
+        """
+        Add one or more sensor names to the sensor registry.
+
+        Args:
+            sensor_type (str): Sensor category used to group the sensor
+                names. Uses '/' as nested subcategory separator. For example, `camera/realsense` 
+                identifies a realsense subclass in camera category, while `force_torque_sensor` 
+                identifies a generic force-torque sensor category.
+            sensor_name (list[str] | str): Sensor name to add. If a list is
+                provided, each sensor name in the list is added.
+
+        Returns:
+            None
+        """
         if sensor_name is None:
             return
 
@@ -1878,6 +1967,8 @@ class UrdfWriter:
                 self.parent_module.addon_elements += self.add_dagana_claws(type=new_addon['parameters']['type'])
             elif new_addon['header']['type'] == 'camera':
                 self.parent_module.addon_elements += self.add_camera(xyz_offset=new_addon['parameters']['xyz_offset'], rpy_offset=new_addon['parameters']['rpy_offset'])
+            elif new_addon['header']['type'] == 'realsense':
+                self.parent_module.addon_elements += self.add_realsense(**new_addon['parameters'])
             else:
                 self.logger.info('Addon type not supported')
 
@@ -3398,9 +3489,9 @@ class UrdfWriter:
             # add the xacro:add_mobile_base_sensors element to the list of urdf elements
             new_Hub.xml_tree_elements.append(new_Hub.name + '_sensors')  
             self.add_sensor_name('camera', ['D435i_camera_front', 'D435i_camera_back'])
-            self.add_sensor_name('velodyne', ['VLP16_lidar_front', 'VLP16_lidar_back'])
+            self.add_sensor_name('lidar/velodyne', ['VLP16_lidar_front', 'VLP16_lidar_back'])
             self.add_sensor_name('imu', 'imu')
-            self.add_sensor_name('ultrasound', [
+            self.add_sensor_name('ultrasound/bosch_uss5', [
                 'ultrasound_fl_sag',
                 'ultrasound_fr_sag',
                 'ultrasound_rl_sag',
@@ -3934,10 +4025,51 @@ class UrdfWriter:
         return string_urdf_xbot
 
     def write_sensor_config(self, output_path=None, xacro_mappings=None):
+        def nest_sensor_names(sensor_names):
+            tree = {}
+
+            def add_unique_names(target_list, new_names):
+                for name in new_names:
+                    if name not in target_list:
+                        target_list.append(name)
+
+            def format_node(node):
+                names = copy.deepcopy(node.get('_names', []))
+                children = {
+                    key: format_node(value)
+                    for key, value in node.items()
+                    if key != '_names'
+                }
+
+                if not children:
+                    return names
+
+                if names:
+                    children = {'generic': names, **children}
+
+                return children
+
+            for sensor_type, names in sensor_names.items():
+                sensor_levels = [level.strip() for level in str(sensor_type).split('/') if level.strip()]
+                if not sensor_levels:
+                    continue
+
+                node = tree
+                for level in sensor_levels:
+                    node = node.setdefault(level, {'_names': []})
+
+                add_unique_names(node.setdefault('_names', []), list(names))
+
+            return {
+                key: format_node(value)
+                for key, value in tree.items()
+            }
+
         global path_name
         if output_path is None:
             output_path = path_name + '/ModularBot/sensors/ModularBot.sensors.yaml'
         sensor_config = self.get_sensor_configuration(xacro_mappings=xacro_mappings)
+        sensor_config['sensor_names'] = nest_sensor_names(sensor_config.get('sensor_names', {}))
         content = yaml.safe_dump(sensor_config, default_flow_style=False, sort_keys=False)
 
         output_dir = os.path.dirname(output_path)
