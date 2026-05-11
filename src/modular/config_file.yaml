@@ -3,7 +3,10 @@ resources_path: 'modular_resources'
 external_resources:
 # the path to external resources must be absolute, even if by using variables (~, etc.)
   concert_resources_path: '$(ros2 pkg prefix --share concert_resources)'
+  # Required by add_dagana(). Uncomment and set the path to use it.
   dagana_path: '$(ros2 pkg prefix --share dagana_urdf)'
+  # Required by add_realsense() to include sensor macros. Uncomment and set the path to use it.
+  realsense_gazebo_description_path: '$(ros2 pkg prefix --share realsense_gazebo_description)'
   # fhi_resources_path: '$(ros2 pkg prefix --share fhi_resources)'
   # whatever_resources_path: None
 modularbot_path: 'modular_data/ModularBot'

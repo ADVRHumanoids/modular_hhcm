@@ -37,8 +37,6 @@ from modular.ModelStats import ModelStats
 import modular.ModuleNode as ModuleNode
 import argparse
 
-from ament_index_python.packages import get_package_share_directory
-
 # import rospy
 # import roslaunch
 # import rospkg
@@ -1799,9 +1797,13 @@ class UrdfWriter:
         camera_name = 'camera'+ self.parent_module.tag
         macro_name = 'sensor_' + camera
         xacro_filename = f"_{camera}.urdf.xacro"
+        realsense_xacro_path = self.resource_finder.get_external_resource_filename(
+            'realsense_gazebo_description_path',
+            [f'urdf/{xacro_filename}', xacro_filename],
+        )
         ET.SubElement(self.root, 
                       "xacro:include",
-                      filename= os.path.join(get_package_share_directory('realsense_gazebo_description'), 'urdf', xacro_filename))
+                      filename=realsense_xacro_path)
         et = ET.SubElement(self.root,
                       f"xacro:{macro_name}",
                       parent=self.parent_module.name,
@@ -2849,6 +2851,11 @@ class UrdfWriter:
         
         elif new_Link.type is ModuleType.DAGANA:
             setattr(new_Link, 'name', 'dagana' + new_Link.tag)
+            dagana_xacro_path = self.resource_finder.get_external_resource_filename(
+                'dagana_path',
+                ['urdf/dagana_macro.urdf.xacro', 'dagana_macro.urdf.xacro'],
+            )
+            ET.SubElement(self.root, "xacro:include", filename=dagana_xacro_path)
             ET.SubElement(self.root,
                           "xacro:add_dagana",
                           type="link",

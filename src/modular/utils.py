@@ -76,6 +76,32 @@ class ResourceFinder:
         """Return a filesystem path for specified external resource"""
         resource_path = '/'.join((self.get_expanded_path(relative_path), resource_name))
         return resource_path
+
+    def get_external_resource_filename(self, external_resource_key, resource_names):
+        """Return a file path from an external resource key.
+
+        Args:
+            external_resource_key: Key under cfg['external_resources'].
+            resource_names: Candidate resource path(s), relative to the external resource root.
+                First existing candidate is returned.
+        """
+        ext_res_path = ['external_resources', external_resource_key]
+        candidates = resource_names if isinstance(resource_names, (list, tuple)) else [resource_names]
+
+        try:
+            for resource_name in candidates:
+                if self.resource_exists(resource_name, ext_res_path):
+                    return self.get_filename(resource_name, ext_res_path)
+        except (KeyError, RuntimeError) as e:
+            raise FileNotFoundError(
+                f"Cannot resolve {candidates} from '{external_resource_key}': {e}. "
+                f"Check external_resources in config_file.yaml."
+            ) from e
+
+        raise FileNotFoundError(
+            f"None of {candidates} found under '{external_resource_key}'. "
+            f"Check that the configured path points to the expected package/share directory."
+        )
     
     def find_resource_absolute_path(self, resource_name, relative_path=None):
         """Return an absolute filesystem path for specified resource"""
@@ -132,7 +158,10 @@ class ResourceFinder:
     def get_listdir(self, resource_name, relative_path=None):
         """List the contents of the named resource directory"""
         resource_package = __name__
-        resource_path = self.find_resource_path(resource_name, relative_path)
+        try:
+            resource_path = self.find_resource_path(resource_name, relative_path)
+        except RuntimeError:
+            return []
         if self.resource_exists(resource_name, relative_path):
             if self.is_resource_external(relative_path):
                 resource_listdir = os.listdir(resource_path)
@@ -145,7 +174,10 @@ class ResourceFinder:
     def resource_exists(self, resource_name, relative_path=None):
         """Does the named resource exist?"""
         resource_package = __name__
-        resource_path = self.find_resource_path(resource_name, relative_path)
+        try:
+            resource_path = self.find_resource_path(resource_name, relative_path)
+        except RuntimeError:
+            return False
         if self.is_resource_external(relative_path):
             resource_exists = os.path.exists(resource_path) # TODO: check if correct
         else:
@@ -155,7 +187,10 @@ class ResourceFinder:
     def resource_isdir(self, resource_name, relative_path=None):
         """Is the named resource a directory?"""
         resource_package = __name__
-        resource_path = self.find_resource_path(resource_name, relative_path)
+        try:
+            resource_path = self.find_resource_path(resource_name, relative_path)
+        except RuntimeError:
+            return False
         if self.is_resource_external(relative_path):
             resource_isdir = os.path.isdir(resource_path)
         else:
