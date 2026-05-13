@@ -1040,6 +1040,7 @@ class UrdfWriter:
                 parent=None,
                 floating_base=False,
                 verbose=False,
+                quiet=False,
                 logger=None,
                 slave_desc_mode='use_pos'):
         self.config_file = config_file
@@ -1051,6 +1052,7 @@ class UrdfWriter:
                     parent,
                     floating_base,
                     verbose,
+                    quiet,
                     logger,
                     slave_desc_mode)
 
@@ -1061,6 +1063,7 @@ class UrdfWriter:
                 parent=None,
                 floating_base=False,
                 verbose=False,
+                quiet=False,
                 logger=None,
                 slave_desc_mode='use_pos'):
 
@@ -1091,12 +1094,24 @@ class UrdfWriter:
         if logger is None:
             # Use the module's named logger so it fits into the 'modular.*' hierarchy.
             self.logger = logging.getLogger(__name__)
+            if not self.logger.handlers:
+                handler = logging.StreamHandler(sys.stderr)
+                handler.setFormatter(logging.Formatter('%(levelname)s:%(name)s:%(message)s'))
+                self.logger.addHandler(handler)
+                # Keep logs local to this logger to avoid duplicate messages from root handlers.
+                self.logger.propagate = False
         else:
             self.logger = logger
 
         self.verbose = verbose
-        if self.verbose:
+        self.quiet = quiet
+        # Set logging level: CRITICAL if quiet, DEBUG if verbose, INFO otherwise.
+        if self.quiet:
+            self.logger.setLevel(logging.CRITICAL)
+        elif self.verbose:
             self.logger.setLevel(logging.DEBUG)
+        else:
+            self.logger.setLevel(logging.INFO)
 
         self.collision_elements = []
 
@@ -1219,22 +1234,32 @@ class UrdfWriter:
             self.default_xacro_mappings['floating_base'] = 'false'
 
     def print(self, *args):
+        msg = ' '.join(str(a) for a in args)
         if isinstance(self.logger, logging.Logger):
-            self.logger.debug(' '.join(str(a) for a in args))
+            self.logger.debug(msg)
         else:
-            print(args)
+            print(msg)
 
     def info_print(self, *args):
+        msg = ' '.join(str(a) for a in args)
         if isinstance(self.logger, logging.Logger):
-            self.logger.info(' '.join(str(a) for a in args))
+            self.logger.info(msg)
         else:
-            print(args)
+            print(msg)
 
     def error_print(self, *args):
+        msg = ' '.join(str(a) for a in args)
         if isinstance(self.logger, logging.Logger):
-            self.logger.error(' '.join(str(a) for a in args))
+            self.logger.error(msg)
         else:
-            print(args)
+            print(msg, file=sys.stderr)
+
+    def warning_print(self, *args):
+        msg = ' '.join(str(a) for a in args)
+        if isinstance(self.logger, logging.Logger):
+            self.logger.warning(msg)
+        else:
+            print(msg, file=sys.stderr)
 
     @staticmethod
     def find_module_from_id(module_id, modules):
@@ -1318,6 +1343,7 @@ class UrdfWriter:
                 control_plugin=self.control_plugin,
                 speedup=self.speedup,
                 verbose=self.verbose,
+                quiet=self.quiet,
                 logger=self.logger,
                 slave_desc_mode=self.slave_desc_mode)
 
