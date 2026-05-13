@@ -34,4 +34,4 @@ reply = "{1: {active_ports: 15, esc_type: 50, mod_id: 3, mod_rev: 0, mod_size: 0
 
 data = urdf_writer_fromHW.read_from_json(reply)
 
-write_file_to_stdout(urdf_writer_fromHW, None, robot_name='sim_discovery')
+urdf_writer_fromHW.write_file_to_stdout(None, robot_name='sim_discovery')

@@ -4215,72 +4215,119 @@ class UrdfWriter:
         return self.model_stats.compute_stats(n_samples=samples)
 
 
-from contextlib import contextmanager
-import sys, os
+    @staticmethod
+    def parse_generator_cli_args(argv=None, known_only=False):
+        """Parse generator CLI arguments used by example and deployment scripts.
+
+        Args:
+            argv: Optional iterable of CLI tokens. If None, argparse reads from
+                sys.argv.
+            known_only: When True, return ``(args, unknown_args)`` using
+                ``parse_known_args``. When False, return only ``args`` using
+                ``parse_args``.
+
+        Returns:
+            argparse.Namespace or tuple[argparse.Namespace, list[str]]:
+                Parsed arguments, with optional unknown tokens when
+                ``known_only`` is enabled.
+        """
+        parser = argparse.ArgumentParser(
+            prog='Modular URDF/SRDF generator and deployer',
+            usage='./script_name.py --output urdf writes URDF to stdout '\
+                  '\n./script_name.py --deploy deploy_dir generates a ros package at deploy_dir',
+        )
+
+        parser.add_argument('--output', '-o', required=False, choices=('urdf', 'srdf', 'sensors'),
+                            help='write requested file to stdout and exit')
+        parser.add_argument('--xacro-args', '-a', required=False, nargs='*',
+                            help='xacro arguments in key:=value format')
+        parser.add_argument('--deploy', '-d', required=False,
+                            help='directory where to deploy the package')
+        parser.add_argument('--robot-name', '-r', required=False,
+                            help='name of the robot')
+        parser.add_argument('--quiet', action='store_true', default=False,
+                            help='suppress logger output while generating files')
+
+        if known_only:
+            return parser.parse_known_args(argv)
+        return parser.parse_args(argv)
 
 
-@contextmanager
-def suppress_stdout():
-    """
-    context manager redirecting all output from stdout to
-    stderr
-    """
-    old_stdout = sys.stdout
-    sys.stdout = sys.stderr
-    try:
-        yield
-    finally:
-        sys.stdout = old_stdout
+    def write_file_to_stdout(self, homing_map, robot_name='modularbot', args=None):
+        """Execute CLI-driven generation actions and print selected output.
 
+        This method is the entrypoint used by generator scripts after creating
+        a ``UrdfWriter`` instance. Depending on parsed CLI arguments, it can:
+        generate URDF/SRDF/sensor YAML content, write a copy under ``/tmp``,
+        print generated content to stdout, and optionally deploy a full robot
+        package.
 
-def write_file_to_stdout(urdf_writer: UrdfWriter, homing_map, robot_name='modularbot'):
+        Args:
+            homing_map: Joint homing map used when generating SRDF.
+            robot_name: Default robot name used for output filenames and deploy.
+                Overridden by ``--robot-name`` when present.
+            args: Optional pre-parsed CLI namespace from
+                ``parse_generator_cli_args``. If None, arguments are parsed from
+                ``sys.argv``.
 
-    import argparse
-    parser = argparse.ArgumentParser(prog='Modular URDF/SRDF generator and deployer',
-                usage='./script_name.py --output urdf writes URDF to stdout \n./script_name.py --deploy deploy_dir generates a ros package at deploy_dir')
+        Side effects:
+            - May set logger level to ``CRITICAL`` when ``--quiet`` is enabled.
+            - Writes generated files under ``/tmp`` for selected outputs.
+            - May deploy URDF/SRDF/config artifacts when ``--deploy`` is set.
+        """
+        if args is None:
+            args = self.parse_generator_cli_args()
 
-    parser.add_argument('--output', '-o', required=False, choices=('urdf', 'srdf', 'sensors'),      help='write requested file to stdout and exit')
-    parser.add_argument('--xacro-args', '-a', required=False, nargs='*', help='xacro arguments in key:=value format')
-    parser.add_argument('--deploy', '-d', required=False, help='directory where to deploy the package')
-    parser.add_argument('--robot-name', '-r', required=False, help='name of the robot')
-    args = parser.parse_args()
+        if args.robot_name is not None:
+            robot_name = args.robot_name
 
-    if args.robot_name is not None:
-        robot_name = args.robot_name
+        xacro_mappings = {}
+        if args.xacro_args:
+            for arg in args.xacro_args:
+                key, value = arg.split(':=', 1)
+                xacro_mappings[key] = value
 
-    xacro_mappings = {}
-    if args.xacro_args:
-        for arg in args.xacro_args:
-            key, value = arg.split(':=')
-            xacro_mappings[key] = value
+        if args.quiet and isinstance(self.logger, logging.Logger):
+            self.quiet = True
+            self.logger.setLevel(logging.CRITICAL)
 
-    content = None
-    with suppress_stdout():
-
-        urdf_writer.remove_all_connectors()
+        content = None
+        self.remove_all_connectors()
 
         if args.output == 'urdf':
-            content = urdf_writer.process_urdf(xacro_mappings=xacro_mappings)
+            content = self.process_urdf(xacro_mappings=xacro_mappings)
             open(f'/tmp/{robot_name}.urdf', 'w').write(content)
 
         elif args.output == 'srdf':
-            urdf_writer.urdf_string = urdf_writer.process_urdf(xacro_mappings=xacro_mappings)
-            content = urdf_writer.write_srdf(homing_map)
+            self.urdf_string = self.process_urdf(xacro_mappings=xacro_mappings)
+            content = self.write_srdf(homing_map)
             open(f'/tmp/{robot_name}.srdf', 'w').write(content)
 
         elif args.output == 'sensors':
-            urdf_writer.process_urdf(xacro_mappings=xacro_mappings)
-            content = urdf_writer.write_sensor_config(f'/tmp/{robot_name}.sensors.yaml', xacro_mappings)
+            self.process_urdf(xacro_mappings=xacro_mappings)
+            content = self.write_sensor_config(f'/tmp/{robot_name}.sensors.yaml', xacro_mappings)
 
-    if content is not None:
-        print(content)
+        if content is not None:
+            print(content)
 
-    if args.deploy is not None:
-        urdf_writer.write_urdf()
-        urdf_writer.write_lowlevel_config()
-        urdf_writer.write_problem_description_multi()
-        urdf_writer.write_srdf(homing_map)
-        urdf_writer.write_joint_map()
-        urdf_writer.write_sensor_config()
+        if args.deploy is not None:
+            self.write_urdf()
+            self.write_lowlevel_config()
+            self.write_problem_description_multi()
+            self.write_srdf(homing_map)
+            self.write_joint_map()
+            self.write_sensor_config()
 
-        urdf_writer.deploy_robot(robot_name, args.deploy)
+            self.deploy_robot(robot_name, args.deploy)
+
+
+# Temporary functions to maintain backwards compatibility with the old generator scripts
+from contextlib import contextmanager
+import sys, os
+
+def parse_generator_cli_args(argv=None, known_only=False):
+    return UrdfWriter.parse_generator_cli_args(argv=argv, known_only=known_only)
+
+
+def write_file_to_stdout(urdf_writer: UrdfWriter, homing_map, robot_name='modularbot', args=None):
+    return urdf_writer.write_file_to_stdout(homing_map, robot_name=robot_name, args=args)
