@@ -228,10 +228,14 @@ class Plugin:
                 # add homing state for each joint-like module. Also create custom groups for some end-effectors
                 if joint_module.type in ModuleClass.joint_modules() | {ModuleType.DAGANA}:
                     joint_name = self.urdf_writer.get_joint_name(joint_module)
+                    homing_value = 0.0
                     if builder_joint_map is not None:
-                        homing_value = float(builder_joint_map[joint_name])
-                    else:
-                        homing_value = 0.1
+                        try:
+                            homing_value = float(builder_joint_map[joint_name])
+                        except (KeyError, TypeError, ValueError):
+                            self.urdf_writer.warning_print(
+                                f"Missing or invalid homing for '{joint_name}', using default 0.0"
+                            )
                     joints.append(ET.SubElement(home_group_state, 
                                                 'joint', 
                                                 name=joint_name, 
@@ -433,10 +437,14 @@ class RosControlPlugin(Plugin):
             for joint_module in joints_chain:
                 if joint_module.type in ModuleClass.joint_modules() | {ModuleType.DAGANA}:
                     # Homing state
+                    homing_value = 0.0
                     if builder_joint_map is not None:
-                        homing_value = float(builder_joint_map[joint_module.name])
-                    else:
-                        homing_value = 0.1
+                        try:
+                            homing_value = float(builder_joint_map[joint_module.name])
+                        except (KeyError, TypeError, ValueError):
+                            self.urdf_writer.warning_print(
+                                f"Missing or invalid homing for '{joint_module.name}', using default 0.0"
+                            )
                     #self.urdf_writer.print(homing_value)
                     joints.append(ET.SubElement(group_state, 'joint', name=joint_module.name, value=str(homing_value)))
                     # Disable collision
