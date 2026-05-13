@@ -1,0 +1,43 @@
+name: Sync to public repo
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches:
+      - master
+      - ros2
+    tags:
+      - 'v*'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up SSH for deploy key
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.PUBLIC_REPO_DEPLOY_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+      - name: Push branch to public
+        if: startsWith(github.ref, 'refs/heads/')
+        run: |
+          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+          git remote remove public || true
+          git remote add public git@github.com:ADVRHumanoids/modular_hhcm.git
+          git push public "HEAD:${BRANCH_NAME}"
+
+      - name: Push tag to public
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          TAG_NAME="${GITHUB_REF#refs/tags/}"
+          git remote remove public || true
+          git remote add public git@github.com:ADVRHumanoids/modular_hhcm.git
+          git push public "refs/tags/${TAG_NAME}:refs/tags/${TAG_NAME}"
