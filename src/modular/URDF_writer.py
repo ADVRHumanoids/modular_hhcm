@@ -3979,12 +3979,19 @@ class UrdfWriter:
         """Compute Allowed Collision Matrix (ACM) using MoveIt!"""
         
         try:
-            # importing python bindings of https://github.com/ADVRHumanoids/moveit_compute_default_collisions
-            from moveit_compute_default_collisions import pymcdc
+            # Prefer current binding name (top-level module), keep legacy fallback.
+            try:
+                import pymcdc
+            except ImportError:
+                import importlib
+                pymcdc = importlib.import_module('moveit_compute_default_collisions.pymcdc')
 
-            # ensure the urdf string has been already generated
-            if getattr(self, 'urdf_string', None) is None:
-                raise RuntimeError("URDF string not generated yet, please call write_urdf() or process_urdf() first")
+            # Ensure URDF string is available before ACM computation.
+            if getattr(self, 'urdf_dirty', False) or not getattr(self, 'urdf_string', None) or not self.urdf_string.strip():
+                self.process_urdf()
+
+            if not self.urdf_string or not self.urdf_string.strip():
+                raise RuntimeError("URDF string is empty, cannot compute ACM")
 
             # set verbosity level of the mcdc module
             if self.logger.level == logging.DEBUG:
@@ -4004,7 +4011,7 @@ class UrdfWriter:
             srdf = srdf_with_acm 
 
         except ImportError:
-            self.info_print("Cannot import moveit_compute_default_collisions (pymcdc), skipping ACM computation")
+            self.info_print("Cannot import pymcdc bindings, skipping ACM computation")
 
         return srdf
 
