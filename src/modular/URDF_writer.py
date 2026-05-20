@@ -1209,7 +1209,8 @@ class UrdfWriter:
         # map between name of the mesh and the module
         self.mesh_to_module_map = {}
 
-        self.urdf_string = self.process_urdf()
+        self.process_urdf()
+        self.urdf_dirty = False
 
         self.model_stats = ModelStats(self)
 
@@ -1451,7 +1452,7 @@ class UrdfWriter:
             #add the module
             data = self.add_module(module_filename, {}, reverse=False, robot_id=robot_id, active_ports=active_ports, module_name=module_name)
 
-        self.urdf_string = self.process_urdf()
+        self.process_urdf()
 
         self.info_print("Discovery completed")
 
@@ -1505,7 +1506,18 @@ class UrdfWriter:
         # string = doc.toprettyxml(indent='  ')
         string = doc.toprettyxml(indent='  ', encoding='utf-8').decode('utf-8')
 
+        self.urdf_string = string
+        self.urdf_dirty = False
+
         return string
+
+    def update_urdf_cache(self):
+        """Regenerate URDF immediately unless speedup mode is enabled."""
+        if self.speedup:
+            self.urdf_dirty = True
+            return self.urdf_string
+
+        return self.process_urdf()
 
     def add_to_chain(self, new_joint):
         """Add joint to one of the robot kinematic chains
@@ -1635,11 +1647,7 @@ class UrdfWriter:
         # Select the meshes to highlight in the GUI
         selected_meshes = self.select_meshes(selected_connector, table)
 
-        if self.speedup:
-            self.urdf_string = ""
-        else:
-            # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string
-            self.urdf_string = self.process_urdf()
+        self.update_urdf_cache()
 
         # Create the dictionary with the relevant info on the selected module, so that the GUI can dispaly it.
         data = {'name': table.name,
@@ -1684,11 +1692,7 @@ class UrdfWriter:
         
         self.collision_elements.append((father_name, drillbit_name))
 
-        if self.speedup:
-            self.urdf_string = ""
-        else:
-            # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string
-            self.urdf_string = self.process_urdf()
+        self.update_urdf_cache()
 
         return [drillbit_name, "fixed_" + drillbit_name]
 
@@ -1752,11 +1756,7 @@ class UrdfWriter:
                         "link",
                         name=handle_gripping_point_name)
 
-        if self.speedup:
-            self.urdf_string = ""
-        else:
-            # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string
-            self.urdf_string = self.process_urdf()
+        self.update_urdf_cache()
 
         return [handle_name, "fixed_" + handle_name, handle_gripping_point_name, "fixed_" + handle_gripping_point_name]
 
@@ -1966,11 +1966,7 @@ class UrdfWriter:
         # Select the meshes to highlight in the GUI
         selected_meshes = self.select_meshes(selected_connector, simple_ee)
 
-        if self.speedup:
-            self.urdf_string = ""
-        else:
-            # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string
-            self.urdf_string = self.process_urdf()
+        self.update_urdf_cache()
 
         # Create the dictionary with the relevant info on the selected module, so that the GUI can dispaly it.
         data = {'name': simple_ee.name,
@@ -2209,11 +2205,7 @@ class UrdfWriter:
         # add meshes to the map
         self.mesh_to_module_map.update({k: new_module.name for k in new_module.mesh_names})
 
-        if self.speedup:
-            self.urdf_string = ""
-        else:
-            # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string
-            self.urdf_string = self.process_urdf()
+        self.update_urdf_cache()
 
         # update the urdf file, adding the new module
         # string = write_urdf(path_name + '/urdf/ModularBot_test.urdf', urdf_tree)
@@ -2317,12 +2309,7 @@ class UrdfWriter:
         # Select the meshes to highlight in the GUI
         selected_meshes = self.select_meshes(selected_connector, selected_module)
 
-        if self.speedup:
-            self.urdf_string = ""
-        else:
-            # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string
-            # Update the urdf file, removing the module
-            self.urdf_string = self.process_urdf()
+        self.update_urdf_cache()
 
         # Create a dictionary containing the urdf string just processed and other parameters needed by the web app
         data = {'name': selected_module.name,
@@ -2413,12 +2400,7 @@ class UrdfWriter:
         ):
             self.tag_num -= 1
 
-        if self.speedup:
-            self.urdf_string = ""
-        else:
-            # Process the urdf string by calling the process_urdf method. Parse, convert from xacro and write to string
-            # Update the urdf file, removing the module
-            self.urdf_string = self.process_urdf()
+        self.update_urdf_cache()
 
         # Update the parent_module attribute of the URDF_writer class
         self.parent_module = father
@@ -4299,7 +4281,7 @@ class UrdfWriter:
             open(f'/tmp/{robot_name}.urdf', 'w').write(content)
 
         elif args.output == 'srdf':
-            self.urdf_string = self.process_urdf(xacro_mappings=xacro_mappings)
+            self.process_urdf(xacro_mappings=xacro_mappings)
             content = self.write_srdf(homing_map)
             open(f'/tmp/{robot_name}.srdf', 'w').write(content)
 
