@@ -7,7 +7,6 @@ from __future__ import print_function
 import math
 import numpy as np
 from future.utils import iteritems
-from abc import ABCMeta, abstractmethod
 import os
 import logging
 
@@ -63,9 +62,19 @@ rootDir = os.path.abspath(os.path.join(currDir, '../..'))
 if rootDir not in sys.path:  # add parent dir to paths
     sys.path.append(rootDir)
 
-NS_XACRO = "http://www.ros.org/wiki/xacro"
+# ---------------------------------------------------------------------------
+# Components extracted from this module for better maintainability
+# ---------------------------------------------------------------------------
+# YAML utilities + SlaveDescMode enum
+from modular.yaml_utils import SlaveDescMode, ordered_load, ordered_dump, NS_XACRO, ns  # noqa: F401 (re-exported)
+# Control-plugin strategy classes
+from modular.plugins import Plugin, RosControlPlugin, XBotCorePlugin, XBot2Plugin  # noqa: F401 (re-exported)
+# Low-level XML element builder
+from modular.urdf_xml_builder import URDFXmlBuilder
+# Kinematic-chain manager
+from modular.chain_manager import ChainManager
+
 ET.register_namespace("xacro", NS_XACRO)
-ns = {"xacro": NS_XACRO}
 
 import modular
 path_name = os.path.dirname(modular.__file__)
