@@ -1899,84 +1899,62 @@ class UrdfWriter:
         }
 
     # Add a cylinder as a fake end-effector
-    def add_simple_ee(self, x_offset=0.0, y_offset=0.0, z_offset=0.0, angle_offset=0.0, mass=1.0, radius=0.02):
-        # TODO: treat this as a link in the link_after_* methods!
+    def add_simple_ee(self, x_offset=0.0, y_offset=0.0, z_offset=0.0, angle_offset=0.0, mass=1.0, radius=0.02, gazebo=None):
         data = {'type': "simple_ee", 'name': "simple_ee", 'kinematics_convention': "urdf"}
-
         simple_ee = ModuleNode.ModuleNode(data, "simple_ee", parent=self.parent_module)
+
         setattr(simple_ee, 'tag', self.parent_module.tag)
         setattr(simple_ee, 'flange_size', self.parent_module.flange_size)
-        setattr(simple_ee, 'i', self.parent_module.i)
-        setattr(simple_ee, 'p', self.parent_module.p+1)
         setattr(simple_ee, 'robot_id', 0)
-        setattr(simple_ee, 'name', 'ee' + self.parent_module.tag)
+        setattr(simple_ee, 'addon_elements', [])
+        setattr(simple_ee, 'xml_tree_elements', [])
+        setattr(simple_ee, 'mesh_names', [])
+        setattr(simple_ee, 'connectors', [])
+        setattr(simple_ee, 'active_ports', '0000')
+        setattr(simple_ee, 'occupied_ports', '0000')
+        setattr(simple_ee, 'current_port', 0)
 
-        ET.SubElement(self.root,
-                      "xacro:add_cylinder",
-                      type="simple_ee",
-                      name=simple_ee.name,
-                      size_z=str(z_offset),
-                      mass=str(mass),
-                      radius=str(radius))
+        if gazebo is not None:
+            if isinstance(gazebo, dict):
+                setattr(simple_ee, 'gazebo', ModuleNode.Module.Attribute({'body_1': gazebo}))
+            else:
+                setattr(simple_ee, 'gazebo', ModuleNode.Module.Attribute({'body_1': vars(gazebo)}))
 
-        try:
-            self.add_gazebo_element(simple_ee, simple_ee.gazebo.body_1, simple_ee.name)
-        except AttributeError:
-            pass
+        length = abs(z_offset) if abs(z_offset) > 0.0 else 2.0 * radius
+        setattr(simple_ee, 'simple_ee_radius', radius)
+        setattr(simple_ee, 'simple_ee_mass', mass)
+        setattr(simple_ee, 'simple_ee_length', length)
 
-        trasl = tf_transformations.translation_matrix((x_offset, y_offset, z_offset))
-        rot = tf_transformations.euler_matrix(0.0, 0.0, angle_offset, 'sxyz')
-        rototrasl = ModuleNode.get_rototranslation(trasl, rot)
-        setattr(simple_ee, 'Homogeneous_tf', rototrasl)
+        offsets = {
+            'x': x_offset,
+            'y': y_offset,
+            'z': z_offset,
+            'roll': 0.0,
+            'pitch': 0.0,
+            'yaw': angle_offset,
+        }
 
-        if self.parent_module.type is ModuleType.JOINT:
-            transform = ModuleNode.get_rototranslation(self.parent_module.Distal_tf, rototrasl)
+        if self.parent_module.type == 'joint':
+            self.link_after_joint(simple_ee, self.parent_module, offsets=offsets, reverse=False)
+        elif self.parent_module.type in {'cube', 'mobile_base'}:
+            self.link_after_hub(simple_ee, self.parent_module, offsets=offsets, reverse=False)
         else:
-            transform = ModuleNode.get_rototranslation(self.parent_module.Homogeneous_tf, rototrasl)
-        x, y, z, roll, pitch, yaw = ModuleNode.get_xyzrpy(transform)
-
-        fixed_joint_name = 'L_' + str(simple_ee.i) + '_fixed_joint_' + str(simple_ee.p) + simple_ee.tag
-
-        if self.parent_module.type is ModuleType.JOINT:
-            father_name = 'L_' + str(self.parent_module.i) + self.parent_module.tag
-        else:
-            father_name = self.parent_module.name
-
-        ET.SubElement(self.root,
-                      "xacro:add_fixed_joint",
-                      type="fixed_joint",
-                      name=fixed_joint_name,
-                      father=father_name,
-                      child=simple_ee.name,
-                      x=x,
-                      y=y,
-                      z=z,
-                      roll=roll,
-                      pitch=pitch,
-                      yaw=yaw)
-
-        self.collision_elements.append((father_name, simple_ee.name))
+            self.link_after_link(simple_ee, self.parent_module, offsets=offsets, reverse=False)
 
         self.add_to_chain(simple_ee)
-        
         self.parent_module = simple_ee
 
-        # Select the current connector of the new module
-        selected_connector = self.select_connector(simple_ee)
-        # Select the meshes to highlight in the GUI
-        selected_meshes = self.select_meshes(selected_connector, simple_ee)
+        selected_connector = simple_ee.name
+        selected_meshes = [simple_ee.name]
 
         self.update_urdf_cache()
 
-        # Create the dictionary with the relevant info on the selected module, so that the GUI can dispaly it.
-        data = {'name': simple_ee.name,
+        return {'name': simple_ee.name,
                 'type': simple_ee.type,
                 'flange_size': simple_ee.flange_size,
                 'selected_connector': selected_connector,
                 'selected_meshes': selected_meshes,
-                'urdf_string': self.urdf_string} 
-
-        return data
+                'urdf_string': self.urdf_string}
 
 
     def add_wheel_module(self, wheel_filename, steering_filename, offsets={}, reverse=False, robot_id=(0,0)):
@@ -3002,6 +2980,39 @@ class UrdfWriter:
                           yaw=yaw_ee)
             # add the xacro:add_tcp element to the list of urdf elements
             new_Link.xml_tree_elements.append(new_Link.tcp_name)
+
+        elif new_Link.type is ModuleType.SIMPLE_EE:
+            setattr(new_Link, 'name', 'simple_ee' + new_Link.tag)
+            setattr(new_Link, 'base_link_name', new_Link.name)
+            setattr(new_Link, 'finger_names', [])
+            setattr(new_Link, 'tcp_name', 'ee' + new_Link.tag)
+
+            radius = getattr(new_Link, 'simple_ee_radius', 0.02)
+            mass = getattr(new_Link, 'simple_ee_mass', 1.0)
+            length = getattr(new_Link, 'simple_ee_length', 2.0 * radius)
+
+            ET.SubElement(self.root,
+                          "xacro:add_cylinder",
+                          type="simple_ee",
+                          name=new_Link.name,
+                          size_z=str(length),
+                          mass=str(mass),
+                          radius=str(radius))
+            new_Link.xml_tree_elements.append(new_Link.name)
+            new_Link.mesh_names.append(new_Link.name)
+
+            ET.SubElement(self.root,
+                          "xacro:add_tcp",
+                          type="pen",
+                          name=new_Link.tcp_name,
+                          father=new_Link.name,
+                          x="0.0",
+                          y="0.0",
+                          z=str(length),
+                          roll="0.0",
+                          pitch="0.0",
+                          yaw="0.0")
+            new_Link.xml_tree_elements.append(new_Link.tcp_name)
             
         elif new_Link.type is ModuleType.TOOL_EXCHANGER:
             setattr(new_Link, 'name', 'tool_exchanger' + new_Link.tag)
@@ -3096,7 +3107,8 @@ class UrdfWriter:
             new_Link.mesh_names.append(new_Link.name)
             setattr(new_Link, 'flange_size', new_Link.size_out)
 
-        self.add_gazebo_element(new_Link, new_Link.gazebo.body_1, new_Link.name)
+        gazebo_body_1 = getattr(getattr(new_Link, 'gazebo', None), 'body_1', None)
+        self.add_gazebo_element(new_Link, gazebo_body_1, new_Link.name)
 
         if new_Link.type in ModuleClass.end_effector_modules():
             fixed_joint_name = new_Link.name + '_fixed_joint'
