@@ -3958,7 +3958,7 @@ class UrdfWriter:
 
         return joint_map
 
-    def write_srdf(self, builder_joint_map=None, compute_acm=True):
+    def write_srdf(self, builder_joint_map=None, compute_acm=True, num_trials=1e5):
         """Generates a basic srdf so that the model can be used right away with XBotCore"""
         
         global path_name
@@ -3972,7 +3972,7 @@ class UrdfWriter:
 
         # Compute Allowed Collision Matrix (ACM) using MoveIt!
         if compute_acm:
-            srdf_string = self.add_acm_to_srdf(srdf_string)
+            srdf_string = self.add_acm_to_srdf(srdf_string, num_trials=num_trials)
 
         # Create folder if doesen't exist
         if not os.path.exists(os.path.dirname(srdf_filename)):
@@ -3987,7 +3987,7 @@ class UrdfWriter:
 
         return srdf_string
     
-    def add_acm_to_srdf(self, srdf):
+    def add_acm_to_srdf(self, srdf, num_trials=1e5):
         """Compute Allowed Collision Matrix (ACM) using MoveIt!"""
         
         try:
@@ -4016,7 +4016,7 @@ class UrdfWriter:
             acm = pymcdc.MoveitComputeDefaultCollisions()
             acm.setVerbose(mcdc_verbose)
             acm.initFromString(self.urdf_string, srdf, False)
-            acm.computeDefaultCollisions(int(1e5))
+            acm.computeDefaultCollisions(int(num_trials))
             if mcdc_verbose:
                 acm.printDisabledCollisions()
             srdf_with_acm = acm.getXmlString()
@@ -4301,7 +4301,7 @@ class UrdfWriter:
 
         elif args.output == 'srdf':
             self.process_urdf(xacro_mappings=xacro_mappings)
-            content = self.write_srdf(homing_map)
+            content = self.write_srdf(homing_map, num_trials=1e3)
             open(f'/tmp/{robot_name}.srdf', 'w').write(content)
 
         elif args.output == 'sensors':
@@ -4315,7 +4315,7 @@ class UrdfWriter:
             self.write_urdf()
             self.write_lowlevel_config()
             self.write_problem_description_multi()
-            self.write_srdf(homing_map)
+            self.write_srdf(homing_map, num_trials=1e3)
             self.write_joint_map()
             self.write_sensor_config()
 
