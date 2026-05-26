@@ -47,8 +47,7 @@ _path_name = "/tmp"
 # Abstract base
 # ---------------------------------------------------------------------------
 
-class Plugin:
-    __metaclass__ = ABCMeta
+class Plugin(metaclass=ABCMeta):
 
     @property
     def urdf_writer(self):
