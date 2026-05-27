@@ -101,7 +101,7 @@ class ChainManager:
         """Return the name of the base link for the given chain."""
         if not chain[0].parent:
             return chain[0].name
-        if "con_" in chain[0].parent.name:
+        elif "con_" in chain[0].parent.name:
             return chain[0].parent.parent.name
         else:
             if not chain[0].parent.is_structural and chain[0].parent.type in ModuleClass.hub_modules():
