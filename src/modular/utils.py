@@ -1,15 +1,12 @@
+import pkg_resources
 import yaml
 import os
 import subprocess
 import io
 import json
 import re
-from pathlib import Path
 from numbers import Number
 from collections.abc import Sequence
-
-
-_PACKAGE_ROOT = Path(__file__).resolve().parent
 
 class ResourceFinder:
     """Class to find resources in the package"""
@@ -128,35 +125,39 @@ class ResourceFinder:
 
     def get_string(self, resource_name, relative_path=None):
         """Return specified resource as a string"""
+        resource_package = __name__
         resource_path = self.find_resource_path(resource_name, relative_path)
         if self.is_resource_external(relative_path):
             resource_string = ''
             with open(resource_path, 'r', encoding="utf-8") as file:
                 resource_string = file.read()
         else:
-            resource_string = (_PACKAGE_ROOT / resource_path).read_bytes()
+            resource_string = pkg_resources.resource_string(resource_package, resource_path)
         return resource_string
 
     def get_stream(self, resource_name, relative_path=None):
         """Return a readable file-like object for specified resource"""
+        resource_package = __name__
         resource_path = self.find_resource_path(resource_name, relative_path)
         if self.is_resource_external(relative_path):
             resource_stream = open(resource_path, 'r', encoding="utf-8")
         else:
-            resource_stream = (_PACKAGE_ROOT / resource_path).open('rb')
+            resource_stream = pkg_resources.resource_stream(resource_package, resource_path)
         return resource_stream
 
     def get_filename(self, resource_name, relative_path=None):
         """Return a true filesystem path for specified resource"""
+        resource_package = __name__
         resource_path = self.find_resource_path(resource_name, relative_path)
         if self.is_resource_external(relative_path):
             resource_filename = resource_path
         else:
-            resource_filename = str(_PACKAGE_ROOT / resource_path)
+            resource_filename = pkg_resources.resource_filename(resource_package, resource_path)
         return resource_filename
     
     def get_listdir(self, resource_name, relative_path=None):
         """List the contents of the named resource directory"""
+        resource_package = __name__
         try:
             resource_path = self.find_resource_path(resource_name, relative_path)
         except RuntimeError:
@@ -165,13 +166,14 @@ class ResourceFinder:
             if self.is_resource_external(relative_path):
                 resource_listdir = os.listdir(resource_path)
             else:
-                resource_listdir = os.listdir(_PACKAGE_ROOT / resource_path)
+                resource_listdir = pkg_resources.resource_listdir(resource_package, resource_path)
         else:
             resource_listdir = []
         return resource_listdir
     
     def resource_exists(self, resource_name, relative_path=None):
         """Does the named resource exist?"""
+        resource_package = __name__
         try:
             resource_path = self.find_resource_path(resource_name, relative_path)
         except RuntimeError:
@@ -179,11 +181,12 @@ class ResourceFinder:
         if self.is_resource_external(relative_path):
             resource_exists = os.path.exists(resource_path) # TODO: check if correct
         else:
-            resource_exists = (_PACKAGE_ROOT / resource_path).exists()
+            resource_exists = pkg_resources.resource_exists(resource_package, resource_path)
         return resource_exists
     
     def resource_isdir(self, resource_name, relative_path=None):
         """Is the named resource a directory?"""
+        resource_package = __name__
         try:
             resource_path = self.find_resource_path(resource_name, relative_path)
         except RuntimeError:
@@ -191,7 +194,7 @@ class ResourceFinder:
         if self.is_resource_external(relative_path):
             resource_isdir = os.path.isdir(resource_path)
         else:
-            resource_isdir = (_PACKAGE_ROOT / resource_path).is_dir()
+            resource_isdir = pkg_resources.resource_isdir(resource_package, resource_path)
         return resource_isdir
 
     def get_yaml(self, resource_name, relative_path=None):
