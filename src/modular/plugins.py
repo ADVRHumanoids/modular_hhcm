@@ -37,7 +37,8 @@ from collections import OrderedDict
 from abc import ABCMeta, abstractmethod
 
 from modular.enums import ModuleType, ModuleClass
-from modular.yaml_utils import ordered_load, ordered_dump, NS_XACRO, ns
+from modular.yaml_utils import ordered_load, ordered_dump
+from modular.urdf_xml_builder import NS_XACRO, ns
 
 # Output directory (same convention as the main writer)
 _path_name = "/tmp"

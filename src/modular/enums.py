@@ -10,6 +10,12 @@ class KinematicsConvention(str, Enum):
     URDF = 'urdf'  # URDF convention
     AFFINE = 'affine_tf_matrix'  # Affine trasformation matrix convention
 
+
+class SlaveDescMode(str, Enum):
+    """Slave description mode"""
+    USE_POSITIONS = 'use_pos'
+    USE_IDS = 'use_ids'
+
 class ModuleType(str, Enum):
     """Type of module"""
     LINK = 'link'

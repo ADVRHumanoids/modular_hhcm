@@ -9,7 +9,7 @@ Verifies that:
 3. UrdfWriter can be constructed and its key public API methods work as before
    the refactoring (using the sim_discovery scenario as the primary integration
    fixture).
-4. The NS_XACRO / ns constants are defined in exactly one place (yaml_utils) and
+4. The NS_XACRO / ns constants are defined in exactly one place (urdf_xml_builder) and
    imported consistently everywhere they are needed.
 
 Note: Tests that construct UrdfWriter require the full modular_resources directory
@@ -23,7 +23,9 @@ Run with:
 import logging
 import subprocess
 import sys
+import xml.etree.ElementTree as ET
 from collections import OrderedDict
+from types import SimpleNamespace
 
 import pytest
 
@@ -99,21 +101,13 @@ class TestYamlUtils:
     def test_importable(self):
         import modular.yaml_utils  # noqa: F401
 
-    def test_ns_xacro_constant(self):
-        from modular.yaml_utils import NS_XACRO
-        assert NS_XACRO == "http://www.ros.org/wiki/xacro"
-
-    def test_ns_dict(self):
-        from modular.yaml_utils import ns, NS_XACRO
-        assert ns == {"xacro": NS_XACRO}
-
     def test_slave_desc_mode_values(self):
-        from modular.yaml_utils import SlaveDescMode
+        from modular.enums import SlaveDescMode
         assert SlaveDescMode.USE_POSITIONS.value == 'use_pos'
         assert SlaveDescMode.USE_IDS.value == 'use_ids'
 
     def test_slave_desc_mode_from_string(self):
-        from modular.yaml_utils import SlaveDescMode
+        from modular.enums import SlaveDescMode
         assert SlaveDescMode('use_pos') is SlaveDescMode.USE_POSITIONS
         assert SlaveDescMode('use_ids') is SlaveDescMode.USE_IDS
 
@@ -185,9 +179,9 @@ class TestPlugins:
         assert p is not None
 
     def test_plugins_use_single_ns_xacro_source(self):
-        """NS_XACRO used in plugins must equal the one defined in yaml_utils."""
+        """NS_XACRO used in plugins must equal the one defined in urdf_xml_builder."""
         import modular.plugins as plugins_mod
-        from modular.yaml_utils import NS_XACRO
+        from modular.urdf_xml_builder import NS_XACRO
         assert plugins_mod.NS_XACRO == NS_XACRO
         assert plugins_mod.ns == {"xacro": NS_XACRO}
 
@@ -206,9 +200,17 @@ class TestUrdfXmlBuilder:
         from modular.urdf_xml_builder import URDFXmlBuilder
         assert URDFXmlBuilder is not None
 
+    def test_ns_xacro_constant(self):
+        from modular.urdf_xml_builder import NS_XACRO
+        assert NS_XACRO == "http://www.ros.org/wiki/xacro"
+
+    def test_ns_dict(self):
+        from modular.urdf_xml_builder import ns, NS_XACRO
+        assert ns == {"xacro": NS_XACRO}
+
     def test_uses_single_ns_xacro_source(self):
         import modular.urdf_xml_builder as builder_mod
-        from modular.yaml_utils import NS_XACRO
+        from modular.urdf_xml_builder import NS_XACRO
         assert builder_mod.NS_XACRO == NS_XACRO
         assert builder_mod.ns == {"xacro": NS_XACRO}
 
@@ -250,16 +252,16 @@ class TestBackwardCompatibility:
         assert hasattr(uw, name), f"'{name}' is missing from modular.URDF_writer"
 
     def test_ns_xacro_consistent_across_modules(self):
-        """NS_XACRO must be identical in yaml_utils, plugins, urdf_xml_builder,
-        and URDF_writer (single source of truth – yaml_utils)."""
-        from modular.yaml_utils import NS_XACRO as ns_yaml
+        """NS_XACRO must be identical in plugins, urdf_xml_builder,
+        and URDF_writer (single source of truth – urdf_xml_builder)."""
+        from modular.urdf_xml_builder import NS_XACRO as ns_xml
         import modular.plugins as plugins_mod
         import modular.urdf_xml_builder as builder_mod
         import modular.URDF_writer as uw
 
-        assert plugins_mod.NS_XACRO == ns_yaml
-        assert builder_mod.NS_XACRO == ns_yaml
-        assert uw.NS_XACRO == ns_yaml
+        assert plugins_mod.NS_XACRO == ns_xml
+        assert builder_mod.NS_XACRO == ns_xml
+        assert uw.NS_XACRO == ns_xml
 
 
 # ===========================================================================
@@ -442,3 +444,232 @@ class TestParseGeneratorCliArgs:
         result = parse_generator_cli_args(['--output', 'urdf', '--unknown-flag'], known_only=True)
         assert isinstance(result, tuple)
         assert len(result) == 2
+
+
+# ===========================================================================
+# 10. Legacy vs submodule parity for chain methods
+# ===========================================================================
+
+def _chain_names(chains):
+    return [[node.name for node in chain] for chain in chains]
+
+
+def _make_discovered_writer():
+    from modular.URDF_writer import UrdfWriter
+    w = UrdfWriter(verbose=False, quiet=True, slave_desc_mode='use_pos')
+    w.read_from_json(DISCOVERY_REPLY)
+    return w
+
+
+def _pick_non_base_node_with_indices(writer):
+    for chain_idx, chain in enumerate(writer.listofchains):
+        for node_idx, node in enumerate(chain):
+            if node_idx == 0:
+                continue
+            if getattr(node, 'parent', None) is None:
+                continue
+            return chain_idx, node_idx, node
+    raise AssertionError('No non-base node found in discovered chains')
+
+
+def _detach_node_from_chains(writer, node):
+    for chain in writer.listofchains:
+        if node in chain:
+            chain.remove(node)
+    writer.listofchains = list(filter(None, writer.listofchains))
+
+
+@_skip_if_no_urdf_writer
+class TestChainMethodParity:
+    """Compare old UrdfWriter chain methods with ChainManager implementations."""
+
+    def test_add_to_chain_existing_branch_equivalence(self):
+        from modular.chain_manager import ChainManager
+
+        old_writer = _make_discovered_writer()
+        new_writer = _make_discovered_writer()
+
+        chain_idx, node_idx, node_old = _pick_non_base_node_with_indices(old_writer)
+        node_new = new_writer.listofchains[chain_idx][node_idx]
+
+        _detach_node_from_chains(old_writer, node_old)
+        _detach_node_from_chains(new_writer, node_new)
+
+        old_writer.add_to_chain(node_old)
+        ChainManager(new_writer).add_to_chain(node_new)
+
+        assert _chain_names(old_writer.listofchains) == _chain_names(new_writer.listofchains)
+
+    def test_remove_from_chain_equivalence(self):
+        from modular.chain_manager import ChainManager
+
+        old_writer = _make_discovered_writer()
+        new_writer = _make_discovered_writer()
+
+        chain_idx, node_idx, node_old = _pick_non_base_node_with_indices(old_writer)
+        node_new = new_writer.listofchains[chain_idx][node_idx]
+
+        old_writer.remove_from_chain(node_old)
+        ChainManager(new_writer).remove_from_chain(node_new)
+
+        assert _chain_names(old_writer.listofchains) == _chain_names(new_writer.listofchains)
+
+    def test_get_actuated_modules_chains_equivalence(self):
+        from modular.chain_manager import ChainManager
+
+        old_writer = _make_discovered_writer()
+        new_writer = _make_discovered_writer()
+
+        old_result = old_writer.get_actuated_modules_chains()
+        new_result = ChainManager(new_writer).get_actuated_modules_chains()
+
+        assert _chain_names(old_result) == _chain_names(new_result)
+
+    def test_static_helpers_equivalence(self):
+        from modular.URDF_writer import UrdfWriter
+        from modular.chain_manager import ChainManager
+
+        w = _make_discovered_writer()
+        for chain in w.listofchains:
+            if len(chain) < 2:
+                continue
+            assert UrdfWriter.find_chain_tip_link(chain) == ChainManager.find_chain_tip_link(chain)
+            assert UrdfWriter.find_chain_base_link(chain) == ChainManager.find_chain_base_link(chain)
+            assert UrdfWriter.find_chain_tag(chain) == ChainManager.find_chain_tag(chain)
+
+
+# ===========================================================================
+# 11. Legacy vs submodule parity for yaml_utils / plugins / urdf_xml_builder
+# ===========================================================================
+
+class TestYamlUtilsParity:
+    """Verify parity between names exposed by URDF_writer and yaml_utils."""
+
+    def test_yaml_symbols_are_the_same_objects(self):
+        import modular.URDF_writer as uw
+        import modular.yaml_utils as yu
+        import modular.urdf_xml_builder as xb
+        import modular.enums as enums_mod
+
+        assert uw.ordered_load is yu.ordered_load
+        assert uw.ordered_dump is yu.ordered_dump
+        assert uw.SlaveDescMode is enums_mod.SlaveDescMode
+        assert uw.NS_XACRO == xb.NS_XACRO
+        assert uw.ns == xb.ns
+
+    def test_yaml_behavior_matches_via_urdf_writer_exports(self):
+        import modular.URDF_writer as uw
+        import modular.yaml_utils as yu
+
+        yaml_text = "b: 2\na: 1\nc: 3"
+        via_uw = uw.ordered_load(yaml_text)
+        via_yu = yu.ordered_load(yaml_text)
+        assert list(via_uw.items()) == list(via_yu.items())
+
+        src = OrderedDict([('x', 1), ('y', 2)])
+        dumped_uw = uw.ordered_dump(src)
+        dumped_yu = yu.ordered_dump(src)
+        assert uw.ordered_load(dumped_uw) == yu.ordered_load(dumped_yu)
+
+
+@_skip_if_no_urdf_writer
+class TestPluginsParity:
+    """Compare plugin behavior via UrdfWriter wrappers vs direct plugin calls."""
+
+    def test_write_joint_map_parity(self):
+        writer_a = _make_discovered_writer()
+        writer_b = _make_discovered_writer()
+
+        via_wrapper = writer_a.write_joint_map(use_robot_id=False)
+        via_plugin = writer_b.control_plugin.write_joint_map(use_robot_id=False)
+
+        assert via_wrapper == via_plugin
+
+    def test_write_srdf_parity_without_acm(self):
+        writer_a = _make_discovered_writer()
+        writer_b = _make_discovered_writer()
+
+        via_wrapper = writer_a.write_srdf(builder_joint_map=None, compute_acm=False)
+        via_plugin = writer_b.control_plugin.write_srdf(builder_joint_map=None)
+
+        assert via_wrapper == via_plugin
+
+
+@_skip_if_no_urdf_writer
+class TestUrdfXmlBuilderParity:
+    """Compare duplicated XML helper methods with URDFXmlBuilder methods."""
+
+    def test_add_origin_parity(self):
+        from modular.URDF_writer import UrdfWriter
+        from modular.urdf_xml_builder import URDFXmlBuilder
+
+        writer = _make_discovered_writer()
+        builder = URDFXmlBuilder(writer)
+
+        pose = SimpleNamespace(x=1.0, y=2.0, z=3.0, roll=0.1, pitch=0.2, yaw=0.3)
+
+        el_old = ET.Element('test_old')
+        el_new = ET.Element('test_new')
+
+        UrdfWriter.add_origin(writer, el_old, pose)
+        builder.add_origin(el_new, pose)
+
+        assert ET.tostring(el_old.find('origin')) == ET.tostring(el_new.find('origin'))
+
+    def test_add_geometry_parity(self):
+        from modular.URDF_writer import UrdfWriter
+        from modular.urdf_xml_builder import URDFXmlBuilder
+
+        writer = _make_discovered_writer()
+        builder = URDFXmlBuilder(writer)
+
+        geometry = SimpleNamespace(
+            type='box',
+            parameters=SimpleNamespace(size=[0.1, 0.2, 0.3])
+        )
+
+        el_old = ET.Element('test_old')
+        el_new = ET.Element('test_new')
+
+        UrdfWriter.add_geometry(writer, el_old, geometry)
+        builder.add_geometry(el_new, geometry)
+
+        assert ET.tostring(el_old.find('geometry')) == ET.tostring(el_new.find('geometry'))
+
+    def test_add_material_parity(self):
+        from modular.URDF_writer import UrdfWriter
+        from modular.urdf_xml_builder import URDFXmlBuilder
+
+        writer = _make_discovered_writer()
+        builder = URDFXmlBuilder(writer)
+
+        color = SimpleNamespace(material_name='m', rgba=[1, 0, 0, 1])
+
+        el_old = ET.Element('test_old')
+        el_new = ET.Element('test_new')
+
+        UrdfWriter.add_material(writer, el_old, color)
+        builder.add_material(el_new, color)
+
+        assert ET.tostring(el_old.find('material')) == ET.tostring(el_new.find('material'))
+
+    def test_add_gazebo_element_parity(self):
+        from modular.urdf_xml_builder import URDFXmlBuilder
+
+        writer_old = _make_discovered_writer()
+        writer_new = _make_discovered_writer()
+        builder = URDFXmlBuilder(writer_new)
+
+        module_old = SimpleNamespace(xml_tree_elements=[])
+        module_new = SimpleNamespace(xml_tree_elements=[])
+        gazebo = SimpleNamespace(plugin='demo_plugin', nested=SimpleNamespace(updateRate=100))
+
+        writer_old.add_gazebo_element(module_old, gazebo, 'mod_test')
+        builder.add_gazebo_element(module_new, gazebo, 'mod_test')
+
+        old_block = next((n for n in writer_old.root if n.attrib.get('name') == 'gazebo_mod_test'), None)
+        new_block = next((n for n in writer_new.root if n.attrib.get('name') == 'gazebo_mod_test'), None)
+
+        assert old_block is not None
+        assert new_block is not None
+        assert ET.tostring(old_block) == ET.tostring(new_block)

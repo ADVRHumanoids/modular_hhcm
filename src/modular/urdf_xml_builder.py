@@ -18,7 +18,13 @@ from modular import ModuleNode
 # tf_transformations is imported transitively via ModuleNode (single source of truth)
 tf_transformations = ModuleNode.tf_transformations
 from modular.enums import ModuleClass
-from modular.yaml_utils import NS_XACRO, ns
+
+
+# ---------------------------------------------------------------------------
+# Shared xacro namespace constants
+# ---------------------------------------------------------------------------
+NS_XACRO = "http://www.ros.org/wiki/xacro"
+ns = {"xacro": NS_XACRO}
 
 
 class URDFXmlBuilder:

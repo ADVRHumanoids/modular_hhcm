@@ -1,12 +1,6 @@
-"""
-YAML loading/dumping utilities, the SlaveDescMode enumeration, and shared
-xacro namespace constants.
-
-Extracted from URDF_writer.py to keep it focused on robot-model building.
-"""
+"""YAML loading/dumping utilities extracted from URDF_writer.py."""
 import yaml
 from collections import OrderedDict
-from enum import Enum
 
 
 class MyDumper(yaml.Dumper):
@@ -51,15 +45,3 @@ def ordered_dump(data, stream=None, Dumper=MyDumper, **kwds):
 
     return yaml.dump(data, stream, OrderedDumper, **kwds)
 
-
-class SlaveDescMode(str, Enum):
-    """Slave description mode"""
-    USE_POSITIONS = 'use_pos'
-    USE_IDS = 'use_ids'
-
-
-# ---------------------------------------------------------------------------
-# Shared xacro namespace constants
-# ---------------------------------------------------------------------------
-NS_XACRO = "http://www.ros.org/wiki/xacro"
-ns = {"xacro": NS_XACRO}
