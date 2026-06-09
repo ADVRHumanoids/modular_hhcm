@@ -982,25 +982,33 @@ class UrdfWriter:
     
 
     def add_addon(self, addon_filename):
-        new_addon = None
         try:
             addons_dict = self.modular_resources_manager.get_available_addons_dict()
             new_addon = addons_dict[addon_filename]
-            if new_addon['header']['type'] == 'drillbit':
-                self.parent_module.addon_elements += self.add_drillbit(length=new_addon['parameters']['length'], radius=new_addon['parameters']['radius'], mass=new_addon['parameters']['mass'])
-            elif new_addon['header']['type'] == 'handle':
-                self.parent_module.addon_elements += self.add_handle(x_offset=new_addon['parameters']['x_offset'], y_offset=new_addon['parameters']['y_offset'], z_offset=new_addon['parameters']['z_offset'], mass=new_addon['parameters']['mass'], radius=new_addon['parameters']['radius'])
-            elif new_addon['header']['type'] == 'dagana_claws':
-                self.parent_module.addon_elements += self.add_dagana_claws(type=new_addon['parameters']['type'])
-            elif new_addon['header']['type'] == 'camera':
-                self.parent_module.addon_elements += self.add_camera(xyz_offset=new_addon['parameters']['xyz_offset'], rpy_offset=new_addon['parameters']['rpy_offset'])
-            elif new_addon['header']['type'] == 'realsense':
-                self.parent_module.addon_elements += self.add_realsense(**new_addon['parameters'])
-            else:
-                self.logger.info('Addon type not supported')
-
-        except FileNotFoundError:
+        except KeyError:
+            diagnostics, root_cause = self.modular_resources_manager.get_resource_discovery_diagnostics()
+            if diagnostics:
+                msg = (
+                    addon_filename
+                    + ' was not found in the available resources.\n'
+                    + 'Resource discovery errors:\n'
+                    + diagnostics
+                )
+                raise FileNotFoundError(msg) from root_cause
             raise FileNotFoundError(addon_filename+' was not found in the available resources')
+
+        if new_addon['header']['type'] == 'drillbit':
+            self.parent_module.addon_elements += self.add_drillbit(length=new_addon['parameters']['length'], radius=new_addon['parameters']['radius'], mass=new_addon['parameters']['mass'])
+        elif new_addon['header']['type'] == 'handle':
+            self.parent_module.addon_elements += self.add_handle(x_offset=new_addon['parameters']['x_offset'], y_offset=new_addon['parameters']['y_offset'], z_offset=new_addon['parameters']['z_offset'], mass=new_addon['parameters']['mass'], radius=new_addon['parameters']['radius'])
+        elif new_addon['header']['type'] == 'dagana_claws':
+            self.parent_module.addon_elements += self.add_dagana_claws(type=new_addon['parameters']['type'])
+        elif new_addon['header']['type'] == 'camera':
+            self.parent_module.addon_elements += self.add_camera(xyz_offset=new_addon['parameters']['xyz_offset'], rpy_offset=new_addon['parameters']['rpy_offset'])
+        elif new_addon['header']['type'] == 'realsense':
+            self.parent_module.addon_elements += self.add_realsense(**new_addon['parameters'])
+        else:
+            self.logger.info('Addon type not supported')
 
 
     def add_module(self, filename, offsets={}, reverse=False, addons =[], robot_id=0, active_ports=3, is_structural=True, module_name=None):
@@ -1040,16 +1048,26 @@ class UrdfWriter:
         try:
             module_dict = self.modular_resources_manager.get_available_modules_dict()[filename]
             template_dict = self.modular_resources_manager.get_available_modules_dict()['template.yaml']
-            if filename.lower().endswith(('.yaml', '.yml')):
-                # Load the module from YAML and create a ModuleNode instance
-                new_module = ModuleNode.module_from_yaml_dict(module_dict, self.parent_module, template_dict, reverse)
-                self.print("Module loaded from YAML: " + new_module.name)
-            elif filename.lower().endswith(('.json')):
-                # Load the module from YAML and create a ModuleNode instance
-                new_module = ModuleNode.module_from_json_dict(module_dict, self.parent_module, template_dict, reverse)
-                self.print("Module loaded from JSON: " + new_module.name)
         except KeyError:
-            raise KeyError(filename+' was not found in the available resources')
+            diagnostics, root_cause = self.modular_resources_manager.get_resource_discovery_diagnostics()
+            if diagnostics:
+                msg = (
+                    filename
+                    + ' was not found in the available resources.\n'
+                    + 'Resource discovery errors:\n'
+                    + diagnostics
+                )
+                raise FileNotFoundError(msg) from root_cause
+            raise FileNotFoundError(filename+' was not found in the available resources')
+
+        if filename.lower().endswith(('.yaml', '.yml')):
+            # Load the module from YAML and create a ModuleNode instance
+            new_module = ModuleNode.module_from_yaml_dict(module_dict, self.parent_module, template_dict, reverse)
+            self.print("Module loaded from YAML: " + new_module.name)
+        elif filename.lower().endswith(('.json')):
+            # Load the module from YAML and create a ModuleNode instance
+            new_module = ModuleNode.module_from_json_dict(module_dict, self.parent_module, template_dict, reverse)
+            self.print("Module loaded from JSON: " + new_module.name)
 
         # Socket module is a custom type. It behaves differently from other link modules because it has no electronics onboard. Its parent should always be the base_link. On the hardware it will actually be connected to a non-structural hub, which therefore will not be part of the URDF, so we consider the base_link to be the parent in any case. This means the ports of the hub will not actually be occupied, so potentially there is no limit to how many sockets could be connected (>3).
         if new_module.type is ModuleType.SOCKET:

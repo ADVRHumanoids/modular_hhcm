@@ -53,9 +53,9 @@ class ResourceFinder:
         try:
             # The dollar sign is used to execute a command and get the output. What is inside the parenthesis is substituted with the output of the command: $(cmd) -> output of cmd
             expanded_path = re.sub(r"\$\(([^\)]+)\)", path_substitution, expanded_path)
-        except (subprocess.CalledProcessError, TypeError):
+        except (subprocess.CalledProcessError, TypeError) as e:
             msg = 'Executing ' + expanded_path + ' resulted in an error. Path substitution cannot be completed. Are the required environment variables set?'
-            raise RuntimeError(msg)
+            raise RuntimeError(msg) from e
         
         ResourceFinder._expanded_path_cache[self.nested_access(relative_path)] = expanded_path
             
@@ -160,8 +160,11 @@ class ResourceFinder:
         resource_package = __name__
         try:
             resource_path = self.find_resource_path(resource_name, relative_path)
-        except RuntimeError:
-            return []
+        except RuntimeError as e:
+            raise RuntimeError(
+                f"Failed to resolve resource path in get_listdir for "
+                f"resource_name={resource_name}, relative_path={relative_path}"
+            ) from e
         if self.resource_exists(resource_name, relative_path):
             if self.is_resource_external(relative_path):
                 resource_listdir = os.listdir(resource_path)
@@ -176,8 +179,11 @@ class ResourceFinder:
         resource_package = __name__
         try:
             resource_path = self.find_resource_path(resource_name, relative_path)
-        except RuntimeError:
-            return False
+        except RuntimeError as e:
+            raise RuntimeError(
+                f"Failed to resolve resource path in resource_exists for "
+                f"resource_name={resource_name}, relative_path={relative_path}"
+            ) from e
         if self.is_resource_external(relative_path):
             resource_exists = os.path.exists(resource_path) # TODO: check if correct
         else:
@@ -189,8 +195,11 @@ class ResourceFinder:
         resource_package = __name__
         try:
             resource_path = self.find_resource_path(resource_name, relative_path)
-        except RuntimeError:
-            return False
+        except RuntimeError as e:
+            raise RuntimeError(
+                f"Failed to resolve resource path in resource_isdir for "
+                f"resource_name={resource_name}, relative_path={relative_path}"
+            ) from e
         if self.is_resource_external(relative_path):
             resource_isdir = os.path.isdir(resource_path)
         else:
@@ -220,6 +229,9 @@ class ResourceFinder:
 class ModularResourcesManager:
     def __init__(self, resource_finder):
         self.resource_finder = resource_finder
+        # Keep discovery failures to report them later when a specific module
+        # lookup fails, instead of aborting during initialization.
+        self._resource_discovery_errors = {}
 
         self.default_offset_values = {"x":0.0, "y":0.0, "z": 0.0, "roll":0.0, "pitch":0.0, "yaw":0.0}
         # dictionary with the keys being the module name and the values being a dictionary specifing
@@ -240,13 +252,47 @@ class ModularResourcesManager:
         self.available_addons_headers = []
         self.init_available_addons()
 
+    @staticmethod
+    def _res_path_to_label(res_path):
+        if isinstance(res_path, (list, tuple)) and len(res_path) == 2 and res_path[0] == 'external_resources':
+            return f"external_resources.{res_path[1]}"
+        if isinstance(res_path, (list, tuple)):
+            return '.'.join(str(x) for x in res_path)
+        return str(res_path)
+
+    def _record_resource_discovery_error(self, res_path, error):
+        label = self._res_path_to_label(res_path)
+        if label not in self._resource_discovery_errors:
+            self._resource_discovery_errors[label] = error
+
+    def get_resource_discovery_diagnostics(self, max_items=3):
+        if not self._resource_discovery_errors:
+            return None, None
+
+        items = list(self._resource_discovery_errors.items())
+        details = [f"  - {key}\n    {err}" for key, err in items[:max_items]]
+        if len(items) > max_items:
+            details.append(f"  - ... and {len(items) - max_items} more")
+        first_exc = items[0][1]
+        return '\n'.join(details), first_exc
+
     def expand_listdir(self, starting_path, res_path):
         """Expand listdir to include subdirectories recursively"""
-        listdir = self.resource_finder.get_listdir(starting_path, res_path)
+        try:
+            listdir = self.resource_finder.get_listdir(starting_path, res_path)
+        except RuntimeError as e:
+            self._record_resource_discovery_error(res_path, e)
+            return []
+
         list_to_remove = []
         list_to_add = []
         for el in listdir:
-            if self.resource_finder.resource_isdir(starting_path + '/' + el, res_path):
+            try:
+                is_dir = self.resource_finder.resource_isdir(starting_path + '/' + el, res_path)
+            except RuntimeError as e:
+                self._record_resource_discovery_error(res_path, e)
+                continue
+            if is_dir:
                 new_listdir = self.expand_listdir(starting_path + '/'+ el, res_path)
                 new_listdir = [el + '/' + new_el for new_el in new_listdir]
                 list_to_remove.append(el)
@@ -341,8 +387,12 @@ class ModularResourcesManager:
 
     def init_available_families(self):
         for res_path in self.resource_finder.resources_paths:
-            if self.resource_finder.resource_exists('families.yaml', res_path):
-                self.available_families += (self.resource_finder.get_yaml('families.yaml', res_path)['families'])
+            try:
+                if self.resource_finder.resource_exists('families.yaml', res_path):
+                    self.available_families += (self.resource_finder.get_yaml('families.yaml', res_path)['families'])
+            except RuntimeError as e:
+                self._record_resource_discovery_error(res_path, e)
+                continue
 
     def init_available_addons(self):
         for res_path in self.resource_finder.resources_paths:
