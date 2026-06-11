@@ -33,7 +33,7 @@
     <link name="base_link_projected"/>
     
     <!-- Add front D435i camera -->
-    <xacro:property name="d435i_front_name" value="D435i_camera_front" />
+    <!-- <xacro:property name="d435i_front_name" value="D435i_camera_front" />
     <xacro:property name="d435i_front_parent_name" value="${parent_name}" />
     <xacro:property name="d435i_front_origin">
         <origin xyz="0.402872 0.0 -0.078218" rpy="0 0.261799 0"/>
@@ -42,20 +42,20 @@
                                 parent_name="${d435i_front_parent_name}" 
                                 add_gazebo_sensor="${ADD_D435I_FRONT}">
         <xacro:insert_block name="d435i_front_origin" />
-    </xacro:add_realsense_d_camera>
+    </xacro:add_realsense_d_camera> -->
 
     <!-- Add back D435i camera -->
-    <xacro:property name="d435i_back_name" value="D435i_camera_back" />
+    <!-- <xacro:property name="d435i_back_name" value="D435i_camera_back" />
     <xacro:property name="d435i_back_parent_name" value="${parent_name}" />
     <xacro:property name="d435i_back_origin">
         <origin xyz="-0.402872 0.0 -0.078218" rpy="0 0.261799 3.141593"/>
-    </xacro:property>
+    </xacro:property> -->
 
-    <xacro:add_realsense_d_camera name="${d435i_back_name}" 
+    <!-- <xacro:add_realsense_d_camera name="${d435i_back_name}" 
                                 parent_name="${d435i_back_parent_name}" 
                                 add_gazebo_sensor="${ADD_D435I_BACK}">
         <xacro:insert_block name="d435i_back_origin" />
-    </xacro:add_realsense_d_camera>
+    </xacro:add_realsense_d_camera> -->
 
     <!-- Add left T265 camera -->
     <xacro:property name="t265_left_name" value="T265_camera_left" />

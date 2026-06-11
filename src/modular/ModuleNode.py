@@ -93,6 +93,24 @@ class JSONInterpreter(object):
         """Parse the dictionary d and set the attributes of the owner module"""
         self.owner.kinematics_convention = KinematicsConvention.AFFINE
         self.owner.type = ModuleType(d['header']['type'])
+        setattr(self.owner, 'default_addons', [])
+        json_sensors = d.get('sensors', [])
+        if isinstance(json_sensors, list):
+            for sensor in json_sensors:
+                if isinstance(sensor, str):
+                    self.owner.default_addons.append({'addon_filename': sensor})
+                else:
+                    _logger.warning(
+                        "Ignoring non-string entry in '%s' sensors list: %s",
+                        d.get('header', {}).get('name', '<unknown>'),
+                        sensor,
+                    )
+        elif json_sensors:
+            _logger.warning(
+                "Ignoring malformed 'sensors' in '%s': expected list, got %s",
+                d.get('header', {}).get('name', '<unknown>'),
+                type(json_sensors).__name__,
+            )
         self.type_dispatcher(d)
 
     def type_dispatcher(self, d):

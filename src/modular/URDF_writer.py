@@ -5,6 +5,7 @@
 
 from __future__ import print_function
 import math
+import inspect
 import numpy as np
 from future.utils import iteritems
 import os
@@ -717,7 +718,7 @@ class UrdfWriter:
         handle_name = 'handle'+ self.parent_module.tag
         ET.SubElement(self.root,
             "xacro:add_cylinder",
-            type="drillbit",
+            type="handle",
             name=handle_name,
             size_z=str(abs(y_offset)),
             mass=str(mass),
@@ -788,29 +789,34 @@ class UrdfWriter:
         # return empty list since all xml elemnts are added from xacro
         return []
     
-    def add_camera(self, xyz_offset=[0.0, 0.0, 0.0], rpy_offset=[0.0, 0.0, 0.0]):
-        camera_name = 'camera'+ self.parent_module.tag
+    def add_camera(self, xyz_offset=[0.0, 0.0, 0.0], rpy_offset=[0.0, 0.0, 0.0], camera_name: str | None = None, parent_name: str | None = None):
+        camera_name = camera_name or ('camera'+ self.parent_module.tag)
+        parent_name = parent_name or self.parent_module.name
         ET.SubElement(self.root, 
                       "xacro:include",
                       filename="${MODULAR_PATH}/modular_data/urdf/concert.sensors.urdf.xacro")
         et = ET.SubElement(self.root,
                       "xacro:add_realsense_d_camera",
                       name=camera_name,
-                      parent_name=self.parent_module.name,
+                      parent_name=parent_name,
                       add_gazebo_sensor="true")
         ET.SubElement(et,
                       "origin",
                       xyz=" ".join([str(x) for x in xyz_offset]),
                       rpy=" ".join([str(x) for x in rpy_offset]))
+        self.parent_module.mesh_names.append(camera_name + "_link")
         self.add_sensor_name('camera', camera_name)
         return [camera_name]
     
-    def add_realsense(self, camera: str = "d435", align_depth: bool = True,
+    def add_realsense(self, camera: str = "d435", align_depth: bool = False,
                         add_plug: bool = False, use_mesh: bool = True,
-                        gazebo_urdf: bool = True, enable_infrared: bool = False,
+                        enable_infrared: bool = False,
+                        publish_pointcloud:bool = False,
                         color_image: dict = {"width": 640, "height": 480, "fps": 30},
                         depth_image: dict = {"width": 640, "height": 480, "fps": 30},
-                        xyz_offset=[0.0, 0.0, 0.0], rpy_offset=[0.0, 0.0, 0.0]):
+                        xyz_offset=[0.0, 0.0, 0.0], rpy_offset=[0.0, 0.0, 0.0],
+                        camera_name: str | None = None,
+                        parent_name: str | None = None):
         """
                         Add a Realsense camera to the URDF.
                         Supported camera types are: 'd435', 'd435i'.
@@ -819,7 +825,6 @@ class UrdfWriter:
                             align_depth (bool): Whether to align depth image to color image. Defaults to True.
                             add_plug (bool): Whether to add camera connector plug to the model. Defaults to False.
                             use_mesh (bool): Whether to use mesh geometry for the camera model. Defaults to True.
-                            gazebo_urdf (bool): Whether to include Gazebo sensors. Defaults to True.
                             enable_infrared (bool): Whether to enable infrared sensors. Defaults to False.
                             color_image (dict): Color camera configuration with keys 'width', 'height', and 'fps'.
                                 Defaults to {"width": 640, "height": 480, "fps": 30}.
@@ -829,6 +834,10 @@ class UrdfWriter:
                                 Defaults to [0.0, 0.0, 0.0].
                             rpy_offset (list): Roll, pitch, yaw rotational offset from parent module in radians [r, p, y].
                                 Defaults to [0.0, 0.0, 0.0].
+                            camera_name (str | None): Optional explicit camera frame/name used in the URDF.
+                                If omitted, defaults to "camera" + parent tag.
+                            parent_name (str | None): Optional explicit parent link name for the camera macro.
+                                If omitted, defaults to the currently selected parent module name.
                         Returns:
                             list: List containing the camera name identifier.
                         Raises:
@@ -845,7 +854,8 @@ class UrdfWriter:
         if camera not in supported_cameras:
             raise ValueError(f"Camera type '{camera}' not supported. Supported types are: {', '.join(supported_cameras)}.")
 
-        camera_name = 'camera'+ self.parent_module.tag
+        camera_name = camera_name or ('camera'+ self.parent_module.tag)
+        parent_name = parent_name or self.parent_module.name
         macro_name = 'sensor_' + camera
         xacro_filename = f"_{camera}.urdf.xacro"
         realsense_xacro_path = self.resource_finder.get_external_resource_filename(
@@ -857,14 +867,16 @@ class UrdfWriter:
                       filename=realsense_xacro_path)
         et = ET.SubElement(self.root,
                       f"xacro:{macro_name}",
-                      parent=self.parent_module.name,
+                      parent=parent_name,
                       name=camera_name,
                       use_nominal_extrinsics="true",
                       add_plug=str(add_plug).lower(),
                       use_mesh=str(use_mesh).lower(),
-                      gazebo_urdf=str(gazebo_urdf).lower(),
+                      publish_tf="${ADD_CAMERAS}",
+                      gazebo_urdf="${GAZEBO_URDF}",
                       align_depth=str(align_depth).lower(),
                       enable_infrared=str(enable_infrared).lower(),
+                      publish_pointcloud=str(publish_pointcloud).lower(),
                       visualize="true",
                       color_width=str(color_image.get("width", 640)),
                       color_height=str(color_image.get("height", 480)),
@@ -880,6 +892,7 @@ class UrdfWriter:
             self.add_sensor_name('camera/realsense', camera_name)
         else:
             self.add_sensor_name('camera/realsense_depth_aligned', camera_name)
+        self.parent_module.mesh_names.append(camera_name + "_link")
         return [camera_name]
 
     def add_sensor_name(self, sensor_type: str, sensor_name: list[str] | str):
@@ -979,9 +992,26 @@ class UrdfWriter:
         wheel_data = self.add_module(wheel_filename, offsets, reverse, robot_id=robot_id[1])
 
         return wheel_data, steering_data
+
+    def _filter_callable_kwargs(self, func, params, context_name):
+        func_name = getattr(func, '__name__', str(func))
+        if not isinstance(params, dict):
+            raise TypeError(f"Parameters for '{func_name}' must be a dictionary")
+
+        supported = set(inspect.signature(func).parameters.keys())
+        filtered_params = {k: v for k, v in params.items() if k in supported}
+        ignored_params = [k for k in params if k not in supported]
+        if ignored_params:
+            self.warning_print(
+                f"Ignoring unsupported parameters for '{func_name}' in '{context_name}': {ignored_params}"
+            )
+
+        return filtered_params
     
 
-    def add_addon(self, addon_filename):
+    def add_addon(self, addon_filename, target_module=None, addon_name=None):
+        module = target_module if target_module is not None else self.parent_module
+
         try:
             addons_dict = self.modular_resources_manager.get_available_addons_dict()
             new_addon = addons_dict[addon_filename]
@@ -997,18 +1027,43 @@ class UrdfWriter:
                 raise FileNotFoundError(msg) from root_cause
             raise FileNotFoundError(addon_filename+' was not found in the available resources')
 
-        if new_addon['header']['type'] == 'drillbit':
-            self.parent_module.addon_elements += self.add_drillbit(length=new_addon['parameters']['length'], radius=new_addon['parameters']['radius'], mass=new_addon['parameters']['mass'])
-        elif new_addon['header']['type'] == 'handle':
-            self.parent_module.addon_elements += self.add_handle(x_offset=new_addon['parameters']['x_offset'], y_offset=new_addon['parameters']['y_offset'], z_offset=new_addon['parameters']['z_offset'], mass=new_addon['parameters']['mass'], radius=new_addon['parameters']['radius'])
-        elif new_addon['header']['type'] == 'dagana_claws':
-            self.parent_module.addon_elements += self.add_dagana_claws(type=new_addon['parameters']['type'])
-        elif new_addon['header']['type'] == 'camera':
-            self.parent_module.addon_elements += self.add_camera(xyz_offset=new_addon['parameters']['xyz_offset'], rpy_offset=new_addon['parameters']['rpy_offset'])
-        elif new_addon['header']['type'] == 'realsense':
-            self.parent_module.addon_elements += self.add_realsense(**new_addon['parameters'])
+        # Map addon type to handler function
+        addon_type = new_addon['header']['type']
+        handler_func = None
+        
+        if addon_type == 'drillbit':
+            handler_func = self.add_drillbit
+        elif addon_type == 'handle':
+            handler_func = self.add_handle
+        elif addon_type == 'dagana_claws':
+            handler_func = self.add_dagana_claws
+        elif addon_type == 'camera':
+            handler_func = self.add_camera
+        elif addon_type == 'realsense':
+            handler_func = self.add_realsense
         else:
             self.logger.info('Addon type not supported')
+            return []
+        
+        # Common parameter filtering and calling pattern
+        params = new_addon.get('parameters', {})
+        filtered_params = self._filter_callable_kwargs(
+            handler_func,
+            params,
+            f"addon '{addon_filename}'",)
+        
+        # Apply type-specific defaults for camera/realsense
+        if addon_type in ('camera', 'realsense'):
+            filtered_params.setdefault('camera_name', 'camera' + module.tag)
+            if addon_name is not None:
+                filtered_params['camera_name'] = addon_name
+            filtered_params.setdefault('parent_name', module.name)
+        
+        # Call the handler function and add the resulting elements to the module's addon_elements
+        added_elements = handler_func(**filtered_params)
+        module.addon_elements += added_elements
+
+        return added_elements
 
 
     def add_module(self, filename, offsets={}, reverse=False, addons =[], robot_id=0, active_ports=3, is_structural=True, module_name=None):
@@ -1142,6 +1197,9 @@ class UrdfWriter:
         # add list of xml elements with an associated visual mesh as attribute
         setattr(new_module, 'mesh_names', [])
 
+        # Ensure module-level default addons is always present and list-typed.
+        setattr(new_module, 'default_addons', list(getattr(new_module, 'default_addons', [])))
+
         # add list of connectors names as attribute. The 0 connector is added by default. The others will be added by the add_connectors() method
         setattr(new_module, 'connectors', ['connector_0'])
 
@@ -1209,11 +1267,20 @@ class UrdfWriter:
         # Select the meshes to highlight in the GUI
         selected_meshes = self.select_meshes(selected_connector, new_module)
 
-        for addon in addons:
+        default_addons = list(getattr(new_module, 'default_addons', []))
+        explicit_addons = [
+            addon if isinstance(addon, dict) else {'addon_filename': addon}
+            for addon in addons
+        ]
+
+        for addon_spec in default_addons + explicit_addons:
             try:
-                self.add_addon(addon_filename=addon)
+                self.add_addon(
+                    addon_filename=addon_spec['addon_filename'],
+                    addon_name=addon_spec.get('addon_name'),
+                )
             except FileNotFoundError:
-                self.logger.error(f'Addon {addon} not found, skipping it')
+                self.logger.error(f"Addon {addon_spec['addon_filename']} not found, skipping it")
 
         # add meshes to the map
         self.mesh_to_module_map.update({k: new_module.name for k in new_module.mesh_names})
@@ -1912,22 +1979,13 @@ class UrdfWriter:
             setattr(new_Link, 'base_link_name', new_Link.name)
             # this list will contain the names of the fingers or any moving extremity of the end effector
             setattr(new_Link, 'finger_names', [])
-            
-            setattr(new_Link, 'camera_name', 'drill_camera' + new_Link.tag)
-            ET.SubElement(self.root,
-                          "xacro:add_realsense_d_camera",
-                          type="link",
-                          name=new_Link.camera_name,
-                          parent_name=new_Link.name)
-            # add the xacro:add_realsense_d_camera to the list of urdf elements
-            new_Link.xml_tree_elements.append(new_Link.camera_name)
-            new_Link.mesh_names.append(new_Link.camera_name)
-
-            # <xacro:property name="velodyne_back_origin">
-            #     # <origin xyz="-0.5305 -0.315 -0.1" rpy="0.0 0.0 3.141593"/>
-            # </xacro:property>
-            # 
-            # <xacro:insert_block name="velodyne_back_origin" />
+            for addon_spec in new_Link.default_addons:
+                if (
+                    isinstance(addon_spec, dict)
+                    and addon_spec.get('addon_filename') == 'concert/drill_camera.json'
+                ):
+                    addon_spec['addon_name'] = 'drill_camera' + new_Link.tag
+                    break
 
             x_ee, y_ee, z_ee, roll_ee, pitch_ee, yaw_ee = ModuleNode.get_xyzrpy(np.array(new_Link.kinematics.link.pose))
             setattr(new_Link, 'tcp_name', 'drillnose' + new_Link.tag)
@@ -2320,8 +2378,8 @@ class UrdfWriter:
                         name=new_Hub.name + '_sensors',
                         parent_name=new_Hub.name)
             # add the xacro:add_mobile_base_sensors element to the list of urdf elements
-            new_Hub.xml_tree_elements.append(new_Hub.name + '_sensors')  
-            self.add_sensor_name('camera', ['D435i_camera_front', 'D435i_camera_back'])
+            new_Hub.xml_tree_elements.append(new_Hub.name + '_sensors')
+
             self.add_sensor_name('lidar/velodyne', ['VLP16_lidar_front', 'VLP16_lidar_back'])
             self.add_sensor_name('imu', 'imu')
             self.add_sensor_name('ultrasound/bosch_uss5', [
@@ -3094,7 +3152,3 @@ import sys, os
 
 def parse_generator_cli_args(argv=None, known_only=False):
     return UrdfWriter.parse_generator_cli_args(argv=argv, known_only=known_only)
-
-
-def write_file_to_stdout(urdf_writer: UrdfWriter, homing_map, robot_name='modularbot', args=None):
-    return urdf_writer.write_file_to_stdout(homing_map, robot_name=robot_name, args=args)
