@@ -789,17 +789,21 @@ class UrdfWriter:
         # return empty list since all xml elemnts are added from xacro
         return []
     
-    def add_camera(self, xyz_offset=[0.0, 0.0, 0.0], rpy_offset=[0.0, 0.0, 0.0], camera_name: str | None = None, parent_name: str | None = None):
+    def add_camera(self, xyz_offset=[0.0, 0.0, 0.0], rpy_offset=[0.0, 0.0, 0.0], camera_name: str | None = None,    
+                   parent_name: str | None = None,
+                   gazebo_urdf: str | bool = "${GAZEBO_URDF}", 
+                   publish_tf: str | bool = "${ADD_CAMERAS}"):
         camera_name = camera_name or ('camera'+ self.parent_module.tag)
         parent_name = parent_name or self.parent_module.name
         ET.SubElement(self.root, 
                       "xacro:include",
                       filename="${MODULAR_PATH}/modular_data/urdf/concert.sensors.urdf.xacro")
         et = ET.SubElement(self.root,
-                      "xacro:add_realsense_d_camera",
+                      "xacro:add_rgbd_camera",
                       name=camera_name,
                       parent_name=parent_name,
-                      add_gazebo_sensor="true")
+                      publish_tf=str(publish_tf).lower() if isinstance(publish_tf, bool) else str(publish_tf),
+                      gazebo_urdf=str(gazebo_urdf).lower() if isinstance(gazebo_urdf, bool) else str(gazebo_urdf))
         ET.SubElement(et,
                       "origin",
                       xyz=" ".join([str(x) for x in xyz_offset]),
@@ -816,7 +820,9 @@ class UrdfWriter:
                         depth_image: dict = {"width": 640, "height": 480, "fps": 30},
                         xyz_offset=[0.0, 0.0, 0.0], rpy_offset=[0.0, 0.0, 0.0],
                         camera_name: str | None = None,
-                        parent_name: str | None = None):
+                        parent_name: str | None = None,
+                        publish_tf: str | bool = "${ADD_CAMERAS}",
+                        gazebo_urdf: str | bool = "${GAZEBO_URDF}"):
         """
                         Add a Realsense camera to the URDF.
                         Supported camera types are: 'd435', 'd435i'.
@@ -872,8 +878,8 @@ class UrdfWriter:
                       use_nominal_extrinsics="true",
                       add_plug=str(add_plug).lower(),
                       use_mesh=str(use_mesh).lower(),
-                      publish_tf="${ADD_CAMERAS}",
-                      gazebo_urdf="${GAZEBO_URDF}",
+                      publish_tf=str(publish_tf).lower() if isinstance(publish_tf, bool) else str(publish_tf),
+                      gazebo_urdf=str(gazebo_urdf).lower() if isinstance(gazebo_urdf, bool) else str(gazebo_urdf),
                       align_depth=str(align_depth).lower(),
                       enable_infrared=str(enable_infrared).lower(),
                       publish_pointcloud=str(publish_pointcloud).lower(),
