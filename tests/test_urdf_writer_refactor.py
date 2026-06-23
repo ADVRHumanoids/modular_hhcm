@@ -243,7 +243,7 @@ class TestBackwardCompatibility:
         'SlaveDescMode', 'ordered_load', 'ordered_dump',
         'NS_XACRO', 'ns',
         'URDFXmlBuilder', 'ChainManager',
-        'parse_generator_cli_args', 'write_file_to_stdout',
+        'parse_generator_cli_args',
     ]
 
     @pytest.mark.parametrize("name", _names)
