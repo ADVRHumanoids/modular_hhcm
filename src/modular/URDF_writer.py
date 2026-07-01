@@ -905,6 +905,31 @@ class UrdfWriter:
             self.add_sensor_name('camera/realsense_depth_aligned', camera_name)
         self.parent_module.mesh_names.append(camera_name + "_link")
         return [camera_name]
+    
+    def add_imu(self, xyz_offset=[0.0, 0.0, 0.0], rpy_offset=[0.0, 0.0, 0.0], imu_name: str | None = None,
+                parent_name: str | None = None, gazebo_urdf: str | bool = "${GAZEBO_URDF}",
+                variant: str | None = None,
+                publish_tf: str | bool = "${ADD_IMU}"):
+        variant_name = variant if variant else "generic"
+        imu_name = imu_name or ('imu'+ self.parent_module.tag)
+        imu_link_name = imu_name + "_link"
+        parent_name = parent_name or self.parent_module.name
+        ET.SubElement(self.root,
+                      "xacro:include",
+                      filename="${MODULAR_PATH}/modular_data/urdf/concert.sensors.urdf.xacro")
+        et = ET.SubElement(self.root,
+                      "xacro:add_imu",
+                      name=imu_name,
+                      parent_name=parent_name,
+                      gazebo_urdf=str(gazebo_urdf).lower() if isinstance(gazebo_urdf, bool) else str(gazebo_urdf),
+                      publish_tf=str(publish_tf).lower() if isinstance(publish_tf, bool) else str(publish_tf))
+        ET.SubElement(et,
+                      "origin",
+                      xyz=" ".join([str(x) for x in xyz_offset]),
+                      rpy=" ".join([str(x) for x in rpy_offset]))
+        self.parent_module.mesh_names.append(imu_link_name)
+        self.add_sensor_name("imu/"+variant_name, imu_link_name)
+        return [imu_name]
 
     def add_sensor_name(self, sensor_type: str, sensor_name: list[str] | str):
         """
@@ -1067,12 +1092,13 @@ class UrdfWriter:
                     "Falling back to generic camera handler."
                 )
                 handler_func = self.add_camera
+        elif addon_type == 'imu':
+            handler_func = self.add_imu
         else:
             self.logger.info('Addon type not supported')
             return []
         
         # Common parameter filtering and calling pattern
-        params = new_addon.get('parameters', {})
         filtered_params = self._filter_callable_kwargs(
             handler_func,
             params,
@@ -2407,7 +2433,6 @@ class UrdfWriter:
             new_Hub.xml_tree_elements.append(new_Hub.name + '_sensors')
 
             self.add_sensor_name('lidar/velodyne', ['VLP16_lidar_front', 'VLP16_lidar_back'])
-            self.add_sensor_name('imu', 'imu')
             self.add_sensor_name('ultrasound/bosch_uss5', [
                 'ultrasound_fl_sag',
                 'ultrasound_fr_sag',
