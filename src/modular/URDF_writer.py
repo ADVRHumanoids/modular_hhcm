@@ -789,10 +789,12 @@ class UrdfWriter:
         # return empty list since all xml elemnts are added from xacro
         return []
     
-    def add_camera(self, xyz_offset=[0.0, 0.0, 0.0], rpy_offset=[0.0, 0.0, 0.0], camera_name: str | None = None,    
+    def add_camera(self, xyz_offset=[0.0, 0.0, 0.0], rpy_offset=[0.0, 0.0, 0.0], camera_name: str | None = None,
                    parent_name: str | None = None,
-                   gazebo_urdf: str | bool = "${GAZEBO_URDF}", 
+                   gazebo_urdf: str | bool = "${GAZEBO_URDF}",
+                   variant: str | None = None,
                    publish_tf: str | bool = "${ADD_CAMERAS}"):
+        _ = variant  # reserved for future camera-specific specializations
         camera_name = camera_name or ('camera'+ self.parent_module.tag)
         parent_name = parent_name or self.parent_module.name
         ET.SubElement(self.root, 
@@ -821,6 +823,7 @@ class UrdfWriter:
                         xyz_offset=[0.0, 0.0, 0.0], rpy_offset=[0.0, 0.0, 0.0],
                         camera_name: str | None = None,
                         parent_name: str | None = None,
+                        variant: str | None = None,
                         publish_tf: str | bool = "${ADD_CAMERAS}",
                         gazebo_urdf: str | bool = "${GAZEBO_URDF}"):
         """
@@ -855,7 +858,9 @@ class UrdfWriter:
                                 add_realsense(camera="d435i", xyz_offset=[0.05, 0.0, 0.1], rpy_offset=[0.0, 0.785, 0.0])
                         """
 
-        # Filter supported camera types 
+        _ = variant  # reserved for future camera-family customizations
+
+        # Filter supported camera types
         supported_cameras = ["d435", "d435i"]
         if camera not in supported_cameras:
             raise ValueError(f"Camera type '{camera}' not supported. Supported types are: {', '.join(supported_cameras)}.")
@@ -1013,7 +1018,6 @@ class UrdfWriter:
             )
 
         return filtered_params
-    
 
     def add_addon(self, addon_filename, target_module=None, addon_name=None):
         module = target_module if target_module is not None else self.parent_module
@@ -1033,8 +1037,17 @@ class UrdfWriter:
                 raise FileNotFoundError(msg) from root_cause
             raise FileNotFoundError(addon_filename+' was not found in the available resources')
 
-        # Map addon type to handler function
-        addon_type = new_addon['header']['type']
+        # Map addon type to handler function.
+        # Keep addon `type` generic and use `variant` to select implementation details
+        # (e.g. type=camera, variant=realsense).
+        addon_header = new_addon.get('header', {})
+        params = copy.deepcopy(new_addon.get('parameters', {}))
+        addon_type = addon_header.get('type')
+        addon_variant = addon_header.get('variant')
+        addon_variant = addon_variant.strip().lower() if isinstance(addon_variant, str) else None
+        # `variant` is defined in header; inject it into kwargs so handlers can use it.
+        params['variant'] = addon_variant
+
         handler_func = None
         
         if addon_type == 'drillbit':
@@ -1044,9 +1057,16 @@ class UrdfWriter:
         elif addon_type == 'dagana_claws':
             handler_func = self.add_dagana_claws
         elif addon_type == 'camera':
-            handler_func = self.add_camera
-        elif addon_type == 'realsense':
-            handler_func = self.add_realsense
+            if addon_variant in {None, 'rgbd', 'generic'}:
+                handler_func = self.add_camera
+            elif addon_variant in {'realsense'}:
+                handler_func = self.add_realsense
+            else:
+                self.warning_print(
+                    f"Unknown camera variant '{addon_variant}' in addon '{addon_filename}'. "
+                    "Falling back to generic camera handler."
+                )
+                handler_func = self.add_camera
         else:
             self.logger.info('Addon type not supported')
             return []
@@ -1058,8 +1078,8 @@ class UrdfWriter:
             params,
             f"addon '{addon_filename}'",)
         
-        # Apply type-specific defaults for camera/realsense
-        if addon_type in ('camera', 'realsense'):
+        # Apply type-specific defaults for camera implementations.
+        if addon_type == 'camera':
             filtered_params.setdefault('camera_name', 'camera' + module.tag)
             if addon_name is not None:
                 filtered_params['camera_name'] = addon_name
