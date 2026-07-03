@@ -906,8 +906,11 @@ class UrdfWriter:
         self.parent_module.mesh_names.append(camera_name + "_link")
         return [camera_name]
     
-    def add_imu(self, xyz_offset=[0.0, 0.0, 0.0], rpy_offset=[0.0, 0.0, 0.0], imu_name: str | None = None,
-                parent_name: str | None = None, gazebo_urdf: str | bool = "${GAZEBO_URDF}",
+    def add_imu(self, xyz_offset=[0.0, 0.0, 0.0], 
+                rpy_offset=[0.0, 0.0, 0.0], 
+                imu_name: str | None = None,
+                parent_name: str | None = None, 
+                gazebo_urdf: str | bool = "${GAZEBO_URDF}",
                 variant: str | None = None,
                 publish_tf: str | bool = "${ADD_IMU}"):
         variant_name = variant if variant else "generic"
@@ -928,8 +931,57 @@ class UrdfWriter:
                       xyz=" ".join([str(x) for x in xyz_offset]),
                       rpy=" ".join([str(x) for x in rpy_offset]))
         self.parent_module.mesh_names.append(imu_link_name)
-        self.add_sensor_name("imu/"+variant_name, imu_link_name)
+        self.add_sensor_name("imu/" + variant_name, imu_link_name)
         return [imu_name]
+
+    def add_velodyne(self, xyz_offset=[0.0, 0.0, 0.0], 
+                     rpy_offset=[0.0, 0.0, 0.0], 
+                     lidar_name: str | None = None,
+                     parent_name: str | None = None,
+                     variant: str | None = None,
+                     publish_tf: str | bool = "${ADD_VELODYNE}", 
+                     gazebo_urdf: str | bool = "${GAZEBO_URDF}",
+                     organize_cloud: str | bool = False,
+                     hz: int | float = 10,
+                     lasers: int = 16,
+                     samples: int = 1875,
+                     collision_range: int | float = 0.3,
+                     min_range: int | float = 0.9,
+                     max_range: int | float = 130.0,
+                     noise: int | float = 0.008,
+                     min_angle: str | int | float = "-${M_PI}",
+                     max_angle: str | int | float = "${M_PI}",
+                     gpu: str | bool = "${USE_GPU_RAY}"):
+        variant_name = variant if variant else "generic"
+        lidar_name = lidar_name or ('VLP16_lidar' + self.parent_module.tag)
+        parent_name = parent_name or self.parent_module.name
+        ET.SubElement(self.root,
+                      "xacro:include",
+                      filename="${MODULAR_PATH}/modular_data/urdf/concert.sensors.urdf.xacro")
+        et = ET.SubElement(self.root,
+                           "xacro:add_velodyne",
+                           name=lidar_name,
+                           parent_name=parent_name,
+                           gazebo_urdf=str(gazebo_urdf).lower() if isinstance(gazebo_urdf, bool) else str(gazebo_urdf),
+                           organize_cloud=str(organize_cloud).lower() if isinstance(organize_cloud, bool) else str(organize_cloud),
+                           hz=str(hz),
+                           lasers=str(lasers),
+                           samples=str(samples),
+                           collision_range=str(collision_range),
+                           min_range=str(min_range),
+                           max_range=str(max_range),
+                           noise=str(noise),
+                           min_angle=str(min_angle),
+                           max_angle=str(max_angle),
+                           gpu=str(gpu).lower() if isinstance(gpu, bool) else str(gpu),
+                           publish_tf=str(publish_tf).lower() if isinstance(publish_tf, bool) else str(publish_tf))
+        ET.SubElement(et,
+                      "origin",
+                      xyz=" ".join([str(x) for x in xyz_offset]),
+                      rpy=" ".join([str(x) for x in rpy_offset]))
+        self.parent_module.mesh_names.extend([lidar_name + "_base_link", lidar_name])
+        self.add_sensor_name('lidar/' + variant_name, lidar_name)
+        return [lidar_name]
 
     def add_sensor_name(self, sensor_type: str, sensor_name: list[str] | str):
         """
@@ -1092,6 +1144,15 @@ class UrdfWriter:
                     "Falling back to generic camera handler."
                 )
                 handler_func = self.add_camera
+        elif addon_type == 'lidar':
+            if addon_variant in {None, 'velodyne', 'generic'}:
+                handler_func = self.add_velodyne
+            else:
+                self.warning_print(
+                    f"Unknown lidar variant '{addon_variant}' in addon '{addon_filename}'. "
+                    "Falling back to generic lidar handler."
+                )
+                handler_func = self.add_velodyne
         elif addon_type == 'imu':
             handler_func = self.add_imu
         else:

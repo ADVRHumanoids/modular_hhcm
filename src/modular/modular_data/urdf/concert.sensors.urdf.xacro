@@ -1,6 +1,8 @@
 <?xml version="1.0"?>
 <robot name="ModularBot" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
+<xacro:property name="M_PI" value="3.1415926535897931" />
+
 <xacro:property name="ADD_D435I_FRONT" value="false" />
 <xacro:property name="ADD_D435I_BACK" value="false" />
 <xacro:property name="ADD_T265_LEFT" value="false" />
@@ -48,7 +50,7 @@
     <!-- <xacro:property name="d435i_back_name" value="D435i_camera_back" />
     <xacro:property name="d435i_back_parent_name" value="${parent_name}" />
     <xacro:property name="d435i_back_origin">
-        <origin xyz="-0.402872 0.0 -0.078218" rpy="0 0.261799 3.141593"/>
+        <origin xyz="-0.402872 0.0 -0.078218" rpy="0 0.261799 ${M_PI}"/>
     </xacro:property> -->
 
     <!-- <xacro:add_rgbd_camera name="${d435i_back_name}" 
@@ -62,7 +64,7 @@
     <xacro:property name="t265_left_name" value="T265_camera_left" />
     <xacro:property name="t265_left_parent_name" value="${parent_name}" />
     <xacro:property name="t265_left_origin">
-        <origin xyz="0.02375 0.37245 -0.062" rpy="3.141593 0.0 1.570796"/>
+        <origin xyz="0.02375 0.37245 -0.062" rpy="${M_PI} 0.0 ${M_PI/2.0}"/>
     </xacro:property>
 
     <xacro:add_realsense_t_camera name="${t265_left_name}" 
@@ -75,7 +77,7 @@
     <xacro:property name="t265_right_name" value="T265_camera_right" />
     <xacro:property name="t265_right_parent_name" value="${parent_name}" />
     <xacro:property name="t265_right_origin">
-        <origin xyz="0.02375 -0.37245 -0.062" rpy="0 0.0 -1.570796"/>
+        <origin xyz="0.02375 -0.37245 -0.062" rpy="0 0.0 ${-M_PI/2.0}"/>
     </xacro:property>
 
     <xacro:add_realsense_t_camera name="${t265_right_name}" 
@@ -83,58 +85,6 @@
                                 gazebo_urdf="${ADD_T265_RIGHT}">
         <xacro:insert_block name="t265_right_origin" />
     </xacro:add_realsense_t_camera>
-
-    <!-- Add Velodyne front -->
-    <xacro:property name="velodyne_front_name" value="VLP16_lidar_front" />
-    <xacro:property name="velodyne_front_parent_name" value="${parent_name}" />
-    <xacro:property name="velodyne_front_origin">
-        <origin xyz="0.5305 0.315 -0.0627" rpy="3.141593 0.0 1.570796"/>
-    </xacro:property>
-    
-    <xacro:if value="${ADD_VELODYNE_FRONT}">
-        <xacro:include filename="$(find velodyne_description)/urdf/VLP-16.urdf.xacro"/>
-        
-        <xacro:VLP-16 parent="${velodyne_front_parent_name}" name="${velodyne_front_name}">
-            <xacro:insert_block name="velodyne_front_origin" />
-        </xacro:VLP-16>
-
-        <xacro:VLP-16-gz-sensor name="${velodyne_front_name}" topic="/${velodyne_front_name}" hz="10" samples="440" gpu="${USE_GPU_RAY}" min_angle="-1.04" max_angle="3.66">
-        </xacro:VLP-16-gz-sensor>
-    </xacro:if>
-    <xacro:unless value="${ADD_VELODYNE_FRONT}">
-        <joint name="${velodyne_front_name}_base_mount_joint" type="fixed">
-            <xacro:insert_block name="velodyne_front_origin"/>
-            <parent link="${velodyne_front_parent_name}"/>
-            <child link="${velodyne_front_name}_base_link"/>
-        </joint>
-        <link name="${velodyne_front_name}_base_link"/>
-    </xacro:unless>
-
-    <!-- Add Velodyne back -->
-    <xacro:property name="velodyne_back_name" value="VLP16_lidar_back" />
-    <xacro:property name="velodyne_back_parent_name" value="${parent_name}" />
-    <xacro:property name="velodyne_back_origin">
-        <origin xyz="-0.5305 -0.315 -0.0627" rpy="3.141593 0.0 -1.570796"/>
-    </xacro:property>
-
-    <xacro:if value="${ADD_VELODYNE_BACK}">
-        <xacro:include filename="$(find velodyne_description)/urdf/VLP-16.urdf.xacro"/>
-        
-        <xacro:VLP-16 parent="${velodyne_back_parent_name}" name="${velodyne_back_name}">
-            <xacro:insert_block name="velodyne_back_origin" />
-        </xacro:VLP-16>
-
-        <xacro:VLP-16-gz-sensor name="${velodyne_back_name}" topic="/${velodyne_back_name}" hz="10" samples="440" gpu="${USE_GPU_RAY}" min_angle="-1.04" max_angle="3.66">
-        </xacro:VLP-16-gz-sensor>
-    </xacro:if>
-    <xacro:unless value="${ADD_VELODYNE_BACK}">
-        <joint name="${velodyne_back_name}_base_mount_joint" type="fixed">
-            <xacro:insert_block name="velodyne_back_origin"/>
-            <parent link="${velodyne_back_parent_name}"/>
-            <child link="${velodyne_back_name}_base_link"/>
-        </joint>
-        <link name="${velodyne_back_name}_base_link"/>
-    </xacro:unless>
 
     <!-- Ultrasound sensors -->
     <xacro:property name="ultrasound_parent_name" value="${parent_name}" />
@@ -190,7 +140,7 @@
     <!-- Add back-left Bosch USS5 ultrasound sensor -->
     <xacro:property name="ultrasound_rear_left_sagittal_name" value="ultrasound_rl_sag" />
     <xacro:property name="ultrasound_rear_left_sagittal_origin">
-        <origin xyz="-0.5105 0.315 -0.129" rpy="0.0 1.963496 3.141593"/>
+        <origin xyz="-0.5105 0.315 -0.129" rpy="0.0 1.963496 ${M_PI}"/>
     </xacro:property>
 
     <xacro:add_ultrasound_sensor parent_name="${ultrasound_parent_name}" 
@@ -202,7 +152,7 @@
     <!-- Add back-right Bosch USS5 ultrasound sensor -->
     <xacro:property name="ultrasound_rear_right_sagittal_name" value="ultrasound_rr_sag" />
     <xacro:property name="ultrasound_rear_right_sagittal_origin">
-        <origin xyz="-0.5105 -0.315 -0.129" rpy="0.0 1.963496 3.141593"/>
+        <origin xyz="-0.5105 -0.315 -0.129" rpy="0.0 1.963496 ${M_PI}"/>
     </xacro:property>
 
     <xacro:add_ultrasound_sensor parent_name="${ultrasound_parent_name}" 
@@ -214,7 +164,7 @@
     <!-- Add left-front Bosch USS5 ultrasound sensor -->
     <xacro:property name="ultrasound_front_left_lateral_name" value="ultrasound_fl_lat" />
     <xacro:property name="ultrasound_front_left_lateral_origin">
-        <origin xyz="0.4515 0.365 -0.117" rpy="0.0 1.963496 1.570796"/>
+        <origin xyz="0.4515 0.365 -0.117" rpy="0.0 1.963496 ${M_PI/2.0}"/>
     </xacro:property>
 
     <xacro:add_ultrasound_sensor parent_name="${ultrasound_parent_name}" 
@@ -226,7 +176,7 @@
     <!-- Add left-back Bosch USS5 ultrasound sensor -->
     <xacro:property name="ultrasound_rear_left_lateral_name" value="ultrasound_rl_lat" />
     <xacro:property name="ultrasound_rear_left_lateral_origin">
-        <origin xyz="-0.4515 0.365 -0.117" rpy="0.0 1.963496 1.570796"/>
+        <origin xyz="-0.4515 0.365 -0.117" rpy="0.0 1.963496 ${M_PI/2.0}"/>
     </xacro:property>
 
     <xacro:add_ultrasound_sensor parent_name="${ultrasound_parent_name}" 
@@ -238,7 +188,7 @@
     <!-- Add right-front Bosch USS5 ultrasound sensor -->
     <xacro:property name="ultrasound_front_right_lateral_name" value="ultrasound_fr_lat" />
     <xacro:property name="ultrasound_front_right_lateral_origin">
-        <origin xyz="0.4515 -0.365 -0.117" rpy="0.0 1.963496 -1.570796"/>
+        <origin xyz="0.4515 -0.365 -0.117" rpy="0.0 1.963496 ${-M_PI/2.0}"/>
     </xacro:property>
 
     <xacro:add_ultrasound_sensor parent_name="${ultrasound_parent_name}" 
@@ -250,7 +200,7 @@
     <!-- Add right-back Bosch USS5 ultrasound sensor -->
     <xacro:property name="ultrasound_rear_right_lateral_name" value="ultrasound_rr_lat" />
     <xacro:property name="ultrasound_rear_right_lateral_origin">
-        <origin xyz="-0.4515 -0.365 -0.117" rpy="0.0 1.963496 -1.570796"/>
+        <origin xyz="-0.4515 -0.365 -0.117" rpy="0.0 1.963496 ${-M_PI/2.0}"/>
     </xacro:property>
 
     <xacro:add_ultrasound_sensor parent_name="${ultrasound_parent_name}" 
@@ -276,6 +226,58 @@
     </joint>
     <link name="dalsa_camera_left"/>
 
+</xacro:macro>
+
+<!-- Add Velodyne LIDAR -->
+<xacro:macro name="add_velodyne" params="name:=VLP16_lidar 
+                                        parent_name:=base_link 
+                                        publish_tf:=true 
+                                        gazebo_urdf:=false 
+                                        organize_cloud:=false
+                                        hz:=10
+                                        lasers:=16
+                                        samples:=1875
+                                        collision_range:=0.3
+                                        min_range:=0.9
+                                        max_range:=130.0
+                                        noise:=0.008
+                                        min_angle:=${-M_PI}
+                                        max_angle:=${M_PI}
+                                        gpu:=${USE_GPU_RAY}
+                                        *origin">
+    
+    <xacro:unless value="${publish_tf}">
+        <joint name="${name}_base_mount_joint" type="fixed">
+            <xacro:insert_block name="origin"/>
+            <parent link="${parent_name}"/>
+            <child link="${name}_base_link"/>
+        </joint>
+        <link name="${name}_base_link"/>
+    </xacro:unless>
+
+    <xacro:if value="${publish_tf}">
+        <xacro:include filename="$(find velodyne_description)/urdf/VLP-16.urdf.xacro"/>
+        <xacro:VLP-16 parent="${parent_name}" name="${name}">
+            <xacro:insert_block name="origin" />
+        </xacro:VLP-16>
+
+        <xacro:if value="${gazebo_urdf}">
+            <xacro:VLP-16-gz-sensor name="${name}" 
+                                    topic="/${name}" 
+                                    organize_cloud="${organize_cloud}"
+                                    hz="${hz}" 
+                                    lasers="${lasers}" 
+                                    samples="${samples}" 
+                                    collision_range="${collision_range}" 
+                                    min_range="${min_range}" 
+                                    max_range="${max_range}" 
+                                    noise="${noise}" 
+                                    min_angle="${min_angle}" 
+                                    max_angle="${max_angle}">
+            </xacro:VLP-16-gz-sensor>
+        </xacro:if>
+    </xacro:if>
+    
 </xacro:macro>
 
 <xacro:macro name="imu_noise" params="stddev">
