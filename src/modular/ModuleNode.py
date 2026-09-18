@@ -252,17 +252,28 @@ class JSONInterpreter(object):
 
     @staticmethod
     def set_dynamic_properties(body, dict_body):
-        """Set the dynamic properties of a body from a dictionary"""
-        body.mass = dict_body['mass']
-        body.inertia_tensor.I_xx = dict_body['inertia'][0][0]
-        body.inertia_tensor.I_yy = dict_body['inertia'][1][1]
-        body.inertia_tensor.I_zz = dict_body['inertia'][2][2]
-        body.inertia_tensor.I_xy = dict_body['inertia'][0][1]
-        body.inertia_tensor.I_xz = dict_body['inertia'][0][2]
-        body.inertia_tensor.I_yz = dict_body['inertia'][1][2]
-        body.CoM.x = dict_body['r_com'][0]
-        body.CoM.y = dict_body['r_com'][1]
-        body.CoM.z = dict_body['r_com'][2]
+        """Set the dynamic properties of a body from a dictionary.
+
+        'mass', 'inertia' and 'r_com' are all optional: when omitted, the
+        body keeps the template's default (null/None), which is treated as
+        massless downstream and given a default inertial (see
+        urdf_xml_builder.add_inertial).
+        """
+        if 'mass' in dict_body:
+            body.mass = dict_body['mass']
+        if 'inertia' in dict_body:
+            inertia = dict_body['inertia']
+            body.inertia_tensor.I_xx = inertia[0][0]
+            body.inertia_tensor.I_yy = inertia[1][1]
+            body.inertia_tensor.I_zz = inertia[2][2]
+            body.inertia_tensor.I_xy = inertia[0][1]
+            body.inertia_tensor.I_xz = inertia[0][2]
+            body.inertia_tensor.I_yz = inertia[1][2]
+        if 'r_com' in dict_body:
+            r_com = dict_body['r_com']
+            body.CoM.x = r_com[0]
+            body.CoM.y = r_com[1]
+            body.CoM.z = r_com[2]
 
     @staticmethod
     def set_visual_properties(visual_obj, body_name, dict_body):
