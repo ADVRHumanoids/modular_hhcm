@@ -310,7 +310,7 @@
                 <geometry>
                     <box size="0.04 0.04 0.004"/>
                 </geometry>
-                <material>
+                <material name="${name}_material">
                     <color rgba="0.8 0.4 0.1 1.0"/>
                 </material>
             </visual>
