@@ -84,7 +84,7 @@ class Plugin(metaclass=ABCMeta):
     def write_srdf(self, builder_joint_map=None):
         """Generates a basic srdf so that the model can be used right away with XBotCore"""
 
-        root = ET.Element('robot', name="ModularBot")
+        root = ET.Element('robot', name=self.urdf_writer.root.get('name').lower())
 
         active_modules_chains = []
 
@@ -258,7 +258,7 @@ class RosControlPlugin(Plugin):
     def write_srdf(self, builder_joint_map=None):
         """Generates a basic srdf so that the model can be used right away with XBotCore"""
         
-        root = ET.Element('robot', name="ModularBot")
+        root = ET.Element('robot', name=self.urdf_writer.root.get('name').lower())
 
         groups = []
         chains = []
