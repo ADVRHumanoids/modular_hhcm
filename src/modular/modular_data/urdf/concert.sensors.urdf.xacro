@@ -332,6 +332,10 @@
                     <gz_frame_id>${name}_link</gz_frame_id>
                     <topic>${name}_link</topic>
                     <imu>
+                        <!-- Orientation of the sensor in the world (ENU), not relative to its initial pose -->
+                        <orientation_reference_frame>
+                            <localization>ENU</localization>
+                        </orientation_reference_frame>
                         <angular_velocity>
                             <x><xacro:imu_noise stddev="2e-4"/></x>
                             <y><xacro:imu_noise stddev="2e-4"/></y>
