@@ -158,6 +158,18 @@ Examples of how to use the python API are provided in the [scripts](https://gith
 - `create_modularbot.ipynb` shows an example of how to build a 6-DOF robot using Alberobotics modules and deploy URDF, SRDF, etc. into a ROS package
 - `generate_concert_robot.ipynb` shows how to build and deploy the CONCERT modular robot
 
+### Deployment destination
+
+Robot Design Studio, the notebooks, and generator scripts use `deploy_dir` from
+[`config_file.yaml`](src/modular/config_file.yaml), which defaults to `~/robots`.
+Set `run_post_processing: true` in that file if your site uses the configured hooks.
+
+- For generator scripts, `--deploy` uses the configured directory and
+  `--deploy DIRECTORY` overrides it. Deployment runs only when the flag is present.
+- For Python calls, `deploy_robot(name, deploy_dir=DIRECTORY)` overrides the configured directory.
+- When running the packaging script directly, pass the destination with
+  `deploy.sh PACKAGE_NAME --destination-folder DIRECTORY`.
+
 ## Documentation
 
 Static documentation for API calls has been added and is stored in the `modular/src/modular/web/docs` directory.

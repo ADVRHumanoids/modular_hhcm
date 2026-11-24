@@ -3092,7 +3092,8 @@ class UrdfWriter:
         return content
 
     # Save URDF/SRDF etc. in a directory with the specified robot_name
-    def deploy_robot(self, robot_name='modularbot', deploy_dir=None):
+    def deploy_robot(self, robot_name='modularbot', deploy_dir=None, *, run_post_processing=None):
+        """Deploy the package, using the writer configuration for unspecified options."""
         script = self.resource_finder.get_filename('deploy.sh', ['data_path'])
 
         try:
@@ -3113,10 +3114,15 @@ class UrdfWriter:
             for hub_module in (hub for hub in hubs if hub.is_structural):
                 self.add_connectors(hub_module)
 
+        if run_post_processing is None:
+            run_post_processing = self.resource_finder.cfg.get('run_post_processing', False)
+        if not run_post_processing:
+            return robot_name
+
         for post_processing_script in self.resource_finder.cfg['post_processing_scripts']:
+            required = self.resource_finder.nested_access(['post_processing_scripts', post_processing_script, 'required'])
             try:
                 script_path = self.resource_finder.get_expanded_path(['post_processing_scripts', post_processing_script, 'file'])
-                required = self.resource_finder.nested_access(['post_processing_scripts', post_processing_script, 'required'])
                 self.info_print(f"Running post processing script {post_processing_script}: {script_path}")
                 output = subprocess.check_output([script_path, "--destination-folder", deploy_dir, "--package-name", robot_name])
             except (subprocess.CalledProcessError, FileNotFoundError, RuntimeError) as e:
@@ -3171,15 +3177,15 @@ class UrdfWriter:
         parser = argparse.ArgumentParser(
             prog='Modular URDF/SRDF generator and deployer',
             usage='./script_name.py --output urdf writes URDF to stdout '\
-                  '\n./script_name.py --deploy deploy_dir generates a ros package at deploy_dir',
+                  '\n./script_name.py --deploy [directory] generates a ROS package',
         )
 
         parser.add_argument('--output', '-o', required=False, choices=('urdf', 'srdf', 'sensors'),
                             help='write requested file to stdout and exit')
         parser.add_argument('--xacro-args', '-a', required=False, nargs='*',
                             help='xacro arguments in key:=value format')
-        parser.add_argument('--deploy', '-d', required=False,
-                            help='directory where to deploy the package')
+        parser.add_argument('--deploy', '-d', nargs='?', const=True, metavar='DIRECTORY',
+                            help='deploy the package, using the configured directory if omitted')
         parser.add_argument('--robot-name', '-r', required=False,
                             help='name of the robot')
         parser.add_argument('--quiet', action='store_true', default=False,
@@ -3255,7 +3261,8 @@ class UrdfWriter:
             self.write_joint_map()
             self.write_sensor_config()
 
-            self.deploy_robot(robot_name, args.deploy)
+            deploy_dir = None if args.deploy is True else args.deploy
+            self.deploy_robot(robot_name, deploy_dir)
 
 
 # Temporary functions to maintain backwards compatibility with the old generator scripts

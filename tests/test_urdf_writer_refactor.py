@@ -26,6 +26,7 @@ import sys
 import xml.etree.ElementTree as ET
 from collections import OrderedDict
 from types import SimpleNamespace
+from unittest.mock import Mock
 
 import pytest
 
@@ -375,6 +376,27 @@ class TestSimDiscovery:
         writer_after_discovery.write_file_to_stdout(None, robot_name='sim_discovery_test', args=args)
         captured = capsys.readouterr()
         assert '<robot' in captured.out
+
+    @pytest.mark.parametrize(
+        ('argv', 'expected_deploy_args'),
+        [
+            ([], None),
+            (['--deploy'], ('example', None)),
+            (['--deploy', '/tmp/example'], ('example', '/tmp/example')),
+        ],
+    )
+    def test_generator_deployment_destination(self, argv, expected_deploy_args):
+        from modular.URDF_writer import UrdfWriter
+
+        writer = Mock(spec=UrdfWriter)
+        args = UrdfWriter.parse_generator_cli_args(argv)
+
+        UrdfWriter.write_file_to_stdout(writer, None, robot_name='example', args=args)
+
+        if expected_deploy_args is None:
+            writer.deploy_robot.assert_not_called()
+        else:
+            writer.deploy_robot.assert_called_once_with(*expected_deploy_args)
 
 
 # ===========================================================================

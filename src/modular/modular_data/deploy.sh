@@ -14,19 +14,15 @@ end_exec(){
 
 print_help () {
     printf "${ORANGE}"
-    echo "Try something like:                         ./deply.sh modular_ros_pkg"
-    echo "You can choose the destination folder with: -d /path/to/destination/dir"
+    echo "Usage: $0 <package-name> --destination-folder <directory> [options]"
+    echo "Use -d as a short form of --destination-folder."
     echo "You can choose the framework to use with: -f {ros_control} - {xbotcore} - {xbot2}"
     echo "You can add vebosity with:                  -v"
     printf "${NC}"
     end_exec
 }
 
-if [ -n "$ROBOTOLOGY_ROOT" ]; then
-    export DESTINATION_FOLDER=$ROBOTOLOGY_ROOT/robots
-else
-    export DESTINATION_FOLDER="$HOME/albero_xbot2_ws/robots"
-fi
+DESTINATION_FOLDER=''
 
 QUIET='-q'
 
@@ -39,15 +35,17 @@ do
             unset QUIET
             printf "Verbose mode ${GREEN}ON${NC}\n"
             ;;
-        -[dD] | --destination-folder) # add destination folder
-            shift
-            case "$1" in
-                -*)
-		            printf "${RED}Path ('$1')  is not valid!${NC}\n"
-       		        print_help
+        -[dD] | --destination-folder)
+            case "${2-}" in
+                ''|-*)
+                    printf "${RED}Expected a directory after %s.${NC}\n" "$1"
+                    print_help
+                    return 1
                     ;;
-                *)  export DESTINATION_FOLDER=$1;
-                ;;
+                *)
+                    DESTINATION_FOLDER=$2
+                    shift
+                    ;;
             esac
             ;;
         -[fF] | --framework) # add destination folder
@@ -80,23 +78,23 @@ do
 done
 
 # check correctness of input
-if ! [ -n "$package_name" ]; then
-	printf "${RED}No package name argument passed!${NC}\n"
+if [ -z "$package_name" ]; then
+    printf "${RED}No package name argument passed!${NC}\n"
     print_help
-else
-    if ! [ -n "$DESTINATION_FOLDER" ]; then
-        printf "${RED}No destination fodler specified!${NC}\n"
-        print_help
-    else
-        printf "${GREEN}Deploying package ${YELLOW}${package_name}${GREEN} into ${YELLOW}$DESTINATION_FOLDER${NC}\n"
-    fi
+    return 1
 fi
+if [ -z "$DESTINATION_FOLDER" ]; then
+    printf "${RED}Specify a destination with --destination-folder.${NC}\n"
+    print_help
+    return 1
+fi
+printf "${GREEN}Deploying package ${YELLOW}%s${GREEN} into ${YELLOW}%s${NC}\n" "$package_name" "$DESTINATION_FOLDER"
 
 # this way the script can be called from any directory
 SCRIPT_ROOT=$(dirname $(readlink --canonicalize --no-newline $BASH_SOURCE))
 
-mkdir -p $DESTINATION_FOLDER/${package_name}
-pushd $DESTINATION_FOLDER/${package_name} > /dev/null #hide print
+mkdir -p -- "$DESTINATION_FOLDER/${package_name}" || end_exec
+pushd "$DESTINATION_FOLDER/${package_name}" > /dev/null || end_exec
 
 # Deploy ROS package info
 # - package.xml
