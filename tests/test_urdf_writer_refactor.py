@@ -593,6 +593,7 @@ class TestPluginsParity:
         via_plugin = writer_b.control_plugin.write_srdf(builder_joint_map=None)
 
         assert via_wrapper == via_plugin
+        assert ET.fromstring(via_wrapper).attrib['name'] == writer_a.root.attrib['name']
 
 
 @_skip_if_no_urdf_writer
