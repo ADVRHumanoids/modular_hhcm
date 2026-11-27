@@ -14,24 +14,17 @@ urdfwriter_kwargs_dict={
 urdf_writer_fromHW = UrdfWriter(**urdfwriter_kwargs_dict)
 
 try:
-    from ec_srvs.srv import GetSlaveInfo
-    ec_srvs_available = True
-except ImportError:
-    applogger.warning('ec_srvs not found: EtherCAT services package is missing. Discovery mode will be unavailable.')
-    ec_srvs_available = False
-    
-srv_name = '/ec_client/get_slaves_description'
-rospy.wait_for_service(srv_name, 5)
-
-try:
-    slave_description = rospy.ServiceProxy(srv_name, GetSlaveInfo) # pylint: disable=undefined-variable
-
-except rospy.ServiceException as e:
-    applogger.debug("Service call failed: %s",e)
+    from xbot2_cli.ecat_context import Context as EcatContext, Arguments as EcatArguments
+except ImportError as e:
+    applogger.error('xbot2_cli not found: EtherCAT client package is missing. Discovery is unavailable.')
     raise e
 
-reply = slave_description()
-reply = reply.cmd_info.msg
+# same as `ecat describe`, uri is the one stored by `ecat config uri` (default: localhost:5555)
+reply = EcatContext().get_slave_description(EcatArguments(), verbose=False)
+
+if not reply:
+    raise RuntimeError('No slave description received from the EtherCAT master')
+
 applogger.debug("Exit")
 
 urdf_writer_fromHW.read_from_json(reply)

@@ -429,7 +429,8 @@ class UrdfWriter:
         module_params_dict = yaml.safe_load(open(module_params_yaml, 'r'))
 
         # Process the modules described in the json to create the tree
-        modules_dict = yaml.safe_load(json_data)
+        # json_data can be either the raw yaml/json string or the already parsed dict (e.g. from xbot2_cli)
+        modules_dict = json_data if isinstance(json_data, dict) else yaml.safe_load(json_data)
         
         if self.slave_desc_mode is SlaveDescMode.USE_POSITIONS:
             # Sort the modules by position

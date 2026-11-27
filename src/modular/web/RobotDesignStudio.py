@@ -15,8 +15,6 @@ import sys
 import re
 import argparse
 import subprocess
-import threading
-import atexit
 from configparser import ConfigParser, ExtendedInterpolation
 from typing import TypedDict
 from datetime import datetime, timedelta
@@ -32,58 +30,10 @@ import modular.ModuleNode  as ModuleNode
 from modular.enums import ModuleClass
 
 try:
-    import rclpy
-    from rclpy.executors import MultiThreadedExecutor
-    from rclpy.signals import SignalHandlerOptions
-    rclpy_available = True
+    from xbot2_cli.ecat_context import Context as EcatContext, Arguments as EcatArguments
+    xbot2_cli_available = True
 except ImportError:
-    rclpy_available = False
-
-try:
-    from ec_srvs.srv import GetSlaveInfo
-    ec_srvs_available = True
-except ImportError:
-    ec_srvs_available = False
-
-ros_available = rclpy_available and ec_srvs_available
-
-# Global ROS 2 node state — created lazily, only if discovery is actually used
-_ros_node = None
-_ros_executor = None
-_ros_thread = None
-_ros_lock = threading.Lock()
-
-def get_ros_node():
-    """Return the ROS 2 node, initializing it on the first call.
-    Returns None if ec_srvs / rclpy are not available."""
-    global _ros_node, _ros_executor, _ros_thread
-    if not ros_available:
-        return None
-    with _ros_lock:
-        if _ros_node is None:
-            if not rclpy.ok():
-                rclpy.init(signal_handler_options=SignalHandlerOptions.NO)
-            _ros_node = rclpy.create_node('robot_design_studio')
-            _ros_executor = MultiThreadedExecutor()
-            _ros_executor.add_node(_ros_node)
-            _ros_thread = threading.Thread(target=_ros_executor.spin, daemon=True)
-            _ros_thread.start()
-    return _ros_node
-
-def _shutdown_ros_node():
-    global _ros_node, _ros_executor, _ros_thread
-    if not rclpy_available:
-        return
-    if _ros_executor is not None:
-        _ros_executor.shutdown(timeout_sec=2)
-    if _ros_node is not None:
-        _ros_node.destroy_node()
-    if rclpy.ok():
-        rclpy.shutdown()
-    if _ros_thread is not None:
-        _ros_thread.join(timeout=5)
-
-atexit.register(_shutdown_ros_node)
+    xbot2_cli_available = False
 
 
 # get backend version from git
@@ -122,6 +72,7 @@ api_base_route = config.get('MODULAR_API','base_route',fallback='')
 secret_key = config.get('MODULAR_API','secret_key',fallback='secret_key')
 enable_sessions = config.getboolean('MODULAR_API','enable_sessions',fallback=False)
 enable_discovery = config.getboolean('MODULAR_API','enable_discovery',fallback=True)
+ecat_uri = config.get('MODULAR_API','ecat_uri',fallback=None)
 download_on_deploy = config.getboolean('MODULAR_API','download_on_deploy',fallback=False)
 
 import modular
@@ -135,10 +86,11 @@ werkzeug_logger.setLevel(logging.INFO if args.verbose else logging.ERROR)
 if args.verbose:
     logger.debug('Starting server')
 
-if not rclpy_available:
-    logger.warning('rclpy not found: ROS 2 is not installed. Discovery mode will be unavailable.')
-elif not ec_srvs_available:
-    logger.warning('ec_srvs not found: EtherCAT services package is missing. Discovery mode will be unavailable.')
+if not xbot2_cli_available:
+    logger.warning('xbot2_cli not found: EtherCAT client package is missing. Discovery mode will be unavailable.')
+
+# EtherCAT client context, uri=None falls back to the one stored by `ecat config uri` (default: localhost:5555)
+ecat_context = EcatContext(uri=ecat_uri) if xbot2_cli_available else None
 
 
 template_folder='modular_frontend'
@@ -773,7 +725,7 @@ def get_resources_meshes_file(path):
             continue
     abort(404)
 
-# send a request to the poller thread to get ECat topology and synchronize with hardware
+# send a request to the EtherCAT master to get ECat topology and synchronize with hardware
 @app.route(f'{api_base_route}/model/urdf', methods=['PUT'])
 def generateUrdfModelFromHardware():
     if not enable_discovery:
@@ -782,8 +734,6 @@ def generateUrdfModelFromHardware():
             status=409,
             mimetype="application/json"
         )
-
-    srv_name = '/ec_client/get_slaves_description'
 
     sid = session.get('session_id') if enable_sessions else 'default'
     if sid not in sessions:
@@ -799,30 +749,20 @@ def generateUrdfModelFromHardware():
             mimetype="application/json"
     )
 
-    if not ros_available:
+    if not xbot2_cli_available:
         return Response(
-            response=json.dumps({"message": 'ec_srvs package not available, cannot contact hardware.'}),
+            response=json.dumps({"message": 'xbot2_cli package not available, cannot contact hardware.'}),
             status=503,
             mimetype="application/json"
         )
 
     try:
-        node = get_ros_node()
-        client = node.create_client(GetSlaveInfo, srv_name) # pylint: disable=undefined-variable
+        # same as `ecat describe`, without printing the table
+        reply = ecat_context.get_slave_description(EcatArguments(), verbose=False)
 
-        if not client.wait_for_service(timeout_sec=5.0):
-            raise Exception(f"Service '{srv_name}' not available after 5 s")
+        if not reply:
+            raise Exception("No slave description received from the EtherCAT master")
 
-        future = client.call_async(GetSlaveInfo.Request()) # pylint: disable=undefined-variable
-        done_event = threading.Event()
-        future.add_done_callback(lambda _: done_event.set())
-        if not done_event.wait(timeout=10.0):
-            raise Exception("Service call timed out after 10 s")
-
-        if future.result() is None:
-            raise Exception("Service call returned no result")
-
-        reply = future.result().cmd_info.msg
         app.logger.debug("Exit")
 
         writer = get_writer(sid)
